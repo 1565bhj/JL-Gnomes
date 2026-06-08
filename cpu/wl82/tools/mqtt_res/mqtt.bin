@@ -1,0 +1,11 @@
+{
+"server_port": 1833,
+"client_ID": "id_test",
+"address": "home.test.com",
+"username": "hometest",
+"password": "ABcd123456",
+"ProductKey": "a1jgj408xm2",
+"DeviceName": "8E658415F05A-LLKJS5Ky-B1N1-XHZ",
+"DeviceSecret": "5fb1b6f462661cc6eed1ea23d286419a",
+"QRCode_URL": "https://test.12356.com"
+}

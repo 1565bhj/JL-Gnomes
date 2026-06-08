@@ -1,0 +1,90 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.swp
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+doc/datasheet/AC790N规格书
+wl80/
+*.used
+*.layout
+*.objs.txt
+*.depend
+app.bin
+app.lz4
+db_update_files_data.bin
+download.bat
+isd_config.ini
+jl_isd.bin
+jl_isd.fw
+jl_isd.ufw
+jl_isd_expend.bin
+*.ufw
+symbol_tbl.txt
+null
+db_update_data.bin
+jl_isd_extend.bin
+symbol_tbl.html
+cpu/wl82/sdk.ld
+cpu/wl82/tools/isd_config_loader.ini
+cpu/wl82/tools/sdk.elf.objs.txt
+cpu/wl82/tools/sdk.elf.resolution.txt
+cpu/wl82/tools/sdk.elf.0.0.preopt.bc
+cpu/wl82/tools/sdk.elf.0.2.internalize.bc
+cpu/wl82/tools/sdk.elf.0.4.opt.bc
+cpu/wl82/tools/sdk.elf.0.5.precodegen.bc
+cpu/wl82/tools/sdk.map
+cpu/wl82/tools/cache_ram_data.bin
+cpu/wl82/tools/data.bin
+cpu/wl82/tools/ram0_data.bin
+cpu/wl82/tools/text.bin
+cpu/wl82/tools/packres/AUPACKRES
+apps/common/movable/section.txt
+apps/wifi_tuya_iot/readme.txt
+apps/wifi_tuya_iot/tuya/.vscode/settings.json
+apps/wifi_tuya_iot/tuya/sdk/include/lwip/apps/FILES
+apps/wifi_story_machine/board/wl82/obj
+lib/system/lvgl_v8/prj/obj
+include_lib/driver/format.sh

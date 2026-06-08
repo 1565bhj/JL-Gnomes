@@ -1,0 +1,435 @@
+/*
+* Copyright 2026 NXP
+* NXP Proprietary. This software is owned or controlled by NXP and may only be used strictly in
+* accordance with the applicable license terms. By expressly accepting such terms or by downloading, installing,
+* activating and/or otherwise using the software, you are agreeing that you have read, and that you agree to
+* comply with and are bound by, such license terms.  If you do not agree to be bound by the applicable license
+* terms, then you may not retain, install, activate or otherwise use the software.
+*/
+
+#include "lvgl.h"
+#include <stdio.h>
+#include "gui_guider.h"
+#include "events_init.h"
+#include "widgets_init.h"
+#include "custom.h"
+
+
+
+void setup_scr_screen_timer_remove(lv_ui *ui)
+{
+    //Write codes screen_timer_remove
+    ui->screen_timer_remove = lv_obj_create(NULL);
+    lv_obj_set_size(ui->screen_timer_remove, 320, 240);
+    lv_obj_set_scrollbar_mode(ui->screen_timer_remove, LV_SCROLLBAR_MODE_OFF);
+
+    //Write style for screen_timer_remove, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_bg_opa(ui->screen_timer_remove, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui->screen_timer_remove, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui->screen_timer_remove, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write codes screen_timer_remove_cont
+    ui->screen_timer_remove_cont = lv_obj_create(ui->screen_timer_remove);
+    lv_obj_set_pos(ui->screen_timer_remove_cont, 28, 60);
+    lv_obj_set_size(ui->screen_timer_remove_cont, 260, 176);
+    lv_obj_set_scrollbar_mode(ui->screen_timer_remove_cont, LV_SCROLLBAR_MODE_OFF);
+
+    //Write style for screen_timer_remove_cont, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_border_width(ui->screen_timer_remove_cont, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui->screen_timer_remove_cont, lv_color_hex(0x2195f6), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui->screen_timer_remove_cont, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_cont, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write codes screen_timer_remove_cont_3
+    ui->screen_timer_remove_cont_3 = lv_obj_create(ui->screen_timer_remove_cont);
+    lv_obj_set_pos(ui->screen_timer_remove_cont_3, 2, 118);
+    lv_obj_set_size(ui->screen_timer_remove_cont_3, 258, 51);
+    lv_obj_set_scrollbar_mode(ui->screen_timer_remove_cont_3, LV_SCROLLBAR_MODE_OFF);
+
+    //Write style for screen_timer_remove_cont_3, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_border_width(ui->screen_timer_remove_cont_3, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui->screen_timer_remove_cont_3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui->screen_timer_remove_cont_3, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui->screen_timer_remove_cont_3, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_cont_3, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui->screen_timer_remove_cont_3, 53, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui->screen_timer_remove_cont_3, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui->screen_timer_remove_cont_3, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui->screen_timer_remove_cont_3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui->screen_timer_remove_cont_3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui->screen_timer_remove_cont_3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui->screen_timer_remove_cont_3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_cont_3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write codes screen_timer_remove_time_3
+    ui->screen_timer_remove_time_3 = lv_spangroup_create(ui->screen_timer_remove_cont_3);
+    lv_spangroup_set_align(ui->screen_timer_remove_time_3, LV_TEXT_ALIGN_LEFT);
+    lv_spangroup_set_overflow(ui->screen_timer_remove_time_3, LV_SPAN_OVERFLOW_CLIP);
+    lv_spangroup_set_mode(ui->screen_timer_remove_time_3, LV_SPAN_MODE_EXPAND);
+    //create span
+    ui->screen_timer_remove_time_3_span = lv_spangroup_new_span(ui->screen_timer_remove_time_3);
+    lv_span_set_text(ui->screen_timer_remove_time_3_span, "12:12:12");
+    lv_style_set_text_color(&ui->screen_timer_remove_time_3_span->style, lv_color_hex(0xffffff));
+    lv_style_set_text_decor(&ui->screen_timer_remove_time_3_span->style, LV_TEXT_DECOR_NONE);
+    lv_style_set_text_font(&ui->screen_timer_remove_time_3_span->style, &lv_font_Barlow__28);
+    lv_obj_set_pos(ui->screen_timer_remove_time_3, 12, 9);
+    lv_obj_set_size(ui->screen_timer_remove_time_3, 57, 25);
+
+    //Write style state: LV_STATE_DEFAULT for &style_screen_timer_remove_time_3_main_main_default
+    static lv_style_t style_screen_timer_remove_time_3_main_main_default;
+    ui_init_style(&style_screen_timer_remove_time_3_main_main_default);
+
+    lv_style_set_border_width(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_style_set_radius(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_style_set_bg_opa(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_style_set_pad_top(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_style_set_pad_right(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_style_set_pad_bottom(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_style_set_pad_left(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_style_set_shadow_width(&style_screen_timer_remove_time_3_main_main_default, 0);
+    lv_obj_add_style(ui->screen_timer_remove_time_3, &style_screen_timer_remove_time_3_main_main_default, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_spangroup_refr_mode(ui->screen_timer_remove_time_3);
+
+    //Write codes screen_timer_remove_imgbtn_del3
+    ui->screen_timer_remove_imgbtn_del3 = lv_imgbtn_create(ui->screen_timer_remove_cont_3);
+    lv_obj_add_flag(ui->screen_timer_remove_imgbtn_del3, LV_OBJ_FLAG_CHECKABLE);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_del3, LV_IMGBTN_STATE_RELEASED, NULL, &_un_press_alpha_20x20, NULL);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_del3, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_alarm_del_alpha_20x20, NULL);
+    ui->screen_timer_remove_imgbtn_del3_label = lv_label_create(ui->screen_timer_remove_imgbtn_del3);
+    lv_label_set_text(ui->screen_timer_remove_imgbtn_del3_label, "");
+    lv_label_set_long_mode(ui->screen_timer_remove_imgbtn_del3_label, LV_LABEL_LONG_WRAP);
+    lv_obj_align(ui->screen_timer_remove_imgbtn_del3_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_pad_all(ui->screen_timer_remove_imgbtn_del3, 0, LV_STATE_DEFAULT);
+    lv_obj_set_pos(ui->screen_timer_remove_imgbtn_del3, 221, 14);
+    lv_obj_set_size(ui->screen_timer_remove_imgbtn_del3, 20, 20);
+
+    //Write style for screen_timer_remove_imgbtn_del3, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del3, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del3, &lv_font_MiSansDemibold_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui->screen_timer_remove_imgbtn_del3, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_imgbtn_del3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_timer_remove_imgbtn_del3, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write style for screen_timer_remove_imgbtn_del3, Part: LV_PART_MAIN, State: LV_STATE_PRESSED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del3, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del3, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del3, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del3, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del3, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del3, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+
+    //Write style for screen_timer_remove_imgbtn_del3, Part: LV_PART_MAIN, State: LV_STATE_CHECKED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del3, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del3, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del3, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del3, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del3, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del3, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+
+    //Write style for screen_timer_remove_imgbtn_del3, Part: LV_PART_MAIN, State: LV_IMGBTN_STATE_RELEASED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del3, 0, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del3, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+
+    //Write codes screen_timer_remove_cont_2
+    ui->screen_timer_remove_cont_2 = lv_obj_create(ui->screen_timer_remove_cont);
+    lv_obj_set_pos(ui->screen_timer_remove_cont_2, 2, 59);
+    lv_obj_set_size(ui->screen_timer_remove_cont_2, 258, 51);
+    lv_obj_set_scrollbar_mode(ui->screen_timer_remove_cont_2, LV_SCROLLBAR_MODE_OFF);
+
+    //Write style for screen_timer_remove_cont_2, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_border_width(ui->screen_timer_remove_cont_2, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui->screen_timer_remove_cont_2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui->screen_timer_remove_cont_2, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui->screen_timer_remove_cont_2, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_cont_2, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui->screen_timer_remove_cont_2, 53, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui->screen_timer_remove_cont_2, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui->screen_timer_remove_cont_2, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui->screen_timer_remove_cont_2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui->screen_timer_remove_cont_2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui->screen_timer_remove_cont_2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui->screen_timer_remove_cont_2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_cont_2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write codes screen_timer_remove_imgbtn_del2
+    ui->screen_timer_remove_imgbtn_del2 = lv_imgbtn_create(ui->screen_timer_remove_cont_2);
+    lv_obj_add_flag(ui->screen_timer_remove_imgbtn_del2, LV_OBJ_FLAG_CHECKABLE);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_del2, LV_IMGBTN_STATE_RELEASED, NULL, &_un_press_alpha_20x20, NULL);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_del2, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_alarm_del_alpha_20x20, NULL);
+    ui->screen_timer_remove_imgbtn_del2_label = lv_label_create(ui->screen_timer_remove_imgbtn_del2);
+    lv_label_set_text(ui->screen_timer_remove_imgbtn_del2_label, "");
+    lv_label_set_long_mode(ui->screen_timer_remove_imgbtn_del2_label, LV_LABEL_LONG_WRAP);
+    lv_obj_align(ui->screen_timer_remove_imgbtn_del2_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_pad_all(ui->screen_timer_remove_imgbtn_del2, 0, LV_STATE_DEFAULT);
+    lv_obj_set_pos(ui->screen_timer_remove_imgbtn_del2, 221, 14);
+    lv_obj_set_size(ui->screen_timer_remove_imgbtn_del2, 20, 20);
+
+    //Write style for screen_timer_remove_imgbtn_del2, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del2, &lv_font_MiSansDemibold_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui->screen_timer_remove_imgbtn_del2, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_imgbtn_del2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_timer_remove_imgbtn_del2, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write style for screen_timer_remove_imgbtn_del2, Part: LV_PART_MAIN, State: LV_STATE_PRESSED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del2, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del2, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del2, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del2, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del2, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del2, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+
+    //Write style for screen_timer_remove_imgbtn_del2, Part: LV_PART_MAIN, State: LV_STATE_CHECKED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del2, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del2, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del2, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del2, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del2, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del2, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+
+    //Write style for screen_timer_remove_imgbtn_del2, Part: LV_PART_MAIN, State: LV_IMGBTN_STATE_RELEASED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del2, 0, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del2, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+
+    //Write codes screen_timer_remove_time_2
+    ui->screen_timer_remove_time_2 = lv_spangroup_create(ui->screen_timer_remove_cont_2);
+    lv_spangroup_set_align(ui->screen_timer_remove_time_2, LV_TEXT_ALIGN_LEFT);
+    lv_spangroup_set_overflow(ui->screen_timer_remove_time_2, LV_SPAN_OVERFLOW_CLIP);
+    lv_spangroup_set_mode(ui->screen_timer_remove_time_2, LV_SPAN_MODE_EXPAND);
+    //create span
+    ui->screen_timer_remove_time_2_span = lv_spangroup_new_span(ui->screen_timer_remove_time_2);
+    lv_span_set_text(ui->screen_timer_remove_time_2_span, "12:12:12");
+    lv_style_set_text_color(&ui->screen_timer_remove_time_2_span->style, lv_color_hex(0xffffff));
+    lv_style_set_text_decor(&ui->screen_timer_remove_time_2_span->style, LV_TEXT_DECOR_NONE);
+    lv_style_set_text_font(&ui->screen_timer_remove_time_2_span->style, &lv_font_Barlow__28);
+    lv_obj_set_pos(ui->screen_timer_remove_time_2, 12, 9);
+    lv_obj_set_size(ui->screen_timer_remove_time_2, 57, 25);
+
+    //Write style state: LV_STATE_DEFAULT for &style_screen_timer_remove_time_2_main_main_default
+    static lv_style_t style_screen_timer_remove_time_2_main_main_default;
+    ui_init_style(&style_screen_timer_remove_time_2_main_main_default);
+
+    lv_style_set_border_width(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_style_set_radius(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_style_set_bg_opa(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_style_set_pad_top(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_style_set_pad_right(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_style_set_pad_bottom(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_style_set_pad_left(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_style_set_shadow_width(&style_screen_timer_remove_time_2_main_main_default, 0);
+    lv_obj_add_style(ui->screen_timer_remove_time_2, &style_screen_timer_remove_time_2_main_main_default, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_spangroup_refr_mode(ui->screen_timer_remove_time_2);
+
+    //Write codes screen_timer_remove_cont_1
+    ui->screen_timer_remove_cont_1 = lv_obj_create(ui->screen_timer_remove_cont);
+    lv_obj_set_pos(ui->screen_timer_remove_cont_1, 2, 0);
+    lv_obj_set_size(ui->screen_timer_remove_cont_1, 258, 51);
+    lv_obj_set_scrollbar_mode(ui->screen_timer_remove_cont_1, LV_SCROLLBAR_MODE_OFF);
+
+    //Write style for screen_timer_remove_cont_1, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_border_width(ui->screen_timer_remove_cont_1, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui->screen_timer_remove_cont_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui->screen_timer_remove_cont_1, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui->screen_timer_remove_cont_1, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_cont_1, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui->screen_timer_remove_cont_1, 53, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui->screen_timer_remove_cont_1, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui->screen_timer_remove_cont_1, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui->screen_timer_remove_cont_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui->screen_timer_remove_cont_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui->screen_timer_remove_cont_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui->screen_timer_remove_cont_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_cont_1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write codes screen_timer_remove_time_1
+    ui->screen_timer_remove_time_1 = lv_spangroup_create(ui->screen_timer_remove_cont_1);
+    lv_spangroup_set_align(ui->screen_timer_remove_time_1, LV_TEXT_ALIGN_LEFT);
+    lv_spangroup_set_overflow(ui->screen_timer_remove_time_1, LV_SPAN_OVERFLOW_CLIP);
+    lv_spangroup_set_mode(ui->screen_timer_remove_time_1, LV_SPAN_MODE_EXPAND);
+    //create span
+    ui->screen_timer_remove_time_1_span = lv_spangroup_new_span(ui->screen_timer_remove_time_1);
+    lv_span_set_text(ui->screen_timer_remove_time_1_span, "12:12:12");
+    lv_style_set_text_color(&ui->screen_timer_remove_time_1_span->style, lv_color_hex(0xffffff));
+    lv_style_set_text_decor(&ui->screen_timer_remove_time_1_span->style, LV_TEXT_DECOR_NONE);
+    lv_style_set_text_font(&ui->screen_timer_remove_time_1_span->style, &lv_font_Barlow__28);
+    lv_obj_set_pos(ui->screen_timer_remove_time_1, 12, 9);
+    lv_obj_set_size(ui->screen_timer_remove_time_1, 86, 25);
+
+    //Write style state: LV_STATE_DEFAULT for &style_screen_timer_remove_time_1_main_main_default
+    static lv_style_t style_screen_timer_remove_time_1_main_main_default;
+    ui_init_style(&style_screen_timer_remove_time_1_main_main_default);
+
+    lv_style_set_border_width(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_style_set_radius(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_style_set_bg_opa(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_style_set_pad_top(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_style_set_pad_right(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_style_set_pad_bottom(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_style_set_pad_left(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_style_set_shadow_width(&style_screen_timer_remove_time_1_main_main_default, 0);
+    lv_obj_add_style(ui->screen_timer_remove_time_1, &style_screen_timer_remove_time_1_main_main_default, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_spangroup_refr_mode(ui->screen_timer_remove_time_1);
+
+    //Write codes screen_timer_remove_imgbtn_del1
+    ui->screen_timer_remove_imgbtn_del1 = lv_imgbtn_create(ui->screen_timer_remove_cont_1);
+    lv_obj_add_flag(ui->screen_timer_remove_imgbtn_del1, LV_OBJ_FLAG_CHECKABLE);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_del1, LV_IMGBTN_STATE_RELEASED, NULL, &_un_press_alpha_20x20, NULL);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_del1, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_alarm_del_alpha_20x20, NULL);
+    ui->screen_timer_remove_imgbtn_del1_label = lv_label_create(ui->screen_timer_remove_imgbtn_del1);
+    lv_label_set_text(ui->screen_timer_remove_imgbtn_del1_label, "");
+    lv_label_set_long_mode(ui->screen_timer_remove_imgbtn_del1_label, LV_LABEL_LONG_WRAP);
+    lv_obj_align(ui->screen_timer_remove_imgbtn_del1_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_pad_all(ui->screen_timer_remove_imgbtn_del1, 0, LV_STATE_DEFAULT);
+    lv_obj_set_pos(ui->screen_timer_remove_imgbtn_del1, 221, 14);
+    lv_obj_set_size(ui->screen_timer_remove_imgbtn_del1, 20, 20);
+
+    //Write style for screen_timer_remove_imgbtn_del1, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del1, &lv_font_MiSansDemibold_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui->screen_timer_remove_imgbtn_del1, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_imgbtn_del1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_timer_remove_imgbtn_del1, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write style for screen_timer_remove_imgbtn_del1, Part: LV_PART_MAIN, State: LV_STATE_PRESSED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del1, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del1, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del1, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del1, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del1, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del1, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+
+    //Write style for screen_timer_remove_imgbtn_del1, Part: LV_PART_MAIN, State: LV_STATE_CHECKED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del1, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del1, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_del1, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_del1, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_del1, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_del1, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+
+    //Write style for screen_timer_remove_imgbtn_del1, Part: LV_PART_MAIN, State: LV_IMGBTN_STATE_RELEASED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_del1, 0, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_del1, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+
+    //Write codes screen_timer_remove_choice
+    ui->screen_timer_remove_choice = lv_spangroup_create(ui->screen_timer_remove);
+    lv_spangroup_set_align(ui->screen_timer_remove_choice, LV_TEXT_ALIGN_LEFT);
+    lv_spangroup_set_overflow(ui->screen_timer_remove_choice, LV_SPAN_OVERFLOW_CLIP);
+    lv_spangroup_set_mode(ui->screen_timer_remove_choice, LV_SPAN_MODE_EXPAND);
+    //create span
+    ui->screen_timer_remove_choice_span = lv_spangroup_new_span(ui->screen_timer_remove_choice);
+    lv_span_set_text(ui->screen_timer_remove_choice_span, "未选择");
+    lv_style_set_text_color(&ui->screen_timer_remove_choice_span->style, lv_color_hex(0xffffff));
+    lv_style_set_text_decor(&ui->screen_timer_remove_choice_span->style, LV_TEXT_DECOR_NONE);
+    lv_style_set_text_font(&ui->screen_timer_remove_choice_span->style, &lv_font_MiSansDemibold_18);
+    lv_obj_set_pos(ui->screen_timer_remove_choice, 61, 23);
+    lv_obj_set_size(ui->screen_timer_remove_choice, 99, 18);
+
+    //Write style state: LV_STATE_DEFAULT for &style_screen_timer_remove_choice_main_main_default
+    static lv_style_t style_screen_timer_remove_choice_main_main_default;
+    ui_init_style(&style_screen_timer_remove_choice_main_main_default);
+
+    lv_style_set_border_width(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_style_set_radius(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_style_set_bg_opa(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_style_set_pad_top(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_style_set_pad_right(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_style_set_pad_bottom(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_style_set_pad_left(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_style_set_shadow_width(&style_screen_timer_remove_choice_main_main_default, 0);
+    lv_obj_add_style(ui->screen_timer_remove_choice, &style_screen_timer_remove_choice_main_main_default, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_spangroup_refr_mode(ui->screen_timer_remove_choice);
+
+    //Write codes screen_timer_remove_return
+    ui->screen_timer_remove_return = lv_img_create(ui->screen_timer_remove);
+    lv_obj_add_flag(ui->screen_timer_remove_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_timer_remove_return, &_return_alpha_22x22);
+    lv_img_set_pivot(ui->screen_timer_remove_return, 50, 50);
+    lv_img_set_angle(ui->screen_timer_remove_return, 0);
+    lv_obj_set_pos(ui->screen_timer_remove_return, 31, 21);
+    lv_obj_set_size(ui->screen_timer_remove_return, 22, 22);
+
+    //Write style for screen_timer_remove_return, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_return, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_timer_remove_return, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write codes screen_timer_remove_imgbtn_choice
+    ui->screen_timer_remove_imgbtn_choice = lv_imgbtn_create(ui->screen_timer_remove);
+    lv_obj_add_flag(ui->screen_timer_remove_imgbtn_choice, LV_OBJ_FLAG_CHECKABLE);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_choice, LV_IMGBTN_STATE_RELEASED, NULL, &_all_choice_alpha_22x22, NULL);
+    lv_imgbtn_set_src(ui->screen_timer_remove_imgbtn_choice, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_all_choice_press_alpha_22x22, NULL);
+    ui->screen_timer_remove_imgbtn_choice_label = lv_label_create(ui->screen_timer_remove_imgbtn_choice);
+    lv_label_set_text(ui->screen_timer_remove_imgbtn_choice_label, "");
+    lv_label_set_long_mode(ui->screen_timer_remove_imgbtn_choice_label, LV_LABEL_LONG_WRAP);
+    lv_obj_align(ui->screen_timer_remove_imgbtn_choice_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_pad_all(ui->screen_timer_remove_imgbtn_choice, 0, LV_STATE_DEFAULT);
+    lv_obj_set_pos(ui->screen_timer_remove_imgbtn_choice, 221, 21);
+    lv_obj_set_size(ui->screen_timer_remove_imgbtn_choice, 22, 22);
+
+    //Write style for screen_timer_remove_imgbtn_choice, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_choice, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_choice, &lv_font_MiSansDemibold_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_choice, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui->screen_timer_remove_imgbtn_choice, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_imgbtn_choice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_timer_remove_imgbtn_choice, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_choice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write style for screen_timer_remove_imgbtn_choice, Part: LV_PART_MAIN, State: LV_STATE_PRESSED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_choice, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_choice, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_choice, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_choice, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_choice, 255, LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_choice, 0, LV_PART_MAIN | LV_STATE_PRESSED);
+
+    //Write style for screen_timer_remove_imgbtn_choice, Part: LV_PART_MAIN, State: LV_STATE_CHECKED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_choice, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_choice, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui->screen_timer_remove_imgbtn_choice, lv_color_hex(0xFF33FF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_font(ui->screen_timer_remove_imgbtn_choice, &lv_font_montserratMedium_12, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ui->screen_timer_remove_imgbtn_choice, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ui->screen_timer_remove_imgbtn_choice, 0, LV_PART_MAIN | LV_STATE_CHECKED);
+
+    //Write style for screen_timer_remove_imgbtn_choice, Part: LV_PART_MAIN, State: LV_IMGBTN_STATE_RELEASED.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_imgbtn_choice, 0, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_imgbtn_choice, 255, LV_PART_MAIN | LV_IMGBTN_STATE_RELEASED);
+
+    //Write codes screen_timer_remove_img_del
+    ui->screen_timer_remove_img_del = lv_img_create(ui->screen_timer_remove);
+    lv_obj_add_flag(ui->screen_timer_remove_img_del, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_timer_remove_img_del, &_trash_alpha_30x30);
+    lv_img_set_pivot(ui->screen_timer_remove_img_del, 15, 15);
+    lv_img_set_angle(ui->screen_timer_remove_img_del, 0);
+    lv_obj_set_pos(ui->screen_timer_remove_img_del, 250, 16);
+    lv_obj_set_size(ui->screen_timer_remove_img_del, 30, 30);
+
+    //Write style for screen_timer_remove_img_del, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_remove_img_del, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_timer_remove_img_del, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_remove_img_del, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_timer_remove_img_del, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //The custom code of screen_timer_remove.
+
+
+    //Update current screen layout.
+    lv_obj_update_layout(ui->screen_timer_remove);
+
+    //Init events for screen.
+    events_init_screen_timer_remove(ui);
+}

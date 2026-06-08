@@ -1,0 +1,7 @@
+1、先使用设备进行配网，并拿到：MAC+UUID+批次号+产品名称，启动对话之后在设备的日志可以拿到
+2、把"MAC+UUID+批次号+产品名称"放在当前文件夹下配置文件config.cfg的uuid字段;
+   文件config-en.cfg是合成英文范例，如果需要合成英文，把文件名改为config.cfg[TTS合成读取的配置文件名是config.cfg]
+
+3、运行：1.TTS合成.bat （TTS合成得到的mp3文件在mp3-file文件夹目录下）
+4、运行：2.ffmpeg处理mp3.bat （处理得到的mp3文件在mp3-out文件夹目录下）
+5、复制mp3-out文件夹下面所有mp3文件到SDK的tools/audlogo/，重新编译下载

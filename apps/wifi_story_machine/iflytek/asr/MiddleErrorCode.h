@@ -1,0 +1,34 @@
+#ifndef __ERROR_CODE_H__
+#define __ERROR_CODE_H__
+
+#define  MIDDLE_OK            (0)
+#define  CAE_INIT_PARAM_ERROR  70001
+#define  CAE_INIT_ENGINE_ERROR 70002
+#define  CAE_WRITE_DATA_NULL   70003
+#define  VTN_REPEA_IINT        70004
+#define  IVW_CB_NULL           70005
+#define  IAT_CB_NULL           70006
+#define  READ_MLP_RES_ERROR    70007
+#define  READ_KEY_RES_ERROR    70008
+#define  INIT_IVW80_FAILED     70009
+#define  CREATE_AEC_THR_ERROR  70010
+#define  CREATE_IVW_THR_ERROR  70011
+#define  OPEN_RES_FILE_ERROR   70012
+#define  AEC_MALLOC_ERROR      70013
+#define  AEC_CREATE_ERROR      70014
+#define  AEC_SET_PARAM_ERROR   70015
+#define  IVW_READ_MLP_ERROR    70016
+#define  IVW_READ_FILLER_ERROR 70017
+#define  IVW_MALLOC_INST_ERROR 70018
+#define  IVW_CREATE_INST_ERROR 70019
+#define  IVW_REG_IVW_CB_ERROR  70020
+#define  IVW_START_INST_ERROR  70021
+#define  WRITE_PARAM_ERROR     70022
+#define  VTN_NO_INIT           70023
+#define  IVW_CB_PARAM_ERROR    70024
+#define  VTN_WRITE_DATA_NULL   70025
+
+
+
+
+#endif // __ERROR_CODE_H__

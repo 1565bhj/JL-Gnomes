@@ -1,0 +1,15 @@
+一、单独代码升级
+1、USB下载代码需要擦除预留区资源，AUPACKRES_OPT设置为0，（如果flash为第一次下载可以为1）
+AUPACKRES_OPT=0;
+2、OTA升级代码不需要擦除预留区资源，AUPACKRES_OPT设置为1
+AUPACKRES_OPT=1;
+3、执行：生成升级固件-OTA.bat
+4、HTTP或者FTP升级
+
+一、单独资源升级
+1、USB下载代码需要擦除预留区资源，AUPACKRES_OPT设置为0，（如果flash为第一次下载可以为1）
+AUPACKRES_OPT=0;
+2、OTA升级资源不需要擦除预留区资源，AUPACKRES_OPT设置为1
+AUPACKRES_OPT=1;
+3、执行：生成升级固件-OTA-RES预留区资源.bat
+4、HTTP或者FTP升级

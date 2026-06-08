@@ -1,0 +1,80 @@
+=================AI多模态二进制数据包的通信协议V1.0======================
+1、websocket头部添加
+//请求类型
+Multimodal-Type: audio/text-img/img-img/text&img-img/text-video/img-video/video-video,320x240
+
+------------------------------------------------------------
+文+图生图，或者图生图，新增一个渲染类型。
+img-img/ghibli = 网红日漫风
+img-img/3d = 3D风
+img-img/real = 写实风
+img-img/angel = 天使风
+img-img/cartoon = 动漫风
+img-img/makoto = 日漫风
+img-img/princess = 公主风
+img-img/dream = 梦幻风
+img-img/ink = 水墨风
+img-img/new_monet = 新莫奈花园
+img-img/watercolor = 水彩风
+img-img/monet = 莫奈花园
+img-img/marvel = 精致美漫
+img-img/cyber = 赛博机械
+img-img/korean = 精致韩漫
+img-img/chinese_ink = 国风-水墨
+img-img/romantic = 浪漫光影
+img-img/ceramic = 陶瓷娃娃
+img-img/chinese_red = 中国红
+img-img/clay = 丑萌粘土
+img-img/doll = 可爱玩偶
+img-img/game = 3D-游戏_Z时代
+img-img/movie = 动画电影
+img-img/toy = 玩偶
+----------------------------------------------------------------
+
+//音视频支持类型，音频mp3或者ogg_opus， 图片jpg，视频gif(avi)
+AV-Type: mp3/ogg/jpg/gif/avi
+
+//触发对话类型：VAD唤醒对话，按键对话，连续对话
+Dialoguo-Type: vad/key
+
+//请求语种类型
+Explicit-Language：zh/en/ja/es-ms/id/pt-br
+
+
+2、二进制数据包协议
+| 4字节头部  + 1字节请求类型  + 1字节数据类型  + 2字节总分片数 + 2字节分片序号 + 4字数据和校验 + 4字数据节长度 +   n字数据       | 
+|   4BYTE    |   1BYTE        |   1BYTE        |   2BYTE       |   2BYTE       |   4BYTE       |   4BYTE       |     nBYTE       | 
+|  "qyai"    |  req_type      |  data_type     |   total_seq   |   seq         |   data_sum    |    len        |data[0]...data[n]|
+
+//服务器端下发+设备端上传[DATA过程]
+struct ai_multimodal_request
+{
+	unsigned char head[4]; 		//"qyai" 
+	unsigned char data_type;		//0 PCM音频，1 text纯文本，2 json，3 ogg-opus,  4 jpg图片，5 gif视频，6 avi视频 ，7...预留
+	unsigned short total_seq;		//总的分片数据数量
+	unsigned short seq;			//当前分片数据包序号，0 1 2 3.....
+	unsigned int data_sum; 		//数据和，使用去校验数据完整性，如果data_sum = 0，则不使用和校验
+	unsigned int len;      			//数据长度
+	unsigned char data[n]; 		//len个字节数据
+};
+
+//设备端+服务器端回复[ACK]
+struct ai_multimodal_ack
+{
+	unsigned char head[4]; 		//"ack" 
+	unsigned char data_type;		//0 PCM音频，  1 text纯文本，2 json，3 ogg,  4 jpg图片，5 gif视频，6 avi视频 ，7...预留
+	unsigned char respond_type;		//0 正常接收， 1 校验出错， 2 重新对话，3 请求关闭， 4...预留
+	unsigned short seq;			//当前分片数据包序号，0 1 2 3.....
+};
+
+
+
+3.识图模式【文+图=text&voice】
+走旧的协议流程。
+
+
+
+
+
+
+
