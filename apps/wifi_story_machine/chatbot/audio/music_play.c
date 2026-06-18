@@ -70,8 +70,6 @@ static void music_play_dec_server_event_handler(void *priv, int argc, int *argv)
     switch (argv[0]) {
     case AUDIO_SERVER_EVENT_ERR:
         printf("->local_music: AUDIO_SERVER_EVENT_ERR\n");
-        os_sem_post(&__this->wait_sem);
-        sys_vad_clear(1);
     case AUDIO_SERVER_EVENT_END:
         printf("->local_music: AUDIO_SERVER_EVENT_END\n");
         music_play_stop(priv);

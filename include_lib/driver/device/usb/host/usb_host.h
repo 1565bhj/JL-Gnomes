@@ -49,13 +49,14 @@ struct usb_private_data {
 
 //AT功能接口信息
 struct wireless_device_serial_set_AT_CMD {
-    u16 idVendor;
-    u16 idProduct;
     //可用的AT接口号
     u8 InterfaceNumber_at;
     u8 ep_in_at;
     u8 ep_out_at;
     u8 prive_vendor;//应用层私有定义的模块厂商ID
+
+    u16 idVendor;
+    u16 idProduct;
     void *AT_CMD;
 };
 

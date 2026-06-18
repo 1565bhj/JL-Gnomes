@@ -4,6 +4,7 @@
 #include "event/net_event.h"
 #include "wifi/wifi_connect.h"
 #include "net/config_network.h"
+#include "event/key_event.h"
 
 /*中断列表 */
 const struct irq_info irq_info_table[] = {
@@ -19,24 +20,24 @@ const struct irq_info irq_info_table[] = {
 #if CPU_CORE_NUM == 1
     { IRQ_SOFT5_IDX,      7,   0    }, //此中断强制注册到cpu0
     { IRQ_SOFT4_IDX,      7,   1    }, //此中断强制注册到cpu1
-    { -2,     			-2,   -2   },//如果加入了该行, 那么只有该行之前的中断注册到对应核, 其他所有中断强制注册到CPU0
+    { -2,               -2,   -2   },//如果加入了该行, 那么只有该行之前的中断注册到对应核, 其他所有中断强制注册到CPU0
 #endif
     { -1,     -1,   -1    },
 };
 
 /*任务列表 */
 const struct task_info task_info_table[] = {
-    {"app_core",            15,     2048,	  1024 },
-    {"sys_event",           29,     512,	   0 },
-    {"systimer",            14,     256, 	   0 },
-    {"sys_timer",            9,     512,	  128 },
+    {"app_core",            15,     2048,     1024 },
+    {"sys_event",           29,     512,       0 },
+    {"systimer",            14,     256,       0 },
+    {"sys_timer",            9,     512,      128 },
 
-    {"tcpip_thread",        16,     800,  	 0},
+    {"tcpip_thread",        16,     800,     0},
 #ifdef CONFIG_WIFI_ENABLE
     {"tasklet",             10,     1400,    0},//通过调节任务优先级平衡WIFI收发占据总CPU的比重
-    {"RtmpMlmeTask",        17,     700,  	 0},
-    {"RtmpCmdQTask",        17,     300,   	 0},
-    {"wl_rx_irq_thread",     5,     256,  	 0},
+    {"RtmpMlmeTask",        17,     700,     0},
+    {"RtmpCmdQTask",        17,     300,     0},
+    {"wl_rx_irq_thread",     5,     256,     0},
 #endif
 
     {0, 0, 0, 0, 0},
@@ -94,7 +95,7 @@ static int app_demo_event_handler(struct application *app, struct sys_event *sys
                 extern void wifi_return_sta_mode(void);
                 wifi_return_sta_mode();
                 break;
-            case NET_NTP_GET_TIME_SUCC:	//NTP获取成功事件返回
+            case NET_NTP_GET_TIME_SUCC: //NTP获取成功事件返回
                 break;
             default:
                 break;
@@ -108,14 +109,39 @@ static int app_demo_event_handler(struct application *app, struct sys_event *sys
 
 static const struct application_operation app_demo_ops = {
     .state_machine  = app_demo_state_machine,
-    .event_handler 	= app_demo_event_handler,
+    .event_handler  = app_demo_event_handler,
 };
 
 REGISTER_APPLICATION(app_demo) = {
-    .name 	= "app_demo",
-    .ops 	= &app_demo_ops,
+    .name   = "app_demo",
+    .ops    = &app_demo_ops,
     .state  = APP_STA_DESTROY,
 };
+
+
+//用户项目产品名称
+char *app_user_product_name(void)
+{
+    return "TestBox"; //英文名称
+}
+
+//用户UUID
+char *app_user_product_uuid(void)
+{
+    return NULL; //客户ID
+}
+
+//产品批次号
+int app_user_product_batch(void)
+{
+    return 1; //批次号
+}
+
+//产品批次的数量，单位K
+int app_user_product_batch_num(void)
+{
+    return 1; //批次号的数量，单位K
+}
 
 /*
  * 应用程序主函数

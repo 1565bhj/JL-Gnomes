@@ -397,6 +397,7 @@ int net_music_play_next(char *priv)
 #ifndef CONFIG_UI_ENABLE
     __this->play_loop = 0;
 #endif
+    __this->last_list = NULL;
     music_buf_play_accept(0);
     websockets_free_lbuf_buf();
     websockets_close_request(1);
@@ -467,12 +468,9 @@ static int net_music_dec_end(int is_force_stop)
 
     if (__this->total_num <= MUSIC_PLAY_NUM) { //完整播放完成，自动播放30首关闭
         if (__this->new_list && __this->play_loop) {
-            if (!__this->last_list) {
-                __this->last_list = __this->new_list;
-            }
-            struct net_music_list *last_list = (struct net_music_list *)__this->last_list;
-            __this->timeout_id = sys_timeout_add_to_task("sys_timer", last_list->music_url, net_music_dec_file, timeout + 500);//1秒后再创建，否则会在发断开消息到下次音乐请求
-            net_music_name_save(last_list->music_name);
+            struct net_music_list *cur = (struct net_music_list *)__this->new_list;
+            __this->timeout_id = sys_timeout_add_to_task("sys_timer", cur->music_url, net_music_dec_file, timeout + 500);
+            net_music_name_save(cur->music_name);
         } else if (__this->play_loop && music_url[0] != 0) {
             //net_music_dec_file(music_url);
             __this->timeout_id = sys_timeout_add_to_task("sys_timer", music_url, net_music_dec_file, timeout + 500);
@@ -512,12 +510,9 @@ static int net_music_dec_end(int is_force_stop)
     if ((__this->total_time - __this->play_time) <= 2 && __this->total_num <= MUSIC_PLAY_NUM) { //完整播放完成，自动播放50首关闭
         __this->play_time = 0;
         if (__this->new_list && __this->play_loop) {
-            if (!__this->last_list) {
-                __this->last_list = __this->new_list;
-            }
-            struct net_music_list *last_list = (struct net_music_list *)__this->last_list;
-            __this->timeout_id = sys_timeout_add_to_task("sys_timer", last_list->music_url, net_music_dec_file, timeout + 500);//1秒后再创建，否则会在发断开消息到下次音乐请求
-            net_music_name_save(last_list->music_name);
+            struct net_music_list *cur = (struct net_music_list *)__this->new_list;
+            __this->timeout_id = sys_timeout_add_to_task("sys_timer", cur->music_url, net_music_dec_file, timeout + 500);
+            net_music_name_save(cur->music_name);
         } else if (__this->play_loop && music_url[0] != 0) {
             //net_music_dec_file(music_url);
             __this->timeout_id = sys_timeout_add_to_task("sys_timer", music_url, net_music_dec_file, timeout + 500);
@@ -711,7 +706,7 @@ int net_music_dec_file(const char *url)
     if (!strcmp(music_url, url) && net_music_play_start_status() && !__this->play_loop) {
         return 0;
     }
-    strcpy(music_url, url);
+    strncpy(music_url, url, sizeof(music_url));
     __this->total_time = __this->play_time = 0;
     __this->request_status = true;
     sys_timeout_add_to_task("sys_timer", NULL, net_music_request_status_clear, 5000);

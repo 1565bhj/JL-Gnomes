@@ -353,6 +353,7 @@ static int uart_send_respond_cmd(char err_status)
     } else {
         uart_send_data(AT_OK);
     }
+    return 0;
 }
 // 串口接收任务
 static void uart_recv_task_main(void *priv)

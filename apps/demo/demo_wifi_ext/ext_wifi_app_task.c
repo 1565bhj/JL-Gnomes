@@ -11,7 +11,7 @@
 #define AP_TEST_MODE    (0)
 #define STA_TEST_MODE   (1)
 #define P2P_TEST_MODE   (2)
-#define EXT_WIFI_TEST_MODE  P2P_TEST_MODE
+#define EXT_WIFI_TEST_MODE  STA_TEST_MODE
 
 #ifdef CONFIG_RTL8822ES_10M_ENABLE
 #define AP_SSID "HF_GPS5G-123456"        //配置 AP模式的SSID前缀
@@ -21,8 +21,8 @@
 #define AP_PWD  "12345678"               //配置 AP模式的密码
 #endif
 
-#define STA_SSID  "ZTE-5G"    //配置 STA模式的SSID
-#define STA_PWD  "12345678"             //配置 STA模式的密码
+#define STA_SSID  "数芯语_5G"    //配置 STA模式的SSID
+#define STA_PWD  "sxy88888888"             //配置 STA模式的密码
 
 #define WIFI_APP_TASK_NAME "ext_wifi_app_task"
 

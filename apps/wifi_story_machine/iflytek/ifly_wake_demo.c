@@ -796,10 +796,8 @@ void pcm_buf_clear(void)
 {
     if (ifly_send_pcm != SEND_PCM_PAUSE) {
         ifly_send_pcm = SEND_PCM_INI;
-#if ASR_FIRST_BEFORE_EN
         first_500ms_len = 0;
-        first_500ms_copy = ASR_FIRST_BEFORE_EN;
-#endif
+        first_500ms_copy = true;
     }
 }
 
@@ -1033,11 +1031,18 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
     volatile short pd_mic1_test = 0xFFFF;
     volatile short pd_aec_ref_test = 0xFFFF;
     volatile short pd_test = 0xFFFF;
-#if ASR_FIRST_BEFORE_EN
-    char *first_500ms_buf = malloc(ASR_FIRST_BEFORE_BYTES); //500ms
-    first_500ms_copy = ASR_FIRST_BEFORE_EN;
-    first_500ms_len = 0;
-#endif
+    char opus = !strcmp(qyai_chat_audio_enc_format(), "opus");
+    int ASR_FIRST_BEFORE_BYTES = ifly_sample_rate * 2 / 2;//500ms
+    char *first_500ms_buf = NULL;
+    if (opus) {
+        ASR_FIRST_BEFORE_BYTES = ASR_FIRST_BEFORE_BYTES > 0 ? ASR_FIRST_BEFORE_BYTES : (16000 * 2 / 2);
+        first_500ms_buf = malloc(ASR_FIRST_BEFORE_BYTES); //500ms
+        first_500ms_copy = 0;
+        if (first_500ms_buf) {
+            first_500ms_copy = true;
+        }
+        first_500ms_len = 0;
+    }
     printf("-->asr_task start====================\r\n");
     start_t = timer_get_ms();
 
@@ -1231,7 +1236,6 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                 }
 #endif
 
-#if ASR_FIRST_BEFORE_EN
                 if (first_500ms_buf && first_500ms_copy) {
                     if ((first_500ms_len + rlen) <= ASR_FIRST_BEFORE_BYTES) { //还没满buf则继续填满
                         memcpy((char*)first_500ms_buf + first_500ms_len, (char*)buf, rlen);
@@ -1246,7 +1250,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                         }
                     }
                 }
-#endif
+
                 //if(keyworld_start)
                 {
                     if (ifly_send_pcm == SEND_PCM_START) {
@@ -1263,16 +1267,13 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                                 continue;
                             }
                         }
-#if ASR_FIRST_BEFORE_EN
                         if (first_500ms_copy) {
                             if (!qyai_audio_send_push((u8 *)first_500ms_buf, first_500ms_len)) {
 //                                sdfile_onefile_save_test(first_500ms_buf, first_500ms_len, 0);//sd卡存储PCM
                                 first_500ms_copy = 0;
                                 ifly_send_pcm = SEND_PCM_DOING;
                             }
-                        } else
-#endif
-                        {
+                        } else {
                             if (!qyai_audio_send_push((u8 *)buf, rlen)) {
                                 ifly_send_pcm = SEND_PCM_DOING;
                             }
@@ -1288,12 +1289,10 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                         qyai_audio_send_end();
 reinit:
                         ifly_send_pcm = SEND_PCM_INI;
-#if ASR_FIRST_BEFORE_EN
                         first_500ms_len = 0;
-                        first_500ms_copy = ASR_FIRST_BEFORE_EN;
-#endif
+                        first_500ms_copy = true;
 
-                    } else {
+                    } else if (!opus) {
                         websockets_send_500ms_audio_buf_push(buf, rlen, 0);//
                     }
                 }
@@ -1306,11 +1305,9 @@ reinit:
         vad_cbuf = NULL;
     }
 #endif
-#if ASR_FIRST_BEFORE_EN
     if (first_500ms_buf) {
         free(first_500ms_buf);
     }
-#endif
     return;
 }
 

@@ -353,7 +353,12 @@ void config_network_connect(void)
 #if TCFG_USER_BLE_ENABLE && BT_NET_CFG_EN
 
     if (bt_net_result.ssid[0]) {
+#ifdef CONFIG_WIFI_ENABLE
         wifi_sta_connect(bt_net_result.ssid, bt_net_result.pwd, 1);
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+        ext_wifi_sta_connect(bt_net_result.ssid, bt_net_result.pwd, 1);
+#endif
         return;
     }
 
@@ -361,7 +366,12 @@ void config_network_connect(void)
 #ifdef CONFIG_QR_CODE_NET_CFG
 
     if (qr_code_net_result.ssid[0]) {
+#ifdef CONFIG_WIFI_ENABLE
         wifi_sta_connect(qr_code_net_result.ssid, qr_code_net_result.pwd, 1);
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+        ext_wifi_sta_connect(bt_net_result.ssid, bt_net_result.pwd, 1);
+#endif
         return;
     }
 
@@ -369,7 +379,12 @@ void config_network_connect(void)
 #ifdef CONFIG_ACOUSTIC_COMMUNICATION_ENABLE
 
     if (voiceprint_result.ssid[0]) {
+#ifdef CONFIG_WIFI_ENABLE
         wifi_sta_connect(voiceprint_result.ssid, voiceprint_result.pwd, 1);
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+        ext_wifi_sta_connect(bt_net_result.ssid, bt_net_result.pwd, 1);
+#endif
         return;
     }
 
@@ -377,7 +392,12 @@ void config_network_connect(void)
 #ifdef CONFIG_AIRKISS_NET_CFG
 
     if (airkiss_result.result.ssid[0]) {
+#ifdef CONFIG_WIFI_ENABLE
         wifi_sta_connect(airkiss_result.result.ssid, airkiss_result.result.passphrase, 1);
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+        ext_wifi_sta_connect(bt_net_result.ssid, bt_net_result.pwd, 1);
+#endif
         return;
     }
 
@@ -385,7 +405,12 @@ void config_network_connect(void)
 #ifdef CONFIG_WSC_NET_CFG
 
     if (wsc_result.ssid[0]) {
+#ifdef CONFIG_WIFI_ENABLE
         wifi_sta_connect(wsc_result.ssid, wsc_result.pwd, 1);
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+        ext_wifi_sta_connect(bt_net_result.ssid, bt_net_result.pwd, 1);
+#endif
         return;
     }
 

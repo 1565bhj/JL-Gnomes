@@ -321,9 +321,7 @@ void app_main()
     }
 
 #if (defined PRODUCTION_TEST_ENABLE || defined PRODUCTION_ALL_TEST_ENABLE)
-    if (production_io_is_enter() && (system_reset_reason_get() != SYS_RST_ALM_WKUP &&
-                                     system_reset_reason_get() != SYS_RST_PORT_WKUP &&
-                                     system_reset_reason_get() != SYS_RST_LONG_PRESS)) { //非闹钟、非按键、非长按唤醒才能进行厂测
+    if (production_io_is_enter() && system_reset_reason_get() == SYS_RST_VDDIO_PWR_ON) { //只有上电才能进行厂测
         product_test_task_init(2);
         return;
     }
@@ -421,7 +419,7 @@ void app_main()
         net_ch = sys_net_channel_read();
     }
 
-#if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
+#if ((defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE) && defined CONFIG_LTE_PHY_ENABLE)
 #if 0 //废弃这种方式
     net_ch = sys_net_channel_read();
     if (net_ch < 0 || (net_ch != 0 && net_ch != 1)) {
@@ -444,10 +442,10 @@ void app_main()
     net_ch = 1;
 #endif
 
-#ifdef CONFIG_WIFI_ENABLE
 
-#if (IP_NAPT==0)
     if (net_ch == 0) {
+#if (IP_NAPT==0)
+#ifdef CONFIG_WIFI_ENABLE
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
         extern u8 IPV4_ADDR_CONFLICT_DETECT;
         //WiFi开启静态ip冲突检测
@@ -457,9 +455,13 @@ void app_main()
             lte_power_control(1);
         }
         wireless_net_init();
+#endif
+
+#ifdef CONFIG_EXT_WIFI_ENABLE
+        ext_wireless_net_init();
+#endif
+#endif
     }
-#endif
-#endif
 
     printf("====net_mode:%d, ====net_ch:%d", net_mode, net_ch);
 #ifdef CONFIG_LTE_PHY_ENABLE

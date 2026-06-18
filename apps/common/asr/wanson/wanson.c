@@ -163,7 +163,7 @@ extern void music_buf_play_set_stop(void);
 extern void websockets_free_lbuf_buf(void);
 extern void music_buf_play_free_lbuf(void);
 extern int music_play_res_file(const char *name);
-extern int music_play_hello(void);
+extern int music_play_hello(char index);
 extern int music_buf_play_stop(void);
 extern int music_buf_play_stop_waite(void);
 extern int music_play_waite(void);
@@ -412,10 +412,8 @@ void pcm_buf_clear(void)
 {
     if (ifly_send_pcm != SEND_PCM_PAUSE) {
         ifly_send_pcm = SEND_PCM_INI;
-#if ASR_FIRST_BEFORE_EN
         first_500ms_len = 0;
-        first_500ms_copy = ASR_FIRST_BEFORE_EN;
-#endif
+        first_500ms_copy = true;
     }
 }
 static volatile char sys_vad_active = 0;//有效检测语音
@@ -423,6 +421,7 @@ void sys_vad_event_handler(void *priv)
 {
     aisp_vad_callback((int)priv);
     if (keyworld_start == 2) {
+        sys_vad_active = 1;
         return;
     }
     if (priv) {
@@ -435,8 +434,9 @@ void sys_vad_event_handler(void *priv)
 #endif // ASR_CONTINIU_EN
             music_buf_play_set_stop();
             aisp_record_callbak(1);
-            websockets_send_pcm_buf_init();
+            websockets_send_audio_buf_init();
             websocket_client_thread_create(0);
+            music_buf_play_accept(1);
             printf("--->SPEAK_START\n");
             ifly_send_pcm = SEND_PCM_START;
         } else {
@@ -444,9 +444,9 @@ void sys_vad_event_handler(void *priv)
                    ifly_send_pcm,
                    music_buf_play_stop_staus(),
                    music_play_stop_status(),
-                   websockets_wait_recv_end_msg());
+                   !websockets_wait_recv_end_msg());
         }
-    } else {
+    } else if (qyai_chat_addr_version() <= 1) {
         if (ifly_send_pcm == SEND_PCM_DOING || ifly_send_pcm == SEND_PCM_START) {
             printf("--->SPEAK_STOP = %d \n", ifly_send_pcm);
             ifly_send_pcm = SEND_PCM_STOP;
@@ -476,11 +476,19 @@ static void wanson_task(void* priv)
     asr_timer_init();
 #endif
 
-#if ASR_FIRST_BEFORE_EN
-    char *first_500ms_buf = malloc(ASR_FIRST_BEFORE_BYTES); //500ms
-    first_500ms_copy = ASR_FIRST_BEFORE_EN;
-    first_500ms_len = 0;
-#endif
+    char opus = !strcmp(qyai_chat_audio_enc_format(), "opus");
+    int ASR_FIRST_BEFORE_BYTES = __this->sample_rate * 2 / 2;//500ms
+    char *first_500ms_buf = NULL;
+    if (opus) {
+        ASR_FIRST_BEFORE_BYTES = ASR_FIRST_BEFORE_BYTES > 0 ? ASR_FIRST_BEFORE_BYTES : (16000 * 2 / 2);
+        first_500ms_buf = malloc(ASR_FIRST_BEFORE_BYTES); //500ms
+        first_500ms_copy = 0;
+        if (first_500ms_buf) {
+            first_500ms_copy = true;
+        }
+        first_500ms_len = 0;
+    }
+
 #if (ASR_USED_AVD == ASR_WEBRTC_AVD) || (ASR_USED_AVD == ASR_MY_AVD) || (ASR_USED_AVD == ASR_JL_AVD)
     void *vad_cbuf = sys_vad_init(__this->sample_rate, ONCE_SR_POINTS * 2 * 64);
     if (vad_cbuf) {
@@ -534,7 +542,7 @@ static void wanson_task(void* priv)
         //printf("ASR_FEAME = %d\n",ASR_FEAME);
         if (1 == Wanson_ASR_Recog(buf, ASR_FEAME, &text, &score)) {
             printf("==================== ASR_Result: %s", text);
-            if (strcmp(text, (const char *)"你好小兔") == 0) {
+            if (strcmp(text, (const char *)"你好小艾") == 0 || strcmp(text, (const char *)"小艾小艾") == 0) {
                 //Handle the wakeup command
                 if (bt_a2dp_status_check()) {
                     printf("Wake up: music stop");
@@ -637,7 +645,7 @@ static void wanson_task(void* priv)
             sys_vad_send_msg(0x1, vad_cbuf, buf, mic_len);
         }
 #endif
-#if ASR_FIRST_BEFORE_EN
+
         if (first_500ms_buf && first_500ms_copy) {
             if ((first_500ms_len + mic_len) <= ASR_FIRST_BEFORE_BYTES) { //还没满buf则继续填满
                 memcpy((char*)first_500ms_buf + first_500ms_len, (char*)buf, mic_len);
@@ -652,46 +660,51 @@ static void wanson_task(void* priv)
                 }
             }
         }
-#endif
+
         //if(keyworld_start)
         {
             if (ifly_send_pcm == SEND_PCM_START) {
+                if (!sys_connect_net_success()) {
+                    printf("err net connect\n\n");
+                    goto reinit;
+                }
                 //music_buf_play_set_stop();
                 //websockets_free_lbuf_buf();
                 music_buf_play_free_lbuf();
-                websockets_send_pcm_buf_start();
-#if ASR_FIRST_BEFORE_EN
+                if (qyai_audio_send_start()) {
+                    if (qyai_audio_send_start()) {
+                        printf("err pcm_buf_start\n\n");
+                        continue;
+                    }
+                }
+
                 if (first_500ms_copy) {
-                    if (!websockets_send_pcm_buf_push((u8 *)first_500ms_buf, first_500ms_len)) {
+                    if (!qyai_audio_send_push((u8 *)first_500ms_buf, first_500ms_len)) {
 //                                sdfile_onefile_save_test(first_500ms_buf, first_500ms_len, 0);//sd卡存储PCM
                         first_500ms_copy = 0;
                         ifly_send_pcm = SEND_PCM_DOING;
                     }
-                } else
-#endif
-                {
-                    if (!websockets_send_pcm_buf_push((u8 *)buf, mic_len)) {
+                } else {
+                    if (!qyai_audio_send_push((u8 *)buf, mic_len)) {
                         ifly_send_pcm = SEND_PCM_DOING;
                     }
                 }
             } else if (ifly_send_pcm == SEND_PCM_DOING) {
-                if (websockets_send_pcm_buf_push((u8 *)buf, mic_len) == -2) { //发送过程中缓存满且掉线
+                if (qyai_audio_send_push((u8 *)buf, mic_len) == -2) { //发送过程中缓存满且掉线
                     goto reinit;
                 }
 //                        sdfile_onefile_save_test(buf, mic_len, 0);//sd卡存储PCM
             } else if (ifly_send_pcm == SEND_PCM_STOP) {
-                websockets_send_pcm_buf_push((u8 *)buf, mic_len);
+                qyai_audio_send_push((u8 *)buf, mic_len);
 //                        sdfile_onefile_save_test(buf, mic_len, 1);//sd卡存储PCM
-                websockets_send_pcm_buf_end();
+                qyai_audio_send_end();
 reinit:
                 ifly_send_pcm = SEND_PCM_INI;
-#if ASR_FIRST_BEFORE_EN
                 first_500ms_len = 0;
-                first_500ms_copy = ASR_FIRST_BEFORE_EN;
-#endif
+                first_500ms_copy = true;
 
-            } else {
-                websockets_send_500ms_pcm_buf_push(buf, mic_len, 0);//
+            } else if (!opus) {
+                websockets_send_500ms_audio_buf_push(buf, mic_len, 0);//
             }
         }
     }
@@ -704,11 +717,10 @@ __exit:
         vad_cbuf = NULL;
     }
 #endif
-#if ASR_FIRST_BEFORE_EN
     if (first_500ms_buf) {
         free(first_500ms_buf);
     }
-#endif
+    return;
 }
 void aisp_all_pause(char stop)
 {
@@ -721,6 +733,7 @@ void aisp_all_pause(char stop)
         sys_vad_clear(1);
     }
     keyworld_start = 0;
+    sys_vad_active = 0;
 
     union audio_req req = {0};
     if (__this->server_handle) {
@@ -753,6 +766,7 @@ void aisp_clear(char stop_net_music)
 {
 //    aisp_wake(21);//
     keyworld_start = 0;
+    sys_vad_active = 0;
     sys_vad_clear(0);
     sys_vad_lock(1);
     ifly_send_pcm = SEND_PCM_STOP;
@@ -807,13 +821,16 @@ void esr_queue_task(void *priv)
         printf("-->recv msg kid[%d]\n", msg[1]);
         struct key_event key = {0};
         key.type = KEY_EVENT_USER;
-        int net_ch = sys_net_channel_read();
+        int net_ch = 0;
+#if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
+        net_ch = sys_net_channel_read();
         if (net_ch < 0) {
             net_ch = 0;
         }
         if (net_ch == 1) {
             websockets_client_best_one_packge_set(1);
         }
+#endif
         index = aisp_wake_world_callback(msg[1]);
         if (index == 1) {
             goto __wakeup;
@@ -840,7 +857,7 @@ __wakeup:
             ;
             extern int sys_connect_net_success(void);
             extern int is_production_test_enter(char wake);
-            if (is_production_test_enter(1) || aisp_asr_disable()) {
+            if (is_production_test_enter(1)) {
                 break;
             }
             auto_sleep_check_clear();
@@ -855,8 +872,8 @@ __wakeup:
                             printf("-> ! ai_speaker_app\n");
                             key_event_notify(KEY_EVENT_FROM_USER, &key);
                             __this->last_key_supspend = KEY_SUPSPEND;
+                            os_time_dly(10);
                         }
-                        os_time_dly(10);
                     }
 
                     struct application *app = get_current_app();
@@ -869,25 +886,32 @@ __wakeup:
                     ifly_send_pcm = SEND_PCM_STOP;
 
                     music_buf_play_accept(0);
-
-                    websockets_free_lbuf_buf();
                     websockets_close_request(1);
                     websockets_dialogue_timeout_del();
+                    websockets_free_lbuf_buf();
 
-                    music_play_stop(NULL);
-                    music_buf_play_stop_all();
-                    music_buf_play_set_stop();
-                    //net_music_play_set_stop();
-                    music_buf_play_free_lbuf();
-                    music_buf_play_stop_waite();//等待关闭完成再播放提示音
+                    if (alarm_music_play_stop()) { //闹钟在响停止闹钟
+                        music_play_stop(NULL);
+                        music_buf_play_stop_all();
+                        music_buf_play_set_stop();
+                        //net_music_play_set_stop();
+                        music_buf_play_free_lbuf();
+                        music_buf_play_stop_waite();//等待关闭完成再播放提示音
+                    }
                     net_music_num_clear();
                     led_eya_wake(1);//LED眼睛唤醒显示
+
+                    char hello_index = rand() % 5;
+#ifdef CONFIG_LVGL_UI_ENABLE
+                    lv_demo_ai_dialogue_start(hello_index);
+#endif
                     if (!aisp_wake_no_play_notice()) {
                         aisp_mic_gain_suspend();
-                        if (!music_play_hello()) {
+                        if (!music_play_hello(hello_index)) {
                             music_play_waite();
                         }
                         aisp_mic_gain_resum();
+                        music_buf_play_set_stop();//停止TTS使用PIPE BUF
                     }
                     keyworld_start = 1;
                     pcm_buf_clear();
@@ -896,8 +920,8 @@ __wakeup:
                     if (aisp_wake_callback(msg[1])) {
                         keyworld_start = 0;
                     } else {
-                        websockets_send_pcm_buf_init();
-                        websockets_send_500ms_pcm_buf_push(NULL, 0, 1);
+                        websockets_send_audio_buf_init();
+                        websockets_send_500ms_audio_buf_push(NULL, 0, 1);
                         websocket_client_thread_create(1);
                     }
                     music_buf_play_accept(1);
@@ -963,7 +987,16 @@ __wifi_cfg:
             if (is_production_test_enter(1)) {
                 break;
             }
-            if (keyworld_start || alow_enter_wifi_cfg || websockets_nobind_check()) {
+            if (keyworld_start || alow_enter_wifi_cfg || websockets_nobind_check() || (keyworld_wifi_enter_congfig == 3 && !sys_connect_net_success)) {
+#ifdef AI_UART_CMD_CTROL_ENABLE
+                ai_uart_cmd_data_push(AI_UART_CMD_WIFI_CONFIG, NULL, 0);
+#endif
+#ifdef AT_UART_CMD_ENABLE
+                at_uart_cmd_send(AI_UART_CMD_WIFI_CONFIG, NULL);
+#endif
+#ifdef CONFIG_UI_PLAY_EMOJI
+                play_face_emoji(AI_UART_CMD_WIFI_CONFIG);
+#endif
                 if (!ai_speaker_app()) {
                     extern int audio_app_mode_switch_set(char *name, char note);
                     audio_app_mode_switch_set("ai_speaker", 0);
@@ -977,14 +1010,16 @@ __wifi_cfg:
                 websockets_client_dialogue_exit();
                 websockets_close_request(1);
                 websockets_dialogue_timeout_del();
-
-                music_buf_play_stop_all();
-                music_buf_play_set_stop();
-                net_music_play_set_stop();
                 websockets_free_lbuf_buf();
-                music_buf_play_free_lbuf();
 
-                music_buf_play_stop_waite();//等待关闭完成再播放提示音
+                if (alarm_music_play_stop()) { //闹钟在响停止闹钟
+                    music_play_stop(NULL);
+                    music_buf_play_stop_all();
+                    music_buf_play_set_stop();
+                    //net_music_play_set_stop();
+                    music_buf_play_free_lbuf();
+                    music_buf_play_stop_waite();//等待关闭完成再播放提示音
+                }
                 net_music_num_clear();
                 pcm_buf_clear();
                 if (net_ch == 0) {
@@ -1115,8 +1150,8 @@ void aisp_wake_no_notic(void)
             net_music_num_clear();
             led_eya_wake(1);//LED眼睛唤醒显示
 
-            websockets_send_pcm_buf_init();
-            websockets_send_500ms_pcm_buf_push(NULL, 0, 1);
+            websockets_send_audio_buf_init();
+            websockets_send_500ms_audio_buf_push(NULL, 0, 1);
 
             ifly_send_pcm = SEND_PCM_START;
             keyworld_start = 1;
@@ -1160,14 +1195,14 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         led_eya_wake(1);//LED眼睛唤醒显示
         if (noice_note) {
             aisp_mic_gain_suspend();
-            if (!music_play_hello()) {
+            if (!music_play_hello(rand() % 5)) {
                 music_play_waite();
             }
             aisp_mic_gain_resum();
         }
         //websocket_client_thread_create(1);
-        websockets_send_pcm_buf_init();
-        websockets_send_500ms_pcm_buf_push(NULL, 0, 1);
+        websockets_send_audio_buf_init();
+        websockets_send_500ms_audio_buf_push(NULL, 0, 1);
         websocket_client_thread_create_new(1, 1);
         music_buf_play_accept(1);
         if (vad_end_enable) {

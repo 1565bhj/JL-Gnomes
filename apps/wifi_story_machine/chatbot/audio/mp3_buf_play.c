@@ -109,7 +109,7 @@ static int music_audio_read(void *file, void *buf, u32 len)
         return 0;
     }
     memcpy(buf, vt_file->buf + vt_file->seek, size);
-    vt_file->seek += len;
+    vt_file->seek += size;
     return size;
 }
 static int music_audio_seek(void *file, u32 offset, int seek_mode)

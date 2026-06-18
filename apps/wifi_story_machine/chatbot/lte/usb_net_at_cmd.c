@@ -11,114 +11,6 @@
 static char **LTE_MUDULE_AT_CMD = NULL;
 static unsigned char LTE_MUDULE_AT_VENDOR = 0;
 
-//中移4G-ML307R/C-AT指令
-static const char *ML307R_AT_TX_CMD[] = {
-    //注意：前4个命令顺序固定
-    "AT\r\n",               //0:检查模块运行是否正常，正常则返回"OK"
-    "AT+CPIN?\r\n",         //1:检查SIM卡问题，成功则返回: "+CPIN: READY", "OK"
-    "AT+CGATT?\r\n",        //2:检查网络问题，联网则返回: "+CGATT: 1", "OK"
-    "AT+MREBOOT=0\r\n",     //3:模块复位AT指令
-    "AT+MCCID\r\n",         //4:读取ICCID
-
-    //组合：mode,0 + auto,1 ;设置过一次就可以(设置后重启生效)
-    "AT+MDIALUPCFG=mode\r\n",//读当前模式
-    "AT+MDIALUPCFG=mode,0\r\n",//不是"mode,0"则设置mode=0->配置模组自动拨号(配置模组自动拨号后，模组重启生效)
-    "AT+MDIALUPCFG=auto\r\n",//读当前auto
-    "AT+MDIALUPCFG=auto,1\r\n",//不是"auto,1"则设置auto=1(配置模组自动拨号后，模组重启生效)
-    "NULL",
-};
-
-//合宙4G-AIR780E模组-AT指令
-static const char *AIR780E_AT_TX_CMD[] = {
-    //注意：前4个命令顺序固定
-    "AT\r\n",               //0:检查模块运行是否正常，正常则返回"OK"
-    "AT+CPIN?\r\n",         //1:检查SIM卡问题，成功则返回: "+CPIN: READY", "OK"
-    "AT+CGATT?\r\n",        //2:检查网络问题，联网则返回: "+CGATT: 1", "OK"
-    "AT+RESET\r\n",         //3:模块复位AT指令
-    "AT+ICCID\r\n",         //4:读取ICCID
-    "NULL",
-};
-
-//域格4G-AT指令(GPS)
-static const char *YUGEYM310_AT_TX_CMD[] = {
-    //注意：前4个命令顺序固定
-    "AT\r\n",               //0:检查模块运行是否正常，正常则返回"OK"
-    "AT+CPIN?\r\n",         //1:检查SIM卡问题，成功则返回: "+CPIN: READY", "OK"
-    "AT+CGATT?\r\n",        //2:检查网络问题，联网则返回: "+CGATT: 1", "OK"
-    "AT+CFUN=1,1\r\n",      //3:模块复位AT指令
-    "AT+ICCID\r\n",         //4:读取ICCID
-
-    "AT+CGPS=1\r\n",        //启动GPS
-    "AT+CGPS=0\r\n",        //停止GPS
-    "AT+CGPSINFO\r\n",      //返回格式化后的定位数据
-    "AT+CGPSPOS\r\n",       //直接输出NMEA原始数据
-    "NULL",
-};
-
-//骐俊ML120H-AT指令
-static const char *ML120H_AT_TX_CMD[] = {
-    //注意：前4个命令顺序固定
-    "AT\r\n",               //0:检查模块运行是否正常，正常则返回"OK"
-    "AT+CPIN?\r\n",         //1:检查SIM卡问题，成功则返回: "+CPIN: READY", "OK"
-    "AT+CGATT?\r\n",        //2:检查网络问题，联网则返回: "+CGATT: 1", "OK"
-    "AT+RESET\r\n",         //3:模块复位AT指令
-    "AT+QCCID\r\n",         //4:读取ICCID
-
-    "AT+NCONFIG=AUTOCONNECT,NDIS\r\n",  //配置模组自动拨号(配置模组自动拨号后，模组重启生效)
-    "AT+NCONFIG=AUTOCONNECT,APP\r\n",   //取消模组自动拨号(手动拨号模式下)
-    "AT+CFUN=0\r\n",    //MCU重启前发下AT+CFUN=0，然后给模组掉电
-    "AT+CGDCONT=1,\"IPV4V6\"\r\n", //手动拨号，连接网络
-    "AT+NDISDUP=1,1\r\n", //手动拨号，连接网络
-    "AT+NDISDUP=1,0\r\n", //手动拨号，断开网络
-    "NULL",
-};
-
-//定义在应用层的可用AT接口信息，所有4G模块全加在这里，一个固件可以全部使用
-static struct wireless_device_serial_set_AT_CMD app_AT_CMD_dev[] ALIGNED(4) = {
-    //合宙：接口两个接口均可用（一个AT，一个拨号？MCU获取到的描述符信息和PC不一样）
-    {
-        //AC79
-        .idVendor = 0x19D1,
-        .idProduct = 0x0001,
-        .InterfaceNumber_at = 7, //该接口下的可用端点是0x04/0x88
-        .prive_vendor = VENDOR_AIR780E,
-        .AT_CMD = AIR780E_AT_TX_CMD,
-    }, { //WINDOWS
-        .idVendor = 0x0417,
-        .idProduct = 0x4a88,
-        .InterfaceNumber_at = 3, //该接口下的可用端点是0x02/0x84
-        .prive_vendor = VENDOR_AIR780E,
-        .AT_CMD = AIR780E_AT_TX_CMD,
-    },
-
-    //中移ML307R，接口下的可用端点是0x81/0x0a
-    {
-        .idVendor = 0x2ECC,
-        .idProduct = 0x3012,
-        .InterfaceNumber_at = 2,
-        .prive_vendor = VENDOR_ML307R,
-        .AT_CMD = ML307R_AT_TX_CMD,
-    },
-
-    //域格YM310，接口下的可用端点是0x86/0x0f
-    {
-        .idVendor = 0x1286,
-        .idProduct = 0x4E3C,
-        .InterfaceNumber_at = 3,
-        .prive_vendor = VENDOR_YUGEYM310,
-        .AT_CMD = YUGEYM310_AT_TX_CMD,
-    },
-
-    //骐俊ML120H，接口下的可用端点是0x86/0x03
-    {
-        .idVendor = 0x3361,
-        .idProduct = 0x7B6E,
-        .InterfaceNumber_at = 5,
-        .prive_vendor = VENDOR_ML120H,
-        .AT_CMD = ML120H_AT_TX_CMD,
-    },
-};
-
 //Note: 不同AT指令的响应时间，有可能超时时间不够，会导致代码逻辑处理出错
 //eg: 切卡耗时就比较长
 #define SEM_WAIT_TIME_OUT (300)
@@ -791,7 +683,7 @@ int app_usb_at_cmd_deinit(void)
 //注册AT接口列表
 int app_usb_at_register_inter(void)
 {
-    return qyai_usb_h_device_serial_at_cmd_interface_register(app_AT_CMD_dev, ARRAY_SIZE(app_AT_CMD_dev));
+    return qyai_usb_h_device_serial_at_cmd_interface_register();
 }
 
 int app_usb_at_unregister_inter(void)

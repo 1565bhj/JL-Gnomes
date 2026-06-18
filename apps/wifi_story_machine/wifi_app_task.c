@@ -18,8 +18,9 @@
 #include "sock_api/sock_api.h"
 #include "asm/rf_coexistence_config.h"
 
-#ifdef CONFIG_NET_ENABLE
 
+#ifdef CONFIG_NET_ENABLE
+#ifdef CONFIG_WIFI_ENABLE
 #ifdef CONFIG_ASSIGN_MACADDR_ENABLE
 #include "net/assign_macaddr.h"
 #include "net/config_network.h"
@@ -1035,6 +1036,9 @@ void wifi_sta_mode_info(char **ssid, char **pwd)
 
 void wifi_sta_connect(char *ssid, char *pwd, char save)
 {
+    if (!ssid) {
+        return;
+    }
     if (save) {
         struct wifi_mode_info info;
         info.mode = STA_MODE;
@@ -1182,5 +1186,6 @@ const char *get_root_path(void)
 {
     return CONFIG_ROOT_PATH;
 }
+#endif
 #endif
 

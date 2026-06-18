@@ -23,6 +23,7 @@
 
 #ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
 extern void key_vad_pcm_send_set_status(char start, char noice_not);
+extern void ai_speaker_mode_exit(void);
 #ifdef CONFIG_LTE_PHY_ENABLE
 extern u8 IPV4_ADDR_CONFLICT_DETECT;
 #endif
@@ -1093,7 +1094,6 @@ static int aux_state_machine(struct application *app, enum app_state state, stru
         switch (it->action) {
         case ACTION_HOME_MAIN:
             ;
-            extern void ai_speaker_mode_exit(void);
             ai_speaker_mode_exit();
             aux_mode_init();
             break;

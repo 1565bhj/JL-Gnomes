@@ -19,7 +19,6 @@
 extern void aisp_wake(char index);//0:小飞小飞，8：配网模式
 
 static int key_wake_enter = 0;
-static char key_wake_done = 0;
 static char key_wake_net_cfg = 0;
 static char key_wake_light_open = 0;
 static char key_wake_light_mode = 0;
@@ -34,11 +33,10 @@ static void key_wake_scan(void)
             aisp_wake(8);//按键进入配网
         }
     } else {
-        if (key_wake_enter >= 2 && !key_wake_done && !key_wake_net_cfg) {
+        if (key_wake_enter >= 2 && !key_wake_net_cfg) {
             aisp_wake(0);//按键唤醒对话
         }
         key_wake_enter = 0;
-        key_wake_done = 0;
         key_wake_net_cfg = 0;
     }
 }

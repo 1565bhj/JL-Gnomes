@@ -673,9 +673,11 @@ void aisp_app_suspend(void)
 }
 void user_aiui_connected_init(void)
 {
+    printf("no need aiui\n");
 }
 void user_aiui_discon_uninit(void)
 {
+    printf("no need aiui\n");
 }
 
 #endif

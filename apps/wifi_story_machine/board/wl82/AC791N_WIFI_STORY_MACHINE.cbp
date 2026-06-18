@@ -39,6 +39,7 @@
 					<Add option="-DCONFIG_THREAD_ENABLE" />
 					<Add option="-DCONFIG_AUDIO_ONCHIP" />
 					<Add option="-DCONFIG_WIFI_ENABLE" />
+					<Add option="-DCONFIG_BT_ENABLE=1" />
 					<Add option="-D__GCC_PI32V2__" />
 					<Add option="-DCONFIG_NEW_ECC_ENABLE" />
 					<Add option="-DCONFIG_EQ_SUPPORT_ASYNC" />
@@ -49,7 +50,6 @@
 					<Add option="-DCONFIG_JLFAT_ENABLE" />
 					<Add option="-DCONFIG_RTOS_AND_MM_LIB_CODE_SECTION_IN_SDRAM" />
 					<Add option="-DCONFIG_NET_ENABLE=1" />
-					<Add option="-DCONFIG_BT_ENABLE=1" />
 					<Add option="-DEVENT_HANDLER_NUM_CONFIG=2" />
 					<Add option="-DEVENT_TOUCH_ENABLE_CONFIG=0" />
 					<Add option="-DEVENT_POOL_SIZE_CONFIG=256" />

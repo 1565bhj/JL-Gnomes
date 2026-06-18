@@ -29,7 +29,7 @@ int tts_buf_callback_reg(char *text, char *buf, int len, int payloadlen, char fi
 #else
         qyai_music_buf_play_accept(1);
         if (text) {
-            qyai_txt_buf_play_push(text, strlen(text) + 1, tts_buf_count, 0)
+            qyai_txt_buf_play_push(text, strlen(text) + 1, tts_buf_count, 0);
         }
         qyai_music_buf_play_push(buf, len, tts_buf_count++, 0);
 #endif
@@ -38,6 +38,15 @@ int tts_buf_callback_reg(char *text, char *buf, int len, int payloadlen, char fi
         music_buf_play_end_index(payloadlen);
     }
     return 0;
+}
+
+void tts_buf_pause_set(int pause)
+{
+#ifdef AC791
+    music_buf_play_pause_set(pause);
+#else
+    qyai_music_buf_play_pause_set(pause);
+#endif
 }
 
 void tts_buf_cnt_clean(void)
@@ -81,7 +90,31 @@ void app_test()
         http_tts_request("留点时间华东数控水电费手机", 0);
     }
     if (http_tts_text_buf_free_size() > 256) {
-        http_tts_request("大佛第三方机构留点时间到啦是撒老大很积极", 0);
+        http_tts_request("诶句王培荣复合物UIi二更hi偶", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("阿妈驱蚊扣普仁鸿日偶遇 ", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("啊哦唐浩然恶妇v阿法GV我饿天全额污染", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("冗余额外额特特让他4热汤人人通", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("额外乳液额特意投委会郭冉冉", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("哦怕咯啊kik上课上课目的", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("委屈微服务吃完饭财务成为", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("数据库上课时间漱口水开挖", 0);
+    }
+    if (http_tts_text_buf_free_size() > 256) {
+        http_tts_request("我请假票数v诶哦离开v发哈吉斯偶发v阿来分局考拉", 0);
     }
 }
 *****************************************************/

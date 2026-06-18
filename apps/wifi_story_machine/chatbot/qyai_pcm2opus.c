@@ -15,7 +15,7 @@ extern int websockets_send_audio_buf_push(char *buf, int len);
 
 static int QYAI_OPUS_SAMPLE_RATE = 16000;
 
-#define QYAI_OPUS_BITRATE           32000
+#define QYAI_OPUS_BITRATE           16000
 /* ivw 每包 320B(10ms)；16k Opus 虚拟源与 dui/turing 一致用 640B(20ms) */
 #define QYAI_IVW_PCM_CHUNK          320
 #define QYAI_OPUS_ENC_FRAME_BYTES   640

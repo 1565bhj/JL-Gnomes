@@ -587,21 +587,6 @@ static void wifi_status(void *p)
     }
 }
 
-char *check_enc_mode(int enc)
-{
-    if (ENC_MODE_BIT_IS_SET(enc, ENC_WPA3)) {
-        return "ENC_WPA3";
-    } else if (ENC_MODE_BIT_IS_SET(enc, ENC_WPA2)) {
-        return "ENC_WPA2";
-    } else if (ENC_MODE_BIT_IS_SET(enc, ENC_WPA)) {
-        return "ENC_WPA";
-    } else if (ENC_MODE_BIT_IS_SET(enc, ENC_WEP)) {
-        return "ENC_WEP";
-    } else {
-        return "ENC_NONE";
-    }
-}
-
 static void wifi_scan_test(void)
 {
     struct wifi_scan_ssid_info *sta_ssid_info;
@@ -619,7 +604,7 @@ static void wifi_scan_test(void)
         sta_ssid_info = wifi_get_scan_result(&sta_ssid_num);
         printf("wifi_sta_scan_channel_test channel %d, ssid_num =%d \r\n", ch, sta_ssid_num);
         for (int i = 0; i < sta_ssid_num; i++) {
-            printf("wifi_sta_scan_channel_test ssid = [%s],rssi = %d,snr = %d, enc = %s\r\n", sta_ssid_info[i].ssid, sta_ssid_info[i].rssi, sta_ssid_info[i].snr, check_enc_mode(sta_ssid_info[i].enc));
+            printf("wifi_sta_scan_channel_test ssid = [%s],rssi = %d,snr = %d\r\n", sta_ssid_info[i].ssid, sta_ssid_info[i].rssi, sta_ssid_info[i].snr);
         }
         free(sta_ssid_info);
     }
@@ -631,7 +616,7 @@ static void wifi_scan_test(void)
     sta_ssid_info = wifi_get_scan_result(&sta_ssid_num);
     printf("wifi_sta_scan_test ssid_num =%d \r\n", sta_ssid_num);
     for (int i = 0; i < sta_ssid_num; i++) {
-        printf("wifi_sta_scan_test ssid = [%s],rssi = %d,snr = %d, enc = %s\r\n", sta_ssid_info[i].ssid, sta_ssid_info[i].rssi, sta_ssid_info[i].snr, check_enc_mode(sta_ssid_info[i].enc));
+        printf("wifi_sta_scan_test ssid = [%s],rssi = %d,snr = %d\r\n", sta_ssid_info[i].ssid, sta_ssid_info[i].rssi, sta_ssid_info[i].snr);
     }
 
     free(sta_ssid_info);

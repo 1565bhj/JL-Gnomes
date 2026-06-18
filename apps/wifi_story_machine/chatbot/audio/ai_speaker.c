@@ -153,7 +153,13 @@ void system_restore_factory_settings(void)
     bt_music_del_all_info();
 #endif
     alarm_time_clear();
+#ifdef CONFIG_WIFI_ENABLE
     wifi_sta_info_clear();
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+    ext_wifi_sta_info_clear(NULL);
+#endif
+    websockets_ip_addr_clean();
     sys_net_channel_info_clear();
     user_data_info_clear();
     sys_volume_clear();
@@ -886,11 +892,18 @@ int ai_net_event_handler(struct net_event *event)
                     printf("=====wifi do not reconnect=====");
                     break;
                 }
+#ifdef CONFIG_WIFI_ENABLE
                 wifi_off();
                 wifi_on();
                 printf("=====reconnect=====:%d", __this->associat_timeout_cnt);
                 wifi_sta_reconnect();
-#if defined CONFIG_BT_ENABLE
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+                //ext_wifi_off();
+                //ext_wifi_on();
+                ext_wifi_sta_reconnect();
+#endif
+#if (defined CONFIG_WIFI_ENABLE && defined CONFIG_BT_ENABLE)
                 //卸载wifi驱动后需要重新设置一下共存参数才能生效
                 void switch_rf_coexistence_config_table(u8 index);
                 switch_rf_coexistence_config_table(get_rf_coexistence_config_index());
@@ -925,7 +938,12 @@ int ai_net_event_handler(struct net_event *event)
             char *ssid, *pwd;
             if (bt_net_config_set_ssid_pwd_get(&ssid, &pwd, 0)) {
                 printf("===reconnet, ssid: %s, pwd: %s\n", ssid, pwd);
+#ifdef CONFIG_WIFI_ENABLE
                 wifi_sta_connect(ssid, pwd, 1);
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+                ext_wifi_sta_connect(ssid, pwd, 1);
+#endif
                 bt_net_config_set_ssid_pwd_get(NULL, NULL, 1);
                 break;
             }
@@ -1079,16 +1097,23 @@ int ai_net_event_handler(struct net_event *event)
                             break;
                         }
                         printf("=====wifi do reconnect!!!!=====");
+#ifdef CONFIG_WIFI_ENABLE
                         wifi_and_network_off();
                         wifi_and_network_on();
                         wifi_sta_reconnect();
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+                        //ext_wifi_off();
+                        //ext_wifi_on();
+                        ext_wifi_sta_reconnect();
+#endif
 #endif
 #ifdef CONFIG_UI_PLAY_EMOJI
                         extern int play_face_emoji(int index);
                         play_face_emoji(AI_UART_CMD_WIFI_DISCON);
 #endif
 
-#if defined CONFIG_BT_ENABLE
+#if (defined CONFIG_WIFI_ENABLE && defined CONFIG_BT_ENABLE)
                         //卸载wifi驱动后需要重新设置一下共存参数才能生效
                         void switch_rf_coexistence_config_table(u8 index);
                         switch_rf_coexistence_config_table(get_rf_coexistence_config_index());
@@ -1140,17 +1165,24 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_DISCONNECTED_AND_REQ_CONNECT:
             puts("\n NET_EVENT_DISCONNECTED_AND_REQ_CONNECT \n");
-            if (net_ch != 0) {
+            if (net_ch != 0 || keyworld_wifi_enter_congfig) {
                 break;
             }
             if (app_usb_is_plugin_state()  && net_mode == NET_MODE_AUTO) {
                 printf("=====wifi do not reconnect=====");
                 break;
             }
+#ifdef CONFIG_WIFI_ENABLE
             wifi_and_network_off();
             wifi_and_network_on();
             wifi_sta_reconnect();
-#if defined CONFIG_BT_ENABLE
+#endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+            //ext_wifi_off();
+            //ext_wifi_on();
+            ext_wifi_sta_reconnect();
+#endif
+#if (defined CONFIG_WIFI_ENABLE && defined CONFIG_BT_ENABLE)
             //卸载wifi驱动后需要重新设置一下共存参数才能生效
             void switch_rf_coexistence_config_table(u8 index);
             switch_rf_coexistence_config_table(get_rf_coexistence_config_index());
@@ -1319,6 +1351,8 @@ done:
                 net_dhcp_status_set(NET_DISCONNECT);
                 app_usb_at_cmd_deinit();
                 lte_net_close();
+                lte_power_control(0);
+                sys_timeout_add(1, lte_power_control, 1000);
             }
             break;
         }
@@ -1365,11 +1399,13 @@ static int ai_speaker_state_machine(struct application *app, enum app_state stat
         switch (it->action) {
         case ACTION_HOME_MAIN:
             ;
+#ifdef CONFIG_WIFI_ENABLE
             if (net_ch == 0) {
                 if (!wifi_is_init()) {
                     wifi_and_network_on();
                 }
             }
+#endif
             //初始化操作
             ai_speaker_mode_init();
 #ifdef CONFIG_LTE_PHY_ENABLE

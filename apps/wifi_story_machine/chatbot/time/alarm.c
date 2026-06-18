@@ -1604,6 +1604,7 @@ static void time_rtc_alarm_task(void *p)
                     break;
                 case ALARM_NOTIFY:
                     index = msg[2];
+                    aisp_clear(0);
 //                    struct key_event key = {0};
 //                    aisp_app_suspend();
 //                    key.type = KEY_EVENT_USER;

@@ -9,6 +9,10 @@
 #include "asm/includes.h"
 #include "gSensor_manage.h"
 
+#ifdef CONFIG_EXT_WIFI_ENABLE
+#include "net/wireless_ext/wifi_dev.h"
+#include "device/sdio/sdio_host_init.h"
+#endif
 #if TCFG_USB_SLAVE_ENABLE || TCFG_USB_HOST_ENABLE
 #include "otg.h"
 #include "usb_host.h"
@@ -775,6 +779,25 @@ const struct wifi_calibration_param wifi_calibration_param = {
 };
 #endif
 
+#ifdef CONFIG_EXT_WIFI_ENABLE
+WIFI_PLATFORM_DATA_BEGIN(wifi_data)
+#ifdef CONFIG_RTL8189E_ENABLE
+	.module = RTL8189E,
+#elif defined(CONFIG_RTL8822ES_10M_ENABLE)
+	.module = RTL8822E,
+#elif defined(CONFIG_RTL8822CS_ENABLE)
+	.module = RTL8822C,
+#elif defined(CONFIG_AIC8800D40_ENABLE)
+	.module = AIC8800M40,
+#endif
+	.sdio_parm = SDIO_GRP_0 | SDIO_PORT_1 | SDIO_4_BIT_DATA | SDIO_DATA1_IRQ_MASK | SDIO_CLOCK_26M,//AC7916的使用PA5、6、7、8、9、10，和开发板默认SD卡使用同一组
+	.wakeup_port = -1,
+	.cs_port = -1,
+	.power_port = -1,
+WIFI_PLATFORM_DATA_END()
+#endif
+
+
 #ifdef TCFG_EXTFLASH_ENABLE
 extern const struct device_operations extflash_dev_ops;
 #endif
@@ -884,6 +907,9 @@ REGISTER_DEVICES(device_table) = {
 #if TCFG_VIR_UDISK_ENABLE
     {"vir_udisk",  &ram_disk_dev_ops, NULL},
 #endif
+#ifdef CONFIG_EXT_WIFI_ENABLE
+    { "wifi",  &wifi_dev_ops, (void *) &wifi_data},
+#endif
 #ifdef CONFIG_LTE_PHY_ENABLE
     { "lte",  &lte_module_dev_ops, (void *)&lte_module_data},
 #endif
@@ -954,7 +980,7 @@ static const struct wakeup_param wk_param = {
 };
 
 //ad按键和开关机键复用
-static unsigned int read_power_key_press(int dly)
+unsigned int read_power_key_press(int dly)
 {
 #if TCFG_ADKEY_ENABLE
     gpio_latch_en(adkey_data.adkey_pin, 0);
@@ -1206,6 +1232,7 @@ static void board_power_init(void)
 #endif
 
     power_init(&power_param);
+
     power_set_callback(TCFG_LOWPOWER_LOWPOWER_SEL, sleep_enter_callback, sleep_exit_callback, board_set_soft_poweroff);
 
 #ifdef CONFIG_AUDIO_ENABLE

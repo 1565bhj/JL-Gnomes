@@ -179,25 +179,21 @@ static int ai_uart_data_recv(char *buf, int len)
 #if defined CONFIG_BT_ENABLE && defined CONFIG_BT_MUSIC_MODE_ENABLE
                     if (app && !strcmp(app->name, "bt_music")) {
                         bt_music_set_volume(volume);
-                        break;
                     }
 #endif
 #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
                     if (app && !strcmp(app->name, "sd_music")) {
                         sd_music_set_dec_volume(volume);
-                        break;
                     }
 #endif
 #ifdef CONFIG_USB_DISK_MUSIC_MODE_ENABLE
                     if (app && !strcmp(app->name, "usbdisk_music")) {
                         usbdisk_music_set_dec_volume(volume);
-                        break;
                     }
 #endif
 #ifdef CONFIG_ASR_ALGORITHM_ENABLE
                     if (app && !strcmp(app->name, "ai_speaker")) {
                         ai_speaker_volume_set(volume, 0);
-                        break;
                     }
 #endif
                 } else {
@@ -333,10 +329,17 @@ static int ai_uart_buff_init(void)
 {
     if (!lbuffer) {
         lbuffer = malloc(LBUF_MEM_BUF_SIZE);
+        if (!lbuffer) {
+            return -1;
+        }
     }
     if (!lbuf_hdl) {
         lbuf_hdl = lbuf_init(lbuffer, LBUF_MEM_BUF_SIZE, 4, sizeof(struct ai_tx_uart_info));
+        if (!lbuf_hdl) {
+            return -1;
+        }
     }
+    return 0;
 }
 int ai_uart_cmd_data_push(unsigned char data_type, char *buf, int len)//外文件使用的函数
 {

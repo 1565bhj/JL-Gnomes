@@ -24,8 +24,6 @@
 //#define TCFG_EQ_ONLINE_ENABLE     1           //1:支持在线EQ调试
 //#define PRODUCTION_ALL_TEST_ENABLE            //所有功能产测模式使能
 
-#ifdef CONFIG_LTE_PHY_ENABLE
-#define DEFAULT_NET_CHANNEL 0 //默认出厂设置的网络模式：0-wifi模式，1-4G模式
 /***********************4G模组芯片厂商*****************************************/
 #define VENDOR_ML307R       0 //中移,307R/C系列
 #define VENDOR_YUGEYM310    1 //域格
@@ -37,9 +35,8 @@
 //USB口使能：0x1-->USB0； 0x2-->USB1； 0x3--->USB0和USB1
 #define CONFIG_USB_OTG_EN_VAL   0x02 //High-Speed端口，7916两组端口都有
 //#define CONFIG_USB_OTG_EN_VAL 0x01 //Full-Speed端口，7911只有FUSB
-
+#define DEFAULT_NET_CHANNEL     0 //默认出厂设置的网络模式：0-wifi模式，1-4G模式
 /*****************************************************************************/
-#endif
 
 #ifdef CONFIG_NET_ENABLE
 #define CONFIG_ASR_ALGORITHM_ENABLE         //mode:打断唤醒模式使能

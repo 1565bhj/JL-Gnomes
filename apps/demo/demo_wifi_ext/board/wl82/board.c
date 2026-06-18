@@ -2,6 +2,9 @@
 #include "system/includes.h"
 #include "device/includes.h"
 #include "asm/includes.h"
+#include "key/key_driver.h"
+#include "event/key_event.h"
+
 #if TCFG_USB_SLAVE_ENABLE || TCFG_USB_HOST_ENABLE
 #include "otg.h"
 #include "usb_host.h"
@@ -32,7 +35,7 @@ UART2_PLATFORM_DATA_BEGIN(uart2_data)
 	.baudrate = 1000000,
 	.port = PORT_REMAP,
 	.output_channel = OUTPUT_CHANNEL0,
-	.tx_pin = IO_PORTC_00,
+	.tx_pin = IO_PORTC_01,
 	.rx_pin = -1,
 	.max_continue_recv_cnt = 1024,
 	.idle_sys_clk_cnt = 500000,
@@ -93,15 +96,17 @@ const struct wifi_calibration_param wifi_calibration_param = {
 WIFI_PLATFORM_DATA_BEGIN(wifi_data)
 #ifdef CONFIG_RTL8189E_ENABLE
 	.module = RTL8189E,
-#elif CONFIG_RTL8822ES_10M_ENABLE
+#elif defined(CONFIG_RTL8822ES_10M_ENABLE)
 	.module = RTL8822E,
-#elif CONFIG_RTL8822CS_ENABLE
+#elif defined(CONFIG_RTL8822CS_ENABLE)
 	.module = RTL8822C,
+#elif defined(CONFIG_AIC8800D40_ENABLE)
+	.module = AIC8800M40,
 #endif
-	.sdio_parm = SDIO_GRP_0 | SDIO_PORT_3 | SDIO_4_BIT_DATA | SDIO_DATA1_IRQ | SDIO_CLOCK_2M,
-	.wakeup_port = IO_PORTB_11,
-	.cs_port = IO_PORTB_12,
-	.power_port = IO_PORTB_13,
+	.sdio_parm = SDIO_GRP_0 | SDIO_PORT_1 | SDIO_1_BIT_DATA | SDIO_POLLING | SDIO_CLOCK_20M,
+	.wakeup_port = -1,
+	.cs_port = -1,
+	.power_port = -1,
 WIFI_PLATFORM_DATA_END()
 #endif
 
@@ -164,6 +169,15 @@ void board_early_init()
 
 static void board_power_init(void)
 {
+//#define TCFG_VCC33_CTRL_PORT IO_PORTH_06
+#ifdef TCFG_VCC33_CTRL_PORT
+    gpio_latch_en(TCFG_VCC33_CTRL_PORT, 0);
+	gpio_direction_output(TCFG_VCC33_CTRL_PORT, 1);
+    gpio_set_pull_up(TCFG_VCC33_CTRL_PORT, 1);
+	gpio_set_pull_down(TCFG_VCC33_CTRL_PORT,0);
+#endif
+
+
     power_init(&power_param);
 }
 

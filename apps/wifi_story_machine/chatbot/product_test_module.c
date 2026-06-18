@@ -197,6 +197,10 @@ int production_all_test_get(void)
 int production_io_is_enter(void)
 {
     int io = (production_test_io_get() | production_all_test_get());
+    if (io) {
+        os_time_dly(5);
+        io = (production_test_io_get() | production_all_test_get());
+    }
     printf("->production_io = %d, %d %d \n", io, production_test_io_get(), production_all_test_get());
     return io;//(production_test_io_get() | production_all_test_get());
 }
@@ -853,7 +857,7 @@ static const u8 product_io_test_group[6][8] = {
     {IO_PORTC_07,       IO_PORTC_08,        IO_PORTC_09,    IO_PORTC_10, (u8) -1, (u8) -1, (u8) -1, (u8) -1},
 };
 
-static int product_all_io_set_init(void)
+static int product_all_io_set_init(char pull_up, char pull_down)
 {
     u32 IO_PORT;
     JL_PORT_FLASH_TypeDef *gpio[] = {JL_PORTA, JL_PORTB, JL_PORTC, JL_PORTD, JL_PORTE, JL_PORTF, JL_PORTG, JL_PORTH};
@@ -870,8 +874,8 @@ static int product_all_io_set_init(void)
             }
 #endif
             gpio_latch_en(IO_PORT, 0);
-            gpio_set_pull_up(IO_PORT, 0);
-            gpio_set_pull_down(IO_PORT, 1);
+            gpio_set_pull_up(IO_PORT, pull_up);
+            gpio_set_pull_down(IO_PORT, pull_down);
             gpio_direction_input(IO_PORT);
             gpio_set_die(IO_PORT, 1);
         }
@@ -883,8 +887,8 @@ static int product_all_io_set_init(void)
         }
 #endif
         gpio_latch_en(i, 0);
-        gpio_set_pull_up(i, 0);
-        gpio_set_pull_down(i, 1);
+        gpio_set_pull_up(i, pull_up);
+        gpio_set_pull_down(i, pull_down);
         gpio_direction_input(i);
         gpio_set_die(i, 1);
     }
@@ -900,8 +904,8 @@ static int product_all_io_set_init(void)
         }
 #endif
         gpio_latch_en(i, 0);
-        gpio_set_pull_up(i, 0);
-        gpio_set_pull_down(i, 1);
+        gpio_set_pull_up(i, pull_up);
+        gpio_set_pull_down(i, pull_down);
         gpio_direction_input(i);
         gpio_set_die(i, 1);
     }
@@ -933,7 +937,7 @@ static int product_all_io_test(void)
     int check_err = 0;
 
     PD_TEST.step |= PD_TEST_IO;
-    product_all_io_set_init();
+    product_all_io_set_init(0, 1);
     for (i = 0; i < 6; i++) {
         check_num = 0;
         check_ok_num = 0;
@@ -1021,6 +1025,7 @@ static int product_all_io_test(void)
         PD_TEST.step &= ~(PD_TEST_IO | PD_TEST_IO_OK);
         printf("-> PD_TEST_IO_OK \n");
     }
+    product_all_io_set_init(0, 0);
     return check_err;
 }
 
@@ -1347,6 +1352,13 @@ __err:
         memset(PD_TEST.app_name, 0, sizeof(PD_TEST.app_name));
     }
 #endif
+
+    while (1) {
+        if (read_power_key_press(1)) { //厂测模式下有按键按下则关机
+            sys_power_poweroff();
+        }
+        os_time_dly(1);
+    }
     return 0;
 }
 

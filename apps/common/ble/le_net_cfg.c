@@ -35,6 +35,7 @@
 #include "le_net_cfg.h"
 #include "le_common.h"
 #include "event/key_event.h"
+#include "net_update.h"
 
 #if (TCFG_BLE_DEMO_SELECT == DEF_BLE_DEMO_NET_CFG)
 
@@ -115,6 +116,16 @@ extern u8 is_in_config_network_state(void);
 // Complete Local Name  默认的蓝牙名字
 extern const char *bt_get_local_name();
 
+enum {
+    BLE_WIFI_CONNECTED = 0,//配网成回复命令
+    BLE_WIFI_CONNECTING,//正在配网回复命令
+    BLE_WIFI_CONNECT_FAILED,//配网失败回复命令
+    BLE_WIFI_CONNECT_NO_FOUND_SSID, //未找到ssid回复命令
+    BLE_WIFI_CONNECT_ASSOCIAT_FAIL, //密码错误回复命令
+};
+
+static const u8 rsp_cmd_head[6] = {0x4A, 0x4C, 0x00, 0x0e, 0x10, 0x02};
+
 //配网成回复命令
 static const u8 rsp_cmd0[] = {
     0x4A, 0x4C, 0x00, 0x0e, 0x10, 0x02,
@@ -152,6 +163,63 @@ static const u8 rsp_cmd4[] = {
 
 //mac地址回复命令
 static u8 rsp_mac_cmd[512] = {0};
+
+void *format_date(void)
+{
+    static char output[12];
+    const char *months[] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    char month_str[4];
+    int day, year;
+    int month = 0;
+    const char *date_str = __DATE__;
+    sscanf(date_str, "%3s %d %d", month_str, &day, &year);
+    for (int i = 0; i < 12; i++) {
+        if (strcmp(month_str, months[i]) == 0) {
+            month = i + 1;
+            break;
+        }
+    }
+    sprintf(output, "%04d.%02d.%02d", year, month, day);
+    return output;
+}
+
+int rsp_cmd_status_str(unsigned char *buf, int buf_size, int status)
+{
+    int Length = 0;
+    int size = 0;
+    int ret = 0;
+    u16 crc = 0;
+
+    memset(buf, 0, buf_size);
+    memcpy(buf, rsp_cmd_head, 6);
+    size += 6;//加上length长度2字节 + 4字节
+
+    ret = snprintf((char *)buf + size, buf_size - size, "{\"status\":%d,\"version\":\"%s.%s\"}", status, format_date(), OTA_VERSON);
+    //ret = snprintf((char *)&buf[size], buf_size - size, "{\"status\":%d}", status);
+    Length += ret + 2;
+    size += ret;
+
+    buf[2] = (Length >> 8) & 0xFF;//length
+    buf[3] = Length & 0xFF;//length
+
+    crc = CRC16(&buf[2], Length + 2);//crc16
+    buf[size++] = (crc >> 8) & 0xFF;
+    buf[size++] = crc & 0xFF;
+    buf[size++] = 0xFF;//end
+    //put_buf(buf, size);
+    printf("rsp_cmd %d : %s\n", size, buf + 6);
+    return size;
+}
+
+void user_app_send_user_data(void *ATT_VALUE, void *rsp_cmd, void *ATT_OP_type)
+{
+    int len = rsp_cmd_status_str(rsp_mac_cmd, sizeof(rsp_mac_cmd), (int)rsp_cmd);
+    app_send_user_data(ATT_VALUE, rsp_mac_cmd, len, ATT_OP_type);
+}
+
 
 //------------------------------------------------------
 static void send_request_connect_parameter(u8 table_index)
@@ -568,7 +636,8 @@ static void check_net_info_if_recv_complete(void)
             //去掉2byte crc 1byte 结束符
             user_buf[user_buf_offset - 3] = 0;
             if (0 == bt_net_config_set_ssid_pwd((const char *)&user_buf[6])) {
-                app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd1, sizeof(rsp_cmd1), ATT_OP_AUTO_READ_CCC);
+                //app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd1, sizeof(rsp_cmd1), ATT_OP_AUTO_READ_CCC);
+                user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECTING, ATT_OP_AUTO_READ_CCC);
                 complete = 1;
                 user_buf_offset = 0;
                 user_data_size = 0;
@@ -580,8 +649,6 @@ static void check_net_info_if_recv_complete(void)
                     int ble_connected_net_notify(void);
 
                     int sys_net_channel_change_reset(void);
-                    extern volatile int keyworld_wifi_enter_congfig;
-                    keyworld_wifi_enter_congfig = 0;
                     sys_timeout_add(NULL, ble_connected_net_notify, 200);
 #if (CONFIG_LTE_VENDOR == VENDOR_GT108)
                     int ble_connected_net_notify2(void);
@@ -595,8 +662,6 @@ static void check_net_info_if_recv_complete(void)
                 }
 #elif defined CONFIG_LTE_PHY_ENABLE
                 int ble_connected_net_notify(void);
-                extern int keyworld_wifi_enter_congfig;
-                keyworld_wifi_enter_congfig = 0;
                 sys_timeout_add(NULL, ble_connected_net_notify, 1000);
 
                 struct net_event net = {0};
@@ -606,7 +671,8 @@ static void check_net_info_if_recv_complete(void)
 #endif
             }
         } else {
-            app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd2, sizeof(rsp_cmd2), ATT_OP_AUTO_READ_CCC);
+            //app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd2, sizeof(rsp_cmd2), ATT_OP_AUTO_READ_CCC);
+            user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECT_FAILED, ATT_OP_AUTO_READ_CCC);
             user_buf_offset = 0;
             user_data_size = 0;
             memset(user_buf, 0, sizeof(user_buf));
@@ -718,7 +784,8 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
         user_buf_offset = 0;
         user_data_size = 0;
         memset(user_buf, 0, sizeof(user_buf));
-        app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd2, sizeof(rsp_cmd2), ATT_OP_AUTO_READ_CCC);
+        //app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd2, sizeof(rsp_cmd2), ATT_OP_AUTO_READ_CCC);
+        user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECT_FAILED, ATT_OP_AUTO_READ_CCC);
         break;
 
     case ATT_CHARACTERISTIC_ae87_01_VALUE_HANDLE:
@@ -1142,6 +1209,11 @@ void bt_ble_init(void)
 #else
     sprintf(bl_name, "%s%02X%02X%02X", BLE_DEV_NAME, mac[3], mac[4], mac[5]);
 #endif
+
+#if defined CONFIG_EXT_WIFI_ENABLE
+    strcat(bl_name, "-5G");//支持5Gwifi
+#endif
+
     if (is_production_test_enter(0)) {
 #ifdef PRODUCTION_ALL_TEST_BT_NAME
         sprintf(bl_name, "%s%s", BLE_DEV_NAME, PRODUCTION_ALL_TEST_BT_NAME);
@@ -1238,6 +1310,9 @@ int ble_connected_net_notify(void)
         ret = sprintf(&rsp_mac_cmd[size], ",\"language\":\"%s\"", qyai_chat_language());
         size += ret;
         Length += ret;
+        ret = sprintf(&rsp_mac_cmd[size], ",\"version\":\"%s.%s\"", format_date(), OTA_VERSON);
+        size += ret;
+        Length += ret;
 
         extern char *qyai_appid_version(void);
         ret = sprintf(&rsp_mac_cmd[size], ",\"appid\":\"%s\"", qyai_appid_version());
@@ -1260,7 +1335,8 @@ int ble_connected_net_notify(void)
         printf("rsp_mac_cmd: %d-%d-%s", rsp_mac_cmd[2] * 256 + rsp_mac_cmd[3], size, &rsp_mac_cmd[6]);
         app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_mac_cmd, size, ATT_OP_AUTO_READ_CCC);
     } else {
-        app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd0, sizeof(rsp_cmd0), ATT_OP_AUTO_READ_CCC);
+        //app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd0, sizeof(rsp_cmd0), ATT_OP_AUTO_READ_CCC);
+        user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECTED, ATT_OP_AUTO_READ_CCC);
     }
     return 0;
 }
@@ -1273,13 +1349,16 @@ void ble_cfg_net_result_notify(int event)
 
     if (event == NET_CONNECT_TIMEOUT_NOT_FOUND_SSID) {
         printf("*********ble end NET_CONNECT_TIMEOUT_NOT_FOUND_SSID*********");
-        app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd3, sizeof(rsp_cmd3), ATT_OP_AUTO_READ_CCC);
+        //app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd3, sizeof(rsp_cmd3), ATT_OP_AUTO_READ_CCC);
+        user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECT_NO_FOUND_SSID, ATT_OP_AUTO_READ_CCC);
     } else if (event == NET_CONNECT_ASSOCIAT_FAIL || event == NET_CONNECT_ASSOCIAT_TIMEOUT) {
         printf("*********ble send NET_CONNECT_ASSOCIAT_FAIL*********");
-        app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd4, sizeof(rsp_cmd4), ATT_OP_AUTO_READ_CCC);
+        //app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd4, sizeof(rsp_cmd4), ATT_OP_AUTO_READ_CCC);
+        user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECT_ASSOCIAT_FAIL, ATT_OP_AUTO_READ_CCC);
     } else if (event == NET_EVENT_CONNECTED) {
         printf("*********lbe send net connect success, notify phone!!!*********");
 //        app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd0, sizeof(rsp_cmd0), ATT_OP_AUTO_READ_CCC);
+//        user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECTED, ATT_OP_AUTO_READ_CCC);
         ble_connected_net_notify();
         complete = 0;
 #if !defined PAYMENT_AUDIO_SDK_ENABLE && !CONFIG_POWER_ON_ENABLE_BLE

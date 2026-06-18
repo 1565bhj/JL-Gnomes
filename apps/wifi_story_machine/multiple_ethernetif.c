@@ -15,6 +15,14 @@
 #include "event/net_event.h"
 #include "event/device_event.h"
 
+#ifdef CONFIG_EXT_WIFI_ENABLE
+//修复外挂wifi芯片编译问题
+enum wifi_sta_connect_state __attribute__((weak))  wifi_get_sta_connect_state(void)
+{
+    return 0;
+}
+#endif
+
 #ifdef CONFIG_NET_ENABLE
 static struct {
     u16 check_timer;
@@ -155,6 +163,7 @@ void net_connected_check_reset_timeout(void)
 static void net_connected_check_thread(void)
 {
     int net_ch = 0;
+    __this->lte_phy_timeout = timer_get_sec();
     while (__this->net_check_th_ready) {
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
         net_ch = sys_net_channel_read();
