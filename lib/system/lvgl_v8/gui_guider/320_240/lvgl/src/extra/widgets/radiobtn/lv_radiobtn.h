@@ -34,13 +34,13 @@ extern "C" {
  **********************/
 typedef struct {
     lv_obj_t obj;
-    char * checked_txt;
+    char *checked_txt;
     uint32_t active_index;
 } lv_radiobtn_t;
 
 typedef struct {
     lv_obj_t obj;
-    char * txt;
+    char *txt;
     uint32_t static_txt : 1;
 } lv_radiobtn_item_t;
 
@@ -66,14 +66,14 @@ typedef enum {
  * @param parent    pointer to an object, it will be the parent of radio button
  * @return          pointer to the created radio button object
  */
-lv_obj_t * lv_radiobtn_create(lv_obj_t * parent);
+lv_obj_t *lv_radiobtn_create(lv_obj_t * parent);
 
 /**
  * Create a radiobtn item object like check box
  * @param parent    pointer to an object, it will be the parent of the new button
  * @return          pointer to the created radiobtn item
  */
-lv_obj_t * lv_radiobtn_create_item(lv_obj_t * parent);
+lv_obj_t *lv_radiobtn_create_item(lv_obj_t * parent);
 
 /**
  * Add new radiobtn item into radio button with text
@@ -81,7 +81,7 @@ lv_obj_t * lv_radiobtn_create_item(lv_obj_t * parent);
  * @param txt       the text of new radiobtn item
  * @return          pointer to created new radiobtn item
  */
-lv_obj_t * lv_radiobtn_add_item(lv_obj_t * radiobtn, const char * txt);
+lv_obj_t *lv_radiobtn_add_item(lv_obj_t * radiobtn, const char * txt);
 
 /*=====================
  * Setter functions
@@ -113,7 +113,7 @@ void lv_radiobtn_set_item_text_static(lv_obj_t * obj, const char * txt);
  * @param index     the index of radiobtn item in radio button
  * @return          pointer to the wanted radiobtn item
  */
-lv_obj_t * lv_radiobtn_get_item(lv_obj_t * radiobtn, uint32_t index);
+lv_obj_t *lv_radiobtn_get_item(lv_obj_t * radiobtn, uint32_t index);
 
 /**
  * Get the text of a radiobtn item
@@ -121,7 +121,7 @@ lv_obj_t * lv_radiobtn_get_item(lv_obj_t * radiobtn, uint32_t index);
  * @param obj      pointer to an object, it is a radiobtn item to get text
  * @return          the text of specified radiobtn item
  */
-const char * lv_radiobtn_get_item_text(lv_obj_t * radiobtn, lv_obj_t * obj);
+const char *lv_radiobtn_get_item_text(lv_obj_t * radiobtn, lv_obj_t * obj);
 
 /**
  * Get the item number of a radio button

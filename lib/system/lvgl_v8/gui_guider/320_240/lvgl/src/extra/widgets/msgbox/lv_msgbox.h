@@ -36,11 +36,11 @@ extern "C" {
 
 typedef struct {
     lv_obj_t obj;
-    lv_obj_t * title;
-    lv_obj_t * close_btn;
-    lv_obj_t * content;
-    lv_obj_t * text;
-    lv_obj_t * btns;
+    lv_obj_t *title;
+    lv_obj_t *close_btn;
+    lv_obj_t *content;
+    lv_obj_t *text;
+    lv_obj_t *btns;
 } lv_msgbox_t;
 
 extern const lv_obj_class_t lv_msgbox_class;
@@ -60,18 +60,18 @@ extern const lv_obj_class_t lv_msgbox_backdrop_class;
  * @param add_close_btn true: add a close button
  * @return              pointer to the message box object
  */
-lv_obj_t * lv_msgbox_create(lv_obj_t * parent, const char * title, const char * txt, const char * btn_txts[],
-                            bool add_close_btn);
+lv_obj_t *lv_msgbox_create(lv_obj_t * parent, const char * title, const char * txt, const char * btn_txts[],
+                           bool add_close_btn);
 
-lv_obj_t * lv_msgbox_get_title(lv_obj_t * obj);
+lv_obj_t *lv_msgbox_get_title(lv_obj_t * obj);
 
-lv_obj_t * lv_msgbox_get_close_btn(lv_obj_t * obj);
+lv_obj_t *lv_msgbox_get_close_btn(lv_obj_t * obj);
 
-lv_obj_t * lv_msgbox_get_text(lv_obj_t * obj);
+lv_obj_t *lv_msgbox_get_text(lv_obj_t * obj);
 
-lv_obj_t * lv_msgbox_get_content(lv_obj_t * obj);
+lv_obj_t *lv_msgbox_get_content(lv_obj_t * obj);
 
-lv_obj_t * lv_msgbox_get_btns(lv_obj_t * obj);
+lv_obj_t *lv_msgbox_get_btns(lv_obj_t * obj);
 
 /**
  * Get the index of the selected button
@@ -80,7 +80,7 @@ lv_obj_t * lv_msgbox_get_btns(lv_obj_t * obj);
  */
 uint16_t lv_msgbox_get_active_btn(lv_obj_t * mbox);
 
-const char * lv_msgbox_get_active_btn_text(lv_obj_t * mbox);
+const char *lv_msgbox_get_active_btn_text(lv_obj_t * mbox);
 
 void lv_msgbox_close(lv_obj_t * mbox);
 

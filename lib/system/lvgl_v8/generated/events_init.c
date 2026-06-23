@@ -10,6 +10,7 @@
 #include "events_init.h"
 #include <stdio.h>
 #include "lvgl.h"
+#include "custom.h"
 
 #if LV_USE_GUIDER_SIMULATOR && LV_USE_FREEMASTER
 #include "freemaster_client.h"
@@ -33,26 +34,6 @@ void events_init_screen_main(lv_ui *ui)
 {
     // lv_obj_add_event_cb(ui->screen_main, screen_main_event_handler, LV_EVENT_ALL, ui);
     screen_main_event_setup();
-
-}
-
-static void screen_option_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-    case LV_EVENT_SCREEN_LOADED: {
-            scrollicon();
-            break;
-        }
-    default:
-        break;
-    }
-}
-
-void events_init_screen_option(lv_ui *ui)
-{
-    // lv_obj_add_event_cb(ui->screen_option, screen_option_event_handler, LV_EVENT_ALL, ui);
-    scrollicon();
 
 }
 
@@ -252,24 +233,6 @@ void events_init_screen_dropdown(lv_ui *ui)
     dropdown_event_setup();
 }
 
-static void screen_story_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-    case LV_EVENT_SCREEN_LOADED: {
-            story_event_setup();
-            break;
-        }
-    default:
-        break;
-    }
-}
-
-void events_init_screen_story(lv_ui *ui)
-{
-    // lv_obj_add_event_cb(ui->screen_story, screen_story_event_handler, LV_EVENT_ALL, ui);'
-    story_event_setup();
-}
 
 static void screen_conversation_event_handler(lv_event_t *e)
 {
@@ -290,75 +253,6 @@ void events_init_screen_conversation(lv_ui *ui)
     conversation_event_setup();
 }
 
-static void screen_dice_game_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-    case LV_EVENT_SCREEN_LOADED: {
-            dice_game_event_setup();
-            break;
-        }
-    default:
-        break;
-    }
-}
-
-void events_init_screen_dice_game(lv_ui *ui)
-{
-//    lv_obj_add_event_cb(ui->screen_dice_game, screen_dice_game_event_handler, LV_EVENT_ALL, ui);
-    dice_game_event_setup();
-}
-
-static void screen_bird_game_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-    case LV_EVENT_SCREEN_LOADED: {
-            bird();
-            break;
-        }
-    default:
-        break;
-    }
-}
-
-void events_init_screen_bird_game(lv_ui *ui)
-{
-//    lv_obj_add_event_cb(ui->screen_bird_game, screen_bird_game_event_handler, LV_EVENT_ALL, ui);
-
-}
-
-static void screen_whack_game_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-    case LV_EVENT_SCREEN_LOADED: {
-            mouse_game_event_setup();
-            break;
-        }
-    default:
-        break;
-    }
-}
-
-void events_init_screen_whack_game(lv_ui *ui)
-{
-//    lv_obj_add_event_cb(ui->screen_whack_game, screen_whack_game_event_handler, LV_EVENT_ALL, ui);
-    mouse_game_event_setup();
-}
-
-static void screen_ring_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-    case LV_EVENT_SCREEN_LOADED: {
-            ring_event_setup();
-            break;
-        }
-    default:
-        break;
-    }
-}
 
 void events_init_screen_ring(lv_ui *ui)
 {
@@ -367,24 +261,146 @@ void events_init_screen_ring(lv_ui *ui)
 }
 
 
-static void screen_tomato_event_handler (lv_event_t *e)
+static void screen_tomato_event_handler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     switch (code) {
-    case LV_EVENT_SCREEN_LOADED:
-    {
-        tomato_time_event_setup();
-        break;
-    }
+    case LV_EVENT_SCREEN_LOADED: {
+            tomato_time_event_setup();
+            break;
+        }
     default:
         break;
     }
 }
 
-void events_init_screen_tomato (lv_ui *ui)
+void events_init_screen_tomato(lv_ui *ui)
 {
 //    lv_obj_add_event_cb(ui->screen_tomato, screen_tomato_event_handler, LV_EVENT_ALL, ui);
     tomato_time_event_setup();
+}
+
+static void screen_wifi_show_event_handler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    switch (code) {
+    case LV_EVENT_SCREEN_LOADED: {
+//        wifi_show_event_setup();
+            break;
+        }
+    default:
+        break;
+    }
+}
+
+void events_init_screen_wifi_show(lv_ui *ui)
+{
+//    lv_obj_add_event_cb(ui->screen_wifi_show, screen_wifi_show_event_handler, LV_EVENT_ALL, ui);
+    wifi_show_event_setup();
+}
+
+static void screen_wifi_psw_event_handler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    switch (code) {
+    case LV_EVENT_SCREEN_LOADED: {
+//        wifi_psw_event_setup();
+            break;
+        }
+    default:
+        break;
+    }
+}
+
+void events_init_screen_wifi_psw(lv_ui *ui)
+{
+//    lv_obj_add_event_cb(ui->screen_wifi_psw, screen_wifi_psw_event_handler, LV_EVENT_ALL, ui);
+    wifi_psw_event_setup();
+}
+
+static void screen_agent_event_handler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    switch (code) {
+    case LV_EVENT_SCREEN_LOADED: {
+            agent_choose_event_setup();
+            break;
+        }
+    default:
+        break;
+    }
+}
+
+void events_init_screen_agent(lv_ui *ui)
+{
+//    lv_obj_add_event_cb(ui->screen_agent, screen_agent_event_handler, LV_EVENT_ALL, ui);
+    agent_choose_event_setup();
+}
+
+static void screen_calculator_event_handler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    switch (code) {
+    case LV_EVENT_SCREEN_LOADED: {
+            calculate_event_setup();
+            break;
+        }
+    default:
+        break;
+    }
+}
+
+void events_init_screen_calculator(lv_ui *ui)
+{
+//    lv_obj_add_event_cb(ui->screen_calculator, screen_calculator_event_handler, LV_EVENT_ALL, ui);
+    calculate_event_setup();
+}
+
+#if CONFIG_LVGL_CONTENT_LIST_ENABLE
+void screen_list_event_setup(void);
+void screen_content_event_setup(void);
+
+void events_init_screen_list(lv_ui *ui)
+{
+    (void)ui;
+    screen_list_event_setup();
+}
+
+void events_init_screen_content(lv_ui *ui)
+{
+    (void)ui;
+    screen_content_event_setup();
+}
+#else
+void events_init_screen_list(lv_ui *ui)
+{
+    (void)ui;
+}
+
+void events_init_screen_content(lv_ui *ui)
+{
+    (void)ui;
+}
+#endif
+
+
+static void screen_sleep_music_event_handler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    switch (code) {
+    case LV_EVENT_SCREEN_LOADED: {
+            screen_sleep_music_event_setup();
+            break;
+        }
+    default:
+        break;
+    }
+}
+
+void events_init_screen_sleep_music(lv_ui *ui)
+{
+//    lv_obj_add_event_cb(ui->screen_sleep_music, screen_sleep_music_event_handler, LV_EVENT_ALL, ui);
+    screen_sleep_music_event_setup();
 }
 
 void events_init(lv_ui *ui)

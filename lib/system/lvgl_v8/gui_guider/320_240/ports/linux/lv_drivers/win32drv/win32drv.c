@@ -38,15 +38,14 @@
  *      TYPEDEFS
  **********************/
 
-typedef struct _WINDOW_THREAD_PARAMETER
-{
+typedef struct _WINDOW_THREAD_PARAMETER {
     HANDLE window_mutex;
     HINSTANCE instance_handle;
     HICON icon_handle;
     lv_coord_t hor_res;
     lv_coord_t ver_res;
     int show_window_mode;
-} WINDOW_THREAD_PARAMETER, * PWINDOW_THREAD_PARAMETER;
+} WINDOW_THREAD_PARAMETER, *PWINDOW_THREAD_PARAMETER;
 
 /**********************
  *  STATIC PROTOTYPES
@@ -69,7 +68,7 @@ static HDC lv_win32_create_frame_buffer(
     _In_opt_ HWND WindowHandle,
     _In_ LONG Width,
     _In_ LONG Height,
-    _Out_ UINT32** PixelBuffer,
+    _Out_ UINT32 **PixelBuffer,
     _Out_ SIZE_T* PixelBufferSize);
 
 /**
@@ -138,24 +137,24 @@ static UINT lv_win32_get_dpi_for_window(
     _In_ HWND WindowHandle);
 
 static void lv_win32_display_driver_flush_callback(
-    lv_disp_drv_t* disp_drv,
-    const lv_area_t* area,
-    lv_color_t* color_p);
+    lv_disp_drv_t *disp_drv,
+    const lv_area_t *area,
+    lv_color_t *color_p);
 
 static void lv_win32_display_refresh_handler(
-    lv_timer_t* param);
+    lv_timer_t *param);
 
 static void lv_win32_pointer_driver_read_callback(
-    lv_indev_drv_t* indev_drv,
-    lv_indev_data_t* data);
+    lv_indev_drv_t *indev_drv,
+    lv_indev_data_t *data);
 
 static void lv_win32_keypad_driver_read_callback(
-    lv_indev_drv_t* indev_drv,
-    lv_indev_data_t* data);
+    lv_indev_drv_t *indev_drv,
+    lv_indev_data_t *data);
 
 static void lv_win32_encoder_driver_read_callback(
-    lv_indev_drv_t* indev_drv,
-    lv_indev_data_t* data);
+    lv_indev_drv_t *indev_drv,
+    lv_indev_data_t *data);
 
 static LRESULT CALLBACK lv_win32_window_message_callback(
     HWND   hWnd,
@@ -164,7 +163,7 @@ static LRESULT CALLBACK lv_win32_window_message_callback(
     LPARAM lParam);
 
 static unsigned int __stdcall lv_win32_window_thread_entrypoint(
-    void* raw_parameter);
+    void *raw_parameter);
 
 /**********************
  *  GLOBAL VARIABLES
@@ -172,9 +171,9 @@ static unsigned int __stdcall lv_win32_window_thread_entrypoint(
 
 EXTERN_C bool lv_win32_quit_signal = false;
 
-EXTERN_C lv_indev_t* lv_win32_pointer_device_object = NULL;
-EXTERN_C lv_indev_t* lv_win32_keypad_device_object = NULL;
-EXTERN_C lv_indev_t* lv_win32_encoder_device_object = NULL;
+EXTERN_C lv_indev_t *lv_win32_pointer_device_object = NULL;
+EXTERN_C lv_indev_t *lv_win32_keypad_device_object = NULL;
+EXTERN_C lv_indev_t *lv_win32_encoder_device_object = NULL;
 
 /**********************
  *  STATIC VARIABLES
@@ -183,10 +182,10 @@ EXTERN_C lv_indev_t* lv_win32_encoder_device_object = NULL;
 static HWND g_window_handle = NULL;
 
 static HDC g_buffer_dc_handle = NULL;
-static UINT32* g_pixel_buffer = NULL;
+static UINT32 *g_pixel_buffer = NULL;
 static SIZE_T g_pixel_buffer_size = 0;
 
-static lv_disp_t* g_display = NULL;
+static lv_disp_t *g_display = NULL;
 static bool volatile g_display_refreshing = false;
 
 static bool volatile g_mouse_pressed = false;
@@ -209,23 +208,20 @@ static int volatile g_dpi_value = USER_DEFAULT_SCREEN_DPI;
  **********************/
 
 EXTERN_C void lv_win32_add_all_input_devices_to_group(
-    lv_group_t* group)
+    lv_group_t *group)
 {
-    if (!group)
-    {
+    if (!group) {
         LV_LOG_WARN(
             "The group object is NULL. Get the default group object instead.");
 
         group = lv_group_get_default();
-        if (!group)
-        {
+        if (!group) {
             LV_LOG_WARN(
                 "The default group object is NULL. Create a new group object "
                 "and set it to default instead.");
 
             group = lv_group_create();
-            if (group)
-            {
+            if (group) {
                 lv_group_set_default(group);
             }
         }
@@ -323,22 +319,19 @@ static HDC lv_win32_create_frame_buffer(
     HWND WindowHandle,
     LONG Width,
     LONG Height,
-    UINT32** PixelBuffer,
+    UINT32 **PixelBuffer,
     SIZE_T* PixelBufferSize)
 {
     HDC hFrameBufferDC = NULL;
 
-    if (PixelBuffer && PixelBufferSize)
-    {
+    if (PixelBuffer && PixelBufferSize) {
         HDC hWindowDC = GetDC(WindowHandle);
-        if (hWindowDC)
-        {
+        if (hWindowDC) {
             hFrameBufferDC = CreateCompatibleDC(hWindowDC);
             ReleaseDC(WindowHandle, hWindowDC);
         }
 
-        if (hFrameBufferDC)
-        {
+        if (hFrameBufferDC) {
 #if LV_COLOR_DEPTH == 32
             BITMAPINFO BitmapInfo = { 0 };
 #elif LV_COLOR_DEPTH == 16
@@ -382,8 +375,7 @@ static HDC lv_win32_create_frame_buffer(
 #elif LV_COLOR_DEPTH == 8
             BitmapInfo.bmiHeader.biBitCount = 8;
             BitmapInfo.bmiHeader.biCompression = BI_RGB;
-            for (size_t i = 0; i < 256; ++i)
-            {
+            for (size_t i = 0; i < 256; ++i) {
                 lv_color8_t color;
                 color.full = i;
 
@@ -411,14 +403,13 @@ static HDC lv_win32_create_frame_buffer(
 #endif
 
             HBITMAP hBitmap = CreateDIBSection(
-                hFrameBufferDC,
-                (PBITMAPINFO)(&BitmapInfo),
-                DIB_RGB_COLORS,
-                (void**)PixelBuffer,
-                NULL,
-                0);
-            if (hBitmap)
-            {
+                                  hFrameBufferDC,
+                                  (PBITMAPINFO)(&BitmapInfo),
+                                  DIB_RGB_COLORS,
+                                  (void**)PixelBuffer,
+                                  NULL,
+                                  0);
+            if (hBitmap) {
 #if LV_COLOR_DEPTH == 32
                 *PixelBufferSize = Width * Height * sizeof(UINT32);
 #elif LV_COLOR_DEPTH == 16
@@ -433,9 +424,7 @@ static HDC lv_win32_create_frame_buffer(
 
                 DeleteObject(SelectObject(hFrameBufferDC, hBitmap));
                 DeleteObject(hBitmap);
-            }
-            else
-            {
+            } else {
                 DeleteDC(hFrameBufferDC);
                 hFrameBufferDC = NULL;
             }
@@ -456,34 +445,31 @@ static BOOL lv_win32_enable_child_window_dpi_message(
     OSVersionInfoEx.dwMinorVersion = 0;
     OSVersionInfoEx.dwBuildNumber = 14393;
     if (!VerifyVersionInfoW(
-        &OSVersionInfoEx,
-        VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER,
-        VerSetConditionMask(
+            &OSVersionInfoEx,
+            VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER,
             VerSetConditionMask(
                 VerSetConditionMask(
-                    0,
-                    VER_MAJORVERSION,
+                    VerSetConditionMask(
+                        0,
+                        VER_MAJORVERSION,
+                        VER_GREATER_EQUAL),
+                    VER_MINORVERSION,
                     VER_GREATER_EQUAL),
-                VER_MINORVERSION,
-                VER_GREATER_EQUAL),
-            VER_BUILDNUMBER,
-            VER_LESS)))
-    {
+                VER_BUILDNUMBER,
+                VER_LESS))) {
         return FALSE;
     }
 
     HMODULE ModuleHandle = GetModuleHandleW(L"user32.dll");
-    if (!ModuleHandle)
-    {
+    if (!ModuleHandle) {
         return FALSE;
     }
 
-    typedef BOOL(WINAPI* FunctionType)(HWND, BOOL);
+    typedef BOOL(WINAPI * FunctionType)(HWND, BOOL);
 
     FunctionType pFunction = (FunctionType)(
-        GetProcAddress(ModuleHandle, "EnableChildWindowDpiMessage"));
-    if (!pFunction)
-    {
+                                 GetProcAddress(ModuleHandle, "EnableChildWindowDpiMessage"));
+    if (!pFunction) {
         return FALSE;
     }
 
@@ -495,17 +481,15 @@ static BOOL lv_win32_register_touch_window(
     ULONG ulFlags)
 {
     HMODULE ModuleHandle = GetModuleHandleW(L"user32.dll");
-    if (!ModuleHandle)
-    {
+    if (!ModuleHandle) {
         return FALSE;
     }
 
-    typedef BOOL(WINAPI* FunctionType)(HWND, ULONG);
+    typedef BOOL(WINAPI * FunctionType)(HWND, ULONG);
 
     FunctionType pFunction = (FunctionType)(
-        GetProcAddress(ModuleHandle, "RegisterTouchWindow"));
-    if (!pFunction)
-    {
+                                 GetProcAddress(ModuleHandle, "RegisterTouchWindow"));
+    if (!pFunction) {
         return FALSE;
     }
 
@@ -519,17 +503,15 @@ static BOOL lv_win32_get_touch_input_info(
     int cbSize)
 {
     HMODULE ModuleHandle = GetModuleHandleW(L"user32.dll");
-    if (!ModuleHandle)
-    {
+    if (!ModuleHandle) {
         return FALSE;
     }
 
-    typedef BOOL(WINAPI* FunctionType)(HTOUCHINPUT, UINT, PTOUCHINPUT, int);
+    typedef BOOL(WINAPI * FunctionType)(HTOUCHINPUT, UINT, PTOUCHINPUT, int);
 
     FunctionType pFunction = (FunctionType)(
-        GetProcAddress(ModuleHandle, "GetTouchInputInfo"));
-    if (!pFunction)
-    {
+                                 GetProcAddress(ModuleHandle, "GetTouchInputInfo"));
+    if (!pFunction) {
         return FALSE;
     }
 
@@ -540,17 +522,15 @@ static BOOL lv_win32_close_touch_input_handle(
     HTOUCHINPUT hTouchInput)
 {
     HMODULE ModuleHandle = GetModuleHandleW(L"user32.dll");
-    if (!ModuleHandle)
-    {
+    if (!ModuleHandle) {
         return FALSE;
     }
 
-    typedef BOOL(WINAPI* FunctionType)(HTOUCHINPUT);
+    typedef BOOL(WINAPI * FunctionType)(HTOUCHINPUT);
 
     FunctionType pFunction = (FunctionType)(
-        GetProcAddress(ModuleHandle, "CloseTouchInputHandle"));
-    if (!pFunction)
-    {
+                                 GetProcAddress(ModuleHandle, "CloseTouchInputHandle"));
+    if (!pFunction) {
         return FALSE;
     }
 
@@ -563,8 +543,7 @@ static UINT lv_win32_get_dpi_for_window(
     UINT Result = (UINT)(-1);
 
     HMODULE ModuleHandle = LoadLibraryW(L"SHCore.dll");
-    if (ModuleHandle)
-    {
+    if (ModuleHandle) {
         typedef enum MONITOR_DPI_TYPE_PRIVATE {
             MDT_EFFECTIVE_DPI = 0,
             MDT_ANGULAR_DPI = 1,
@@ -572,25 +551,23 @@ static UINT lv_win32_get_dpi_for_window(
             MDT_DEFAULT = MDT_EFFECTIVE_DPI
         } MONITOR_DPI_TYPE_PRIVATE;
 
-        typedef HRESULT(WINAPI* FunctionType)(
-            HMONITOR, MONITOR_DPI_TYPE_PRIVATE, UINT*, UINT*);
+        typedef HRESULT(WINAPI * FunctionType)(
+            HMONITOR, MONITOR_DPI_TYPE_PRIVATE, UINT *, UINT *);
 
         FunctionType pFunction = (FunctionType)(
-            GetProcAddress(ModuleHandle, "GetDpiForMonitor"));
-        if (pFunction)
-        {
+                                     GetProcAddress(ModuleHandle, "GetDpiForMonitor"));
+        if (pFunction) {
             HMONITOR MonitorHandle = MonitorFromWindow(
-                WindowHandle,
-                MONITOR_DEFAULTTONEAREST);
+                                         WindowHandle,
+                                         MONITOR_DEFAULTTONEAREST);
 
             UINT dpiX = 0;
             UINT dpiY = 0;
             if (SUCCEEDED(pFunction(
-                MonitorHandle,
-                MDT_EFFECTIVE_DPI,
-                &dpiX,
-                &dpiY)))
-            {
+                              MonitorHandle,
+                              MDT_EFFECTIVE_DPI,
+                              &dpiX,
+                              &dpiY))) {
                 Result = dpiX;
             }
         }
@@ -598,18 +575,15 @@ static UINT lv_win32_get_dpi_for_window(
         FreeLibrary(ModuleHandle);
     }
 
-    if (Result == (UINT)(-1))
-    {
+    if (Result == (UINT)(-1)) {
         HDC hWindowDC = GetDC(WindowHandle);
-        if (hWindowDC)
-        {
+        if (hWindowDC) {
             Result = GetDeviceCaps(hWindowDC, LOGPIXELSX);
             ReleaseDC(WindowHandle, hWindowDC);
         }
     }
 
-    if (Result == (UINT)(-1))
-    {
+    if (Result == (UINT)(-1)) {
         Result = USER_DEFAULT_SCREEN_DPI;
     }
 
@@ -617,12 +591,11 @@ static UINT lv_win32_get_dpi_for_window(
 }
 
 static void lv_win32_display_driver_flush_callback(
-    lv_disp_drv_t* disp_drv,
-    const lv_area_t* area,
-    lv_color_t* color_p)
+    lv_disp_drv_t *disp_drv,
+    const lv_area_t *area,
+    lv_color_t *color_p)
 {
-    if (lv_disp_flush_is_last(disp_drv))
-    {
+    if (lv_disp_flush_is_last(disp_drv)) {
 #if (LV_COLOR_DEPTH == 32) || \
     (LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP == 0) || \
     (LV_COLOR_DEPTH == 8) || \
@@ -632,8 +605,7 @@ static void lv_win32_display_driver_flush_callback(
         SIZE_T count = g_pixel_buffer_size / sizeof(UINT16);
         PUINT16 source = (PUINT16)color_p;
         PUINT16 destination = (PUINT16)g_pixel_buffer;
-        for (SIZE_T i = 0; i < count; ++i)
-        {
+        for (SIZE_T i = 0; i < count; ++i) {
             UINT16 current = *source;
             *destination = (LOBYTE(current) << 8) | HIBYTE(current);
 
@@ -641,10 +613,8 @@ static void lv_win32_display_driver_flush_callback(
             ++destination;
         }
 #else
-        for (int y = area->y1; y <= area->y2; ++y)
-        {
-            for (int x = area->x1; x <= area->x2; ++x)
-            {
+        for (int y = area->y1; y <= area->y2; ++y) {
+            for (int x = area->x1; x <= area->x2; ++x) {
                 g_pixel_buffer[y * disp_drv->hor_res + x] =
                     lv_color_to32(*color_p);
                 color_p++;
@@ -659,65 +629,59 @@ static void lv_win32_display_driver_flush_callback(
 }
 
 static void lv_win32_display_refresh_handler(
-    lv_timer_t* param)
+    lv_timer_t *param)
 {
     UNREFERENCED_PARAMETER(param);
 
-    if (!g_display_refreshing)
-    {
+    if (!g_display_refreshing) {
         _lv_disp_refr_timer(NULL);
     }
 }
 
 static void lv_win32_pointer_driver_read_callback(
-    lv_indev_drv_t* indev_drv,
-    lv_indev_data_t* data)
+    lv_indev_drv_t *indev_drv,
+    lv_indev_data_t *data)
 {
     UNREFERENCED_PARAMETER(indev_drv);
 
     data->state = (lv_indev_state_t)(
-        g_mouse_pressed ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL);
+                      g_mouse_pressed ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL);
 
     data->point.x = MulDiv(
-        GET_X_LPARAM(g_mouse_value),
-        USER_DEFAULT_SCREEN_DPI,
-        WIN32DRV_MONITOR_ZOOM * g_dpi_value);
+                        GET_X_LPARAM(g_mouse_value),
+                        USER_DEFAULT_SCREEN_DPI,
+                        WIN32DRV_MONITOR_ZOOM * g_dpi_value);
     data->point.y = MulDiv(
-        GET_Y_LPARAM(g_mouse_value),
-        USER_DEFAULT_SCREEN_DPI,
-        WIN32DRV_MONITOR_ZOOM * g_dpi_value);
+                        GET_Y_LPARAM(g_mouse_value),
+                        USER_DEFAULT_SCREEN_DPI,
+                        WIN32DRV_MONITOR_ZOOM * g_dpi_value);
 
-    if (data->point.x < 0)
-    {
+    if (data->point.x < 0) {
         data->point.x = 0;
     }
-    if (data->point.x > g_display->driver->hor_res - 1)
-    {
+    if (data->point.x > g_display->driver->hor_res - 1) {
         data->point.x = g_display->driver->hor_res - 1;
     }
-    if (data->point.y < 0)
-    {
+    if (data->point.y < 0) {
         data->point.y = 0;
     }
-    if (data->point.y > g_display->driver->ver_res - 1)
-    {
+    if (data->point.y > g_display->driver->ver_res - 1) {
         data->point.y = g_display->driver->ver_res - 1;
     }
 }
 
 static void lv_win32_keypad_driver_read_callback(
-    lv_indev_drv_t* indev_drv,
-    lv_indev_data_t* data)
+    lv_indev_drv_t *indev_drv,
+    lv_indev_data_t *data)
 {
     UNREFERENCED_PARAMETER(indev_drv);
 
     data->state = (lv_indev_state_t)(
-        g_keyboard_pressed ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL);
+                      g_keyboard_pressed ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL);
 
     WPARAM KeyboardValue = g_keyboard_value;
 
-    switch (KeyboardValue)
-    {
+    switch (KeyboardValue) {
     case VK_UP:
         data->key = LV_KEY_UP;
         break;
@@ -755,8 +719,7 @@ static void lv_win32_keypad_driver_read_callback(
         data->key = LV_KEY_END;
         break;
     default:
-        if (KeyboardValue >= 'A' && KeyboardValue <= 'Z')
-        {
+        if (KeyboardValue >= 'A' && KeyboardValue <= 'Z') {
             KeyboardValue += 0x20;
         }
 
@@ -767,13 +730,13 @@ static void lv_win32_keypad_driver_read_callback(
 }
 
 static void lv_win32_encoder_driver_read_callback(
-    lv_indev_drv_t* indev_drv,
-    lv_indev_data_t* data)
+    lv_indev_drv_t *indev_drv,
+    lv_indev_data_t *data)
 {
     UNREFERENCED_PARAMETER(indev_drv);
 
     data->state = (lv_indev_state_t)(
-        g_mousewheel_pressed ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL);
+                      g_mousewheel_pressed ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL);
     data->enc_diff = g_mousewheel_value;
     g_mousewheel_value = 0;
 }
@@ -784,154 +747,139 @@ static LRESULT CALLBACK lv_win32_window_message_callback(
     WPARAM wParam,
     LPARAM lParam)
 {
-    switch (uMsg)
-    {
+    switch (uMsg) {
     case WM_MOUSEMOVE:
     case WM_LBUTTONDOWN:
     case WM_LBUTTONUP:
     case WM_MBUTTONDOWN:
-    case WM_MBUTTONUP:
-    {
-        g_mouse_value = lParam;
-        if (uMsg == WM_LBUTTONDOWN || uMsg == WM_LBUTTONUP)
-        {
-            g_mouse_pressed = (uMsg == WM_LBUTTONDOWN);
+    case WM_MBUTTONUP: {
+            g_mouse_value = lParam;
+            if (uMsg == WM_LBUTTONDOWN || uMsg == WM_LBUTTONUP) {
+                g_mouse_pressed = (uMsg == WM_LBUTTONDOWN);
+            } else if (uMsg == WM_MBUTTONDOWN || uMsg == WM_MBUTTONUP) {
+                g_mousewheel_pressed = (uMsg == WM_MBUTTONDOWN);
+            }
+            return 0;
         }
-        else if (uMsg == WM_MBUTTONDOWN || uMsg == WM_MBUTTONUP)
-        {
-            g_mousewheel_pressed = (uMsg == WM_MBUTTONDOWN);
-        }
-        return 0;
-    }
     case WM_KEYDOWN:
-    case WM_KEYUP:
-    {
-        g_keyboard_pressed = (uMsg == WM_KEYDOWN);
-        g_keyboard_value = wParam;
-        break;
-    }
-    case WM_MOUSEWHEEL:
-    {
-        g_mousewheel_value = -(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
-        break;
-    }
-    case WM_TOUCH:
-    {
-        UINT cInputs = LOWORD(wParam);
-        HTOUCHINPUT hTouchInput = (HTOUCHINPUT)(lParam);
+    case WM_KEYUP: {
+            g_keyboard_pressed = (uMsg == WM_KEYDOWN);
+            g_keyboard_value = wParam;
+            break;
+        }
+    case WM_MOUSEWHEEL: {
+            g_mousewheel_value = -(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
+            break;
+        }
+    case WM_TOUCH: {
+            UINT cInputs = LOWORD(wParam);
+            HTOUCHINPUT hTouchInput = (HTOUCHINPUT)(lParam);
 
-        PTOUCHINPUT pInputs = malloc(cInputs * sizeof(TOUCHINPUT));
-        if (pInputs)
-        {
-            if (lv_win32_get_touch_input_info(
-                hTouchInput,
-                cInputs,
-                pInputs,
-                sizeof(TOUCHINPUT)))
-            {
-                for (UINT i = 0; i < cInputs; ++i)
-                {
-                    POINT Point;
-                    Point.x = TOUCH_COORD_TO_PIXEL(pInputs[i].x);
-                    Point.y = TOUCH_COORD_TO_PIXEL(pInputs[i].y);
-                    if (!ScreenToClient(hWnd, &Point))
-                    {
-                        continue;
+            PTOUCHINPUT pInputs = malloc(cInputs * sizeof(TOUCHINPUT));
+            if (pInputs) {
+                if (lv_win32_get_touch_input_info(
+                        hTouchInput,
+                        cInputs,
+                        pInputs,
+                        sizeof(TOUCHINPUT))) {
+                    for (UINT i = 0; i < cInputs; ++i) {
+                        POINT Point;
+                        Point.x = TOUCH_COORD_TO_PIXEL(pInputs[i].x);
+                        Point.y = TOUCH_COORD_TO_PIXEL(pInputs[i].y);
+                        if (!ScreenToClient(hWnd, &Point)) {
+                            continue;
+                        }
+
+                        uint16_t x = (uint16_t)(Point.x & 0xffff);
+                        uint16_t y = (uint16_t)(Point.y & 0xffff);
+
+                        DWORD MousePressedMask =
+                            TOUCHEVENTF_MOVE | TOUCHEVENTF_DOWN;
+
+                        g_mouse_value = (y << 16) | x;
+                        g_mouse_pressed = (pInputs[i].dwFlags & MousePressedMask);
                     }
-
-                    uint16_t x = (uint16_t)(Point.x & 0xffff);
-                    uint16_t y = (uint16_t)(Point.y & 0xffff);
-
-                    DWORD MousePressedMask =
-                        TOUCHEVENTF_MOVE | TOUCHEVENTF_DOWN;
-
-                    g_mouse_value = (y << 16) | x;
-                    g_mouse_pressed = (pInputs[i].dwFlags & MousePressedMask);
                 }
+
+                free(pInputs);
             }
 
-            free(pInputs);
+            lv_win32_close_touch_input_handle(hTouchInput);
+
+            break;
         }
+    case WM_DPICHANGED: {
+            g_dpi_value = HIWORD(wParam);
 
-        lv_win32_close_touch_input_handle(hTouchInput);
+            LPRECT SuggestedRect = (LPRECT)lParam;
 
-        break;
-    }
-    case WM_DPICHANGED:
-    {
-        g_dpi_value = HIWORD(wParam);
+            SetWindowPos(
+                hWnd,
+                NULL,
+                SuggestedRect->left,
+                SuggestedRect->top,
+                SuggestedRect->right,
+                SuggestedRect->bottom,
+                SWP_NOZORDER | SWP_NOACTIVATE);
 
-        LPRECT SuggestedRect = (LPRECT)lParam;
+            RECT ClientRect;
+            GetClientRect(hWnd, &ClientRect);
 
-        SetWindowPos(
-            hWnd,
-            NULL,
-            SuggestedRect->left,
-            SuggestedRect->top,
-            SuggestedRect->right,
-            SuggestedRect->bottom,
-            SWP_NOZORDER | SWP_NOACTIVATE);
+            int WindowWidth = MulDiv(
+                                  g_display->driver->hor_res * WIN32DRV_MONITOR_ZOOM,
+                                  g_dpi_value,
+                                  USER_DEFAULT_SCREEN_DPI);
+            int WindowHeight = MulDiv(
+                                   g_display->driver->ver_res * WIN32DRV_MONITOR_ZOOM,
+                                   g_dpi_value,
+                                   USER_DEFAULT_SCREEN_DPI);
 
-        RECT ClientRect;
-        GetClientRect(hWnd, &ClientRect);
+            SetWindowPos(
+                hWnd,
+                NULL,
+                SuggestedRect->left,
+                SuggestedRect->top,
+                SuggestedRect->right + (WindowWidth - ClientRect.right),
+                SuggestedRect->bottom + (WindowHeight - ClientRect.bottom),
+                SWP_NOZORDER | SWP_NOACTIVATE);
 
-        int WindowWidth = MulDiv(
-            g_display->driver->hor_res * WIN32DRV_MONITOR_ZOOM,
-            g_dpi_value,
-            USER_DEFAULT_SCREEN_DPI);
-        int WindowHeight = MulDiv(
-            g_display->driver->ver_res * WIN32DRV_MONITOR_ZOOM,
-            g_dpi_value,
-            USER_DEFAULT_SCREEN_DPI);
+            break;
+        }
+    case WM_PAINT: {
+            g_display_refreshing = true;
 
-        SetWindowPos(
-            hWnd,
-            NULL,
-            SuggestedRect->left,
-            SuggestedRect->top,
-            SuggestedRect->right + (WindowWidth - ClientRect.right),
-            SuggestedRect->bottom + (WindowHeight - ClientRect.bottom),
-            SWP_NOZORDER | SWP_NOACTIVATE);
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hWnd, &ps);
 
-        break;
-    }
-    case WM_PAINT:
-    {
-        g_display_refreshing = true;
+            if (g_display) {
+                SetStretchBltMode(hdc, HALFTONE);
 
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-
-        if (g_display)
-        {
-            SetStretchBltMode(hdc, HALFTONE);
-
-            StretchBlt(
-                hdc,
-                ps.rcPaint.left,
-                ps.rcPaint.top,
-                ps.rcPaint.right - ps.rcPaint.left,
-                ps.rcPaint.bottom - ps.rcPaint.top,
-                g_buffer_dc_handle,
-                0,
-                0,
-                MulDiv(
+                StretchBlt(
+                    hdc,
+                    ps.rcPaint.left,
+                    ps.rcPaint.top,
                     ps.rcPaint.right - ps.rcPaint.left,
-                    USER_DEFAULT_SCREEN_DPI,
-                    WIN32DRV_MONITOR_ZOOM * g_dpi_value),
-                MulDiv(
                     ps.rcPaint.bottom - ps.rcPaint.top,
-                    USER_DEFAULT_SCREEN_DPI,
-                    WIN32DRV_MONITOR_ZOOM * g_dpi_value),
-                SRCCOPY);
+                    g_buffer_dc_handle,
+                    0,
+                    0,
+                    MulDiv(
+                        ps.rcPaint.right - ps.rcPaint.left,
+                        USER_DEFAULT_SCREEN_DPI,
+                        WIN32DRV_MONITOR_ZOOM * g_dpi_value),
+                    MulDiv(
+                        ps.rcPaint.bottom - ps.rcPaint.top,
+                        USER_DEFAULT_SCREEN_DPI,
+                        WIN32DRV_MONITOR_ZOOM * g_dpi_value),
+                    SRCCOPY);
+            }
+
+            EndPaint(hWnd, &ps);
+
+            g_display_refreshing = false;
+
+            break;
         }
-
-        EndPaint(hWnd, &ps);
-
-        g_display_refreshing = false;
-
-        break;
-    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
@@ -943,7 +891,7 @@ static LRESULT CALLBACK lv_win32_window_message_callback(
 }
 
 static unsigned int __stdcall lv_win32_window_thread_entrypoint(
-    void* raw_parameter)
+    void *raw_parameter)
 {
     PWINDOW_THREAD_PARAMETER parameter =
         (PWINDOW_THREAD_PARAMETER)raw_parameter;
@@ -961,27 +909,25 @@ static unsigned int __stdcall lv_win32_window_thread_entrypoint(
     window_class.lpszMenuName = NULL;
     window_class.lpszClassName = L"lv_sim_visual_studio";
     window_class.hIconSm = parameter->icon_handle;
-    if (!RegisterClassExW(&window_class))
-    {
+    if (!RegisterClassExW(&window_class)) {
         return 0;
     }
 
     HWND window_handle = CreateWindowExW(
-        WINDOW_EX_STYLE,
-        window_class.lpszClassName,
-        L"LVGL Simulator for Windows Desktop",
-        WINDOW_STYLE,
-        CW_USEDEFAULT,
-        0,
-        CW_USEDEFAULT,
-        0,
-        NULL,
-        NULL,
-        parameter->instance_handle,
-        NULL);
+                             WINDOW_EX_STYLE,
+                             window_class.lpszClassName,
+                             L"LVGL Simulator for Windows Desktop",
+                             WINDOW_STYLE,
+                             CW_USEDEFAULT,
+                             0,
+                             CW_USEDEFAULT,
+                             0,
+                             NULL,
+                             NULL,
+                             parameter->instance_handle,
+                             NULL);
 
-    if (!window_handle)
-    {
+    if (!window_handle) {
         return 0;
     }
 
@@ -991,14 +937,14 @@ static unsigned int __stdcall lv_win32_window_thread_entrypoint(
 
     window_size.left = 0;
     window_size.right = MulDiv(
-        parameter->hor_res * WIN32DRV_MONITOR_ZOOM,
-        g_dpi_value,
-        USER_DEFAULT_SCREEN_DPI);
+                            parameter->hor_res * WIN32DRV_MONITOR_ZOOM,
+                            g_dpi_value,
+                            USER_DEFAULT_SCREEN_DPI);
     window_size.top = 0;
     window_size.bottom = MulDiv(
-        parameter->ver_res * WIN32DRV_MONITOR_ZOOM,
-        g_dpi_value,
-        USER_DEFAULT_SCREEN_DPI);
+                             parameter->ver_res * WIN32DRV_MONITOR_ZOOM,
+                             g_dpi_value,
+                             USER_DEFAULT_SCREEN_DPI);
 
     AdjustWindowRectEx(
         &window_size,
@@ -1024,11 +970,11 @@ static unsigned int __stdcall lv_win32_window_thread_entrypoint(
     lv_win32_enable_child_window_dpi_message(window_handle);
 
     HDC hNewBufferDC = lv_win32_create_frame_buffer(
-        window_handle,
-        parameter->hor_res,
-        parameter->ver_res,
-        &g_pixel_buffer,
-        &g_pixel_buffer_size);
+                           window_handle,
+                           parameter->hor_res,
+                           parameter->ver_res,
+                           &g_pixel_buffer,
+                           &g_pixel_buffer_size);
 
     DeleteDC(g_buffer_dc_handle);
     g_buffer_dc_handle = hNewBufferDC;
@@ -1040,8 +986,7 @@ static unsigned int __stdcall lv_win32_window_thread_entrypoint(
     SetEvent(parameter->window_mutex);
 
     MSG message;
-    while (GetMessageW(&message, NULL, 0, 0))
-    {
+    while (GetMessageW(&message, NULL, 0, 0)) {
         TranslateMessage(&message);
         DispatchMessageW(&message);
     }

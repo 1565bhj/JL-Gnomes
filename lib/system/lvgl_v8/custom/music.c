@@ -278,7 +278,7 @@ void music_update_genre(const char *genre)
         music_info.genre_changed = true;
         request_ui_update();
     }
-
+    music_ui_cache_play_lyric(genre);
 }
 
 // 更新总时长（注意：需在UI结构体中补充时间显示控件才能完全生效）
@@ -462,7 +462,7 @@ void async_screen_music_btn_play_pause_show(void* param)
 void screen_music_btn_play_pause_show(bool is_pause)
 {
     //printf("异步调用播放/暂停按钮显示处理函数: %s\n", is_pause ? "暂停" : "播放");
-    printf("music status: %s\n", is_pause ? "暂停" : "播放");
+    // printf("music status: %s\n", is_pause ? "暂停" : "播放");
     lv_async_call(async_screen_music_btn_play_pause_show, (void *)is_pause);
 }
 // 音量进度条状态
@@ -619,27 +619,88 @@ static void screen_music_img_next_event_handler(lv_event_t *e)
 void async_screen_music_btn_play_pause_show(void* param);
 void lv_demo_music_play(char next, char *type);
 int lv_demo_is_app_music_stop(void);
+int lv_demo_active_audio_app_music_paused(void);
 
 // 变量：存储当前音乐模式的图标和标题
 static const void *g_music_current_icon = &_play_random_alpha_20x20;  // 默认图标
 static char g_music_current_title[32] = "默认音乐";              // 默认标题
 static char g_music_current_singer[32] = "歌手加载中";           // 默认歌手
 static char g_music_current_lyrics[32] = "歌词加载中";           // 默认歌词
+static int s_music_page_init_last_mode = -1;
+
+static int music_lyric_should_restore(int mode_changed)
+{
+    if (mode_changed) {
+        return 0;
+    }
+    if (music_ui_cached_play_lyric_valid()) {
+        return 1;
+    }
+    return music_info.genre[0] != '\0'
+           && strcmp(music_info.genre, "歌词未更新") != 0;
+}
+
+static const char *music_lyric_text_for_init(int restore_cached)
+{
+    if (!restore_cached) {
+        return g_music_current_lyrics;
+    }
+    if (music_ui_cached_play_lyric_valid()) {
+        return music_ui_cached_play_lyric_get();
+    }
+    if (music_info.genre[0] != '\0' && strcmp(music_info.genre, "歌词未更新") != 0) {
+        return music_info.genre;
+    }
+    return g_music_current_lyrics;
+}
+
+static void music_page_apply_loop_ui_sd_usb(int enable);
+static void music_page_apply_lyric_label(const char *text)
+{
+    if (!guider_ui.screen_music_lyric || !text || !text[0]) {
+        return;
+    }
+    lv_label_set_text(guider_ui.screen_music_lyric, text);
+    lv_label_set_long_mode(guider_ui.screen_music_lyric, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_set_style_text_align(guider_ui.screen_music_lyric, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_height(guider_ui.screen_music_lyric,
+                      lv_font_get_line_height(lv_obj_get_style_text_font(guider_ui.screen_music_lyric, LV_PART_MAIN)) + 4);
+    lv_obj_set_style_anim_time(guider_ui.screen_music_lyric, 3000, LV_PART_MAIN);
+    lv_obj_update_layout(guider_ui.screen_music_lyric);
+}
+
 // 音乐页面切换初始化函数
 void async_music_page_init(void* param)
 {
+    int mode = get_current_play_mode_id();
+    int mode_changed = (s_music_page_init_last_mode != mode);
+    int restore_cached_lyric = music_lyric_should_restore(mode_changed);
+    const char *lyric_show;
+
+    s_music_page_init_last_mode = mode;
+
+    if (mode_changed) {
+        music_ui_cache_play_lyric_clear();
+    }
+    if (!restore_cached_lyric) {
+        strcpy(g_music_current_lyrics, "歌词加载中……");
+    }
+    lyric_show = music_lyric_text_for_init(restore_cached_lyric);
     // 根据新的模式ID更新模式名称和图标
-    switch (get_current_play_mode_id()) {
+    switch (mode) {
     case MODE_NET_ID:
         g_music_current_icon = &_play_random_alpha_20x20;
         lv_imgbtn_set_src(guider_ui.screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, g_music_current_icon, NULL);
-        lv_label_set_text(guider_ui.screen_music_lyric, g_music_current_lyrics);
-        // 确保标签足够高以显示一行文本，避免垂直滚动
-        lv_obj_set_height(guider_ui.screen_music_lyric, lv_font_get_line_height(lv_obj_get_style_text_font(guider_ui.screen_music_lyric, LV_PART_MAIN)) + 4);
+        music_page_apply_lyric_label(lyric_show);
 
         if (lv_demo_is_app_music_stop()) {
-            lv_demo_music_play(1, NULL);
-            async_screen_music_btn_play_pause_show(1);
+            if (lv_demo_active_audio_app_music_paused()) {
+                lv_demo_handle_music_play();
+                async_screen_music_btn_play_pause_show(0);
+            } else {
+                lv_demo_music_play(1, NULL);
+                async_screen_music_btn_play_pause_show(1);
+            }
         } else {
             async_screen_music_btn_play_pause_show(0);
         }
@@ -652,7 +713,17 @@ void async_music_page_init(void* param)
         break;
     case MODE_SD_ID:
         g_music_current_icon = &_shunxu_alpha_20x20;
-        strcpy(g_music_current_title, "SD卡音乐");
+        strcpy(g_music_current_title, "TF卡音乐");
+        break;
+    case MODE_USB_ID:
+        g_music_current_icon = &_shunxu_alpha_20x20;
+        strcpy(g_music_current_title, "U盘音乐");
+        strcpy(g_music_current_lyrics, "U盘播放");
+        break;
+    case MODE_AUX_ID:
+        g_music_current_icon = &_shunxu_alpha_20x20;
+        strcpy(g_music_current_title, "线路输入(AUX)");
+        strcpy(g_music_current_lyrics, "外接音频输入");
         break;
     default:
         // 保持默认值，无需重复赋值
@@ -663,15 +734,25 @@ void async_music_page_init(void* param)
     lv_imgbtn_set_src(guider_ui.screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, g_music_current_icon, NULL);
     // 刷新对象以确保设置生效
     lv_obj_update_layout(guider_ui.screen_music_imgbtn_mode);
-    lv_label_set_text(guider_ui.screen_music_lyric, g_music_current_lyrics);
+    if (mode == MODE_USB_ID || mode == MODE_AUX_ID) {
+        music_page_apply_lyric_label(g_music_current_lyrics);
+    } else {
+        music_page_apply_lyric_label(lyric_show);
+    }
     lv_label_set_text(guider_ui.screen_music_label_title, g_music_current_title);
 
-    // 确保标签足够高以显示一行文本，避免垂直滚动
-    lv_obj_set_height(guider_ui.screen_music_lyric, lv_font_get_line_height(lv_obj_get_style_text_font(guider_ui.screen_music_lyric, LV_PART_MAIN)) + 4);
+    if (mode == MODE_SD_ID || mode == MODE_USB_ID) {
+        music_page_apply_loop_ui_sd_usb(g_current_play_mode.is_clicked);
+    }
 
     if (lv_demo_is_app_music_stop()) {
-        lv_demo_music_play(1, NULL);
-        async_screen_music_btn_play_pause_show(1);
+        if (lv_demo_active_audio_app_music_paused()) {
+            lv_demo_handle_music_play();
+            async_screen_music_btn_play_pause_show(0);
+        } else {
+            lv_demo_music_play(1, NULL);
+            async_screen_music_btn_play_pause_show(1);
+        }
     } else {
         async_screen_music_btn_play_pause_show(0);
     }
@@ -709,6 +790,48 @@ void set_current_play_mode_status(char *status)
 {
     strcpy(g_current_play_mode.mode_status, status);
 }
+
+static void music_page_apply_loop_ui_sd_usb(int enable)
+{
+    int mode = get_current_play_mode_id();
+    lv_obj_t *btn = guider_ui.screen_music_imgbtn_mode;
+
+    if (mode != MODE_SD_ID && mode != MODE_USB_ID) {
+        return;
+    }
+    g_current_play_mode.is_clicked = enable ? true : false;
+    if (!btn) {
+        return;
+    }
+    set_current_play_mode_status(enable ? "单曲循环" : "顺序循环");
+
+    if (mode == MODE_SD_ID) {
+        strcpy(g_current_play_mode.name, "SD卡模式");
+    } else {
+        strcpy(g_current_play_mode.name, "U盘模式");
+    }
+
+    lv_imgbtn_set_src(btn, LV_IMGBTN_STATE_RELEASED, NULL, &_shunxu_alpha_20x20, NULL);
+    lv_imgbtn_set_src(btn, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+    if (enable) {
+        lv_obj_add_state(btn, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(btn, LV_STATE_CHECKED);
+    }
+    lv_obj_invalidate(btn);
+    printf("-> sync loop ui: %s %s\n", g_current_play_mode.name, g_current_play_mode.mode_status);
+}
+
+static void async_lv_demo_music_sync_local_loop_ui(void *param)
+{
+    music_page_apply_loop_ui_sd_usb((int)(uintptr_t)param);
+}
+
+void lv_demo_music_sync_local_loop_ui(int enable)
+{
+    lv_async_call(async_lv_demo_music_sync_local_loop_ui, (void *)(uintptr_t)(enable ? 1 : 0));
+}
+
 // 模式切换按钮点击事件处理函数
 static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
 {
@@ -744,6 +867,19 @@ static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
                     set_current_play_mode_status("顺序循环");
                 }
                 break;
+            case MODE_USB_ID:
+                strcpy(g_current_play_mode.name, "U盘模式");
+                /* 与 SD 卡模式一致：is_clicked 切换 单曲循环 / 顺序循环 */
+                if (g_current_play_mode.is_clicked) {
+                    set_current_play_mode_status("单曲循环");
+                } else {
+                    set_current_play_mode_status("顺序循环");
+                }
+                break;
+            case MODE_AUX_ID:
+                strcpy(g_current_play_mode.name, "线路输入模式");
+                set_current_play_mode_status("线路播放");
+                break;
             default:
                 break;
             }
@@ -759,6 +895,14 @@ static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
                 printf("SD卡模式：顺序播放和随机播放\n");
                 lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_shunxu_alpha_20x20, NULL);
                 lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            } else if (strcmp(g_current_play_mode.name, "U盘模式") == 0) {
+                /* 与 SD 卡模式一致：未点 = 顺序图标，点中 = 单曲循环图标 */
+                printf("U盘模式：顺序播放和单曲循环\n");
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_shunxu_alpha_20x20, NULL);
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            } else if (strcmp(g_current_play_mode.name, "线路输入模式") == 0) {
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_shunxu_alpha_20x20, NULL);
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_shunxu_alpha_20x20, NULL);
             }
 
             printf("模式为%s\n", g_current_play_mode.name);
@@ -825,7 +969,13 @@ void lv_demo_handle_music_mode_switch(void)
     printf("[网络音乐]当前播放模式状态：%s\n", get_current_play_mode_status());
     if (strcmp(get_current_play_mode_status(), "单曲循环") == 0) {
         lv_demo_music_play_loop(1);
-    } else if (strcmp(get_current_play_mode_status(), "随机循环") == 0) {
+    } else if (strcmp(get_current_play_mode_status(), "随机循环") == 0 ||
+               strcmp(get_current_play_mode_status(), "顺序循环") == 0) {
+        /* "顺序循环" 是 SD / U 盘模式切回非单曲时的状态串。
+         * 原来只判 "随机循环"，导致 SD / U 盘从单曲循环切回顺序循环时
+         * lv_demo_music_play_loop(0) 不会被调用，底层 play_loop 一直是 1，
+         * 表现就是"显示顺序循环但实际还在单曲循环"。
+         */
         lv_demo_music_play_loop(0);
     }
 #endif

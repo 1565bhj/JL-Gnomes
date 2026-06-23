@@ -38,8 +38,8 @@
 #include "fsl_pxp.h"
 
 #if defined(SDK_OS_FREE_RTOS)
-    #include "FreeRTOS.h"
-    #include "semphr.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 #endif
 
 /*********************
@@ -79,7 +79,7 @@ static void _lv_gpu_nxp_pxp_wait(void);
  **********************/
 
 #if defined(SDK_OS_FREE_RTOS)
-    static SemaphoreHandle_t s_pxpIdleSem;
+static SemaphoreHandle_t s_pxpIdleSem;
 #endif
 static volatile bool s_pxpIdle;
 
@@ -104,7 +104,7 @@ void PXP_IRQHandler(void)
     BaseType_t taskAwake = pdFALSE;
 #endif
 
-    if(kPXP_CompleteFlag & PXP_GetStatusFlags(LV_GPU_NXP_PXP_ID)) {
+    if (kPXP_CompleteFlag & PXP_GetStatusFlags(LV_GPU_NXP_PXP_ID)) {
         PXP_ClearStatusFlags(LV_GPU_NXP_PXP_ID, kPXP_CompleteFlag);
 #if defined(SDK_OS_FREE_RTOS)
         xSemaphoreGiveFromISR(s_pxpIdleSem, &taskAwake);
@@ -115,7 +115,7 @@ void PXP_IRQHandler(void)
     }
 }
 
-lv_nxp_pxp_cfg_t * lv_gpu_nxp_pxp_get_cfg(void)
+lv_nxp_pxp_cfg_t *lv_gpu_nxp_pxp_get_cfg(void)
 {
     return &pxp_default_cfg;
 }
@@ -128,8 +128,9 @@ static lv_res_t _lv_gpu_nxp_pxp_interrupt_init(void)
 {
 #if defined(SDK_OS_FREE_RTOS)
     s_pxpIdleSem = xSemaphoreCreateBinary();
-    if(s_pxpIdleSem == NULL)
+    if (s_pxpIdleSem == NULL) {
         return LV_RES_INV;
+    }
 
     NVIC_SetPriority(LV_GPU_NXP_PXP_IRQ_ID, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1);
 #endif
@@ -166,13 +167,15 @@ static void _lv_gpu_nxp_pxp_wait(void)
 {
 #if defined(SDK_OS_FREE_RTOS)
     /* Return if PXP was never started, otherwise the semaphore will lock forever. */
-    if(s_pxpIdle == true)
+    if (s_pxpIdle == true) {
         return;
+    }
 
-    if(xSemaphoreTake(s_pxpIdleSem, portMAX_DELAY) == pdTRUE)
+    if (xSemaphoreTake(s_pxpIdleSem, portMAX_DELAY) == pdTRUE) {
         s_pxpIdle = true;
+    }
 #else
-    while(s_pxpIdle == false) {
+    while (s_pxpIdle == false) {
     }
 #endif
 }

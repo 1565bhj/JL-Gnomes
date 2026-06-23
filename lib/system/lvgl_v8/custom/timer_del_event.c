@@ -419,6 +419,7 @@ void timer_del_event_init(lv_ui *ui)
     // 注册返回按钮点击事件
     lv_obj_remove_event_cb(ui->screen_timer_remove_return, timer_del_return_event_handler);
     lv_obj_add_event_cb(ui->screen_timer_remove_return, timer_del_return_event_handler, LV_EVENT_CLICKED, ui);
+    ui_subpage_return_set_large_touch_area(ui->screen_timer_remove_return, (lv_coord_t)UI_SUBPAGE_RETURN_EXT_PAD);
 
     // 注册全选按钮点击事件
     lv_obj_remove_event_cb(ui->screen_timer_remove_imgbtn_choice, timer_del_all_choice_event_handler);

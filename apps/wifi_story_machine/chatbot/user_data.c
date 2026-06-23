@@ -14,6 +14,12 @@ static struct user_data_info {
 #endif
 #ifdef CONFIG_UI_ENABLE
     unsigned char lcd_light;
+#if CONFIG_LVGL_AGENT_ENABLE
+    unsigned char agent_intell_id; /* http_ai_intell_set_id 参数，0 表示未记忆 */
+#endif
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+    unsigned char account_bound;   /* 是否已绑定账号：0=未绑定，1=已绑定 */
+#endif
 #endif
     unsigned char resv;
     unsigned short last_power_off; //上次关机计数
@@ -67,6 +73,48 @@ int user_lcd_light_write(u8 light_value)
     syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
     return 0;
 }
+#if CONFIG_LVGL_AGENT_ENABLE
+int user_agent_intell_id_read(void)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        return 0;
+    }
+    return (int)USER_DATA.agent_intell_id;
+}
+
+int user_agent_intell_id_write(int id_index)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        memset(&USER_DATA, 0, sizeof(USER_DATA));
+    }
+    if (id_index <= 0 || id_index > 65535) {
+        return -1;
+    }
+    USER_DATA.agent_intell_id = (unsigned short)id_index;
+    syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+    return 0;
+}
+#endif
+
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+int user_data_account_bound_read(void)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        return 0;
+    }
+    return USER_DATA.account_bound;
+}
+
+int user_data_account_bound_write(u8 bound)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        memset(&USER_DATA, 0, sizeof(USER_DATA));
+    }
+    USER_DATA.account_bound = bound ? 1 : 0;
+    syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+    return 0;
+}
+#endif
 #endif
 
 int user_is_soft_power_off_read(void)
@@ -117,6 +165,10 @@ int user_soft_power_off_write(void)
 #endif
     extern int alarm_time_index(void);
     USER_DATA.alarm_index = alarm_time_index();
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+    extern int http_wifi_device_bind_app_get(void);
+    USER_DATA.account_bound = http_wifi_device_bind_app_get() ? 1 : 0;
+#endif
     USER_DATA.last_power_off = USER_DATA.power_off;
     USER_DATA.power_off++;
     syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));

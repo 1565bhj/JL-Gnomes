@@ -47,26 +47,26 @@ static void generate_roller_options(lv_obj_t *roller, int start, int end, bool i
     if (infinite) {
         // 无限循环模式：直接生成所有选项
         for (int i = start; i <= end; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
     } else {
         // 正常模式但需要视觉上的无缝循环：添加额外的边界选项
         // 在开始之前添加3个结束的数字
         for (int i = end - 2; i <= end; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
 
         // 生成主要选项
         for (int i = start; i <= end; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
 
         // 在结束之后添加3个开始的数字
         for (int i = start; i <= start + 2; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
     }
@@ -176,24 +176,24 @@ static void timer_add_yes_event_handler(lv_event_t *e)
                 return;
             }
         }
-        #if TOMATO_TIMER_ENABLE
-            // 更新番茄时间显示
-            update_tomato_time(ui, hour, min, sec);
-        #else
-            // 根据获取的时间值创建新倒计时
-            Sync_ui_dynamic_add_new_timer(ui, hour, min, sec);
-            Sync_app_dynamic_add_new_timer(ui, hour, min, sec);
-        #endif
+#if TOMATO_TIMER_ENABLE
+        // 更新番茄时间显示
+        update_tomato_time(ui, hour, min, sec);
+#else
+        // 根据获取的时间值创建新倒计时
+        Sync_ui_dynamic_add_new_timer(ui, hour, min, sec);
+        Sync_app_dynamic_add_new_timer(ui, hour, min, sec);
+#endif
         // 清除所有新增页面的选择状态和事件
         clear_timer_add_events_and_selection(ui);
 
-        #if TOMATO_TIMER_ENABLE
-            // 切换回番茄倒计时主页面
-            switch_to_tomato_page();
-        #else
-            // 切换回倒计时主页面
-            switch_to_timer_page();
-        #endif
+#if TOMATO_TIMER_ENABLE
+        // 切换回番茄倒计时主页面
+        switch_to_tomato_page();
+#else
+        // 切换回倒计时主页面
+        switch_to_timer_page();
+#endif
 
     }
 }
@@ -283,13 +283,13 @@ static void timer_add_return_event_handler(lv_event_t *e)
         // 清除所有新增页面的选择状态和事件
         clear_timer_add_events_and_selection(ui);
 
-        #if TOMATO_TIMER_ENABLE
-            // 切换回番茄倒计时主页面
-            switch_to_tomato_page();
-        #else
-            // 切换回倒计时主页面
-            switch_to_timer_page();
-        #endif
+#if TOMATO_TIMER_ENABLE
+        // 切换回番茄倒计时主页面
+        switch_to_tomato_page();
+#else
+        // 切换回倒计时主页面
+        switch_to_timer_page();
+#endif
     }
 }
 
@@ -424,6 +424,7 @@ void timer_add_event_init(lv_ui *ui)
     // 注册返回按钮点击事件
     lv_obj_remove_event_cb(ui->screen_timer_add_img_return, timer_add_return_event_handler);
     lv_obj_add_event_cb(ui->screen_timer_add_img_return, timer_add_return_event_handler, LV_EVENT_CLICKED, ui);
+    ui_subpage_return_set_large_touch_area(ui->screen_timer_add_img_return, (lv_coord_t)UI_SUBPAGE_RETURN_EXT_PAD);
     // 注册确认按钮点击事件
     lv_obj_remove_event_cb(ui->screen_timer_add_img_yes, timer_add_yes_event_handler);
     lv_obj_add_event_cb(ui->screen_timer_add_img_yes, timer_add_yes_event_handler, LV_EVENT_CLICKED, ui);

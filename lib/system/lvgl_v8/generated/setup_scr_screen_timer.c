@@ -28,13 +28,26 @@ void setup_scr_screen_timer(lv_ui *ui)
     lv_obj_set_style_bg_color(ui->screen_timer, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui->screen_timer, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    //Write codes screen_timer_img_return
+    ui->screen_timer_img_return = lv_img_create(ui->screen_timer);
+    lv_obj_add_flag(ui->screen_timer_img_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_timer_img_return, &_return_alpha_22x22);
+    lv_img_set_pivot(ui->screen_timer_img_return, 50, 50);
+    lv_img_set_angle(ui->screen_timer_img_return, 0);
+    lv_obj_set_pos(ui->screen_timer_img_return, 20, 10);
+    lv_obj_set_size(ui->screen_timer_img_return, 22, 22);
+    lv_obj_set_style_img_recolor_opa(ui->screen_timer_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_timer_img_return, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_timer_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_timer_img_return, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     //Write codes screen_timer_img_add
     ui->screen_timer_img_add = lv_img_create(ui->screen_timer);
     lv_obj_add_flag(ui->screen_timer_img_add, LV_OBJ_FLAG_CLICKABLE);
     lv_img_set_src(ui->screen_timer_img_add, &_add_alpha_30x30);
     lv_img_set_pivot(ui->screen_timer_img_add, 50, 50);
     lv_img_set_angle(ui->screen_timer_img_add, 0);
-    lv_obj_set_pos(ui->screen_timer_img_add, 253, 15);
+    lv_obj_set_pos(ui->screen_timer_img_add, 256, 10);
     lv_obj_set_size(ui->screen_timer_img_add, 30, 30);
 
     //Write style for screen_timer_img_add, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -54,8 +67,8 @@ void setup_scr_screen_timer(lv_ui *ui)
     lv_style_set_text_color(&ui->screen_timer_span_timer_span->style, lv_color_hex(0xffffff));
     lv_style_set_text_decor(&ui->screen_timer_span_timer_span->style, LV_TEXT_DECOR_NONE);
     lv_style_set_text_font(&ui->screen_timer_span_timer_span->style, &lv_font_MiSansDemibold_18);
-    lv_obj_set_pos(ui->screen_timer_span_timer, 132, 22);
-    lv_obj_set_size(ui->screen_timer_span_timer, 55, 18);
+    lv_obj_set_pos(ui->screen_timer_span_timer, 52, 10);
+    lv_obj_set_size(ui->screen_timer_span_timer, 55, 22);
 
     //Write style state: LV_STATE_DEFAULT for &style_screen_timer_span_timer_main_main_default
     static lv_style_t style_screen_timer_span_timer_main_main_default;
@@ -78,7 +91,7 @@ void setup_scr_screen_timer(lv_ui *ui)
     lv_img_set_src(ui->screen_timer_img_del, &_clear_alpha_30x30);
     lv_img_set_pivot(ui->screen_timer_img_del, 50, 50);
     lv_img_set_angle(ui->screen_timer_img_del, 0);
-    lv_obj_set_pos(ui->screen_timer_img_del, 33, 15);
+    lv_obj_set_pos(ui->screen_timer_img_del, 210, 9);
     lv_obj_set_size(ui->screen_timer_img_del, 30, 30);
 
     //Write style for screen_timer_img_del, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.

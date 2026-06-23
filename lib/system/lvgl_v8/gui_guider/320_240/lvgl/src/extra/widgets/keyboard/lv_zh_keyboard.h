@@ -56,7 +56,7 @@ typedef uint8_t lv_zh_keyboard_mode_t;
 /*Data of keyboard*/
 typedef struct {
     lv_btnmatrix_t btnm;
-    lv_obj_t * ta;              /*Pointer to the assigned text area*/
+    lv_obj_t *ta;               /*Pointer to the assigned text area*/
     lv_zh_keyboard_mode_t mode;    /*Key map type*/
     uint8_t popovers : 1;       /*Show button titles in popovers on press*/
 } lv_zh_keyboard_t;
@@ -73,7 +73,7 @@ extern const lv_obj_class_t lv_zh_keyboard_class;
  * @param zh_font pointer to an font object.
  * @return pointer to the created keyboard
  */
-lv_obj_t * lv_zh_keyboard_create(lv_obj_t * parent, const lv_font_t * zh_font);
+lv_obj_t *lv_zh_keyboard_create(lv_obj_t * parent, const lv_font_t * zh_font);
 
 /*=====================
  * Setter functions
@@ -119,7 +119,7 @@ void lv_zh_keyboard_set_map(lv_obj_t * kb, lv_zh_keyboard_mode_t mode, const cha
  * @param kb pointer to a Keyboard object
  * @return pointer to the assigned Text Area object
  */
-lv_obj_t * lv_zh_keyboard_get_textarea(const lv_obj_t * kb);
+lv_obj_t *lv_zh_keyboard_get_textarea(const lv_obj_t * kb);
 
 /**
  * Set a new a mode (text or number map)
@@ -140,7 +140,7 @@ bool lv_zh_btnmatrix_get_popovers(const lv_obj_t * obj);
  * @param kb pointer to a keyboard object
  * @return the current map
  */
-static inline const char ** lv_zh_keyboard_get_map_array(const lv_obj_t * kb)
+static inline const char **lv_zh_keyboard_get_map_array(const lv_obj_t * kb)
 {
     return lv_btnmatrix_get_map(kb);
 }
@@ -162,7 +162,7 @@ static inline uint16_t lv_zh_keyboard_get_selected_btn(const lv_obj_t * obj)
  * @param btn_id    the index a button not counting new line characters.
  * @return          text of btn_index` button
  */
-static inline const char * lv_zh_keyboard_get_btn_text(const lv_obj_t * obj, uint16_t btn_id)
+static inline const char *lv_zh_keyboard_get_btn_text(const lv_obj_t * obj, uint16_t btn_id)
 {
     return lv_btnmatrix_get_btn_text(obj, btn_id);
 }
@@ -181,7 +181,7 @@ static inline const char * lv_zh_keyboard_get_btn_text(const lv_obj_t * obj, uin
  */
 void lv_zh_keyboard_def_event_cb(lv_event_t * e);
 
-char * get_chinese(char * input_string);
+char *get_chinese(char * input_string);
 
 /**********************
  *      MACROS

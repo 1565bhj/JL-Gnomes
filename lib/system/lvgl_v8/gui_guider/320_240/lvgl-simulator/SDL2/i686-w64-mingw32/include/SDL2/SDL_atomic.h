@@ -126,7 +126,7 @@ void _ReadWriteBarrier(void);
 /* This is correct for all CPUs when using GCC or Solaris Studio 12.1+. */
 #define SDL_CompilerBarrier()   __asm__ __volatile__ ("" : : : "memory")
 #elif defined(__WATCOMC__)
-extern _inline void SDL_CompilerBarrier (void);
+extern _inline void SDL_CompilerBarrier(void);
 #pragma aux SDL_CompilerBarrier = "" parm [] modify exact [];
 #else
 #define SDL_CompilerBarrier()   \
@@ -170,8 +170,8 @@ extern DECLSPEC void SDLCALL SDL_MemoryBarrierAcquireFunction(void);
    hard-coded at address 0xffff0fa0
 */
 typedef void (*SDL_KernelMemoryBarrierFunc)();
-#define SDL_MemoryBarrierRelease()	((SDL_KernelMemoryBarrierFunc)0xffff0fa0)()
-#define SDL_MemoryBarrierAcquire()	((SDL_KernelMemoryBarrierFunc)0xffff0fa0)()
+#define SDL_MemoryBarrierRelease()  ((SDL_KernelMemoryBarrierFunc)0xffff0fa0)()
+#define SDL_MemoryBarrierAcquire()  ((SDL_KernelMemoryBarrierFunc)0xffff0fa0)()
 #elif 0 /* defined(__QNXNTO__) */
 #include <sys/cpuinline.h>
 
@@ -213,7 +213,9 @@ typedef void (*SDL_KernelMemoryBarrierFunc)();
  * \brief A type representing an atomic integer value.  It is a struct
  *        so people don't accidentally use numeric operations on it.
  */
-typedef struct { int value; } SDL_atomic_t;
+typedef struct {
+    int value;
+} SDL_atomic_t;
 
 /**
  * \brief Set an atomic variable to a new value if it is currently an old value.
@@ -276,12 +278,12 @@ extern DECLSPEC SDL_bool SDLCALL SDL_AtomicCASPtr(void **a, void *oldval, void *
  *
  * \return The previous value of the pointer.
  */
-extern DECLSPEC void* SDLCALL SDL_AtomicSetPtr(void **a, void* v);
+extern DECLSPEC void *SDLCALL SDL_AtomicSetPtr(void **a, void* v);
 
 /**
  * \brief Get the value of a pointer atomically.
  */
-extern DECLSPEC void* SDLCALL SDL_AtomicGetPtr(void **a);
+extern DECLSPEC void *SDLCALL SDL_AtomicGetPtr(void **a);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

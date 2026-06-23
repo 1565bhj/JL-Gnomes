@@ -161,14 +161,14 @@ static const int code128_stop_pattern = 6379; // 1100011101011, 2331112
 
 struct code128_step {
     int prev_ix;                // Index of previous step, if any
-    const char * next_input;    // Remaining input
+    const char *next_input;     // Remaining input
     unsigned short len;         // The length of the pattern so far (includes this step)
     char mode;                  // State for the current encoding
     signed char code;           // What code should be written for this step
 };
 
 struct code128_state {
-    struct code128_step * steps;
+    struct code128_step *steps;
     int allocated_steps;
     int current_ix;
     int todo_ix;
@@ -193,7 +193,7 @@ static void code128_append_pattern(int pattern, int pattern_length, char * out)
     CODE128_ASSERT(pattern & (1 << (pattern_length - 1)));
 
     int i;
-    for(i = pattern_length - 1; i >= 0; i--) {
+    for (i = pattern_length - 1; i >= 0; i--) {
         // cast avoids warning: implicit conversion from 'int' to 'char' changes value from 255 to -1 [-Wconstant-conversion]
         *out++ = (unsigned char)((pattern & (1 << i)) ? 255 : 0);
     }
@@ -214,35 +214,35 @@ static int code128_append_stop_code(char * out)
 
 static signed char code128_switch_code(char from_mode, char to_mode)
 {
-    switch(from_mode) {
-        case CODE128_MODE_A:
-            switch(to_mode) {
-                case CODE128_MODE_B:
-                    return 100;
-                case CODE128_MODE_C:
-                    return 99;
-            }
-            break;
-
+    switch (from_mode) {
+    case CODE128_MODE_A:
+        switch (to_mode) {
         case CODE128_MODE_B:
-            switch(to_mode) {
-                case CODE128_MODE_A:
-                    return 101;
-                case CODE128_MODE_C:
-                    return 99;
-            }
-            break;
-
+            return 100;
         case CODE128_MODE_C:
-            switch(to_mode) {
-                case CODE128_MODE_B:
-                    return 100;
-                case CODE128_MODE_A:
-                    return 101;
-            }
-            break;
-        default:
-            break;
+            return 99;
+        }
+        break;
+
+    case CODE128_MODE_B:
+        switch (to_mode) {
+        case CODE128_MODE_A:
+            return 101;
+        case CODE128_MODE_C:
+            return 99;
+        }
+        break;
+
+    case CODE128_MODE_C:
+        switch (to_mode) {
+        case CODE128_MODE_B:
+            return 100;
+        case CODE128_MODE_A:
+            return 101;
+        }
+        break;
+    default:
+        break;
     }
 
     CODE128_ASSERT(0); // Invalid mode switch
@@ -251,45 +251,48 @@ static signed char code128_switch_code(char from_mode, char to_mode)
 
 static signed char code128a_ascii_to_code(signed char value)
 {
-    if(value >= ' ' && value <= '_')
+    if (value >= ' ' && value <= '_') {
         return (signed char)(value - ' ');
-    else if(value >= 0 && value < ' ')
+    } else if (value >= 0 && value < ' ') {
         return (signed char)(value + 64);
-    else if(value == (signed char)CODE128_FNC1)
+    } else if (value == (signed char)CODE128_FNC1) {
         return 102;
-    else if(value == (signed char)CODE128_FNC2)
+    } else if (value == (signed char)CODE128_FNC2) {
         return 97;
-    else if(value == (signed char)CODE128_FNC3)
+    } else if (value == (signed char)CODE128_FNC3) {
         return 96;
-    else if(value == (signed char)CODE128_FNC4)
+    } else if (value == (signed char)CODE128_FNC4) {
         return 101;
-    else
+    } else {
         return -1;
+    }
 }
 
 static signed char code128b_ascii_to_code(signed char value)
 {
-    if(value >= ' ')  // value <= 127 is implied
+    if (value >= ' ') { // value <= 127 is implied
         return (signed char)(value - ' ');
-    else if(value == (signed char)CODE128_FNC1)
+    } else if (value == (signed char)CODE128_FNC1) {
         return 102;
-    else if(value == (signed char)CODE128_FNC2)
+    } else if (value == (signed char)CODE128_FNC2) {
         return 97;
-    else if(value == (signed char)CODE128_FNC3)
+    } else if (value == (signed char)CODE128_FNC3) {
         return 96;
-    else if(value == (signed char)CODE128_FNC4)
+    } else if (value == (signed char)CODE128_FNC4) {
         return 100;
-    else
+    } else {
         return -1;
+    }
 }
 
 static signed char code128c_ascii_to_code(const char * values)
 {
-    if(values[0] == CODE128_FNC1)
+    if (values[0] == CODE128_FNC1) {
         return 102;
+    }
 
-    if(values[0] >= '0' && values[0] <= '9' &&
-       values[1] >= '0' && values[1] <= '9') {
+    if (values[0] >= '0' && values[0] <= '9' &&
+        values[1] >= '0' && values[1] <= '9') {
         char code = 10 * (values[0] - '0') + (values[1] - '0');
         return code;
     }
@@ -304,19 +307,22 @@ static int code128_do_a_step(struct code128_step * base, int prev_ix, int ix)
 
     char value = *previous_step->next_input;
     // NOTE: Currently we can't encode NULL
-    if(value == 0)
+    if (value == 0) {
         return 0;
+    }
 
     step->code = code128a_ascii_to_code(value);
-    if(step->code < 0)
+    if (step->code < 0) {
         return 0;
+    }
 
     step->prev_ix = prev_ix;
     step->next_input = previous_step->next_input + 1;
     step->mode = CODE128_MODE_A;
     step->len = previous_step->len + CODE128_CHAR_LEN;
-    if(step->mode != previous_step->mode)
-        step->len += CODE128_CHAR_LEN; // Need to switch modes
+    if (step->mode != previous_step->mode) {
+        step->len += CODE128_CHAR_LEN;    // Need to switch modes
+    }
 
     return 1;
 }
@@ -328,19 +334,22 @@ static int code128_do_b_step(struct code128_step * base, int prev_ix, int ix)
 
     char value = *previous_step->next_input;
     // NOTE: Currently we can't encode NULL
-    if(value == 0)
+    if (value == 0) {
         return 0;
+    }
 
     step->code = code128b_ascii_to_code(value);
-    if(step->code < 0)
+    if (step->code < 0) {
         return 0;
+    }
 
     step->prev_ix = prev_ix;
     step->next_input = previous_step->next_input + 1;
     step->mode = CODE128_MODE_B;
     step->len = previous_step->len + CODE128_CHAR_LEN;
-    if(step->mode != previous_step->mode)
-        step->len += CODE128_CHAR_LEN; // Need to switch modes
+    if (step->mode != previous_step->mode) {
+        step->len += CODE128_CHAR_LEN;    // Need to switch modes
+    }
 
     return 1;
 }
@@ -352,34 +361,38 @@ static int code128_do_c_step(struct code128_step * base, int prev_ix, int ix)
 
     char value = *previous_step->next_input;
     // NOTE: Currently we can't encode NULL
-    if(value == 0)
+    if (value == 0) {
         return 0;
+    }
 
     step->code = code128c_ascii_to_code(previous_step->next_input);
-    if(step->code < 0)
+    if (step->code < 0) {
         return 0;
+    }
 
     step->prev_ix = prev_ix;
     step->next_input = previous_step->next_input + 1;
 
     // Mode C consumes 2 characters for codes 0-99
-    if(step->code < 100)
+    if (step->code < 100) {
         step->next_input++;
+    }
 
     step->mode = CODE128_MODE_C;
     step->len = previous_step->len + CODE128_CHAR_LEN;
-    if(step->mode != previous_step->mode)
-        step->len += CODE128_CHAR_LEN; // Need to switch modes
+    if (step->mode != previous_step->mode) {
+        step->len += CODE128_CHAR_LEN;    // Need to switch modes
+    }
 
     return 1;
 }
 
-static struct code128_step * code128_alloc_step(struct code128_state * state)
+static struct code128_step *code128_alloc_step(struct code128_state * state)
 {
-    if(state->todo_ix >= state->allocated_steps) {
+    if (state->todo_ix >= state->allocated_steps) {
         state->allocated_steps += 1024;
         state->steps = (struct code128_step *) CODE128_REALLOC(state->steps,
-                                                               state->allocated_steps * sizeof(struct code128_step));
+                       state->allocated_steps * sizeof(struct code128_step));
     }
 
     struct code128_step * step = &state->steps[state->todo_ix];
@@ -391,10 +404,10 @@ static struct code128_step * code128_alloc_step(struct code128_state * state)
 static void code128_do_step(struct code128_state * state)
 {
     struct code128_step * step = &state->steps[state->current_ix];
-    if(*step->next_input == 0) {
+    if (*step->next_input == 0) {
         // Done, so see if we have a new shortest encoding.
-        if((step->len < state->maxlength) ||
-           (state->best_ix < 0 && step->len == state->maxlength)) {
+        if ((step->len < state->maxlength) ||
+            (state->best_ix < 0 && step->len == state->maxlength)) {
             state->best_ix = state->current_ix;
 
             // Update maxlength to avoid considering anything longer
@@ -405,47 +418,49 @@ static void code128_do_step(struct code128_state * state)
 
     // Don't try if we're already at or beyond the max acceptable
     // length;
-    if(step->len >= state->maxlength)
+    if (step->len >= state->maxlength) {
         return;
+    }
     char mode = step->mode;
 
     code128_alloc_step(state);
     int mode_c_worked = 0;
 
     // Always try mode C
-    if(code128_do_c_step(state->steps, state->current_ix, state->todo_ix)) {
+    if (code128_do_c_step(state->steps, state->current_ix, state->todo_ix)) {
         state->todo_ix++;
         code128_alloc_step(state);
         mode_c_worked = 1;
     }
 
-    if(mode == CODE128_MODE_A) {
+    if (mode == CODE128_MODE_A) {
         // If A works, stick with A. There's no advantage to switching
         // to B proactively if A still works.
-        if(code128_do_a_step(state->steps, state->current_ix, state->todo_ix) ||
-           code128_do_b_step(state->steps, state->current_ix, state->todo_ix))
+        if (code128_do_a_step(state->steps, state->current_ix, state->todo_ix) ||
+            code128_do_b_step(state->steps, state->current_ix, state->todo_ix)) {
             state->todo_ix++;
-    }
-    else if(mode == CODE128_MODE_B) {
+        }
+    } else if (mode == CODE128_MODE_B) {
         // The same logic applies here. There's no advantage to switching
         // proactively to A if B still works.
-        if(code128_do_b_step(state->steps, state->current_ix, state->todo_ix) ||
-           code128_do_a_step(state->steps, state->current_ix, state->todo_ix))
+        if (code128_do_b_step(state->steps, state->current_ix, state->todo_ix) ||
+            code128_do_a_step(state->steps, state->current_ix, state->todo_ix)) {
             state->todo_ix++;
-    }
-    else if(!mode_c_worked) {
+        }
+    } else if (!mode_c_worked) {
         // In mode C. If mode C worked and we're in mode C, trying anything
         // else is pointless since the mode C encoding will be shorter and
         // there won't be any mode switches.
 
         // If we're leaving mode C, though, try both in case one ends up
         // better than the other.
-        if(code128_do_a_step(state->steps, state->current_ix, state->todo_ix)) {
+        if (code128_do_a_step(state->steps, state->current_ix, state->todo_ix)) {
             state->todo_ix++;
             code128_alloc_step(state);
         }
-        if(code128_do_b_step(state->steps, state->current_ix, state->todo_ix))
+        if (code128_do_b_step(state->steps, state->current_ix, state->todo_ix)) {
             state->todo_ix++;
+        }
     }
 }
 
@@ -457,7 +472,7 @@ size_t code128_encode_raw(const char * s, char * out, size_t maxlength)
                             + CODE128_CHAR_LEN // checksum
                             + CODE128_STOP_CODE_LEN
                             + CODE128_QUIET_ZONE_LEN;
-    if(maxlength < overhead + CODE128_CHAR_LEN + CODE128_CHAR_LEN) {
+    if (maxlength < overhead + CODE128_CHAR_LEN + CODE128_CHAR_LEN) {
         // Need space to encode the start character and one additional
         // character.
         return 0;
@@ -495,25 +510,25 @@ size_t code128_encode_raw(const char * s, char * out, size_t maxlength)
     do {
         code128_do_step(&state);
         state.current_ix++;
-    } while(state.current_ix != state.todo_ix);
+    } while (state.current_ix != state.todo_ix);
 
     // If no best_step, then fail.
-    if(state.best_ix < 0) {
+    if (state.best_ix < 0) {
         CODE128_FREE(state.steps);
         return 0;
     }
 
     // Determine the list of codes
     size_t num_codes = state.maxlength / CODE128_CHAR_LEN;
-    char * codes = CODE128_MALLOC(num_codes);
+    char *codes = CODE128_MALLOC(num_codes);
     CODE128_ASSERT(codes);
 
     struct code128_step * step = &state.steps[state.best_ix];
     size_t i;
-    for(i = num_codes - 1; i > 0; --i) {
+    for (i = num_codes - 1; i > 0; --i) {
         struct code128_step * prev_step = &state.steps[step->prev_ix];
         codes[i] = step->code;
-        if(step->mode != prev_step->mode) {
+        if (step->mode != prev_step->mode) {
             --i;
             codes[i] = code128_switch_code(prev_step->mode, step->mode);
         }
@@ -525,13 +540,15 @@ size_t code128_encode_raw(const char * s, char * out, size_t maxlength)
     size_t actual_length = state.maxlength + overhead;
     CODE128_MEMSET(out, 0, CODE128_QUIET_ZONE_LEN);
     out += CODE128_QUIET_ZONE_LEN;
-    for(i = 0; i < num_codes; i++)
+    for (i = 0; i < num_codes; i++) {
         out += code128_append_code(codes[i], out);
+    }
 
     // Compute the checksum
     int sum = codes[0];
-    for(i = 1; i < num_codes; i++)
+    for (i = 1; i < num_codes; i++) {
         sum += codes[i] * i;
+    }
     out += code128_append_code(sum % 103, out);
 
     // Finalize the code.
@@ -554,19 +571,18 @@ size_t code128_encode_raw(const char * s, char * out, size_t maxlength)
 size_t code128_encode_gs1(const char * s, char * out, size_t maxlength)
 {
     size_t raw_size = CODE128_STRLEN(s) + 1;
-    char * raw = CODE128_MALLOC(raw_size);
+    char *raw = CODE128_MALLOC(raw_size);
     CODE128_ASSERT(raw);
-    if(!raw) {
+    if (!raw) {
         return 0;
     }
 
-    char * p = raw;
-    for(; *s != '\0'; s++) {
-        if(strncmp(s, "[FNC1]", 6) == 0) {
+    char *p = raw;
+    for (; *s != '\0'; s++) {
+        if (strncmp(s, "[FNC1]", 6) == 0) {
             *p++ = CODE128_FNC1;
             s += 5;
-        }
-        else if(*s != ' ') {
+        } else if (*s != ' ') {
             *p++ = *s;
         }
     }

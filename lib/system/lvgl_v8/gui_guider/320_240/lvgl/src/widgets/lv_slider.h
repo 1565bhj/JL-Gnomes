@@ -44,7 +44,7 @@ typedef struct {
     lv_bar_t bar;       /*Add the ancestor's type first*/
     lv_area_t left_knob_area;
     lv_area_t right_knob_area;
-    int32_t * value_to_set; /*Which bar value to set*/
+    int32_t *value_to_set;  /*Which bar value to set*/
     uint8_t dragging : 1;       /*1: the slider is being dragged*/
     uint8_t left_knob_focus : 1; /*1: with encoder now the right knob can be adjusted*/
 } lv_slider_t;
@@ -69,7 +69,7 @@ typedef enum {
  * @param parent    pointer to an object, it will be the parent of the new slider.
  * @return          pointer to the created slider
  */
-lv_obj_t * lv_slider_create(lv_obj_t * parent);
+lv_obj_t *lv_slider_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -177,9 +177,13 @@ bool lv_slider_is_dragged(const lv_obj_t * obj);
 static inline lv_slider_mode_t lv_slider_get_mode(lv_obj_t * slider)
 {
     lv_bar_mode_t mode = lv_bar_get_mode(slider);
-    if(mode == LV_BAR_MODE_SYMMETRICAL) return LV_SLIDER_MODE_SYMMETRICAL;
-    else if(mode == LV_BAR_MODE_RANGE) return LV_SLIDER_MODE_RANGE;
-    else return LV_SLIDER_MODE_NORMAL;
+    if (mode == LV_BAR_MODE_SYMMETRICAL) {
+        return LV_SLIDER_MODE_SYMMETRICAL;
+    } else if (mode == LV_BAR_MODE_RANGE) {
+        return LV_SLIDER_MODE_RANGE;
+    } else {
+        return LV_SLIDER_MODE_NORMAL;
+    }
 }
 
 /**********************

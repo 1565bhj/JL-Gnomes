@@ -61,7 +61,9 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_rect_dsc_init(lv_draw_rect_dsc_t * dsc)
  */
 void lv_draw_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dsc, const lv_area_t * coords)
 {
-    if(lv_area_get_height(coords) < 1 || lv_area_get_width(coords) < 1) return;
+    if (lv_area_get_height(coords) < 1 || lv_area_get_width(coords) < 1) {
+        return;
+    }
 
     draw_ctx->draw_rect(draw_ctx, dsc, coords);
 

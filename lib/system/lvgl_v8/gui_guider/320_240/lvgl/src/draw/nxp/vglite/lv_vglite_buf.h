@@ -68,14 +68,14 @@ void lv_gpu_nxp_vglite_init_buf(const lv_color_t * buf, const lv_area_t * area, 
  *
  * @retval The vglite destination buffer
  */
-vg_lite_buffer_t * lv_vglite_get_dest_buf(void);
+vg_lite_buffer_t *lv_vglite_get_dest_buf(void);
 
 /**
  * Get vglite source buffer pointer.
  *
  * @retval The vglite source buffer
  */
-vg_lite_buffer_t * lv_vglite_get_src_buf(void);
+vg_lite_buffer_t *lv_vglite_get_src_buf(void);
 
 /**
  * Set vglite destination buffer address only.
@@ -109,7 +109,7 @@ void lv_vglite_set_src_buf(const lv_color_t * buf, const lv_area_t * area, lv_co
  * @param[in] stride buffer stride
  */
 void lv_vglite_set_buf(vg_lite_buffer_t * vgbuf, const lv_color_t * buf,
-                       const lv_area_t * area, lv_coord_t stride);
+                       const lv_area_t *area, lv_coord_t stride);
 
 /**********************
  *      MACROS

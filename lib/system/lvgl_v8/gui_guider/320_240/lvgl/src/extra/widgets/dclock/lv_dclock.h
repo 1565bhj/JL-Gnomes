@@ -51,7 +51,7 @@ LV_EXPORT_CONST_INT(LV_DCLOCK_TEXT_SELECTION_OFF);
 
 typedef struct {
     lv_obj_t obj;
-    char * text;
+    char *text;
 
 #if LV_DCLOCK_TEXT_SELECTION
     uint32_t sel_start;
@@ -79,7 +79,7 @@ extern const lv_obj_class_t lv_dclock_class;
  * Example:  lv_obj_t * dclock = lv_dclock_create(lv_obj_t * parent,"11:59:55 AM", LV_DCLOCK_SHOW_SECONDS_TRUE,LV_DCLOCK_SHOW_MERIDIEM_TRUE);
  */
 
-lv_obj_t * lv_dclock_create(lv_obj_t * parent, char * input_time);
+lv_obj_t *lv_dclock_create(lv_obj_t * parent, char * input_time);
 
 /*=====================
  * Setter functions

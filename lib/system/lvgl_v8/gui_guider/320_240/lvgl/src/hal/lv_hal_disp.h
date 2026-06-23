@@ -49,11 +49,11 @@ struct _lv_theme_t;
  * Structure for holding display buffer information.
  */
 typedef struct _lv_disp_draw_buf_t {
-    void * buf1; /**< First display buffer.*/
-    void * buf2; /**< Second display buffer.*/
+    void *buf1;  /**< First display buffer.*/
+    void *buf2;  /**< Second display buffer.*/
 
     /*Internal, used by the library*/
-    void * buf_act;
+    void *buf_act;
     uint32_t size; /*In pixel count*/
     /*1: flushing is in progress. (It can't be a bit field because when it's cleared from IRQ Read-Modify-Write issue might occur)*/
     volatile int flushing;
@@ -90,7 +90,7 @@ typedef struct _lv_disp_drv_t {
 
     /** Pointer to a buffer initialized with `lv_disp_draw_buf_init()`.
      * LVGL will use this buffer(s) to draw the screens contents*/
-    lv_disp_draw_buf_t * draw_buf;
+    lv_disp_draw_buf_t *draw_buf;
 
     uint32_t direct_mode : 1;        /**< 1: Use screen-sized buffers and draw to absolute coordinates*/
     uint32_t full_refresh : 1;       /**< 1: Always make the whole screen redrawn*/
@@ -141,13 +141,13 @@ typedef struct _lv_disp_drv_t {
      * `LV_COLOR_CHROMA_KEY` by default. (lv_conf.h)*/
     lv_color_t color_chroma_key;
 
-    lv_draw_ctx_t * draw_ctx;
+    lv_draw_ctx_t *draw_ctx;
     void (*draw_ctx_init)(struct _lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw_ctx);
     void (*draw_ctx_deinit)(struct _lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw_ctx);
     size_t draw_ctx_size;
 
 #if LV_USE_USER_DATA
-    void * user_data; /**< Custom display driver user data*/
+    void *user_data;  /**< Custom display driver user data*/
 #endif
 
 } lv_disp_drv_t;
@@ -158,21 +158,21 @@ typedef struct _lv_disp_drv_t {
  */
 typedef struct _lv_disp_t {
     /**< Driver to the display*/
-    struct _lv_disp_drv_t * driver;
+    struct _lv_disp_drv_t *driver;
 
     /**< A timer which periodically checks the dirty areas and refreshes them*/
-    lv_timer_t * refr_timer;
+    lv_timer_t *refr_timer;
 
     /**< The theme assigned to the screen*/
-    struct _lv_theme_t * theme;
+    struct _lv_theme_t *theme;
 
     /** Screens of the display*/
-    struct _lv_obj_t ** screens;    /**< Array of screen objects.*/
-    struct _lv_obj_t * act_scr;     /**< Currently active screen on this display*/
-    struct _lv_obj_t * prev_scr;    /**< Previous screen. Used during screen animations*/
-    struct _lv_obj_t * scr_to_load; /**< The screen prepared to load in lv_scr_load_anim*/
-    struct _lv_obj_t * top_layer;   /**< @see lv_disp_get_layer_top*/
-    struct _lv_obj_t * sys_layer;   /**< @see lv_disp_get_layer_sys*/
+    struct _lv_obj_t **screens;     /**< Array of screen objects.*/
+    struct _lv_obj_t *act_scr;      /**< Currently active screen on this display*/
+    struct _lv_obj_t *prev_scr;     /**< Previous screen. Used during screen animations*/
+    struct _lv_obj_t *scr_to_load;  /**< The screen prepared to load in lv_scr_load_anim*/
+    struct _lv_obj_t *top_layer;    /**< @see lv_disp_get_layer_top*/
+    struct _lv_obj_t *sys_layer;    /**< @see lv_disp_get_layer_sys*/
     uint32_t screen_cnt;
     uint8_t draw_prev_over_act : 1; /**< 1: Draw previous screen over active screen*/
     uint8_t del_prev : 1;           /**< 1: Automatically delete the previous screen when the screen load anim. is ready*/
@@ -180,7 +180,7 @@ typedef struct _lv_disp_t {
 
     lv_opa_t bg_opa;                /**<Opacity of the background color or wallpaper*/
     lv_color_t bg_color;            /**< Default display color when screens are transparent*/
-    const void * bg_img;            /**< An image source to display as wallpaper*/
+    const void *bg_img;             /**< An image source to display as wallpaper*/
 
     /** Invalidated (marked to redraw) areas*/
     lv_area_t inv_areas[LV_INV_BUF_SIZE];
@@ -230,7 +230,7 @@ void lv_disp_draw_buf_init(lv_disp_draw_buf_t * draw_buf, void * buf1, void * bu
  * @param driver pointer to an initialized 'lv_disp_drv_t' variable. Only its pointer is saved!
  * @return pointer to the new display or NULL on error
  */
-lv_disp_t * lv_disp_drv_register(lv_disp_drv_t * driver);
+lv_disp_t *lv_disp_drv_register(lv_disp_drv_t * driver);
 
 /**
  * Update the driver in run time.
@@ -255,7 +255,7 @@ void lv_disp_set_default(lv_disp_t * disp);
  * Get the default display
  * @return pointer to the default display
  */
-lv_disp_t * lv_disp_get_default(void);
+lv_disp_t *lv_disp_get_default(void);
 
 /**
  * Get the horizontal resolution of a display
@@ -351,14 +351,14 @@ bool /* LV_ATTRIBUTE_FLUSH_READY */ lv_disp_flush_is_last(lv_disp_drv_t * disp_d
  * @param disp pointer to the current display. NULL to initialize.
  * @return the next display or NULL if no more. Give the first display when the parameter is NULL
  */
-lv_disp_t * lv_disp_get_next(lv_disp_t * disp);
+lv_disp_t *lv_disp_get_next(lv_disp_t * disp);
 
 /**
  * Get the internal buffer of a display
  * @param disp pointer to a display
  * @return pointer to the internal buffers
  */
-lv_disp_draw_buf_t * lv_disp_get_draw_buf(lv_disp_t * disp);
+lv_disp_draw_buf_t *lv_disp_get_draw_buf(lv_disp_t * disp);
 
 void lv_disp_drv_use_generic_set_px_cb(lv_disp_drv_t * disp_drv, lv_img_cf_t cf);
 

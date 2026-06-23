@@ -58,14 +58,14 @@ void lv_monkey_config_init(lv_monkey_config_t * config);
  * @param config pointer to 'lv_monkey_config_t' variable
  * @return pointer to the created monkey
  */
-lv_monkey_t * lv_monkey_create(const lv_monkey_config_t * config);
+lv_monkey_t *lv_monkey_create(const lv_monkey_config_t * config);
 
 /**
  * Get monkey input device
  * @param monkey pointer to a monkey
  * @return pointer to the input device
  */
-lv_indev_t * lv_monkey_get_indev(lv_monkey_t * monkey);
+lv_indev_t *lv_monkey_get_indev(lv_monkey_t * monkey);
 
 /**
  * Enable monkey
@@ -95,7 +95,7 @@ void lv_monkey_set_user_data(lv_monkey_t * monkey, void * user_data);
  * @param monkey pointer to a monkey
  * @return the pointer to the user_data of the monkey
  */
-void * lv_monkey_get_user_data(lv_monkey_t * monkey);
+void *lv_monkey_get_user_data(lv_monkey_t * monkey);
 
 #endif/*LV_USE_USER_DATA*/
 

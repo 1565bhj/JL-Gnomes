@@ -24,9 +24,9 @@
  **********************/
 
 typedef struct {
-    SDL_Texture * texture;
-    void * userdata;
-    lv_lru_free_t * userdata_free;
+    SDL_Texture *texture;
+    void *userdata;
+    lv_lru_free_t *userdata_free;
     lv_draw_sdl_cache_flag_t flags;
 } draw_cache_value_t;
 
@@ -40,8 +40,8 @@ typedef struct {
 
 static void draw_cache_free_value(draw_cache_value_t *);
 
-static draw_cache_value_t * draw_cache_get_entry(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
-                                                 bool * found);
+static draw_cache_value_t *draw_cache_get_entry(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
+        bool * found);
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -57,7 +57,7 @@ static draw_cache_value_t * draw_cache_get_entry(lv_draw_sdl_ctx_t * ctx, const 
 void lv_draw_sdl_texture_cache_init(lv_draw_sdl_ctx_t * ctx)
 {
     ctx->internals->texture_cache = lv_lru_create(LV_GPU_SDL_LRU_SIZE, 65536,
-                                                  (lv_lru_free_t *) draw_cache_free_value, NULL);
+                                    (lv_lru_free_t *) draw_cache_free_value, NULL);
 }
 
 void lv_draw_sdl_texture_cache_deinit(lv_draw_sdl_ctx_t * ctx)
@@ -65,17 +65,19 @@ void lv_draw_sdl_texture_cache_deinit(lv_draw_sdl_ctx_t * ctx)
     lv_lru_del(ctx->internals->texture_cache);
 }
 
-SDL_Texture * lv_draw_sdl_texture_cache_get(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length, bool * found)
+SDL_Texture *lv_draw_sdl_texture_cache_get(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length, bool * found)
 {
     return lv_draw_sdl_texture_cache_get_with_userdata(ctx, key, key_length, found, NULL);
 }
 
-SDL_Texture * lv_draw_sdl_texture_cache_get_with_userdata(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
-                                                          bool * found, void ** userdata)
+SDL_Texture *lv_draw_sdl_texture_cache_get_with_userdata(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
+        bool * found, void **userdata)
 {
-    draw_cache_value_t * value = draw_cache_get_entry(ctx, key, key_length, found);
-    if(!value) return NULL;
-    if(userdata) {
+    draw_cache_value_t *value = draw_cache_get_entry(ctx, key, key_length, found);
+    if (!value) {
+        return NULL;
+    }
+    if (userdata) {
         *userdata = value->userdata;
     }
     return value->texture;
@@ -87,33 +89,33 @@ bool lv_draw_sdl_texture_cache_put(lv_draw_sdl_ctx_t * ctx, const void * key, si
 }
 
 bool lv_draw_sdl_texture_cache_put_advanced(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
-                                            SDL_Texture * texture, void * userdata, void userdata_free(void *),
-                                            lv_draw_sdl_cache_flag_t flags)
+        SDL_Texture * texture, void *userdata, void userdata_free(void *),
+        lv_draw_sdl_cache_flag_t flags)
 {
-    lv_lru_t * lru = ctx->internals->texture_cache;
-    draw_cache_value_t * value = SDL_malloc(sizeof(draw_cache_value_t));
+    lv_lru_t *lru = ctx->internals->texture_cache;
+    draw_cache_value_t *value = SDL_malloc(sizeof(draw_cache_value_t));
     value->texture = texture;
     value->userdata = userdata;
     value->userdata_free = userdata_free;
     value->flags = flags;
-    if(!texture) {
+    if (!texture) {
         return lv_lru_set(lru, key, key_length, value, 1) == LV_LRU_OK;
     }
-    if(flags & LV_DRAW_SDL_CACHE_FLAG_MANAGED) {
+    if (flags & LV_DRAW_SDL_CACHE_FLAG_MANAGED) {
         /* Managed texture doesn't count into cache size */
         LV_LOG_INFO("cache texture %p", texture);
         return lv_lru_set(lru, key, key_length, value, 1) == LV_LRU_OK;
     }
     Uint32 format;
     int access, width, height;
-    if(SDL_QueryTexture(texture, &format, &access, &width, &height) != 0) {
+    if (SDL_QueryTexture(texture, &format, &access, &width, &height) != 0) {
         return false;
     }
     LV_LOG_INFO("cache texture %p, %d*%d@%dbpp", texture, width, height, SDL_BITSPERPIXEL(format));
     return lv_lru_set(lru, key, key_length, value, width * height * SDL_BITSPERPIXEL(format) / 8) == LV_LRU_OK;
 }
 
-lv_draw_sdl_cache_key_head_img_t * lv_draw_sdl_texture_img_key_create(const void * src, int32_t frame_id, size_t * size)
+lv_draw_sdl_cache_key_head_img_t *lv_draw_sdl_texture_img_key_create(const void * src, int32_t frame_id, size_t * size)
 {
     lv_draw_sdl_cache_key_head_img_t header;
     /* VERY IMPORTANT! Padding between members is uninitialized, so we have to wipe them manually */
@@ -121,17 +123,16 @@ lv_draw_sdl_cache_key_head_img_t * lv_draw_sdl_texture_img_key_create(const void
     header.magic = LV_GPU_CACHE_KEY_MAGIC_IMG;
     header.type = lv_img_src_get_type(src);
     header.frame_id = frame_id;
-    void * key;
+    void *key;
     size_t key_size;
-    if(header.type == LV_IMG_SRC_FILE || header.type == LV_IMG_SRC_SYMBOL) {
+    if (header.type == LV_IMG_SRC_FILE || header.type == LV_IMG_SRC_SYMBOL) {
         size_t srclen = SDL_strlen(src);
         key_size = sizeof(header) + srclen;
         key = SDL_malloc(key_size);
         SDL_memcpy(key, &header, sizeof(header));
         /*Copy string content as key value*/
         SDL_memcpy(key + sizeof(header), src, srclen);
-    }
-    else {
+    } else {
         key_size = sizeof(header) + sizeof(void *);
         key = SDL_malloc(key_size);
         SDL_memcpy(key, &header, sizeof(header));
@@ -144,29 +145,29 @@ lv_draw_sdl_cache_key_head_img_t * lv_draw_sdl_texture_img_key_create(const void
 
 static void draw_cache_free_value(draw_cache_value_t * value)
 {
-    if(value->texture && !(value->flags & LV_DRAW_SDL_CACHE_FLAG_MANAGED)) {
+    if (value->texture && !(value->flags & LV_DRAW_SDL_CACHE_FLAG_MANAGED)) {
         LV_LOG_INFO("destroy texture %p", value->texture);
         SDL_DestroyTexture(value->texture);
     }
-    if(value->userdata_free) {
+    if (value->userdata_free) {
         value->userdata_free(value->userdata);
     }
     SDL_free(value);
 }
 
-static draw_cache_value_t * draw_cache_get_entry(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
-                                                 bool * found)
+static draw_cache_value_t *draw_cache_get_entry(lv_draw_sdl_ctx_t * ctx, const void * key, size_t key_length,
+        bool * found)
 {
-    lv_lru_t * lru = ctx->internals->texture_cache;
-    draw_cache_value_t * value = NULL;
+    lv_lru_t *lru = ctx->internals->texture_cache;
+    draw_cache_value_t *value = NULL;
     lv_lru_get(lru, key, key_length, (void **) &value);
-    if(!value) {
-        if(found) {
+    if (!value) {
+        if (found) {
             *found = false;
         }
         return NULL;
     }
-    if(found) {
+    if (found) {
         *found = true;
     }
     return value;

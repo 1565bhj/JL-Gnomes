@@ -32,8 +32,8 @@ typedef enum {
 
 /*Data of pinyin_dict*/
 typedef struct {
-    const char * const py;
-    const char * const py_mb;
+    const char *const py;
+    const char *const py_mb;
 } lv_pinyin_dict_t;
 
 /*Data of 9-key input(k9) mode*/
@@ -44,11 +44,11 @@ typedef struct {
 /*Data of lv_ime_pinyin*/
 typedef struct {
     lv_obj_t obj;
-    lv_obj_t * kb;
-    lv_obj_t * cand_panel;
-    lv_pinyin_dict_t * dict;
+    lv_obj_t *kb;
+    lv_obj_t *cand_panel;
+    lv_pinyin_dict_t *dict;
     lv_ll_t k9_legal_py_ll;
-    char * cand_str;            /* Candidate string */
+    char *cand_str;             /* Candidate string */
     char   input_char[16];      /* Input box character */
 #if LV_IME_PINYIN_USE_K9_MODE
     char   k9_input_str[LV_IME_PINYIN_K9_MAX_INPUT]; /* 9-key input(k9) mode input string */
@@ -71,7 +71,7 @@ typedef struct {
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
-lv_obj_t * lv_ime_pinyin_create(lv_obj_t * parent);
+lv_obj_t *lv_ime_pinyin_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -108,7 +108,7 @@ void lv_ime_pinyin_set_mode(lv_obj_t * obj, lv_ime_pinyin_mode_t mode);
  * @param obj  pointer to a Pinyin IME object
  * @return     pointer to the Pinyin IME keyboard
  */
-lv_obj_t * lv_ime_pinyin_get_kb(lv_obj_t * obj);
+lv_obj_t *lv_ime_pinyin_get_kb(lv_obj_t * obj);
 
 
 /**
@@ -116,7 +116,7 @@ lv_obj_t * lv_ime_pinyin_get_kb(lv_obj_t * obj);
  * @param obj  pointer to a Pinyin input method object
  * @return     pointer to the Pinyin input method candidate panel
  */
-lv_obj_t * lv_ime_pinyin_get_cand_panel(lv_obj_t * obj);
+lv_obj_t *lv_ime_pinyin_get_cand_panel(lv_obj_t * obj);
 
 
 /**
@@ -124,7 +124,7 @@ lv_obj_t * lv_ime_pinyin_get_cand_panel(lv_obj_t * obj);
  * @param obj  pointer to a Pinyin input method object
  * @return     pointer to the Pinyin input method dictionary
  */
-lv_pinyin_dict_t * lv_ime_pinyin_get_dict(lv_obj_t * obj);
+lv_pinyin_dict_t *lv_ime_pinyin_get_dict(lv_obj_t * obj);
 
 /*=====================
  * Other functions

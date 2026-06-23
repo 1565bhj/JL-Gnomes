@@ -110,7 +110,7 @@
 		<Compiler>
 			<Add directory="./" />
 		</Compiler>
-		<Unit filename="../custom/Page_External_Interface_Function_Collection.c">
+		<Unit filename="../custom/agent_choose.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../custom/alarm.h" />
@@ -126,6 +126,9 @@
 		<Unit filename="../custom/alarm_set_event.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../custom/calculate.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../custom/conversation.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -137,29 +140,31 @@
 		<Unit filename="../custom/dropdown.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../custom/game_die.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../custom/game_mouse.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../custom/lv_conf_ext.h" />
-		<Unit filename="../custom/music.c">
-			<Option compilerVar="CC" />
-		</Unit>
+		<Unit filename="../custom/lvgl_develop.h" />
 		<Unit filename="../custom/page_switch.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../custom/podcast.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../custom/ring.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../custom/screen_content.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_content_pinyin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_content_pinyin.h" />
+		<Unit filename="../custom/screen_list.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../custom/screen_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../custom/screen_option.c">
+		<Unit filename="../custom/screen_music.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/sleep_music.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../custom/timer.h" />
@@ -173,6 +178,13 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../custom/tomoto_time.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/wifi_common.h" />
+		<Unit filename="../custom/wifi_psw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/wifi_show.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../demos/benchmark/assets/img_benchmark_cogwheel_alpha16.c">
@@ -441,7 +453,16 @@
 		<Unit filename="../generated/guider_fonts/lv_font_Barlow__54.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__72.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__80.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../generated/guider_fonts/lv_font_MiSansDemibold_12.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_MiSansDemibold_14.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/guider_fonts/lv_font_MiSansDemibold_18.c">
@@ -459,16 +480,34 @@
 		<Unit filename="../generated/images/_BT_alpha_20x20.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../generated/images/_QR_code_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../generated/images/_add_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_1_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_2_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_3_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_4_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_5_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_6_alpha_66x66.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_ai_alpha_30x30.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_alarm_del_alpha_20x20.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_alarm_option_alpha_100x100.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_all_choice_alpha_22x22.c">
@@ -486,70 +525,40 @@
 		<Unit filename="../generated/images/_bg_320x240.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_blog_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_blog_alpha_80x80.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_cave_alpha_71x63.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../generated/images/_charging_battery_alpha_22x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_choose_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_choose_bg_320x240.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_clear_alpha_30x30.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_conversation_option_alpha_100x100.c">
+		<Unit filename="../generated/images/_close_alpha_20x20.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_die1_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_die2_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_die3_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_die4_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_die5_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_die6_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_die_fail_alpha_137x86.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_die_win_alpha_137x86.c">
+		<Unit filename="../generated/images/_connect_success_alpha_20x20.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_enter_alpha_24x17.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_enter_game_168x61.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_fail_again_168x61.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_fast_shake_alpha_141x56.c">
+		<Unit filename="../generated/images/_excellent_essays_alpha_240x82.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_fully_charged_battery_alpha_22x14.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_groove_alpha_228x145.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_groove_alpha_234x140.c">
+		<Unit filename="../generated/images/_general_QA_alpha_240x82.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_hide_part_alpha_52x51.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_ios_alpha_100x100.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_last2_alpha_50x50.c">
@@ -562,6 +571,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_location_set_alpha_15x18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_lock_alpha_18x16.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_low_battery_alpha_22x14.c">
@@ -580,36 +592,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_min_volumn_alpha_25x25.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_mouse2_alpha_50x50.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_mouse_alpha_50x50.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_mouse_countdown_alpha_124x53.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_mouse_countdown_alpha_131x53.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_mouse_game_num_alpha_59x71.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_music_option_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_new_mouse2_alpha_37x55.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_new_mouse2_alpha_37x63.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_new_mouse_alpha_37x55.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_new_mouse_alpha_37x63.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_next2_alpha_50x50.c">
@@ -639,58 +621,52 @@
 		<Unit filename="../generated/images/_no_wifi_alpha_18x16.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../generated/images/_nomute_alpha_17x18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_normal_fully_battery_alpha_22x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../generated/images/_normol_battery_alpha_22x14.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_alarm_66x85.c">
+		<Unit filename="../generated/images/_op_agent_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_conversation_66x85.c">
+		<Unit filename="../generated/images/_op_alarm_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_dice_game_66x85.c">
+		<Unit filename="../generated/images/_op_calculator_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_draw_lots_game_66x85.c">
+		<Unit filename="../generated/images/_op_content_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_music_66x85.c">
+		<Unit filename="../generated/images/_op_conversation_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_podcast_66x85.c">
+		<Unit filename="../generated/images/_op_music_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_set_alpha_100x100.c">
+		<Unit filename="../generated/images/_op_sleep_music_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_op_timer_66x85.c">
+		<Unit filename="../generated/images/_op_timer_alpha_66x85.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_op_whack_game_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_wifi_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_open_alpha_20x20.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_overcast_alpha_25x20.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_overcast_alpha_30x25.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_pdie1_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_pdie2_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_pdie3_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_pdie4_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_pdie5_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/images/_pdie6_alpha_100x100.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_play_random_alpha_20x20.c">
@@ -705,7 +681,13 @@
 		<Unit filename="../generated/images/_rain_alpha_30x25.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../generated/images/_refresh_alpha_15x15.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../generated/images/_refresh_alpha_22x22.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_return_alpha_20x20.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_return_alpha_22x22.c">
@@ -726,7 +708,13 @@
 		<Unit filename="../generated/images/_set_alarm_alpha_17x15.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../generated/images/_set_wifi_alpha_16x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../generated/images/_set_wifi_alpha_18x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_set_wifi_alpha_80x62.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_shunxu_alpha_20x20.c">
@@ -742,6 +730,15 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_story_alpha_80x80.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_study_QA_alpha_240x82.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_study_chinese_alpha_240x82.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_study_english_alpha_240x82.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_sun_alpha_25x20.c">
@@ -762,9 +759,6 @@
 		<Unit filename="../generated/images/_tape_bar_alpha_47x98.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/images/_timer_option_alpha_100x100.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../generated/images/_trash_alpha_30x30.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -778,6 +772,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_volume_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_wifi_err_alpha_80x80.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/images/_wind_alpha_25x20.c">
@@ -799,6 +796,9 @@
 		<Unit filename="../generated/images/images_list.mk" />
 		<Unit filename="../generated/images/images_md5.json" />
 		<Unit filename="../generated/images/lottie_list.mk" />
+		<Unit filename="../generated/setup_scr_screen_agent.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../generated/setup_scr_screen_alarm.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -811,16 +811,19 @@
 		<Unit filename="../generated/setup_scr_screen_alarm_set.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../generated/setup_scr_screen_calculator.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_content.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../generated/setup_scr_screen_conversation.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/setup_scr_screen_dice_game.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/setup_scr_screen_draw_lots_game.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../generated/setup_scr_screen_dropdown.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_list.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/setup_scr_screen_main.c">
@@ -829,13 +832,13 @@
 		<Unit filename="../generated/setup_scr_screen_music.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/setup_scr_screen_option.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../generated/setup_scr_screen_podcast.c">
+		<Unit filename="../generated/setup_scr_screen_net.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/setup_scr_screen_ring.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_sleep_music.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/setup_scr_screen_timer.c">
@@ -850,7 +853,10 @@
 		<Unit filename="../generated/setup_scr_screen_tomato.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../generated/setup_scr_screen_whack_game.c">
+		<Unit filename="../generated/setup_scr_screen_wifi_psw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_wifi_show.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../generated/widgets_init.c">

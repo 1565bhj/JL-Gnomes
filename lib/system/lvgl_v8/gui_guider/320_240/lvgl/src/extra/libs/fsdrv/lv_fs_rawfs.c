@@ -21,13 +21,13 @@
  *********************/
 
 #if LV_FS_RAWFS_LETTER == '\0'
-    #error "LV_FS_RAWFS_LETTER must be an upper case ASCII letter"
+#error "LV_FS_RAWFS_LETTER must be an upper case ASCII letter"
 #endif
 
 #if LV_FS_RAWFS_XIP
-    #if LV_FS_RAWFS_XIP_BASE_ADDR == 0xFFFFFFFF
-        #error "Base address for image binary (LV_FS_RAWFS_XIP_BASE_ADDR) must be valid"
-    #endif
+#if LV_FS_RAWFS_XIP_BASE_ADDR == 0xFFFFFFFF
+#error "Base address for image binary (LV_FS_RAWFS_XIP_BASE_ADDR) must be valid"
+#endif
 #endif
 
 /**********************
@@ -52,7 +52,7 @@ static lv_fs_res_t rawfs_file_find(const char * path, rawfs_file_t * file_p);
 
 static void fs_init(void);
 
-static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
+static void *fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
 static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p);
 static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br);
 static lv_fs_res_t fs_write(lv_fs_drv_t * drv, void * file_p, const void * buf, uint32_t btw, uint32_t * bw);
@@ -60,7 +60,7 @@ static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs
 static lv_fs_res_t fs_size(lv_fs_drv_t * drv, void * file_p, uint32_t * size_p);
 static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p);
 
-static void * fs_dir_open(lv_fs_drv_t * drv, const char * path);
+static void *fs_dir_open(lv_fs_drv_t * drv, const char * path);
 static lv_fs_res_t fs_dir_read(lv_fs_drv_t * drv, void * rddir_p, char * fn);
 static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * rddir_p);
 
@@ -126,8 +126,8 @@ static lv_fs_res_t rawfs_file_find(const char * path, rawfs_file_t * file_p)
 {
     lv_fs_res_t res = LV_FS_RES_FS_ERR;
     /*Find file*/
-    for(int i = 0; i < rawfs_file_count; i++) {
-        if(0 == strcmp(path, rawfs_files[i].name)) {
+    for (int i = 0; i < rawfs_file_count; i++) {
+        if (0 == strcmp(path, rawfs_files[i].name)) {
             *file_p = rawfs_files[i];
             res = LV_FS_RES_OK;
             break;
@@ -150,22 +150,21 @@ static void fs_init(void)
  * @param mode      read: FS_MODE_RD, write: FS_MODE_WR, both: FS_MODE_RD | FS_MODE_WR
  * @return          a file descriptor or NULL on error
  */
-static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
+static void *fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
-    void * f = NULL;
+    void *f = NULL;
 
-    if(mode == LV_FS_MODE_RD) {
+    if (mode == LV_FS_MODE_RD) {
         /*Open a file for read*/
         res = rawfs_file_find(path, &FIL);
-    }
-    else if(mode == (LV_FS_MODE_WR | LV_FS_MODE_RD)) {
+    } else if (mode == (LV_FS_MODE_WR | LV_FS_MODE_RD)) {
         /*Open a file for read and write*/
         res = rawfs_file_find(path, &FIL);
     }
 
-    if(res == LV_FS_RES_OK) {
+    if (res == LV_FS_RES_OK) {
         f = &FIL;
     }
 
@@ -200,7 +199,7 @@ static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_
 {
     lv_fs_res_t res = LV_FS_RES_OK;
 
-    rawfs_file_t * p = (rawfs_file_t *)file_p;
+    rawfs_file_t *p = (rawfs_file_t *)file_p;
 #if LV_FS_RAWFS_XIP
     /*For XIP flash, copy directly*/
     lv_memcpy((uint8_t *)buf, (uint8_t *)(LV_FS_RAWFS_XIP_BASE_ADDR + p->base + p->offset), btr);
@@ -245,17 +244,14 @@ static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs
 {
     lv_fs_res_t res = LV_FS_RES_OK;
 
-    rawfs_file_t * p = (rawfs_file_t *)file_p;
-    if(whence == LV_FS_SEEK_SET) {
+    rawfs_file_t *p = (rawfs_file_t *)file_p;
+    if (whence == LV_FS_SEEK_SET) {
         p->offset = pos;
-    }
-    else if(whence == LV_FS_SEEK_CUR) {
+    } else if (whence == LV_FS_SEEK_CUR) {
         p->offset += pos;
-    }
-    else if(whence == LV_FS_SEEK_END) {
+    } else if (whence == LV_FS_SEEK_END) {
         p->offset = p->size + pos;
-    }
-    else {
+    } else {
         res = LV_FS_RES_NOT_IMP;
     }
 
@@ -273,7 +269,7 @@ static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
 {
     lv_fs_res_t res = LV_FS_RES_OK;
 
-    rawfs_file_t * p = (rawfs_file_t *)file_p;
+    rawfs_file_t *p = (rawfs_file_t *)file_p;
     *pos_p = p->offset;
 
     return res;
@@ -285,9 +281,9 @@ static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
  * @param path      path to a directory
  * @return          pointer to the directory read descriptor or NULL on error
  */
-static void * fs_dir_open(lv_fs_drv_t * drv, const char * path)
+static void *fs_dir_open(lv_fs_drv_t * drv, const char * path)
 {
-    void * dir = NULL;
+    void *dir = NULL;
     /*Add your code here*/
     return dir;
 }

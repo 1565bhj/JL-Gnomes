@@ -248,7 +248,7 @@ extern DECLSPEC size_t SDLCALL SDL_SIMDGetAlignment(void);
  * \sa SDL_SIMDAlignment
  * \sa SDL_SIMDFree
  */
-extern DECLSPEC void * SDLCALL SDL_SIMDAlloc(const size_t len);
+extern DECLSPEC void *SDLCALL SDL_SIMDAlloc(const size_t len);
 
 /**
  * \brief Deallocate memory obtained from SDL_SIMDAlloc

@@ -52,7 +52,7 @@ void switch_to_conversation_page(void);
 void conversation_set_ai_message(lv_ui *ui, const char *message);
 void conversation_set_user_message(lv_ui *ui, const char *message);
 
-// 事件设置函数声明 
+// 事件设置函数声明
 void music_event_setup(void);
 void alarm_event_setup(void);
 void alarm_add_event_setup(void);

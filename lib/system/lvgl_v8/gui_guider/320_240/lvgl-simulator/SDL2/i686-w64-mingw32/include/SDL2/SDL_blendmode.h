@@ -37,8 +37,7 @@ extern "C" {
 /**
  *  \brief The blend mode used in SDL_RenderCopy() and drawing operations.
  */
-typedef enum
-{
+typedef enum {
     SDL_BLENDMODE_NONE = 0x00000000,     /**< no blending
                                               dstRGBA = srcRGBA */
     SDL_BLENDMODE_BLEND = 0x00000001,    /**< alpha blending
@@ -55,15 +54,14 @@ typedef enum
                                               dstA = (srcA * dstA) + (dstA * (1-srcA)) */
     SDL_BLENDMODE_INVALID = 0x7FFFFFFF
 
-    /* Additional custom blend modes can be returned by SDL_ComposeCustomBlendMode() */
+                            /* Additional custom blend modes can be returned by SDL_ComposeCustomBlendMode() */
 
 } SDL_BlendMode;
 
 /**
  *  \brief The blend operation used when combining source and destination pixel components
  */
-typedef enum
-{
+typedef enum {
     SDL_BLENDOPERATION_ADD              = 0x1,  /**< dst + src: supported by all renderers */
     SDL_BLENDOPERATION_SUBTRACT         = 0x2,  /**< dst - src : supported by D3D9, D3D11, OpenGL, OpenGLES */
     SDL_BLENDOPERATION_REV_SUBTRACT     = 0x3,  /**< src - dst : supported by D3D9, D3D11, OpenGL, OpenGLES */
@@ -75,8 +73,7 @@ typedef enum
 /**
  *  \brief The normalized factor used to multiply pixel components
  */
-typedef enum
-{
+typedef enum {
     SDL_BLENDFACTOR_ZERO                = 0x1,  /**< 0, 0, 0, 0 */
     SDL_BLENDFACTOR_ONE                 = 0x2,  /**< 1, 1, 1, 1 */
     SDL_BLENDFACTOR_SRC_COLOR           = 0x3,  /**< srcR, srcG, srcB, srcA */
@@ -106,11 +103,11 @@ typedef enum
  *      dstA = dstA * dstAlphaFactor alphaOperation srcA * srcAlphaFactor
  */
 extern DECLSPEC SDL_BlendMode SDLCALL SDL_ComposeCustomBlendMode(SDL_BlendFactor srcColorFactor,
-                                                                 SDL_BlendFactor dstColorFactor,
-                                                                 SDL_BlendOperation colorOperation,
-                                                                 SDL_BlendFactor srcAlphaFactor,
-                                                                 SDL_BlendFactor dstAlphaFactor,
-                                                                 SDL_BlendOperation alphaOperation);
+        SDL_BlendFactor dstColorFactor,
+        SDL_BlendOperation colorOperation,
+        SDL_BlendFactor srcAlphaFactor,
+        SDL_BlendFactor dstAlphaFactor,
+        SDL_BlendOperation alphaOperation);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

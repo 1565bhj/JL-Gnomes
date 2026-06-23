@@ -57,7 +57,7 @@ typedef struct _lv_timer_t {
     uint32_t period; /**< How often the timer should run*/
     uint32_t last_run; /**< Last time the timer ran*/
     lv_timer_cb_t timer_cb; /**< Timer function*/
-    void * user_data; /**< Custom user data*/
+    void *user_data;  /**< Custom user data*/
     int32_t repeat_count; /**< 1: One time;  -1 : infinity;  n>0: residual times*/
     uint32_t paused : 1;
 } lv_timer_t;
@@ -107,7 +107,7 @@ static inline uint32_t LV_ATTRIBUTE_TIMER_HANDLER lv_timer_handler_run_in_period
     static uint32_t last_tick = 0;
     uint32_t curr_tick = lv_tick_get();
 
-    if((curr_tick - last_tick) >= (ms)) {
+    if ((curr_tick - last_tick) >= (ms)) {
         last_tick = curr_tick;
         return lv_timer_handler();
     }
@@ -119,7 +119,7 @@ static inline uint32_t LV_ATTRIBUTE_TIMER_HANDLER lv_timer_handler_run_in_period
  * `lv_timer_set_cb` and `lv_timer_set_period`
  * @return pointer to the created timer
  */
-lv_timer_t * lv_timer_create_basic(void);
+lv_timer_t *lv_timer_create_basic(void);
 
 /**
  * Create a new lv_timer
@@ -130,7 +130,7 @@ lv_timer_t * lv_timer_create_basic(void);
  * @param user_data custom parameter
  * @return pointer to the new timer
  */
-lv_timer_t * lv_timer_create(lv_timer_cb_t timer_xcb, uint32_t period, void * user_data);
+lv_timer_t *lv_timer_create(lv_timer_cb_t timer_xcb, uint32_t period, void * user_data);
 
 /**
  * Delete a lv_timer
@@ -197,7 +197,7 @@ uint8_t lv_timer_get_idle(void);
  * @param timer NULL to start iteration or the previous return value to get the next timer
  * @return the next timer or NULL if there is no more timer
  */
-lv_timer_t * lv_timer_get_next(lv_timer_t * timer);
+lv_timer_t *lv_timer_get_next(lv_timer_t * timer);
 
 /**********************
  *      MACROS

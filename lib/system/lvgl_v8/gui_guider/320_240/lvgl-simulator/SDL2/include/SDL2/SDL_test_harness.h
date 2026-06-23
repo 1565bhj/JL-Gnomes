@@ -67,7 +67,7 @@ typedef void (*SDLTest_TestCaseSetUpFp)(void *arg);
 typedef int (*SDLTest_TestCaseFp)(void *arg);
 
 /* !< Function pointer to a test case teardown function (run after every test) */
-typedef void  (*SDLTest_TestCaseTearDownFp)(void *arg);
+typedef void (*SDLTest_TestCaseTearDownFp)(void *arg);
 
 /**
  * Holds information about a single test case.

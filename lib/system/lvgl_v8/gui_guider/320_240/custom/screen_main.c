@@ -64,9 +64,10 @@ static uint16_t alarm_warning_hide_timer_id = 0;
 lv_ui guider_ui;
 
 // 获取星期几的中文名称
-static const char* get_weekday_name(int weekday) {
-    static const char* weekday_names[] = {
-        "","星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日",
+static const char *get_weekday_name(int weekday)
+{
+    static const char *weekday_names[] = {
+        "", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日",
     };
 
     if (weekday >= 1 && weekday <= 7) {
@@ -82,7 +83,8 @@ typedef struct {
 
 static time_update_data_t g_weekday_data = {0};
 
-static void weekday_data_update(void){
+static void weekday_data_update(void)
+{
 //// 计算并格式化星期几
 ////    struct sys_time current_weekday = {0};  // 显式初始化为0
 //#if 1
@@ -154,7 +156,7 @@ static void time_data_update(void)
     if (current_time.hour < 0 || current_time.hour >= 24 ||
         current_time.min < 0 || current_time.min >= 60 ||
         current_time.sec < 0 || current_time.sec >= 60
-) {
+       ) {
         printf("[时间错误] 无效时间值: %d:%d\n", current_time.hour, current_time.min, current_time.sec);
         return;  // 放弃此次更新，避免缓冲区溢出
     }
@@ -195,30 +197,30 @@ void time_ui_update(void)
         if (guider_ui.screen_dropdown_time_span) {
             lv_span_set_text(guider_ui.screen_dropdown_time_span, g_time_data.time_str);
             lv_obj_invalidate(guider_ui.screen_dropdown_time_span);
-    //            printf("[UI更新] 时间显示已更新: %s\n", g_time_data.time_str);
+            //            printf("[UI更新] 时间显示已更新: %s\n", g_time_data.time_str);
         } else {
             printf("[UI错误] screen_dropdown_time_span 对象无效\n");
         }
 
         // 注释：日期显示功能可根据需要启用
-         if (guider_ui.screen_main_span_date_span) {
-             lv_span_set_text(guider_ui.screen_main_span_date_span, g_time_data.date_str);
-             lv_obj_invalidate(guider_ui.screen_main_span_date_span);
+        if (guider_ui.screen_main_span_date_span) {
+            lv_span_set_text(guider_ui.screen_main_span_date_span, g_time_data.date_str);
+            lv_obj_invalidate(guider_ui.screen_main_span_date_span);
 //             printf("[UI更新] 日期显示已更新: %s\n", g_time_data.time_str);
-         } else {
+        } else {
             printf("[UI错误] screen_main_span_date 对象无效\n");
-         }
-             // 注释：日期显示功能可根据需要启用
-         if (guider_ui.screen_main_span_week_span) {
-             lv_span_set_text(guider_ui.screen_main_span_week_span, g_time_data.week_str);
+        }
+        // 注释：日期显示功能可根据需要启用
+        if (guider_ui.screen_main_span_week_span) {
+            lv_span_set_text(guider_ui.screen_main_span_week_span, g_time_data.week_str);
 //             printf("===============================\n");
 //             printf("==week_str = %s=============\n",g_time_data.week_str);
 //             printf("===============================\n");
-             lv_obj_invalidate(guider_ui.screen_main_span_week_span);
+            lv_obj_invalidate(guider_ui.screen_main_span_week_span);
 //             printf("[UI更新] 星期显示已更新: %s\n", g_time_data.week_str);
-         } else {
+        } else {
             printf("[UI错误] screen_main_span_week_span 对象无效\n");
-         }
+        }
 
     }
 }
@@ -295,7 +297,7 @@ static void network_check_and_init(void *priv)
 
         if (g_time_retry_count < TIME_MAX_RETRY_COUNT) {
             // 继续重试
-            sys_timeout_add_to_task("sys_timer",NULL, network_check_and_init, TIME_RETRY_INTERVAL_MS);
+            sys_timeout_add_to_task("sys_timer", NULL, network_check_and_init, TIME_RETRY_INTERVAL_MS);
         } else {
             printf("[网络错误] 超过最大重试次数(%d)，时间服务初始化失败\n",
                    TIME_MAX_RETRY_COUNT);
@@ -312,7 +314,7 @@ void start_time_update_with_net_wait(void)
 {
     g_time_retry_count = 0;
     printf("\n[时间服务] 启动时间更新流程，等待网络连接...\n");
-    sys_timeout_add_to_task("sys_timer",NULL, network_check_and_init, 0);  // 立即开始第一次检查
+    sys_timeout_add_to_task("sys_timer", NULL, network_check_and_init, 0); // 立即开始第一次检查
 }
 
 
@@ -325,7 +327,8 @@ void start_time_update_with_net_wait(void)
  * 根据天气文本显示相应的图标
  * @param weather 天气文本
  */
-static void update_weather_icon(const char *weather) {
+static void update_weather_icon(const char *weather)
+{
     // 隐藏所有天气图标
     lv_obj_add_flag(guider_ui.screen_main_img_sun, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(guider_ui.screen_main_img_rain, LV_OBJ_FLAG_HIDDEN);
@@ -486,8 +489,8 @@ void update_weather_ui_from_json(const char *json_data)
     lv_obj_clear_flag(guider_ui.screen_main_img_location_set, LV_OBJ_FLAG_HIDDEN);
     lv_obj_align_to(guider_ui.screen_main_img_location_set, guider_ui.screen_main_span_direction, LV_ALIGN_OUT_LEFT_MID, -10, 0);
 
-    printf("[城市] city = %s\n",city);
-    printf("[城市] city_str = %s\n",city_str);
+    printf("[城市] city = %s\n", city);
+    printf("[城市] city_str = %s\n", city_str);
     // 更新天气和温度
     if (weather && temp_day && temp_night) {
         char weather_str[64];
@@ -497,7 +500,7 @@ void update_weather_ui_from_json(const char *json_data)
         lv_span_set_text(guider_ui.screen_main_span_weather_span, weather_temp_str);
         lv_style_set_text_color(&guider_ui.screen_main_span_direction_span->style, lv_color_hex(0xffffff));
         // 添加天气图标更新
-        printf("[tq] weather_str = %s\n",weather);
+        printf("[tq] weather_str = %s\n", weather);
         update_weather_icon(weather_str);
     }
 
@@ -564,7 +567,7 @@ void weather_check_net_and_fetch(void)
         lv_async_call(on_network_connected_init_wrapper, NULL);
     } else {
         printf("[Network] Attempt: Not connected.\n");
-        sys_timeout_add_to_task("sys_timer",NULL, weather_check_net_and_fetch, 2000);
+        sys_timeout_add_to_task("sys_timer", NULL, weather_check_net_and_fetch, 2000);
     }
 }
 // === 外部调用入口 ===
@@ -573,7 +576,7 @@ void start_weather_update_with_net_wait(void)
 //    weather_retry_count = 0;
     printf("\n[天气初始化] 开始天气更新。等待网络连接...\n");
     // 立即开始第一次检查
-    sys_timeout_add_to_task("sys_timer",NULL, weather_check_net_and_fetch, 2000);
+    sys_timeout_add_to_task("sys_timer", NULL, weather_check_net_and_fetch, 2000);
 }
 
 
@@ -590,7 +593,7 @@ void alarm_status_check(void)
     if (!guider_ui.screen_main_img_set_alarm) {
         return;
     }
-        // 检查UI对象是否有效
+    // 检查UI对象是否有效
     if (!guider_ui.screen_dropdown_img_no_alarm) {
         return;
     }
@@ -729,7 +732,8 @@ static int chargfull;
 #define TCFG_CHARGFULL_STATUS_PORT      IO_PORT_PR_00
 #define DEBOUNCE_THRESHOLD 3  // 防抖阈值
 // 更新电池电量显示 - 作为唯一控制电池图标显示的函数
-void update_battery_display(u8 percent) {
+void update_battery_display(u8 percent)
+{
     // 先隐藏所有图标
     if (guider_ui.screen_main_img_fully_battery) {
         lv_obj_add_flag(guider_ui.screen_main_img_fully_battery, LV_OBJ_FLAG_HIDDEN);
@@ -743,7 +747,7 @@ void update_battery_display(u8 percent) {
     if (guider_ui.screen_main_img_normol_battery) {
         lv_obj_add_flag(guider_ui.screen_main_img_normol_battery, LV_OBJ_FLAG_HIDDEN);
     }
-      // 先隐藏所有图标
+    // 先隐藏所有图标
     if (guider_ui.screen_dropdown_img_fully_battery) {
         lv_obj_add_flag(guider_ui.screen_dropdown_img_fully_battery, LV_OBJ_FLAG_HIDDEN);
     }
@@ -771,7 +775,7 @@ void update_battery_display(u8 percent) {
     if (guider_ui.screen_main_img_normol_battery) {
         lv_obj_set_pos(guider_ui.screen_main_img_normol_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
     }
-        // 统一设置图标位置
+    // 统一设置图标位置
     if (guider_ui.screen_dropdown_img_fully_battery) {
         lv_obj_set_pos(guider_ui.screen_dropdown_img_fully_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
     }
@@ -834,7 +838,8 @@ void update_battery_display(u8 percent) {
 }
 
 // 电池电量定时器回调函数 - 每分钟更新一次
-void battery_update_timer_cb(lv_timer_t *timer) {
+void battery_update_timer_cb(lv_timer_t *timer)
+{
     // 获取并更新电池电量显示
     extern int sys_get_vbat_percent(void);
     u8 battery_percent = sys_get_vbat_percent();
@@ -847,7 +852,8 @@ static bool already_notified_full = false;
 static int chargfull_dete(void);
 static void charge_status_check(void);
 // 初始化充电状态检测
-void charge_status_init(void) {
+void charge_status_init(void)
+{
     // 配置GPIO为输入模式
     gpio_direction_input(TCFG_CHARING_STATUS_PORT);
     gpio_set_die(TCFG_CHARING_STATUS_PORT, 1);
@@ -871,22 +877,23 @@ static int chargfull_dete(void)
     static char dete_full_cnt = 0;
     char dete_full = gpio_read(TCFG_CHARGFULL_STATUS_PORT);
 
-    if(dete_full){
+    if (dete_full) {
         dete_full_cnt++;
-        if(dete_full_cnt > 30){//大于1.5秒
+        if (dete_full_cnt > 30) { //大于1.5秒
             chargfull = true;
             chargfull = true;
 //            printf("充满电充满电\n");
             // 移除直接操作图标的代码
         }
-    }else{
+    } else {
         dete_full_cnt = 0;
     }
 
     return 0;
 }
 // 修改充电状态检查函数，移除图标操作代码
-static void charge_status_check(void) {
+static void charge_status_check(void)
+{
     int charging_status = gpio_read(TCFG_CHARING_STATUS_PORT);
     static char last_charging_status = -1;
     static char last_raw_status = -1;
@@ -946,7 +953,8 @@ static void charge_status_check(void) {
     last_charging_status = charging_status;
 }
 
-int is_charging_now(void) {
+int is_charging_now(void)
+{
     return gpio_read(TCFG_CHARING_STATUS_PORT);  // 高电平表示在充电
 }
 #endif
@@ -954,22 +962,23 @@ int is_charging_now(void) {
 
 
 // 音乐按钮点击事件处理函数
-static void btn_music_click_handler(lv_event_t *e) {
+static void btn_music_click_handler(lv_event_t *e)
+{
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
-    if(!ui || !ui->screen_main_btn_music){
+    if (!ui || !ui->screen_main_btn_music) {
         return;
     }
-    if(code == LV_EVENT_CLICKED) {
+    if (code == LV_EVENT_CLICKED) {
         printf("音乐按钮被点击，跳转到音乐页面\n");
 #ifdef APPLAYER_ENABLE
-        if(audio_app_mode_check() == -1){
+        if (audio_app_mode_check() == -1) {
             return;
-        }else if(audio_app_mode_check() == 0){
+        } else if (audio_app_mode_check() == 0) {
             switch_to_music_page("net_music");
-        }else if(audio_app_mode_check() == 1){
+        } else if (audio_app_mode_check() == 1) {
             switch_to_music_page("bt_music");
-        }else if(audio_app_mode_check() == 2){
+        } else if (audio_app_mode_check() == 2) {
             switch_to_music_page("sd_music");
         }
 #else
@@ -979,48 +988,54 @@ static void btn_music_click_handler(lv_event_t *e) {
 }
 
 // 对话按钮点击事件处理函数
-static void btn_conversation_click_handler(lv_event_t *e) {
+static void btn_conversation_click_handler(lv_event_t *e)
+{
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
-    if(!ui || !ui->screen_main_btn_conversation){
+    if (!ui || !ui->screen_main_btn_conversation) {
         return;
     }
-    if(code == LV_EVENT_CLICKED) {
+    if (code == LV_EVENT_CLICKED) {
         printf("对话按钮被点击，跳转到对话页面\n");
         switch_to_conversation_page();
     }
 }
 
 // 闹钟按钮点击事件处理函数
-static void btn_alarm_click_handler(lv_event_t *e) {
+static void btn_alarm_click_handler(lv_event_t *e)
+{
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
-    if(!ui || !ui->screen_main_btn_alarm){
+    if (!ui || !ui->screen_main_btn_alarm) {
         return;
     }
-    if(code == LV_EVENT_CLICKED) {
+    if (code == LV_EVENT_CLICKED) {
         printf("闹钟按钮被点击，跳转到闹钟页面\n");
         switch_to_alarm_page();
     }
 }
 
 // 倒计时按钮点击事件处理函数
-static void btn_timer_click_handler(lv_event_t *e) {
+static void btn_timer_click_handler(lv_event_t *e)
+{
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
-    if(!ui || !ui->screen_main_btn_timer){
+    if (!ui || !ui->screen_main_btn_timer) {
         return;
     }
-    if(code == LV_EVENT_CLICKED) {
+    if (code == LV_EVENT_CLICKED) {
         printf("倒计时按钮被点击，跳转到倒计时页面\n");
         switch_to_timer_page();
     }
 }
 
 // 初始化主页面事件
-void screen_main_event_init(lv_ui *ui) {
-    if (!ui) return;
-    
+void screen_main_event_init(lv_ui *ui)
+{
+    if (!ui) {
+        return;
+    }
+
     lv_obj_set_scroll_dir(guider_ui.screen_main, LV_DIR_NONE);
     // 配置容器，确保它不会拦截子按钮的点击事件
     if (ui->screen_main_cont) {
@@ -1028,7 +1043,7 @@ void screen_main_event_init(lv_ui *ui) {
         lv_obj_clear_flag(ui->screen_main_cont, LV_OBJ_FLAG_CLICKABLE);
         printf("容器配置完成，确保不拦截子按钮事件\n");
     }
-    
+
     // 先移除可能已存在的事件处理函数，防止多次注册
     if (ui->screen_main_btn_music) {
         lv_obj_remove_event_cb(ui->screen_main_btn_music, btn_music_click_handler);
@@ -1042,25 +1057,25 @@ void screen_main_event_init(lv_ui *ui) {
     if (ui->screen_main_btn_timer) {
         lv_obj_remove_event_cb(ui->screen_main_btn_timer, btn_timer_click_handler);
     }
-    
+
     // 为音乐按钮绑定点击事件
     if (ui->screen_main_btn_music) {
         lv_obj_add_event_cb(ui->screen_main_btn_music, btn_music_click_handler, LV_EVENT_CLICKED, ui);
         printf("音乐按钮点击事件绑定完成\n");
     }
-    
+
     // 为对话按钮绑定点击事件
     if (ui->screen_main_btn_conversation) {
         lv_obj_add_event_cb(ui->screen_main_btn_conversation, btn_conversation_click_handler, LV_EVENT_CLICKED, ui);
         printf("对话按钮点击事件绑定完成\n");
     }
-    
+
     // 为闹钟按钮绑定点击事件
     if (ui->screen_main_btn_alarm) {
         lv_obj_add_event_cb(ui->screen_main_btn_alarm, btn_alarm_click_handler, LV_EVENT_CLICKED, ui);
         printf("闹钟按钮点击事件绑定完成\n");
     }
-    
+
     // 为倒计时按钮绑定点击事件
     if (ui->screen_main_btn_timer) {
         lv_obj_add_event_cb(ui->screen_main_btn_timer, btn_timer_click_handler, LV_EVENT_CLICKED, ui);
@@ -1068,7 +1083,8 @@ void screen_main_event_init(lv_ui *ui) {
     }
 }
 
-void screen_main_event_setup(void){
+void screen_main_event_setup(void)
+{
     screen_main_event_init(&guider_ui);
 }
- 
+

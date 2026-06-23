@@ -1,0 +1,1997 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="lvgl_v8" />
+		<Option pch_mode="2" />
+		<Option compiler="pi32v2_r3_empty_compiler" />
+		<Build>
+			<Target title="Release">
+				<Option output="../../../../cpu/wl82/liba/lib_lvgl_v8.a" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="" />
+				<Option object_output="obj/Release/" />
+				<Option type="2" />
+				<Option compiler="pi32v2_r3_empty_compiler" />
+				<Compiler>
+					<Add option="-flto" />
+					<Add option="-Os" />
+					<Add option="-w" />
+					<Add option="-g" />
+					<Add option="-Oz" />
+					<Add option="-ffunction-sections" />
+					<Add option="-Wno-unused-value" />
+					<Add option="-D_POSIX_SOURCE" />
+					<Add option="-D_SYS_SELECT_H" />
+					<Add option="-DCONFIG_FREE_RTOS_ENABLE" />
+					<Add option="-DFREE_RTOS" />
+					<Add option="-DVFS_ENABLE=1" />
+					<Add option="-DCONFIG_JLFAT_ENABLE" />
+					<Add option="-DLV_LVGL_H_INCLUDE_SIMPLE" />
+					<Add option="-DCONFIG_LVGL_UI_ENABLE" />
+					<Add option="-DCONFIG_UI_ENABLE" />
+					<Add directory="../../../../include_lib/net" />
+					<Add directory="../../../../include_lib/net/server" />
+					<Add directory="../../../../include_lib/net/wifi_module" />
+					<Add directory="../../../../include_lib/net/hostapdandwpa_supplicant" />
+					<Add directory="../../../../include_lib/net/lwip_2_2_0/lwip/src/include" />
+					<Add directory="../../../../include_lib/net/lwip_2_2_0/lwip/src/include/lwip" />
+					<Add directory="../../../../include_lib/net/lwip_2_2_0/lwip/port" />
+					<Add directory="../../../../include_lib/net/lwip_2_2_0/lwip/app" />
+					<Add directory="../../../../include_lib/net/lwip_2_2_0/lwip/app/ctp" />
+					<Add directory="../../../../include_lib/net/lwip_2_2_0/lwip/app/cdp" />
+					<Add directory="../../../../include_lib/utils" />
+					<Add directory="../../../../include_lib/driver" />
+					<Add directory="../../../../include_lib/system/generic" />
+					<Add directory="../../../../include_lib/system/" />
+					<Add directory="../../../../include_lib/driver/cpu/wl82/" />
+					<Add directory="../../../../include_lib/driver/cpu" />
+					<Add directory="../../../../include_lib" />
+					<Add directory="../../../../include_lib/system/os" />
+					<Add directory="../../../../include_lib/system/os/FreeRTOS" />
+					<Add directory="../../../../include_lib/system/os/FreeRTOS/pi32v2" />
+					<Add directory="../src" />
+					<Add directory="../../../../include_lib/net/web_socket" />
+					<Add directory="../../../../include_lib/system" />
+					<Add directory="../../../../include_lib/driver/cpu/wl82" />
+					<Add directory="../../../../include_lib/newlib/include" />
+					<Add directory="../../../../include_lib/net/mbedtls_3_4_0" />
+					<Add directory="../../../system" />
+					<Add directory="../../lvgl_v8" />
+					<Add directory="../examples" />
+					<Add directory="../examples/porting" />
+					<Add directory="../src/core" />
+					<Add directory="../src/draw" />
+					<Add directory="../src/extra/layouts/flex" />
+					<Add directory="../src/extra/layouts/grid" />
+					<Add directory="../src/extra/themes/basic" />
+					<Add directory="../src/extra/themes/default" />
+					<Add directory="../src/extra/themes/mono" />
+					<Add directory="../src/extra/widgets/animimg" />
+					<Add directory="../src/extra/widgets/calendar" />
+					<Add directory="../src/extra/widgets/chart" />
+					<Add directory="../src/extra/widgets/colorwheel" />
+					<Add directory="../src/extra/widgets/imgbtn" />
+					<Add directory="../src/extra/widgets/keyboard" />
+					<Add directory="../src/extra/widgets/led" />
+					<Add directory="../src/extra/widgets/list" />
+					<Add directory="../src/extra/widgets/meter" />
+					<Add directory="../src/extra/widgets/span" />
+					<Add directory="../src/extra/widgets/spinner" />
+					<Add directory="../src/extra/widgets/tabview" />
+					<Add directory="../src/extra/widgets/tileview" />
+					<Add directory="../src/extra/widgets/win" />
+					<Add directory="../src/extra/font" />
+					<Add directory="../src/extra/gpu" />
+					<Add directory="../src/extra/hal" />
+					<Add directory="../src/extra/misc" />
+					<Add directory="../src/extra/widgets" />
+					<Add directory="../demos/benchmark" />
+					<Add directory="../demos/keypad_encoder" />
+					<Add directory="../demos/music" />
+					<Add directory="../demos/stress" />
+					<Add directory="../demos/widgets" />
+					<Add directory="../generated" />
+					<Add directory="../custom" />
+					<Add directory="../../../../apps/wifi_story_machine/include" />
+					<Add directory="../../../../apps/wifi_story_machine/board/wl82" />
+					<Add directory="../../../../apps/wifi_story_machine/chatbot" />
+					<Add directory="../../../../apps/common/usb" />
+					<Add directory="../../../../apps/common/usb/include" />
+					<Add directory="../../../../apps/common/usb/device" />
+					<Add directory="../../../../apps/common/usb/host" />
+					<Add directory="../../../../apps/common/usb/include/host" />
+				</Compiler>
+				<Linker>
+					<Add option="-flto" />
+					<Add directory="C:/JL/dv12/lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add directory="./" />
+		</Compiler>
+		<Unit filename="../custom/agent_choose.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/alarm.h" />
+		<Unit filename="../custom/alarm_add_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/alarm_del_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/alarm_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/alarm_set_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/calculate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/conversation.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/custom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/custom.h" />
+		<Unit filename="../custom/custom.mk" />
+		<Unit filename="../custom/dropdown.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/lv_conf_ext.h" />
+		<Unit filename="../custom/lvgl_develop.h" />
+		<Unit filename="../custom/page_switch.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/ring.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_content.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_content_pinyin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_content_pinyin.h" />
+		<Unit filename="../custom/screen_list.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_music.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/screen_option.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/sleep_music.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/timer.h" />
+		<Unit filename="../custom/timer_add_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/timer_del_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/timer_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/tomoto_time.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/wifi_common.h" />
+		<Unit filename="../custom/wifi_psw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../custom/wifi_show.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/img_benchmark_cogwheel_alpha16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/img_benchmark_cogwheel_argb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/img_benchmark_cogwheel_chroma_keyed.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/img_benchmark_cogwheel_indexed16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/img_benchmark_cogwheel_rgb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/img_benchmark_cogwheel_rgb565a8.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/lv_font_bechmark_montserrat_12_compr_az.c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/lv_font_bechmark_montserrat_16_compr_az.c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/assets/lv_font_bechmark_montserrat_28_compr_az.c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/lv_demo_benchmark.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/benchmark/lv_demo_benchmark.h" />
+		<Unit filename="../demos/keypad_encoder/lv_demo_keypad_encoder.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/keypad_encoder/lv_demo_keypad_encoder.h" />
+		<Unit filename="../demos/lv_demos.h" />
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_corner_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_list_pause.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_list_pause_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_list_play.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_list_play_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_loop.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_loop_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_next.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_next_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_pause.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_pause_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_play.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_play_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_prev.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_prev_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_rnd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_btn_rnd_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_corner_left.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_corner_left_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_corner_right.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_corner_right_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_cover_1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_cover_1_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_cover_2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_cover_2_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_cover_3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_cover_3_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_1_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_2_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_3_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_icon_4_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_list_border.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_list_border_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_logo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_slider_knob.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_slider_knob_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_wave_bottom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_wave_bottom_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_wave_top.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/img_lv_demo_music_wave_top_large.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/assets/spectrum_1.h" />
+		<Unit filename="../demos/music/assets/spectrum_2.h" />
+		<Unit filename="../demos/music/assets/spectrum_3.h" />
+		<Unit filename="../demos/music/lv_demo_music.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/lv_demo_music.h" />
+		<Unit filename="../demos/music/lv_demo_music_list.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/lv_demo_music_list.h" />
+		<Unit filename="../demos/music/lv_demo_music_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/music/lv_demo_music_main.h" />
+		<Unit filename="../demos/stress/lv_demo_stress.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/stress/lv_demo_stress.h" />
+		<Unit filename="../demos/widgets/assets/img_clothes.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/widgets/assets/img_demo_widgets_avatar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/widgets/assets/img_lvgl_logo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/widgets/lv_demo_widgets.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../demos/widgets/lv_demo_widgets.h" />
+		<Unit filename="../examples/anim/lv_example_anim.h" />
+		<Unit filename="../examples/event/lv_example_event.h" />
+		<Unit filename="../examples/get_started/lv_example_get_started.h" />
+		<Unit filename="../examples/layouts/flex/lv_example_flex.h" />
+		<Unit filename="../examples/layouts/grid/lv_example_grid.h" />
+		<Unit filename="../examples/layouts/lv_example_layout.h" />
+		<Unit filename="../examples/lv_examples.h" />
+		<Unit filename="../examples/porting/lv_port_disp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../examples/porting/lv_port_disp.h" />
+		<Unit filename="../examples/porting/lv_port_disp_template.h" />
+		<Unit filename="../examples/porting/lv_port_fs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../examples/porting/lv_port_fs.h" />
+		<Unit filename="../examples/porting/lv_port_fs_template.h" />
+		<Unit filename="../examples/porting/lv_port_indev.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../examples/porting/lv_port_indev.h" />
+		<Unit filename="../examples/porting/lv_port_indev_template.h" />
+		<Unit filename="../examples/porting/lv_port_lcd_stm32_template.h" />
+		<Unit filename="../examples/porting/osal/lv_example_osal.h" />
+		<Unit filename="../examples/scroll/lv_example_scroll.h" />
+		<Unit filename="../examples/styles/lv_example_style.h" />
+		<Unit filename="../examples/widgets/lv_example_widgets.h" />
+		<Unit filename="../generated/MicroPython/images_md5.json" />
+		<Unit filename="../generated/events_init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/events_init.h" />
+		<Unit filename="../generated/generated.mk" />
+		<Unit filename="../generated/gui_guider.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/gui_guider.h" />
+		<Unit filename="../generated/guider_customer_fonts/guider_customer_fonts.h" />
+		<Unit filename="../generated/guider_customer_fonts/guider_customer_fonts.mk" />
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__12.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__15.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__24.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__28.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__40.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__54.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_Barlow__80.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_MiSansDemibold_12.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_MiSansDemibold_14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_MiSansDemibold_18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/guider_fonts/lv_font_MiSansDemibold_24.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_BT2_alpha_40x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_BT_alpha_14x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_BT_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_QR_code_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_add_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_1_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_2_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_3_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_4_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_5_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_agent_6_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_ai_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_alarm_del_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_alarm_option_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_all_choice_alpha_22x22.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_all_choice_press_alpha_22x22.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_background_320x240.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_bg2_100x39.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_bg_320x240.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_blog_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_blog_alpha_80x80.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_cave_alpha_71x63.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_charging_battery_alpha_22x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_choose_alpha_66x66.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_choose_bg_320x240.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_clear_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_close_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_connect_success_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_conversation_option_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_enter_alpha_24x17.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_enter_game_168x61.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_excellent_essays_alpha_240x82.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_fail_again_168x61.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_fast_shake_alpha_141x56.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_fully_charged_battery_alpha_22x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_general_QA_alpha_240x82.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_groove_alpha_228x145.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_groove_alpha_234x140.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_hide_part_alpha_52x51.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_ios_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_last2_alpha_50x50.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_last_alpha_14x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_location_alpha_15x18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_location_set_alpha_15x18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_lock_alpha_18x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_low_battery_alpha_22x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_max_light_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_max_volumn_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_mic_alpha_25x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_min_light_alpha_25x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_min_volumn_alpha_25x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_mouse2_alpha_50x50.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_mouse_alpha_50x50.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_mouse_countdown_alpha_124x53.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_mouse_countdown_alpha_131x53.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_mouse_game_num_alpha_59x71.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_music_option_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_alarm_alpha_120x120.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_content_alpha_120x120.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_conversation_alpha_120x120.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_mouse2_alpha_37x55.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_mouse2_alpha_37x63.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_mouse_alpha_37x55.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_mouse_alpha_37x63.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_music_alpha_120x120.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_sleep_alpha_120x120.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_timer_alpha_120x120.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_new_whack_alpha_120x120.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_next2_alpha_50x50.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_next_alpha_14x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_no_4g_alpha_18x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_no_BT2_alpha_40x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_no_BT_alpha_14x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_no_alarm_alpha_17x15.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_no_mic_alpha_25x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_no_volumn_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_no_wifi_alpha_18x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_nomute_alpha_17x18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_normal_fully_battery_alpha_22x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_normol_battery_alpha_22x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_agent_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_alarm_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_calculator_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_content_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_conversation_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_music_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_set_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_sleep_music_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_timer_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_whack_game_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_op_wifi_alpha_66x85.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_open_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_overcast_alpha_25x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_overcast_alpha_30x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_play_random_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_play_repeat_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_rain_alpha_25x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_rain_alpha_30x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_refresh_alpha_15x15.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_refresh_alpha_22x22.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_return_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_return_alpha_22x22.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_ring_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_ring_light_alpha_200x240.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_score_alpha_115x41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_set_4g_alpha_18x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_set_alarm_alpha_17x15.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_set_wifi_alpha_16x14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_set_wifi_alpha_18x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_set_wifi_alpha_80x62.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_shunxu_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_snow_alpha_25x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_snow_alpha_30x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_story_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_story_alpha_80x80.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_study_QA_alpha_240x82.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_study_chinese_alpha_240x82.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_study_english_alpha_240x82.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_sun_alpha_25x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_sun_alpha_30x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_sus_again_168x61.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_tape_alpha_62x62.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_tape_bar_alpha_35x68.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_tape_bar_alpha_47x98.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_timer_option_alpha_100x100.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_trash_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_un_press_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_user_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_volume_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_volume_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_wifi_err_alpha_80x80.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_wind_alpha_25x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_wind_alpha_30x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_windy_alpha_25x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_windy_alpha_30x25.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_yes_alpha_20x20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/_yes_alpha_30x30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/images/images.mk" />
+		<Unit filename="../generated/images/images_list.mk" />
+		<Unit filename="../generated/images/images_md5.json" />
+		<Unit filename="../generated/images/lottie_list.mk" />
+		<Unit filename="../generated/setup_scr_screen_agent.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_alarm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_alarm_add.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_alarm_remove.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_alarm_set.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_calculator.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_content.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_conversation.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_dropdown.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_list.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_music.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_net.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_option.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_ring.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_sleep_music.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_timer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_timer_add.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_timer_remove.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_tomato.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_wifi_psw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/setup_scr_screen_wifi_show.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/widgets_init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../generated/widgets_init.h" />
+		<Unit filename="../lv_conf.h" />
+		<Unit filename="../lvgl.h" />
+		<Unit filename="../lvgl_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_disp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_disp.h" />
+		<Unit filename="../src/core/lv_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_event.h" />
+		<Unit filename="../src/core/lv_global.h" />
+		<Unit filename="../src/core/lv_group.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_group.h" />
+		<Unit filename="../src/core/lv_group_private.h" />
+		<Unit filename="../src/core/lv_indev.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_indev.h" />
+		<Unit filename="../src/core/lv_indev_scroll.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_indev_scroll.h" />
+		<Unit filename="../src/core/lv_obj.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj.h" />
+		<Unit filename="../src/core/lv_obj_class.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj_class.h" />
+		<Unit filename="../src/core/lv_obj_class_private.h" />
+		<Unit filename="../src/core/lv_obj_draw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj_draw.h" />
+		<Unit filename="../src/core/lv_obj_draw_private.h" />
+		<Unit filename="../src/core/lv_obj_event.h" />
+		<Unit filename="../src/core/lv_obj_event_private.h" />
+		<Unit filename="../src/core/lv_obj_pos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj_pos.h" />
+		<Unit filename="../src/core/lv_obj_private.h" />
+		<Unit filename="../src/core/lv_obj_property.h" />
+		<Unit filename="../src/core/lv_obj_scroll.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj_scroll.h" />
+		<Unit filename="../src/core/lv_obj_scroll_private.h" />
+		<Unit filename="../src/core/lv_obj_style.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj_style.h" />
+		<Unit filename="../src/core/lv_obj_style_gen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj_style_gen.h" />
+		<Unit filename="../src/core/lv_obj_style_private.h" />
+		<Unit filename="../src/core/lv_obj_tree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_obj_tree.h" />
+		<Unit filename="../src/core/lv_refr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_refr.h" />
+		<Unit filename="../src/core/lv_refr_private.h" />
+		<Unit filename="../src/core/lv_theme.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/core/lv_theme.h" />
+		<Unit filename="../src/display/lv_display.h" />
+		<Unit filename="../src/display/lv_display_private.h" />
+		<Unit filename="../src/draw/arm2d/lv_gpu_arm2d.h" />
+		<Unit filename="../src/draw/lv_draw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw.h" />
+		<Unit filename="../src/draw/lv_draw_arc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_arc.h" />
+		<Unit filename="../src/draw/lv_draw_blend.h" />
+		<Unit filename="../src/draw/lv_draw_buf.h" />
+		<Unit filename="../src/draw/lv_draw_buf_private.h" />
+		<Unit filename="../src/draw/lv_draw_image.h" />
+		<Unit filename="../src/draw/lv_draw_image_private.h" />
+		<Unit filename="../src/draw/lv_draw_img.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_img.h" />
+		<Unit filename="../src/draw/lv_draw_label.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_label.h" />
+		<Unit filename="../src/draw/lv_draw_label_private.h" />
+		<Unit filename="../src/draw/lv_draw_layer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_layer.h" />
+		<Unit filename="../src/draw/lv_draw_line.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_line.h" />
+		<Unit filename="../src/draw/lv_draw_mask.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_mask.h" />
+		<Unit filename="../src/draw/lv_draw_mask_private.h" />
+		<Unit filename="../src/draw/lv_draw_private.h" />
+		<Unit filename="../src/draw/lv_draw_rect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_rect.h" />
+		<Unit filename="../src/draw/lv_draw_rect_private.h" />
+		<Unit filename="../src/draw/lv_draw_transform.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_transform.h" />
+		<Unit filename="../src/draw/lv_draw_triangle.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_draw_triangle.h" />
+		<Unit filename="../src/draw/lv_draw_triangle_private.h" />
+		<Unit filename="../src/draw/lv_draw_vector.h" />
+		<Unit filename="../src/draw/lv_draw_vector_private.h" />
+		<Unit filename="../src/draw/lv_image_decoder.h" />
+		<Unit filename="../src/draw/lv_image_decoder_private.h" />
+		<Unit filename="../src/draw/lv_image_dsc.h" />
+		<Unit filename="../src/draw/lv_img_buf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_img_buf.h" />
+		<Unit filename="../src/draw/lv_img_cache.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_img_cache.h" />
+		<Unit filename="../src/draw/lv_img_decoder.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/lv_img_decoder.h" />
+		<Unit filename="../src/draw/nxp/pxp/lv_draw_pxp.h" />
+		<Unit filename="../src/draw/nxp/pxp/lv_draw_pxp_blend.h" />
+		<Unit filename="../src/draw/nxp/pxp/lv_gpu_nxp_pxp.h" />
+		<Unit filename="../src/draw/nxp/pxp/lv_gpu_nxp_pxp_osa.h" />
+		<Unit filename="../src/draw/nxp/pxp/lv_pxp_cfg.h" />
+		<Unit filename="../src/draw/nxp/pxp/lv_pxp_osa.h" />
+		<Unit filename="../src/draw/nxp/pxp/lv_pxp_utils.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_draw_vglite.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_draw_vglite_arc.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_draw_vglite_blend.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_draw_vglite_line.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_draw_vglite_rect.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_vglite_buf.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_vglite_matrix.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_vglite_path.h" />
+		<Unit filename="../src/draw/nxp/vglite/lv_vglite_utils.h" />
+		<Unit filename="../src/draw/renesas/dave2d/lv_draw_dave2d.h" />
+		<Unit filename="../src/draw/renesas/dave2d/lv_draw_dave2d_utils.h" />
+		<Unit filename="../src/draw/renesas/lv_gpu_d2_ra6m3.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_composite.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_img.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_layer.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_mask.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_priv.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_rect.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_stack_blur.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_texture_cache.h" />
+		<Unit filename="../src/draw/sdl/lv_draw_sdl_utils.h" />
+		<Unit filename="../src/draw/stm32_dma2d/lv_gpu_stm32_dma2d.h" />
+		<Unit filename="../src/draw/sw/arm2d/lv_draw_sw_arm2d.h" />
+		<Unit filename="../src/draw/sw/arm2d/lv_draw_sw_helium.h" />
+		<Unit filename="../src/draw/sw/blend/arm2d/lv_blend_arm2d.h" />
+		<Unit filename="../src/draw/sw/blend/helium/lv_blend_helium.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend_private.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend_to_al88.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend_to_argb8888.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend_to_i1.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend_to_l8.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend_to_rgb565.h" />
+		<Unit filename="../src/draw/sw/blend/lv_draw_sw_blend_to_rgb888.h" />
+		<Unit filename="../src/draw/sw/blend/neon/lv_blend_neon.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_arc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_blend.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_blend.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_dither.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_dither.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_gradient.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_gradient.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_gradient_private.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_img.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_layer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_letter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_line.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_mask.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_mask_private.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_polygon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_private.h" />
+		<Unit filename="../src/draw/sw/lv_draw_sw_rect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/sw/lv_draw_sw_transform.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/draw/swm341_dma2d/lv_gpu_swm341_dma2d.h" />
+		<Unit filename="../src/draw/vg_lite/lv_draw_vg_lite.h" />
+		<Unit filename="../src/draw/vg_lite/lv_draw_vg_lite_type.h" />
+		<Unit filename="../src/draw/vg_lite/lv_vg_lite_decoder.h" />
+		<Unit filename="../src/draw/vg_lite/lv_vg_lite_grad.h" />
+		<Unit filename="../src/draw/vg_lite/lv_vg_lite_math.h" />
+		<Unit filename="../src/draw/vg_lite/lv_vg_lite_path.h" />
+		<Unit filename="../src/draw/vg_lite/lv_vg_lite_pending.h" />
+		<Unit filename="../src/draw/vg_lite/lv_vg_lite_stroke.h" />
+		<Unit filename="../src/draw/vg_lite/lv_vg_lite_utils.h" />
+		<Unit filename="../src/drivers/display/drm/lv_linux_drm.h" />
+		<Unit filename="../src/drivers/display/fb/lv_linux_fbdev.h" />
+		<Unit filename="../src/drivers/display/ili9341/lv_ili9341.h" />
+		<Unit filename="../src/drivers/display/lcd/lv_lcd_generic_mipi.h" />
+		<Unit filename="../src/drivers/display/renesas_glcdc/lv_renesas_glcdc.h" />
+		<Unit filename="../src/drivers/display/st7735/lv_st7735.h" />
+		<Unit filename="../src/drivers/display/st7789/lv_st7789.h" />
+		<Unit filename="../src/drivers/display/st7796/lv_st7796.h" />
+		<Unit filename="../src/drivers/display/tft_espi/lv_tft_espi.h" />
+		<Unit filename="../src/drivers/evdev/lv_evdev.h" />
+		<Unit filename="../src/drivers/glfw/lv_glfw_window.h" />
+		<Unit filename="../src/drivers/glfw/lv_glfw_window_private.h" />
+		<Unit filename="../src/drivers/glfw/lv_opengles_debug.h" />
+		<Unit filename="../src/drivers/glfw/lv_opengles_driver.h" />
+		<Unit filename="../src/drivers/glfw/lv_opengles_texture.h" />
+		<Unit filename="../src/drivers/libinput/lv_libinput.h" />
+		<Unit filename="../src/drivers/libinput/lv_libinput_private.h" />
+		<Unit filename="../src/drivers/libinput/lv_xkb.h" />
+		<Unit filename="../src/drivers/libinput/lv_xkb_private.h" />
+		<Unit filename="../src/drivers/lv_drivers.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_cache.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_entry.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_fbdev.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_image_cache.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_lcd.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_libuv.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_profiler.h" />
+		<Unit filename="../src/drivers/nuttx/lv_nuttx_touchscreen.h" />
+		<Unit filename="../src/drivers/qnx/lv_qnx.h" />
+		<Unit filename="../src/drivers/sdl/lv_sdl_keyboard.h" />
+		<Unit filename="../src/drivers/sdl/lv_sdl_mouse.h" />
+		<Unit filename="../src/drivers/sdl/lv_sdl_mousewheel.h" />
+		<Unit filename="../src/drivers/sdl/lv_sdl_private.h" />
+		<Unit filename="../src/drivers/sdl/lv_sdl_window.h" />
+		<Unit filename="../src/drivers/wayland/lv_wayland.h" />
+		<Unit filename="../src/drivers/wayland/lv_wayland_smm.h" />
+		<Unit filename="../src/drivers/windows/lv_windows_context.h" />
+		<Unit filename="../src/drivers/windows/lv_windows_display.h" />
+		<Unit filename="../src/drivers/windows/lv_windows_input.h" />
+		<Unit filename="../src/drivers/windows/lv_windows_input_private.h" />
+		<Unit filename="../src/drivers/x11/lv_x11.h" />
+		<Unit filename="../src/extra/layouts/flex/lv_flex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/layouts/flex/lv_flex.h" />
+		<Unit filename="../src/extra/layouts/grid/lv_grid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/layouts/grid/lv_grid.h" />
+		<Unit filename="../src/extra/layouts/lv_layouts.h" />
+		<Unit filename="../src/extra/libs/bmp/lv_bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/bmp/lv_bmp.h" />
+		<Unit filename="../src/extra/libs/ffmpeg/lv_ffmpeg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/ffmpeg/lv_ffmpeg.h" />
+		<Unit filename="../src/extra/libs/freetype/lv_freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/freetype/lv_freetype.h" />
+		<Unit filename="../src/extra/libs/fsdrv/lv_fs_fatfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/fsdrv/lv_fs_littlefs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/fsdrv/lv_fs_posix.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/fsdrv/lv_fs_stdio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/fsdrv/lv_fs_win32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/fsdrv/lv_fsdrv.h" />
+		<Unit filename="../src/extra/libs/gif/gifdec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/gif/gifdec.h" />
+		<Unit filename="../src/extra/libs/gif/lv_gif.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/gif/lv_gif.h" />
+		<Unit filename="../src/extra/libs/lv_libs.h" />
+		<Unit filename="../src/extra/libs/png/lodepng.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/png/lodepng.h" />
+		<Unit filename="../src/extra/libs/png/lv_png.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/png/lv_png.h" />
+		<Unit filename="../src/extra/libs/qrcode/lv_qrcode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/qrcode/lv_qrcode.h" />
+		<Unit filename="../src/extra/libs/qrcode/qrcodegen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/qrcode/qrcodegen.h" />
+		<Unit filename="../src/extra/libs/rlottie/lv_rlottie.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/rlottie/lv_rlottie.h" />
+		<Unit filename="../src/extra/libs/rlottie/lv_rlottie_example_fingerprint.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/sjpg/lv_sjpg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/sjpg/lv_sjpg.h" />
+		<Unit filename="../src/extra/libs/sjpg/tjpgd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/libs/sjpg/tjpgd.h" />
+		<Unit filename="../src/extra/libs/sjpg/tjpgdcnf.h" />
+		<Unit filename="../src/extra/lv_extra.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/lv_extra.h" />
+		<Unit filename="../src/extra/others/fragment/lv_fragment.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/fragment/lv_fragment.h" />
+		<Unit filename="../src/extra/others/fragment/lv_fragment_manager.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/gridnav/lv_gridnav.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/gridnav/lv_gridnav.h" />
+		<Unit filename="../src/extra/others/ime/lv_ime_pinyin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/ime/lv_ime_pinyin.h" />
+		<Unit filename="../src/extra/others/imgfont/lv_imgfont.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/imgfont/lv_imgfont.h" />
+		<Unit filename="../src/extra/others/lv_others.h" />
+		<Unit filename="../src/extra/others/monkey/lv_monkey.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/monkey/lv_monkey.h" />
+		<Unit filename="../src/extra/others/msg/lv_msg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/msg/lv_msg.h" />
+		<Unit filename="../src/extra/others/snapshot/lv_snapshot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/others/snapshot/lv_snapshot.h" />
+		<Unit filename="../src/extra/themes/basic/lv_theme_basic.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/themes/basic/lv_theme_basic.h" />
+		<Unit filename="../src/extra/themes/default/lv_theme_default.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/themes/default/lv_theme_default.h" />
+		<Unit filename="../src/extra/themes/lv_themes.h" />
+		<Unit filename="../src/extra/themes/mono/lv_theme_mono.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/themes/mono/lv_theme_mono.h" />
+		<Unit filename="../src/extra/widgets/animimg/lv_animimg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/animimg/lv_animimg.h" />
+		<Unit filename="../src/extra/widgets/calendar/lv_calendar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/calendar/lv_calendar.h" />
+		<Unit filename="../src/extra/widgets/calendar/lv_calendar_header_arrow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/calendar/lv_calendar_header_arrow.h" />
+		<Unit filename="../src/extra/widgets/calendar/lv_calendar_header_dropdown.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/calendar/lv_calendar_header_dropdown.h" />
+		<Unit filename="../src/extra/widgets/chart/lv_chart.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/chart/lv_chart.h" />
+		<Unit filename="../src/extra/widgets/colorwheel/lv_colorwheel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/colorwheel/lv_colorwheel.h" />
+		<Unit filename="../src/extra/widgets/imgbtn/lv_imgbtn.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/imgbtn/lv_imgbtn.h" />
+		<Unit filename="../src/extra/widgets/keyboard/lv_keyboard.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/keyboard/lv_keyboard.h" />
+		<Unit filename="../src/extra/widgets/led/lv_led.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/led/lv_led.h" />
+		<Unit filename="../src/extra/widgets/list/lv_list.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/list/lv_list.h" />
+		<Unit filename="../src/extra/widgets/lv_widgets.h" />
+		<Unit filename="../src/extra/widgets/menu/lv_menu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/menu/lv_menu.h" />
+		<Unit filename="../src/extra/widgets/meter/lv_meter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/meter/lv_meter.h" />
+		<Unit filename="../src/extra/widgets/msgbox/lv_msgbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/msgbox/lv_msgbox.h" />
+		<Unit filename="../src/extra/widgets/span/lv_span.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/span/lv_span.h" />
+		<Unit filename="../src/extra/widgets/spinbox/lv_spinbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/spinbox/lv_spinbox.h" />
+		<Unit filename="../src/extra/widgets/spinner/lv_spinner.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/spinner/lv_spinner.h" />
+		<Unit filename="../src/extra/widgets/tabview/lv_tabview.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/tabview/lv_tabview.h" />
+		<Unit filename="../src/extra/widgets/tileview/lv_tileview.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/tileview/lv_tileview.h" />
+		<Unit filename="../src/extra/widgets/win/lv_win.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/extra/widgets/win/lv_win.h" />
+		<Unit filename="../src/font/lv_binfont_loader.h" />
+		<Unit filename="../src/font/lv_font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font.h" />
+		<Unit filename="../src/font/lv_font_dejavu_16_persian_hebrew.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_fmt_txt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_fmt_txt.h" />
+		<Unit filename="../src/font/lv_font_fmt_txt_private.h" />
+		<Unit filename="../src/font/lv_font_loader.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_loader.h" />
+		<Unit filename="../src/font/lv_font_montserrat_10.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_12.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_12_subpx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_14.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_20.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_22.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_24.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_26.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_28.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_28_compressed.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_30.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_34.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_36.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_38.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_40.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_42.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_44.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_46.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_48.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_montserrat_8.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_simsun_16_cjk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_unscii_16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_font_unscii_8.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/lv_symbol_def.h" />
+		<Unit filename="../src/gpu/lv_gpu_nxp_pxp.h" />
+		<Unit filename="../src/gpu/lv_gpu_nxp_pxp_osa.h" />
+		<Unit filename="../src/gpu/lv_gpu_nxp_vglite.h" />
+		<Unit filename="../src/gpu/lv_gpu_stm32_dma2d.h" />
+		<Unit filename="../src/hal/lv_hal.h" />
+		<Unit filename="../src/hal/lv_hal_disp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/hal/lv_hal_disp.h" />
+		<Unit filename="../src/hal/lv_hal_indev.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/hal/lv_hal_indev.h" />
+		<Unit filename="../src/hal/lv_hal_tick.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/hal/lv_hal_tick.h" />
+		<Unit filename="../src/indev/lv_indev.h" />
+		<Unit filename="../src/indev/lv_indev_private.h" />
+		<Unit filename="../src/indev/lv_indev_scroll.h" />
+		<Unit filename="../src/layouts/flex/lv_flex.h" />
+		<Unit filename="../src/layouts/grid/lv_grid.h" />
+		<Unit filename="../src/layouts/lv_layout.h" />
+		<Unit filename="../src/layouts/lv_layout_private.h" />
+		<Unit filename="../src/libs/barcode/code128.h" />
+		<Unit filename="../src/libs/barcode/lv_barcode.h" />
+		<Unit filename="../src/libs/barcode/lv_barcode_private.h" />
+		<Unit filename="../src/libs/bin_decoder/lv_bin_decoder.h" />
+		<Unit filename="../src/libs/bmp/lv_bmp.h" />
+		<Unit filename="../src/libs/ffmpeg/lv_ffmpeg.h" />
+		<Unit filename="../src/libs/ffmpeg/lv_ffmpeg_private.h" />
+		<Unit filename="../src/libs/freetype/ftmodule.h" />
+		<Unit filename="../src/libs/freetype/ftoption.h" />
+		<Unit filename="../src/libs/freetype/lv_freetype.h" />
+		<Unit filename="../src/libs/freetype/lv_freetype_private.h" />
+		<Unit filename="../src/libs/fsdrv/lv_fsdrv.h" />
+		<Unit filename="../src/libs/gif/gifdec.h" />
+		<Unit filename="../src/libs/gif/gifdec_mve.h" />
+		<Unit filename="../src/libs/gif/lv_gif.h" />
+		<Unit filename="../src/libs/gif/lv_gif_private.h" />
+		<Unit filename="../src/libs/libjpeg_turbo/lv_libjpeg_turbo.h" />
+		<Unit filename="../src/libs/libpng/lv_libpng.h" />
+		<Unit filename="../src/libs/lodepng/lodepng.h" />
+		<Unit filename="../src/libs/lodepng/lv_lodepng.h" />
+		<Unit filename="../src/libs/lz4/lz4.h" />
+		<Unit filename="../src/libs/qrcode/lv_qrcode.h" />
+		<Unit filename="../src/libs/qrcode/lv_qrcode_private.h" />
+		<Unit filename="../src/libs/qrcode/qrcodegen.h" />
+		<Unit filename="../src/libs/rle/lv_rle.h" />
+		<Unit filename="../src/libs/rlottie/lv_rlottie.h" />
+		<Unit filename="../src/libs/rlottie/lv_rlottie_private.h" />
+		<Unit filename="../src/libs/thorvg/config.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/allocators.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/cursorstreamwrapper.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/document.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/encodedstream.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/encodings.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/error/en.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/error/error.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/filereadstream.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/filewritestream.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/fwd.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/biginteger.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/clzll.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/diyfp.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/dtoa.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/ieee754.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/itoa.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/meta.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/pow10.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/regex.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/stack.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/strfunc.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/strtod.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/internal/swap.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/istreamwrapper.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/memorybuffer.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/memorystream.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/msinttypes/inttypes.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/msinttypes/stdint.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/ostreamwrapper.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/pointer.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/prettywriter.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/rapidjson.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/reader.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/schema.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/stream.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/stringbuffer.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/uri.h" />
+		<Unit filename="../src/libs/thorvg/rapidjson/writer.h" />
+		<Unit filename="../src/libs/thorvg/thorvg.h" />
+		<Unit filename="../src/libs/thorvg/thorvg_capi.h" />
+		<Unit filename="../src/libs/thorvg/thorvg_lottie.h" />
+		<Unit filename="../src/libs/thorvg/tvgAnimation.h" />
+		<Unit filename="../src/libs/thorvg/tvgArray.h" />
+		<Unit filename="../src/libs/thorvg/tvgBinaryDesc.h" />
+		<Unit filename="../src/libs/thorvg/tvgCanvas.h" />
+		<Unit filename="../src/libs/thorvg/tvgCommon.h" />
+		<Unit filename="../src/libs/thorvg/tvgCompressor.h" />
+		<Unit filename="../src/libs/thorvg/tvgFill.h" />
+		<Unit filename="../src/libs/thorvg/tvgFrameModule.h" />
+		<Unit filename="../src/libs/thorvg/tvgInlist.h" />
+		<Unit filename="../src/libs/thorvg/tvgIteratorAccessor.h" />
+		<Unit filename="../src/libs/thorvg/tvgLines.h" />
+		<Unit filename="../src/libs/thorvg/tvgLoadModule.h" />
+		<Unit filename="../src/libs/thorvg/tvgLoader.h" />
+		<Unit filename="../src/libs/thorvg/tvgLock.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieBuilder.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieExpressions.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieInterpolator.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieLoader.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieModel.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieParser.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieParserHandler.h" />
+		<Unit filename="../src/libs/thorvg/tvgLottieProperty.h" />
+		<Unit filename="../src/libs/thorvg/tvgMath.h" />
+		<Unit filename="../src/libs/thorvg/tvgPaint.h" />
+		<Unit filename="../src/libs/thorvg/tvgPicture.h" />
+		<Unit filename="../src/libs/thorvg/tvgRawLoader.h" />
+		<Unit filename="../src/libs/thorvg/tvgRender.h" />
+		<Unit filename="../src/libs/thorvg/tvgSaveModule.h" />
+		<Unit filename="../src/libs/thorvg/tvgScene.h" />
+		<Unit filename="../src/libs/thorvg/tvgShape.h" />
+		<Unit filename="../src/libs/thorvg/tvgStr.h" />
+		<Unit filename="../src/libs/thorvg/tvgSvgCssStyle.h" />
+		<Unit filename="../src/libs/thorvg/tvgSvgLoader.h" />
+		<Unit filename="../src/libs/thorvg/tvgSvgLoaderCommon.h" />
+		<Unit filename="../src/libs/thorvg/tvgSvgPath.h" />
+		<Unit filename="../src/libs/thorvg/tvgSvgSceneBuilder.h" />
+		<Unit filename="../src/libs/thorvg/tvgSvgUtil.h" />
+		<Unit filename="../src/libs/thorvg/tvgSwCommon.h" />
+		<Unit filename="../src/libs/thorvg/tvgSwRasterAvx.h" />
+		<Unit filename="../src/libs/thorvg/tvgSwRasterC.h" />
+		<Unit filename="../src/libs/thorvg/tvgSwRasterNeon.h" />
+		<Unit filename="../src/libs/thorvg/tvgSwRasterTexmap.h" />
+		<Unit filename="../src/libs/thorvg/tvgSwRenderer.h" />
+		<Unit filename="../src/libs/thorvg/tvgTaskScheduler.h" />
+		<Unit filename="../src/libs/thorvg/tvgText.h" />
+		<Unit filename="../src/libs/thorvg/tvgXmlParser.h" />
+		<Unit filename="../src/libs/tiny_ttf/lv_tiny_ttf.h" />
+		<Unit filename="../src/libs/tiny_ttf/stb_rect_pack.h" />
+		<Unit filename="../src/libs/tiny_ttf/stb_truetype_htcw.h" />
+		<Unit filename="../src/libs/tjpgd/lv_tjpgd.h" />
+		<Unit filename="../src/libs/tjpgd/tjpgd.h" />
+		<Unit filename="../src/libs/tjpgd/tjpgdcnf.h" />
+		<Unit filename="../src/lv_api_map.h" />
+		<Unit filename="../src/lv_conf_internal.h" />
+		<Unit filename="../src/lv_conf_kconfig.h" />
+		<Unit filename="../src/lvgl.h" />
+		<Unit filename="../src/misc/cache/lv_cache.h" />
+		<Unit filename="../src/misc/cache/lv_cache_entry.h" />
+		<Unit filename="../src/misc/cache/lv_cache_entry_private.h" />
+		<Unit filename="../src/misc/cache/lv_cache_lru_rb.h" />
+		<Unit filename="../src/misc/cache/lv_cache_private.h" />
+		<Unit filename="../src/misc/cache/lv_image_cache.h" />
+		<Unit filename="../src/misc/cache/lv_image_header_cache.h" />
+		<Unit filename="../src/misc/lv_anim.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_anim.h" />
+		<Unit filename="../src/misc/lv_anim_private.h" />
+		<Unit filename="../src/misc/lv_anim_timeline.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_anim_timeline.h" />
+		<Unit filename="../src/misc/lv_area.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_area.h" />
+		<Unit filename="../src/misc/lv_area_private.h" />
+		<Unit filename="../src/misc/lv_array.h" />
+		<Unit filename="../src/misc/lv_assert.h" />
+		<Unit filename="../src/misc/lv_async.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_async.h" />
+		<Unit filename="../src/misc/lv_bidi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_bidi.h" />
+		<Unit filename="../src/misc/lv_bidi_private.h" />
+		<Unit filename="../src/misc/lv_color.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_color.h" />
+		<Unit filename="../src/misc/lv_color_op.h" />
+		<Unit filename="../src/misc/lv_color_op_private.h" />
+		<Unit filename="../src/misc/lv_event.h" />
+		<Unit filename="../src/misc/lv_event_private.h" />
+		<Unit filename="../src/misc/lv_fs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_fs.h" />
+		<Unit filename="../src/misc/lv_fs_private.h" />
+		<Unit filename="../src/misc/lv_gc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_gc.h" />
+		<Unit filename="../src/misc/lv_ll.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_ll.h" />
+		<Unit filename="../src/misc/lv_log.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_log.h" />
+		<Unit filename="../src/misc/lv_lru.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_lru.h" />
+		<Unit filename="../src/misc/lv_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_math.h" />
+		<Unit filename="../src/misc/lv_matrix.h" />
+		<Unit filename="../src/misc/lv_mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_mem.h" />
+		<Unit filename="../src/misc/lv_palette.h" />
+		<Unit filename="../src/misc/lv_printf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_printf.h" />
+		<Unit filename="../src/misc/lv_profiler.h" />
+		<Unit filename="../src/misc/lv_profiler_builtin.h" />
+		<Unit filename="../src/misc/lv_profiler_builtin_private.h" />
+		<Unit filename="../src/misc/lv_rb.h" />
+		<Unit filename="../src/misc/lv_rb_private.h" />
+		<Unit filename="../src/misc/lv_style.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_style.h" />
+		<Unit filename="../src/misc/lv_style_gen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_style_gen.h" />
+		<Unit filename="../src/misc/lv_style_private.h" />
+		<Unit filename="../src/misc/lv_templ.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_templ.h" />
+		<Unit filename="../src/misc/lv_text.h" />
+		<Unit filename="../src/misc/lv_text_ap.h" />
+		<Unit filename="../src/misc/lv_text_private.h" />
+		<Unit filename="../src/misc/lv_timer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_timer.h" />
+		<Unit filename="../src/misc/lv_timer_private.h" />
+		<Unit filename="../src/misc/lv_tlsf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_tlsf.h" />
+		<Unit filename="../src/misc/lv_txt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_txt.h" />
+		<Unit filename="../src/misc/lv_txt_ap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_txt_ap.h" />
+		<Unit filename="../src/misc/lv_types.h" />
+		<Unit filename="../src/misc/lv_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/lv_utils.h" />
+		<Unit filename="../src/osal/lv_cmsis_rtos2.h" />
+		<Unit filename="../src/osal/lv_freertos.h" />
+		<Unit filename="../src/osal/lv_mqx.h" />
+		<Unit filename="../src/osal/lv_os.h" />
+		<Unit filename="../src/osal/lv_os_none.h" />
+		<Unit filename="../src/osal/lv_os_private.h" />
+		<Unit filename="../src/osal/lv_pthread.h" />
+		<Unit filename="../src/osal/lv_rtthread.h" />
+		<Unit filename="../src/osal/lv_windows.h" />
+		<Unit filename="../src/others/file_explorer/lv_file_explorer.h" />
+		<Unit filename="../src/others/file_explorer/lv_file_explorer_private.h" />
+		<Unit filename="../src/others/fragment/lv_fragment.h" />
+		<Unit filename="../src/others/fragment/lv_fragment_private.h" />
+		<Unit filename="../src/others/gridnav/lv_gridnav.h" />
+		<Unit filename="../src/others/ime/lv_ime_pinyin.h" />
+		<Unit filename="../src/others/ime/lv_ime_pinyin_private.h" />
+		<Unit filename="../src/others/imgfont/lv_imgfont.h" />
+		<Unit filename="../src/others/monkey/lv_monkey.h" />
+		<Unit filename="../src/others/monkey/lv_monkey_private.h" />
+		<Unit filename="../src/others/observer/lv_observer.h" />
+		<Unit filename="../src/others/observer/lv_observer_private.h" />
+		<Unit filename="../src/others/snapshot/lv_snapshot.h" />
+		<Unit filename="../src/others/sysmon/lv_sysmon.h" />
+		<Unit filename="../src/others/sysmon/lv_sysmon_private.h" />
+		<Unit filename="../src/others/vg_lite_tvg/vg_lite.h" />
+		<Unit filename="../src/signal_processing/resample_by_2_internal.h" />
+		<Unit filename="../src/signal_processing/signal_processing_library.h" />
+		<Unit filename="../src/signal_processing/spl_inl.h" />
+		<Unit filename="../src/stdlib/builtin/lv_tlsf.h" />
+		<Unit filename="../src/stdlib/builtin/lv_tlsf_private.h" />
+		<Unit filename="../src/stdlib/lv_mem.h" />
+		<Unit filename="../src/stdlib/lv_mem_private.h" />
+		<Unit filename="../src/stdlib/lv_sprintf.h" />
+		<Unit filename="../src/stdlib/lv_string.h" />
+		<Unit filename="../src/themes/default/lv_theme_default.h" />
+		<Unit filename="../src/themes/lv_theme.h" />
+		<Unit filename="../src/themes/lv_theme_private.h" />
+		<Unit filename="../src/themes/mono/lv_theme_mono.h" />
+		<Unit filename="../src/themes/simple/lv_theme_simple.h" />
+		<Unit filename="../src/tick/lv_tick.h" />
+		<Unit filename="../src/tick/lv_tick_private.h" />
+		<Unit filename="../src/vad/common.h" />
+		<Unit filename="../src/vad/vad_core.h" />
+		<Unit filename="../src/vad/vad_filterbank.h" />
+		<Unit filename="../src/vad/vad_gmm.h" />
+		<Unit filename="../src/vad/vad_sp.h" />
+		<Unit filename="../src/widgets/animimage/lv_animimage.h" />
+		<Unit filename="../src/widgets/animimage/lv_animimage_private.h" />
+		<Unit filename="../src/widgets/arc/lv_arc.h" />
+		<Unit filename="../src/widgets/arc/lv_arc_private.h" />
+		<Unit filename="../src/widgets/bar/lv_bar.h" />
+		<Unit filename="../src/widgets/bar/lv_bar_private.h" />
+		<Unit filename="../src/widgets/button/lv_button.h" />
+		<Unit filename="../src/widgets/button/lv_button_private.h" />
+		<Unit filename="../src/widgets/buttonmatrix/lv_buttonmatrix.h" />
+		<Unit filename="../src/widgets/buttonmatrix/lv_buttonmatrix_private.h" />
+		<Unit filename="../src/widgets/calendar/lv_calendar.h" />
+		<Unit filename="../src/widgets/calendar/lv_calendar_chinese.h" />
+		<Unit filename="../src/widgets/calendar/lv_calendar_chinese_private.h" />
+		<Unit filename="../src/widgets/calendar/lv_calendar_header_arrow.h" />
+		<Unit filename="../src/widgets/calendar/lv_calendar_header_dropdown.h" />
+		<Unit filename="../src/widgets/calendar/lv_calendar_private.h" />
+		<Unit filename="../src/widgets/canvas/lv_canvas.h" />
+		<Unit filename="../src/widgets/canvas/lv_canvas_private.h" />
+		<Unit filename="../src/widgets/chart/lv_chart.h" />
+		<Unit filename="../src/widgets/chart/lv_chart_private.h" />
+		<Unit filename="../src/widgets/checkbox/lv_checkbox.h" />
+		<Unit filename="../src/widgets/checkbox/lv_checkbox_private.h" />
+		<Unit filename="../src/widgets/dropdown/lv_dropdown.h" />
+		<Unit filename="../src/widgets/dropdown/lv_dropdown_private.h" />
+		<Unit filename="../src/widgets/image/lv_image.h" />
+		<Unit filename="../src/widgets/image/lv_image_private.h" />
+		<Unit filename="../src/widgets/imagebutton/lv_imagebutton.h" />
+		<Unit filename="../src/widgets/imagebutton/lv_imagebutton_private.h" />
+		<Unit filename="../src/widgets/keyboard/lv_keyboard.h" />
+		<Unit filename="../src/widgets/keyboard/lv_keyboard_private.h" />
+		<Unit filename="../src/widgets/label/lv_label.h" />
+		<Unit filename="../src/widgets/label/lv_label_private.h" />
+		<Unit filename="../src/widgets/led/lv_led.h" />
+		<Unit filename="../src/widgets/led/lv_led_private.h" />
+		<Unit filename="../src/widgets/line/lv_line.h" />
+		<Unit filename="../src/widgets/line/lv_line_private.h" />
+		<Unit filename="../src/widgets/list/lv_list.h" />
+		<Unit filename="../src/widgets/lottie/lv_lottie.h" />
+		<Unit filename="../src/widgets/lottie/lv_lottie_private.h" />
+		<Unit filename="../src/widgets/lv_arc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_arc.h" />
+		<Unit filename="../src/widgets/lv_bar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_bar.h" />
+		<Unit filename="../src/widgets/lv_btn.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_btn.h" />
+		<Unit filename="../src/widgets/lv_btnmatrix.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_btnmatrix.h" />
+		<Unit filename="../src/widgets/lv_canvas.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_canvas.h" />
+		<Unit filename="../src/widgets/lv_checkbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_checkbox.h" />
+		<Unit filename="../src/widgets/lv_dropdown.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_dropdown.h" />
+		<Unit filename="../src/widgets/lv_img.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_img.h" />
+		<Unit filename="../src/widgets/lv_label.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_label.h" />
+		<Unit filename="../src/widgets/lv_line.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_line.h" />
+		<Unit filename="../src/widgets/lv_objx_templ.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_objx_templ.h" />
+		<Unit filename="../src/widgets/lv_roller.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_roller.h" />
+		<Unit filename="../src/widgets/lv_slider.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_slider.h" />
+		<Unit filename="../src/widgets/lv_switch.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_switch.h" />
+		<Unit filename="../src/widgets/lv_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_table.h" />
+		<Unit filename="../src/widgets/lv_textarea.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/widgets/lv_textarea.h" />
+		<Unit filename="../src/widgets/menu/lv_menu.h" />
+		<Unit filename="../src/widgets/menu/lv_menu_private.h" />
+		<Unit filename="../src/widgets/msgbox/lv_msgbox.h" />
+		<Unit filename="../src/widgets/msgbox/lv_msgbox_private.h" />
+		<Unit filename="../src/widgets/objx_templ/lv_objx_templ.h" />
+		<Unit filename="../src/widgets/property/lv_obj_property_names.h" />
+		<Unit filename="../src/widgets/property/lv_style_properties.h" />
+		<Unit filename="../src/widgets/roller/lv_roller.h" />
+		<Unit filename="../src/widgets/roller/lv_roller_private.h" />
+		<Unit filename="../src/widgets/scale/lv_scale.h" />
+		<Unit filename="../src/widgets/scale/lv_scale_private.h" />
+		<Unit filename="../src/widgets/slider/lv_slider.h" />
+		<Unit filename="../src/widgets/slider/lv_slider_private.h" />
+		<Unit filename="../src/widgets/span/lv_span.h" />
+		<Unit filename="../src/widgets/span/lv_span_private.h" />
+		<Unit filename="../src/widgets/spinbox/lv_spinbox.h" />
+		<Unit filename="../src/widgets/spinbox/lv_spinbox_private.h" />
+		<Unit filename="../src/widgets/spinner/lv_spinner.h" />
+		<Unit filename="../src/widgets/switch/lv_switch.h" />
+		<Unit filename="../src/widgets/switch/lv_switch_private.h" />
+		<Unit filename="../src/widgets/table/lv_table.h" />
+		<Unit filename="../src/widgets/table/lv_table_private.h" />
+		<Unit filename="../src/widgets/tabview/lv_tabview.h" />
+		<Unit filename="../src/widgets/tabview/lv_tabview_private.h" />
+		<Unit filename="../src/widgets/textarea/lv_textarea.h" />
+		<Unit filename="../src/widgets/textarea/lv_textarea_private.h" />
+		<Unit filename="../src/widgets/tileview/lv_tileview.h" />
+		<Unit filename="../src/widgets/tileview/lv_tileview_private.h" />
+		<Unit filename="../src/widgets/win/lv_win.h" />
+		<Unit filename="../src/widgets/win/lv_win_private.h" />
+		<Extensions>
+			<debugger>
+				<remote_debugging>
+					<options conn_type="0" serial_baud="115200" ip_address="127.0.0.1" ip_port="9999" />
+				</remote_debugging>
+			</debugger>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

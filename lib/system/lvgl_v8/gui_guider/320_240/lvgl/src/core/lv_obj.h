@@ -153,11 +153,11 @@ extern const lv_obj_class_t lv_obj_class;
  * They are allocated automatically if any elements is set.
  */
 typedef struct {
-    struct _lv_obj_t ** children;       /**< Store the pointer of the children in an array.*/
+    struct _lv_obj_t **children;        /**< Store the pointer of the children in an array.*/
     uint32_t child_cnt;                 /**< Number of children*/
-    lv_group_t * group_p;
+    lv_group_t *group_p;
 
-    struct _lv_event_dsc_t * event_dsc; /**< Dynamically allocated event callback and user data array*/
+    struct _lv_event_dsc_t *event_dsc;  /**< Dynamically allocated event callback and user data array*/
     lv_point_t scroll;                  /**< The current X/Y scroll offset*/
 
     lv_coord_t ext_click_pad;           /**< Extra click padding in all direction*/
@@ -172,12 +172,12 @@ typedef struct {
 } _lv_obj_spec_attr_t;
 
 typedef struct _lv_obj_t {
-    const lv_obj_class_t * class_p;
-    struct _lv_obj_t * parent;
-    _lv_obj_spec_attr_t * spec_attr;
-    _lv_obj_style_t * styles;
+    const lv_obj_class_t *class_p;
+    struct _lv_obj_t *parent;
+    _lv_obj_spec_attr_t *spec_attr;
+    _lv_obj_style_t *styles;
 #if LV_USE_USER_DATA
-    void * user_data;
+    void *user_data;
 #endif
     lv_area_t coords;
     lv_obj_flag_t flags;
@@ -222,7 +222,7 @@ bool lv_is_initialized(void);
  * @param parent    pointer to a parent object. If NULL then a screen will be created.
  * @return          pointer to the new object
  */
-lv_obj_t * lv_obj_create(lv_obj_t * parent);
+lv_obj_t *lv_obj_create(lv_obj_t * parent);
 
 
 /*=====================
@@ -312,7 +312,7 @@ bool lv_obj_has_state(const lv_obj_t * obj, lv_state_t state);
  * @param       obj pointer to an object
  * @return      the pointer to group of the object
  */
-void * lv_obj_get_group(const lv_obj_t * obj);
+void *lv_obj_get_group(const lv_obj_t * obj);
 
 /**
  * Get the user_data field of the object
@@ -320,7 +320,7 @@ void * lv_obj_get_group(const lv_obj_t * obj);
  * @return      the pointer to the user_data of the object
  */
 #if LV_USE_USER_DATA
-static inline void * lv_obj_get_user_data(lv_obj_t * obj)
+static inline void *lv_obj_get_user_data(lv_obj_t * obj)
 {
     return obj->user_data;
 }
@@ -358,7 +358,7 @@ bool lv_obj_has_class(const lv_obj_t * obj, const lv_obj_class_t * class_p);
  * @param obj   pointer to an object
  * @return      the class (type) of the object
  */
-const lv_obj_class_t * lv_obj_get_class(const lv_obj_t * obj);
+const lv_obj_class_t *lv_obj_get_class(const lv_obj_t * obj);
 
 /**
  * Check if any object is still "alive".

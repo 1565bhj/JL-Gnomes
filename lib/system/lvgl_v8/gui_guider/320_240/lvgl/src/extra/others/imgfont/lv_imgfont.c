@@ -19,7 +19,7 @@
  *      TYPEDEFS
  **********************/
 typedef struct {
-    lv_font_t * font;
+    lv_font_t *font;
     lv_get_imgfont_path_cb_t path_cb;
     char path[LV_IMGFONT_PATH_MAX_LEN];
 } imgfont_dsc_t;
@@ -27,7 +27,7 @@ typedef struct {
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static const uint8_t * imgfont_get_glyph_bitmap(const lv_font_t * font, uint32_t unicode);
+static const uint8_t *imgfont_get_glyph_bitmap(const lv_font_t * font, uint32_t unicode);
 static bool imgfont_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out,
                                   uint32_t unicode, uint32_t unicode_next);
 
@@ -46,20 +46,22 @@ static bool imgfont_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * 
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
-lv_font_t * lv_imgfont_create(uint16_t height, lv_get_imgfont_path_cb_t path_cb)
+lv_font_t *lv_imgfont_create(uint16_t height, lv_get_imgfont_path_cb_t path_cb)
 {
     LV_ASSERT_MSG(LV_IMGFONT_PATH_MAX_LEN > sizeof(lv_img_dsc_t),
                   "LV_IMGFONT_PATH_MAX_LEN must be greater than sizeof(lv_img_dsc_t)");
 
     size_t size = sizeof(imgfont_dsc_t) + sizeof(lv_font_t);
-    imgfont_dsc_t * dsc = (imgfont_dsc_t *)lv_mem_alloc(size);
-    if(dsc == NULL) return NULL;
+    imgfont_dsc_t *dsc = (imgfont_dsc_t *)lv_mem_alloc(size);
+    if (dsc == NULL) {
+        return NULL;
+    }
     lv_memset_00(dsc, size);
 
     dsc->font = (lv_font_t *)(((char *)dsc) + sizeof(imgfont_dsc_t));
     dsc->path_cb = path_cb;
 
-    lv_font_t * font = dsc->font;
+    lv_font_t *font = dsc->font;
     font->dsc = dsc;
     font->get_glyph_dsc = imgfont_get_glyph_dsc;
     font->get_glyph_bitmap = imgfont_get_glyph_bitmap;
@@ -74,11 +76,11 @@ lv_font_t * lv_imgfont_create(uint16_t height, lv_get_imgfont_path_cb_t path_cb)
 
 void lv_imgfont_destroy(lv_font_t * font)
 {
-    if(font == NULL) {
+    if (font == NULL) {
         return;
     }
 
-    imgfont_dsc_t * dsc = (imgfont_dsc_t *)font->dsc;
+    imgfont_dsc_t *dsc = (imgfont_dsc_t *)font->dsc;
     lv_mem_free(dsc);
 }
 
@@ -86,11 +88,11 @@ void lv_imgfont_destroy(lv_font_t * font)
  *   STATIC FUNCTIONS
  **********************/
 
-static const uint8_t * imgfont_get_glyph_bitmap(const lv_font_t * font, uint32_t unicode)
+static const uint8_t *imgfont_get_glyph_bitmap(const lv_font_t * font, uint32_t unicode)
 {
     LV_UNUSED(unicode);
     LV_ASSERT_NULL(font);
-    imgfont_dsc_t * dsc = (imgfont_dsc_t *)font->dsc;
+    imgfont_dsc_t *dsc = (imgfont_dsc_t *)font->dsc;
     return (uint8_t *)dsc->path;
 }
 
@@ -99,16 +101,18 @@ static bool imgfont_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * 
 {
     LV_ASSERT_NULL(font);
 
-    imgfont_dsc_t * dsc = (imgfont_dsc_t *)font->dsc;
+    imgfont_dsc_t *dsc = (imgfont_dsc_t *)font->dsc;
     LV_ASSERT_NULL(dsc);
-    if(dsc->path_cb == NULL) return false;
+    if (dsc->path_cb == NULL) {
+        return false;
+    }
 
-    if(!dsc->path_cb(dsc->font, dsc->path, LV_IMGFONT_PATH_MAX_LEN, unicode, unicode_next)) {
+    if (!dsc->path_cb(dsc->font, dsc->path, LV_IMGFONT_PATH_MAX_LEN, unicode, unicode_next)) {
         return false;
     }
 
     lv_img_header_t header;
-    if(lv_img_decoder_get_info(dsc->path, &header) != LV_RES_OK) {
+    if (lv_img_decoder_get_info(dsc->path, &header) != LV_RES_OK) {
         return false;
     }
 

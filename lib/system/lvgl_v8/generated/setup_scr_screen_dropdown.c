@@ -34,7 +34,7 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_img_set_src(ui->screen_dropdown_max_volumn, &_volume_alpha_30x30);
     lv_img_set_pivot(ui->screen_dropdown_max_volumn, 50, 50);
     lv_img_set_angle(ui->screen_dropdown_max_volumn, 0);
-    lv_obj_set_pos(ui->screen_dropdown_max_volumn, 250, 137);
+    lv_obj_set_pos(ui->screen_dropdown_max_volumn, 250, 52);
     lv_obj_set_size(ui->screen_dropdown_max_volumn, 30, 30);
 
     //Write style for screen_dropdown_max_volumn, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -49,7 +49,7 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_img_set_src(ui->screen_dropdown_min_light, &_min_light_alpha_25x25);
     lv_img_set_pivot(ui->screen_dropdown_min_light, 50, 50);
     lv_img_set_angle(ui->screen_dropdown_min_light, 0);
-    lv_obj_set_pos(ui->screen_dropdown_min_light, 37, 183);
+    lv_obj_set_pos(ui->screen_dropdown_min_light, 37, 95);
     lv_obj_set_size(ui->screen_dropdown_min_light, 25, 25);
 
     //Write style for screen_dropdown_min_light, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -64,7 +64,7 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_img_set_src(ui->screen_dropdown_max_light, &_max_light_alpha_30x30);
     lv_img_set_pivot(ui->screen_dropdown_max_light, 50, 50);
     lv_img_set_angle(ui->screen_dropdown_max_light, 0);
-    lv_obj_set_pos(ui->screen_dropdown_max_light, 250, 182);
+    lv_obj_set_pos(ui->screen_dropdown_max_light, 250, 93);
     lv_obj_set_size(ui->screen_dropdown_max_light, 30, 30);
 
     //Write style for screen_dropdown_max_light, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -79,7 +79,7 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_img_set_src(ui->screen_dropdown_min_volumn, &_min_volumn_alpha_25x25);
     lv_img_set_pivot(ui->screen_dropdown_min_volumn, 50, 50);
     lv_img_set_angle(ui->screen_dropdown_min_volumn, 0);
-    lv_obj_set_pos(ui->screen_dropdown_min_volumn, 37, 137);
+    lv_obj_set_pos(ui->screen_dropdown_min_volumn, 37, 52);
     lv_obj_set_size(ui->screen_dropdown_min_volumn, 25, 25);
 
     //Write style for screen_dropdown_min_volumn, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -90,7 +90,7 @@ void setup_scr_screen_dropdown(lv_ui *ui)
 
     //Write codes screen_dropdown_cont
     ui->screen_dropdown_cont = lv_obj_create(ui->screen_dropdown);
-    lv_obj_set_pos(ui->screen_dropdown_cont, 34, 52);
+    lv_obj_set_pos(ui->screen_dropdown_cont, 34, 137);
     lv_obj_set_size(ui->screen_dropdown_cont, 249, 70);
     lv_obj_set_scrollbar_mode(ui->screen_dropdown_cont, LV_SCROLLBAR_MODE_OFF);
 
@@ -197,7 +197,7 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     ui->screen_dropdown_imgbtn_BT = lv_imgbtn_create(ui->screen_dropdown_cont);
     lv_obj_add_flag(ui->screen_dropdown_imgbtn_BT, LV_OBJ_FLAG_CHECKABLE);
     lv_imgbtn_set_src(ui->screen_dropdown_imgbtn_BT, LV_IMGBTN_STATE_RELEASED, NULL, &_no_BT2_alpha_40x30, NULL);
-    lv_imgbtn_set_src(ui->screen_dropdown_imgbtn_BT, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_BT2_alpha_40x30, NULL);
+    lv_imgbtn_set_src(ui->screen_dropdown_imgbtn_BT, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_no_BT2_alpha_40x30, NULL);
     ui->screen_dropdown_imgbtn_BT_label = lv_label_create(ui->screen_dropdown_imgbtn_BT);
     lv_label_set_text(ui->screen_dropdown_imgbtn_BT_label, "");
     lv_label_set_long_mode(ui->screen_dropdown_imgbtn_BT_label, LV_LABEL_LONG_WRAP);
@@ -281,34 +281,34 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_obj_set_style_clip_corner(ui->screen_dropdown_img_set_alarm, true, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     //Write codes screen_dropdown_img_set_BT
-//    ui->screen_dropdown_img_set_BT = lv_img_create(ui->screen_dropdown);
-//    lv_obj_add_flag(ui->screen_dropdown_img_set_BT, LV_OBJ_FLAG_CLICKABLE);
-//    lv_img_set_src(ui->screen_dropdown_img_set_BT, &_BT_alpha_14x16);
-//    lv_img_set_pivot(ui->screen_dropdown_img_set_BT, 50, 50);
-//    lv_img_set_angle(ui->screen_dropdown_img_set_BT, 0);
-//    lv_obj_set_pos(ui->screen_dropdown_img_set_BT, 207, -31);
-//    lv_obj_set_size(ui->screen_dropdown_img_set_BT, 14, 16);
-//
-//    //Write style for screen_dropdown_img_set_BT, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
-//    lv_obj_set_style_img_recolor_opa(ui->screen_dropdown_img_set_BT, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-//    lv_obj_set_style_img_opa(ui->screen_dropdown_img_set_BT, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-//    lv_obj_set_style_radius(ui->screen_dropdown_img_set_BT, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-//    lv_obj_set_style_clip_corner(ui->screen_dropdown_img_set_BT, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui->screen_dropdown_img_set_BT = lv_img_create(ui->screen_dropdown);
+    lv_obj_add_flag(ui->screen_dropdown_img_set_BT, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_dropdown_img_set_BT, &_BT_alpha_14x16);
+    lv_img_set_pivot(ui->screen_dropdown_img_set_BT, 50, 50);
+    lv_img_set_angle(ui->screen_dropdown_img_set_BT, 0);
+    lv_obj_set_pos(ui->screen_dropdown_img_set_BT, 207, -31);
+    lv_obj_set_size(ui->screen_dropdown_img_set_BT, 14, 16);
+
+    //Write style for screen_dropdown_img_set_BT, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_img_recolor_opa(ui->screen_dropdown_img_set_BT, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_dropdown_img_set_BT, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_dropdown_img_set_BT, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_dropdown_img_set_BT, true, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     //Write codes screen_dropdown_img_set_wifi
-//    ui->screen_dropdown_img_set_wifi = lv_img_create(ui->screen_dropdown);
-//    lv_obj_add_flag(ui->screen_dropdown_img_set_wifi, LV_OBJ_FLAG_CLICKABLE);
-//    lv_img_set_src(ui->screen_dropdown_img_set_wifi, &_set_wifi_alpha_18x16);
-//    lv_img_set_pivot(ui->screen_dropdown_img_set_wifi, 50, 50);
-//    lv_img_set_angle(ui->screen_dropdown_img_set_wifi, 0);
-//    lv_obj_set_pos(ui->screen_dropdown_img_set_wifi, 231, -31);
-//    lv_obj_set_size(ui->screen_dropdown_img_set_wifi, 18, 16);
-//
-//    //Write style for screen_dropdown_img_set_wifi, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
-//    lv_obj_set_style_img_recolor_opa(ui->screen_dropdown_img_set_wifi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-//    lv_obj_set_style_img_opa(ui->screen_dropdown_img_set_wifi, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-//    lv_obj_set_style_radius(ui->screen_dropdown_img_set_wifi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-//    lv_obj_set_style_clip_corner(ui->screen_dropdown_img_set_wifi, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui->screen_dropdown_img_set_wifi = lv_img_create(ui->screen_dropdown);
+    lv_obj_add_flag(ui->screen_dropdown_img_set_wifi, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_dropdown_img_set_wifi, &_set_wifi_alpha_18x16);
+    lv_img_set_pivot(ui->screen_dropdown_img_set_wifi, 50, 50);
+    lv_img_set_angle(ui->screen_dropdown_img_set_wifi, 0);
+    lv_obj_set_pos(ui->screen_dropdown_img_set_wifi, 231, -31);
+    lv_obj_set_size(ui->screen_dropdown_img_set_wifi, 18, 16);
+
+    //Write style for screen_dropdown_img_set_wifi, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_img_recolor_opa(ui->screen_dropdown_img_set_wifi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_dropdown_img_set_wifi, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_dropdown_img_set_wifi, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_dropdown_img_set_wifi, true, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     //Write codes screen_dropdown_img_fully_battery
     ui->screen_dropdown_img_fully_battery = lv_img_create(ui->screen_dropdown);
@@ -339,6 +339,20 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_obj_set_style_img_opa(ui->screen_dropdown_img_normal_battery, 221, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui->screen_dropdown_img_normal_battery, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_clip_corner(ui->screen_dropdown_img_normal_battery, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    //Write codes screen_dropdown_img_normal_fully_battery???????
+    ui->screen_dropdown_img_normal_fully_battery = lv_img_create(ui->screen_dropdown);
+    lv_obj_add_flag(ui->screen_dropdown_img_normal_fully_battery, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_dropdown_img_normal_fully_battery, &_normal_fully_battery_alpha_22x14);
+    lv_img_set_pivot(ui->screen_dropdown_img_normal_fully_battery, 50, 50);
+    lv_img_set_angle(ui->screen_dropdown_img_normal_fully_battery, 0);
+    lv_obj_set_pos(ui->screen_dropdown_img_normal_fully_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
+    lv_obj_set_size(ui->screen_dropdown_img_normal_fully_battery, 22, 14);
+    lv_obj_set_style_img_recolor_opa(ui->screen_dropdown_img_normal_fully_battery, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_dropdown_img_normal_fully_battery, 221, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_dropdown_img_normal_fully_battery, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_dropdown_img_normal_fully_battery, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(ui->screen_dropdown_img_normal_fully_battery, LV_OBJ_FLAG_HIDDEN);
 
     //Write codes screen_dropdown_img_no_wifi
     ui->screen_dropdown_img_no_wifi = lv_img_create(ui->screen_dropdown);
@@ -385,11 +399,31 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_obj_set_style_radius(ui->screen_dropdown_img_no_alarm, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_clip_corner(ui->screen_dropdown_img_no_alarm, true, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    //Write codes screen_dropdown_img_nomute?? UI_SHOW_SCREEN_DROPDOWN_NOMUTE_ICON ???????
+#if UI_SHOW_SCREEN_DROPDOWN_NOMUTE_ICON
+    ui->screen_dropdown_img_nomute = lv_img_create(ui->screen_dropdown);
+    lv_obj_add_flag(ui->screen_dropdown_img_nomute, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_dropdown_img_nomute, &_nomute_alpha_17x18);
+    lv_img_set_pivot(ui->screen_dropdown_img_nomute, 50, 50);
+    lv_img_set_angle(ui->screen_dropdown_img_nomute, 0);
+    lv_obj_set_pos(ui->screen_dropdown_img_nomute, NOMUTE_ICON_X, NOMUTE_ICON_Y);
+    lv_obj_set_size(ui->screen_dropdown_img_nomute, 17, 18);
+
+    //Write style for screen_dropdown_img_nomute, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_img_recolor_opa(ui->screen_dropdown_img_nomute, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_dropdown_img_nomute, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_dropdown_img_nomute, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_dropdown_img_nomute, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(ui->screen_dropdown_img_nomute, LV_OBJ_FLAG_HIDDEN);
+#else
+    ui->screen_dropdown_img_nomute = NULL;
+#endif
+
     //Write codes screen_dropdown_time
     ui->screen_dropdown_time = lv_spangroup_create(ui->screen_dropdown);
     lv_spangroup_set_align(ui->screen_dropdown_time, LV_TEXT_ALIGN_LEFT);
     lv_spangroup_set_overflow(ui->screen_dropdown_time, LV_SPAN_OVERFLOW_CLIP);
-    lv_spangroup_set_mode(ui->screen_dropdown_time, LV_SPAN_MODE_BREAK);
+    lv_spangroup_set_mode(ui->screen_dropdown_time, LV_SPAN_MODE_EXPAND);
     //create span
     ui->screen_dropdown_time_span = lv_spangroup_new_span(ui->screen_dropdown_time);
     lv_span_set_text(ui->screen_dropdown_time_span, "12:12");
@@ -397,7 +431,7 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_style_set_text_decor(&ui->screen_dropdown_time_span->style, LV_TEXT_DECOR_NONE);
     lv_style_set_text_font(&ui->screen_dropdown_time_span->style, &lv_font_Barlow__18);
     lv_obj_set_pos(ui->screen_dropdown_time, 42, 19);
-    lv_obj_set_size(ui->screen_dropdown_time, 60, 16);
+    lv_obj_set_size(ui->screen_dropdown_time, 46, 16);
 
     //Write style state: LV_STATE_DEFAULT for &style_screen_dropdown_time_main_main_default
     static lv_style_t style_screen_dropdown_time_main_main_default;
@@ -419,9 +453,9 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_obj_set_style_anim_time(ui->screen_dropdown_volumn_bar, 1000, 0);
     lv_bar_set_mode(ui->screen_dropdown_volumn_bar, LV_BAR_MODE_NORMAL);
     lv_bar_set_range(ui->screen_dropdown_volumn_bar, 0, 100);
-    lv_bar_set_value(ui->screen_dropdown_volumn_bar, 70, LV_ANIM_OFF);
-    lv_obj_set_pos(ui->screen_dropdown_volumn_bar, 70, 146);
-    lv_obj_set_size(ui->screen_dropdown_volumn_bar, 171, 10);
+    lv_bar_set_value(ui->screen_dropdown_volumn_bar, 11, LV_ANIM_OFF);
+    lv_obj_set_pos(ui->screen_dropdown_volumn_bar, 70, 52);
+    lv_obj_set_size(ui->screen_dropdown_volumn_bar, 171, 25);
 
     //Write style for screen_dropdown_volumn_bar, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
     lv_obj_set_style_bg_opa(ui->screen_dropdown_volumn_bar, 61, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -441,9 +475,9 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_obj_set_style_anim_time(ui->screen_dropdown_light_bar, 1000, 0);
     lv_bar_set_mode(ui->screen_dropdown_light_bar, LV_BAR_MODE_NORMAL);
     lv_bar_set_range(ui->screen_dropdown_light_bar, 0, 100);
-    lv_bar_set_value(ui->screen_dropdown_light_bar, 100, LV_ANIM_OFF);
-    lv_obj_set_pos(ui->screen_dropdown_light_bar, 70, 192);
-    lv_obj_set_size(ui->screen_dropdown_light_bar, 171, 10);
+    lv_bar_set_value(ui->screen_dropdown_light_bar, 10, LV_ANIM_OFF);
+    lv_obj_set_pos(ui->screen_dropdown_light_bar, 70, 95);
+    lv_obj_set_size(ui->screen_dropdown_light_bar, 171, 25);
 
     //Write style for screen_dropdown_light_bar, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
     lv_obj_set_style_bg_opa(ui->screen_dropdown_light_bar, 60, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -458,6 +492,30 @@ void setup_scr_screen_dropdown(lv_ui *ui)
     lv_obj_set_style_bg_grad_dir(ui->screen_dropdown_light_bar, LV_GRAD_DIR_NONE, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui->screen_dropdown_light_bar, 10, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 //    lv_obj_set_style_pad_all(ui->screen_dropdown_light_bar, 20);
+
+    //Write codes screen_dropdown_label_version
+    ui->screen_dropdown_label_version = lv_label_create(ui->screen_dropdown);
+    lv_label_set_text(ui->screen_dropdown_label_version, "???????????");
+    lv_label_set_long_mode(ui->screen_dropdown_label_version, LV_LABEL_LONG_WRAP);
+    lv_obj_set_pos(ui->screen_dropdown_label_version, 3, 217);
+    lv_obj_set_size(ui->screen_dropdown_label_version, 320, 13);
+
+    //Write style for screen_dropdown_label_version, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_border_width(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui->screen_dropdown_label_version, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui->screen_dropdown_label_version, &lv_font_MiSansDemibold_12, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui->screen_dropdown_label_version, 169, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_letter_space(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui->screen_dropdown_label_version, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(ui->screen_dropdown_label_version, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     //The custom code of screen_dropdown.
 
 

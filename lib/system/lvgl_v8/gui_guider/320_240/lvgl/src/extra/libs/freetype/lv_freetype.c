@@ -29,18 +29,18 @@ typedef struct {
 } lv_faces_control_t;
 
 typedef struct name_refer_t {
-    const char * name;  /* point to font name string */
+    const char *name;   /* point to font name string */
     int32_t cnt;        /* reference count */
 } name_refer_t;
 
 typedef struct {
-    const void * mem;
-    const char * name;
+    const void *mem;
+    const char *name;
     size_t mem_size;
 #if LV_FREETYPE_CACHE_SIZE < 0
     FT_Size     size;
 #endif
-    lv_font_t * font;
+    lv_font_t *font;
     uint16_t    style;
     uint16_t    height;
 } lv_font_fmt_ft_dsc_t;
@@ -62,9 +62,9 @@ static bool lv_ft_font_init_nocache(lv_ft_info_t * info);
 static void lv_ft_font_destroy_nocache(lv_font_t * font);
 #endif
 
-static const char * name_refer_save(const char * name);
+static const char *name_refer_save(const char * name);
 static void name_refer_del(const char * name);
-static const char * name_refer_find(const char * name);
+static const char *name_refer_find(const char * name);
 
 /**********************
 *  STATIC VARIABLES
@@ -73,20 +73,20 @@ static FT_Library library;
 static lv_ll_t names_ll;
 
 #if LV_FREETYPE_CACHE_SIZE >= 0
-    static FTC_Manager cache_manager;
-    static FTC_CMapCache cmap_cache;
-    static FT_Face current_face = NULL;
+static FTC_Manager cache_manager;
+static FTC_CMapCache cmap_cache;
+static FT_Face current_face = NULL;
 
-    #if LV_FREETYPE_SBIT_CACHE
-        static FTC_SBitCache sbit_cache;
-        static FTC_SBit sbit;
-    #else
-        static FTC_ImageCache image_cache;
-        static FT_Glyph       image_glyph;
-    #endif
+#if LV_FREETYPE_SBIT_CACHE
+static FTC_SBitCache sbit_cache;
+static FTC_SBit sbit;
+#else
+static FTC_ImageCache image_cache;
+static FT_Glyph       image_glyph;
+#endif
 
 #else
-    static lv_faces_control_t face_control;
+static lv_faces_control_t face_control;
 #endif
 
 /**********************
@@ -100,7 +100,7 @@ static lv_ll_t names_ll;
 bool lv_freetype_init(uint16_t max_faces, uint16_t max_sizes, uint32_t max_bytes)
 {
     FT_Error error = FT_Init_FreeType(&library);
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("init freeType error(%d)", error);
         return false;
     }
@@ -110,27 +110,27 @@ bool lv_freetype_init(uint16_t max_faces, uint16_t max_sizes, uint32_t max_bytes
 #if LV_FREETYPE_CACHE_SIZE >= 0
     error = FTC_Manager_New(library, max_faces, max_sizes,
                             max_bytes, font_face_requester, NULL, &cache_manager);
-    if(error) {
+    if (error) {
         FT_Done_FreeType(library);
         LV_LOG_ERROR("Failed to open cache manager");
         return false;
     }
 
     error = FTC_CMapCache_New(cache_manager, &cmap_cache);
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("Failed to open Cmap Cache");
         goto Fail;
     }
 
 #if LV_FREETYPE_SBIT_CACHE
     error = FTC_SBitCache_New(cache_manager, &sbit_cache);
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("Failed to open sbit cache");
         goto Fail;
     }
 #else
     error = FTC_ImageCache_New(cache_manager, &image_cache);
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("Failed to open image cache");
         goto Fail;
     }
@@ -187,15 +187,14 @@ static FT_Error font_face_requester(FTC_FaceID face_id,
     LV_UNUSED(library_is);
     LV_UNUSED(req_data);
 
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)face_id;
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)face_id;
     FT_Error error;
-    if(dsc->mem) {
+    if (dsc->mem) {
         error = FT_New_Memory_Face(library, dsc->mem, dsc->mem_size, 0, aface);
-    }
-    else {
+    } else {
         error = FT_New_Face(library, dsc->name, 0, aface);
     }
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("FT_New_Face error:%d\n", error);
         return error;
     }
@@ -203,21 +202,21 @@ static FT_Error font_face_requester(FTC_FaceID face_id,
 }
 
 static bool get_bold_glyph(const lv_font_t * font, FT_Face face,
-                           FT_UInt glyph_index, lv_font_glyph_dsc_t * dsc_out)
+                           FT_UInt glyph_index, lv_font_glyph_dsc_t *dsc_out)
 {
-    if(FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT)) {
+    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT)) {
         return false;
     }
 
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
-    if(face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
-        if(dsc->style & FT_FONT_STYLE_BOLD) {
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
+    if (face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
+        if (dsc->style & FT_FONT_STYLE_BOLD) {
             int strength = 1 << 6;
             FT_Outline_Embolden(&face->glyph->outline, strength);
         }
     }
 
-    if(FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL)) {
+    if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL)) {
         return false;
     }
 
@@ -233,10 +232,10 @@ static bool get_bold_glyph(const lv_font_t * font, FT_Face face,
 }
 
 static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
-                                   lv_font_glyph_dsc_t * dsc_out, uint32_t unicode_letter, uint32_t unicode_letter_next)
+                                   lv_font_glyph_dsc_t *dsc_out, uint32_t unicode_letter, uint32_t unicode_letter_next)
 {
     LV_UNUSED(unicode_letter_next);
-    if(unicode_letter < 0x20) {
+    if (unicode_letter < 0x20) {
         dsc_out->adv_w = 0;
         dsc_out->box_h = 0;
         dsc_out->box_w = 0;
@@ -246,7 +245,7 @@ static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
         return true;
     }
 
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
 
     FTC_FaceID face_id = (FTC_FaceID)dsc;
     FT_Size face_size;
@@ -255,7 +254,7 @@ static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
     scaler.width = dsc->height;
     scaler.height = dsc->height;
     scaler.pixel = 1;
-    if(FTC_Manager_LookupSize(cache_manager, &scaler, &face_size) != 0) {
+    if (FTC_Manager_LookupSize(cache_manager, &scaler, &face_size) != 0) {
         return false;
     }
 
@@ -264,7 +263,7 @@ static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
     FT_UInt glyph_index = FTC_CMapCache_Lookup(cmap_cache, face_id, charmap_index, unicode_letter);
     dsc_out->is_placeholder = glyph_index == 0;
 
-    if(dsc->style & FT_FONT_STYLE_ITALIC) {
+    if (dsc->style & FT_FONT_STYLE_ITALIC) {
         FT_Matrix italic_matrix;
         italic_matrix.xx = 1 << 16;
         italic_matrix.xy = 0x5800;
@@ -273,9 +272,9 @@ static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
         FT_Set_Transform(face, &italic_matrix, NULL);
     }
 
-    if(dsc->style & FT_FONT_STYLE_BOLD) {
+    if (dsc->style & FT_FONT_STYLE_BOLD) {
         current_face = face;
-        if(!get_bold_glyph(font, face, glyph_index, dsc_out)) {
+        if (!get_bold_glyph(font, face, glyph_index, dsc_out)) {
             current_face = NULL;
             return false;
         }
@@ -290,7 +289,7 @@ static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
 
 #if LV_FREETYPE_SBIT_CACHE
     FT_Error error = FTC_SBitCache_Lookup(sbit_cache, &desc_type, glyph_index, &sbit, NULL);
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("SBitCache_Lookup error");
         return false;
     }
@@ -303,11 +302,11 @@ static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
     dsc_out->bpp = 8;               /*Bit per pixel: 1/2/4/8*/
 #else
     FT_Error error = FTC_ImageCache_Lookup(image_cache, &desc_type, glyph_index, &image_glyph, NULL);
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("ImageCache_Lookup error");
         return false;
     }
-    if(image_glyph->format != FT_GLYPH_FORMAT_BITMAP) {
+    if (image_glyph->format != FT_GLYPH_FORMAT_BITMAP) {
         LV_LOG_ERROR("Glyph_To_Bitmap error");
         return false;
     }
@@ -323,20 +322,20 @@ static bool get_glyph_dsc_cb_cache(const lv_font_t * font,
 #endif
 
 end:
-    if((dsc->style & FT_FONT_STYLE_ITALIC) && (unicode_letter_next == '\0')) {
+    if ((dsc->style & FT_FONT_STYLE_ITALIC) && (unicode_letter_next == '\0')) {
         dsc_out->adv_w = dsc_out->box_w + dsc_out->ofs_x;
     }
 
     return true;
 }
 
-static const uint8_t * get_glyph_bitmap_cb_cache(const lv_font_t * font, uint32_t unicode_letter)
+static const uint8_t *get_glyph_bitmap_cb_cache(const lv_font_t * font, uint32_t unicode_letter)
 {
     LV_UNUSED(unicode_letter);
 
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
-    if(dsc->style & FT_FONT_STYLE_BOLD) {
-        if(current_face && current_face->glyph->format == FT_GLYPH_FORMAT_BITMAP) {
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
+    if (dsc->style & FT_FONT_STYLE_BOLD) {
+        if (current_face && current_face->glyph->format == FT_GLYPH_FORMAT_BITMAP) {
             return (const uint8_t *)(current_face->glyph->bitmap.buffer);
         }
         return NULL;
@@ -353,8 +352,10 @@ static const uint8_t * get_glyph_bitmap_cb_cache(const lv_font_t * font, uint32_
 static bool lv_ft_font_init_cache(lv_ft_info_t * info)
 {
     size_t need_size = sizeof(lv_font_fmt_ft_dsc_t) + sizeof(lv_font_t);
-    lv_font_fmt_ft_dsc_t * dsc = lv_mem_alloc(need_size);
-    if(dsc == NULL) return false;
+    lv_font_fmt_ft_dsc_t *dsc = lv_mem_alloc(need_size);
+    if (dsc == NULL) {
+        return false;
+    }
     lv_memset_00(dsc, need_size);
 
     dsc->font = (lv_font_t *)(((char *)dsc) + sizeof(lv_font_fmt_ft_dsc_t));
@@ -372,12 +373,12 @@ static bool lv_ft_font_init_cache(lv_ft_info_t * info)
     scaler.height = info->weight;
     scaler.pixel = 1;
     FT_Error error = FTC_Manager_LookupSize(cache_manager, &scaler, &face_size);
-    if(error) {
+    if (error) {
         LV_LOG_ERROR("Failed to LookupSize");
         goto Fail;
     }
 
-    lv_font_t * font = dsc->font;
+    lv_font_t *font = dsc->font;
     font->dsc = dsc;
     font->get_glyph_dsc = get_glyph_dsc_cb_cache;
     font->get_glyph_bitmap = get_glyph_bitmap_cb_cache;
@@ -402,12 +403,12 @@ Fail:
 
 void lv_ft_font_destroy_cache(lv_font_t * font)
 {
-    if(font == NULL) {
+    if (font == NULL) {
         return;
     }
 
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
-    if(dsc) {
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
+    if (dsc) {
         FTC_Manager_RemoveFaceID(cache_manager, (FTC_FaceID)dsc);
         name_refer_del(dsc->name);
         lv_mem_free(dsc);
@@ -417,11 +418,11 @@ void lv_ft_font_destroy_cache(lv_font_t * font)
 
 static FT_Face face_find_in_list(lv_ft_info_t * info)
 {
-    lv_font_fmt_ft_dsc_t * dsc;
+    lv_font_fmt_ft_dsc_t *dsc;
     FT_Face * pface = _lv_ll_get_head(&face_control.face_ll);
-    while(pface) {
+    while (pface) {
         dsc = (lv_font_fmt_ft_dsc_t *)(*pface)->generic.data;
-        if(strcmp(dsc->name, info->name) == 0) {
+        if (strcmp(dsc->name, info->name) == 0) {
             return *pface;
         }
         pface = _lv_ll_get_next(&face_control.face_ll, pface);
@@ -440,8 +441,8 @@ static void face_add_to_list(FT_Face face)
 static void face_remove_from_list(FT_Face face)
 {
     FT_Face * pface = _lv_ll_get_head(&face_control.face_ll);
-    while(pface) {
-        if(*pface == face) {
+    while (pface) {
+        if (*pface == face) {
             _lv_ll_remove(&face_control.face_ll, pface);
             lv_mem_free(pface);
             break;
@@ -458,10 +459,10 @@ static void face_generic_finalizer(void * object)
 }
 
 static bool get_glyph_dsc_cb_nocache(const lv_font_t * font,
-                                     lv_font_glyph_dsc_t * dsc_out, uint32_t unicode_letter, uint32_t unicode_letter_next)
+                                     lv_font_glyph_dsc_t *dsc_out, uint32_t unicode_letter, uint32_t unicode_letter_next)
 {
     LV_UNUSED(unicode_letter_next);
-    if(unicode_letter < 0x20) {
+    if (unicode_letter < 0x20) {
         dsc_out->adv_w = 0;
         dsc_out->box_h = 0;
         dsc_out->box_w = 0;
@@ -472,28 +473,28 @@ static bool get_glyph_dsc_cb_nocache(const lv_font_t * font,
     }
 
     FT_Error error;
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
     FT_Face face = dsc->size->face;
 
     FT_UInt glyph_index = FT_Get_Char_Index(face, unicode_letter);
 
-    if(face->size != dsc->size) {
+    if (face->size != dsc->size) {
         FT_Activate_Size(dsc->size);
     }
     dsc_out->is_placeholder = glyph_index == 0;
 
     error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-    if(error) {
+    if (error) {
         return false;
     }
 
-    if(face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
-        if(dsc->style & FT_FONT_STYLE_BOLD) {
+    if (face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
+        if (dsc->style & FT_FONT_STYLE_BOLD) {
             int strength = 1 << 6;
             FT_Outline_Embolden(&face->glyph->outline, strength);
         }
 
-        if(dsc->style & FT_FONT_STYLE_ITALIC) {
+        if (dsc->style & FT_FONT_STYLE_ITALIC) {
             FT_Matrix italic_matrix;
             italic_matrix.xx = 1 << 16;
             italic_matrix.xy = 0x5800;
@@ -504,7 +505,7 @@ static bool get_glyph_dsc_cb_nocache(const lv_font_t * font,
     }
 
     error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-    if(error) {
+    if (error) {
         return false;
     }
 
@@ -516,17 +517,17 @@ static bool get_glyph_dsc_cb_nocache(const lv_font_t * font,
                      face->glyph->bitmap.rows;         /*Y offset of the bitmap measured from the as line*/
     dsc_out->bpp = 8;         /*Bit per pixel: 1/2/4/8*/
 
-    if((dsc->style & FT_FONT_STYLE_ITALIC) && (unicode_letter_next == '\0')) {
+    if ((dsc->style & FT_FONT_STYLE_ITALIC) && (unicode_letter_next == '\0')) {
         dsc_out->adv_w = dsc_out->box_w + dsc_out->ofs_x;
     }
 
     return true;
 }
 
-static const uint8_t * get_glyph_bitmap_cb_nocache(const lv_font_t * font, uint32_t unicode_letter)
+static const uint8_t *get_glyph_bitmap_cb_nocache(const lv_font_t * font, uint32_t unicode_letter)
 {
     LV_UNUSED(unicode_letter);
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
     FT_Face face = dsc->size->face;
     return (const uint8_t *)(face->glyph->bitmap.buffer);
 }
@@ -534,8 +535,10 @@ static const uint8_t * get_glyph_bitmap_cb_nocache(const lv_font_t * font, uint3
 static bool lv_ft_font_init_nocache(lv_ft_info_t * info)
 {
     size_t need_size = sizeof(lv_font_fmt_ft_dsc_t) + sizeof(lv_font_t);
-    lv_font_fmt_ft_dsc_t * dsc = lv_mem_alloc(need_size);
-    if(dsc == NULL) return false;
+    lv_font_fmt_ft_dsc_t *dsc = lv_mem_alloc(need_size);
+    if (dsc == NULL) {
+        return false;
+    }
     lv_memset_00(dsc, need_size);
 
     dsc->font = (lv_font_t *)(((char *)dsc) + sizeof(lv_font_fmt_ft_dsc_t));
@@ -546,15 +549,14 @@ static bool lv_ft_font_init_nocache(lv_ft_info_t * info)
     dsc->style = info->style;
 
     FT_Face face = face_find_in_list(info);
-    if(face == NULL) {
+    if (face == NULL) {
         FT_Error error;
-        if(dsc->mem) {
+        if (dsc->mem) {
             error = FT_New_Memory_Face(library, dsc->mem, (FT_Long) dsc->mem_size, 0, &face);
-        }
-        else {
+        } else {
             error = FT_New_Face(library, dsc->name, 0, &face);
         }
-        if(error) {
+        if (error) {
             LV_LOG_WARN("create face error(%d)", error);
             goto Fail;
         }
@@ -563,11 +565,10 @@ static bool lv_ft_font_init_nocache(lv_ft_info_t * info)
         face->generic.data = dsc;
         face->generic.finalizer = face_generic_finalizer;
         face_add_to_list(face);
-    }
-    else {
+    } else {
         FT_Size size;
         FT_Error error = FT_New_Size(face, &size);
-        if(error) {
+        if (error) {
             goto Fail;
         }
         FT_Activate_Size(size);
@@ -577,7 +578,7 @@ static bool lv_ft_font_init_nocache(lv_ft_info_t * info)
     FT_Set_Pixel_Sizes(face, 0, info->weight);
     dsc->size = face->size;
 
-    lv_font_t * font = dsc->font;
+    lv_font_t *font = dsc->font;
     font->dsc = dsc;
     font->get_glyph_dsc = get_glyph_dsc_cb_nocache;
     font->get_glyph_bitmap = get_glyph_bitmap_cb_nocache;
@@ -600,12 +601,12 @@ Fail:
 
 static void lv_ft_font_destroy_nocache(lv_font_t * font)
 {
-    if(font == NULL) {
+    if (font == NULL) {
         return;
     }
 
-    lv_font_fmt_ft_dsc_t * dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
-    if(dsc) {
+    lv_font_fmt_ft_dsc_t *dsc = (lv_font_fmt_ft_dsc_t *)(font->dsc);
+    if (dsc) {
         FT_Face face = dsc->size->face;
         FT_Done_Size(dsc->size);
         FT_Done_Face(face);
@@ -621,11 +622,11 @@ static void lv_ft_font_destroy_nocache(lv_font_t * font)
  * @param name name string
  * @return the string pointer of name.
  */
-static const char * name_refer_find(const char * name)
+static const char *name_refer_find(const char * name)
 {
-    name_refer_t * refer = _lv_ll_get_head(&names_ll);
-    while(refer) {
-        if(strcmp(refer->name, name) == 0) {
+    name_refer_t *refer = _lv_ll_get_head(&names_ll);
+    while (refer) {
+        if (strcmp(refer->name, name) == 0) {
             refer->cnt += 1;
             return refer->name;
         }
@@ -639,11 +640,11 @@ static const char * name_refer_find(const char * name)
  */
 static void name_refer_del(const char * name)
 {
-    name_refer_t * refer = _lv_ll_get_head(&names_ll);
-    while(refer) {
-        if(strcmp(refer->name, name) == 0) {
+    name_refer_t *refer = _lv_ll_get_head(&names_ll);
+    while (refer) {
+        if (strcmp(refer->name, name) == 0) {
             refer->cnt -= 1;
-            if(refer->cnt <= 0) {
+            if (refer->cnt <= 0) {
                 _lv_ll_remove(&names_ll, refer);
                 lv_mem_free((void *)refer->name);
                 lv_mem_free(refer);
@@ -661,18 +662,18 @@ static void name_refer_del(const char * name)
  * @param name name string
  * @return Saved string pointer
  */
-static const char * name_refer_save(const char * name)
+static const char *name_refer_save(const char * name)
 {
-    const char * pos = name_refer_find(name);
-    if(pos) {
+    const char *pos = name_refer_find(name);
+    if (pos) {
         return pos;
     }
 
-    name_refer_t * refer = _lv_ll_ins_tail(&names_ll);
-    if(refer) {
+    name_refer_t *refer = _lv_ll_ins_tail(&names_ll);
+    if (refer) {
         uint32_t len = strlen(name) + 1;
         refer->name = lv_mem_alloc(len);
-        if(refer->name) {
+        if (refer->name) {
             lv_memcpy((void *)refer->name, name, len);
             refer->cnt = 1;
             return refer->name;

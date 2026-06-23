@@ -24,21 +24,21 @@
 #define _RLOTTIE_COMMON_H_
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef RLOTTIE_BUILD_DLL
-    #ifdef RLOTTIE_BUILD
-      #define RLOTTIE_API __declspec(dllexport)
-    #else
-      #define RLOTTIE_API __declspec(dllimport)
-    #endif
-  #else
-    #define RLOTTIE_API
-  #endif
+#ifdef RLOTTIE_BUILD_DLL
+#ifdef RLOTTIE_BUILD
+#define RLOTTIE_API __declspec(dllexport)
 #else
-  #ifdef RLOTTIE_BUILD
-      #define RLOTTIE_API __attribute__ ((visibility ("default")))
-  #else
-      #define RLOTTIE_API
-  #endif
+#define RLOTTIE_API __declspec(dllimport)
+#endif
+#else
+#define RLOTTIE_API
+#endif
+#else
+#ifdef RLOTTIE_BUILD
+#define RLOTTIE_API __attribute__ ((visibility ("default")))
+#else
+#define RLOTTIE_API
+#endif
 #endif
 
 
@@ -60,46 +60,39 @@
  * @ingroup Lottie_Animation
  */
 
-typedef enum
-{
+typedef enum {
     BrushSolid = 0,
     BrushGradient
 } LOTBrushType;
 
-typedef enum
-{
+typedef enum {
     FillEvenOdd = 0,
     FillWinding
 } LOTFillRule;
 
-typedef enum
-{
+typedef enum {
     JoinMiter = 0,
     JoinBevel,
     JoinRound
 } LOTJoinStyle;
 
-typedef enum
-{
+typedef enum {
     CapFlat = 0,
     CapSquare,
     CapRound
 } LOTCapStyle;
 
-typedef enum
-{
+typedef enum {
     GradientLinear = 0,
     GradientRadial
 } LOTGradientType;
 
-typedef struct LOTGradientStop
-{
+typedef struct LOTGradientStop {
     float         pos;
     unsigned char r, g, b, a;
 } LOTGradientStop;
 
-typedef enum
-{
+typedef enum {
     MaskAdd = 0,
     MaskSubstract,
     MaskIntersect,
@@ -110,15 +103,14 @@ typedef struct LOTMask {
     struct {
         const float *ptPtr;
         size_t       ptCount;
-        const char*  elmPtr;
+        const char  *elmPtr;
         size_t       elmCount;
     } mPath;
     LOTMaskType mMode;
     unsigned char mAlpha;
-}LOTMask;
+} LOTMask;
 
-typedef enum
-{
+typedef enum {
     MatteNone = 0,
     MatteAlpha,
     MatteAlphaInv,
@@ -127,14 +119,14 @@ typedef enum
 } LOTMatteType;
 
 typedef struct LOTMarker {
-   char *name;
-   size_t startframe;
-   size_t endframe;
+    char *name;
+    size_t startframe;
+    size_t endframe;
 } LOTMarker;
 
 typedef struct LOTMarkerList {
-   LOTMarker *ptr;
-   size_t size;
+    LOTMarker *ptr;
+    size_t size;
 } LOTMarkerList;
 
 typedef struct LOTNode {
@@ -182,9 +174,15 @@ typedef struct LOTNode {
         size_t height;
         unsigned char mAlpha;
         struct {
-           float m11; float m12; float m13;
-           float m21; float m22; float m23;
-           float m31; float m32; float m33;
+            float m11;
+            float m12;
+            float m13;
+            float m21;
+            float m22;
+            float m23;
+            float m31;
+            float m32;
+            float m33;
         } mMatrix;
     } mImageInfo;
 

@@ -53,6 +53,10 @@ void lv_demo_handle_music_pause(void);
 void lv_demo_handle_music_play(void);
 void lv_demo_handle_music_prev(void);
 void lv_demo_handle_music_next(void);
+int lv_demo_is_app_music_stop(void);
+int lv_demo_active_audio_app_music_paused(void);
+void lv_demo_music_play(char next, char *type);
+void screen_music_btn_play_pause_show(bool is_pause);
 void lv_demo_handle_music_mode_switch(void);
 
 // 简单的UI更新函数，直接在适当的线程中调用
@@ -99,7 +103,7 @@ static void direct_ui_update(void)
         // 刷新对象以确保设置生效
         lv_obj_update_layout(guider_ui.screen_music_lyric);
     }
-     if (music_info.total_time_changed && guider_ui.screen_music_span_end_span) {
+    if (music_info.total_time_changed && guider_ui.screen_music_span_end_span) {
         char time_str[16];
         uint32_t min = music_info.total_time / 60;
         uint32_t sec = music_info.total_time % 60;
@@ -122,7 +126,9 @@ static void direct_ui_update(void)
         // 更新进度条位置
         if (music_info.total_time > 0) {
             uint32_t progress = (music_info.current_time * 100) / music_info.total_time;
-            if (progress > 100) progress = 100;
+            if (progress > 100) {
+                progress = 100;
+            }
             lv_bar_set_value(guider_ui.screen_music_slider, progress, LV_ANIM_OFF);
         }
         music_info.current_time_changed = false;
@@ -160,10 +166,11 @@ static bool original_title_initialized = false; // 添加初始化标志
 
 #ifdef APPLAYER_ENABLE
 #else
-int put_buf(const char *str, int len){
+int put_buf(const char *str, int len)
+{
 
 }
-#endif  
+#endif
 // 更新标题，歌曲名
 void music_update_title(const char *title)
 {
@@ -256,7 +263,7 @@ void music_update_artist(const char *artist)
     if (pos != NULL) {
         // 计算剩余字符串长度
         size_t title_len = (pos == strstr(temp_artist, original_title)) ?
-                          strlen(original_title) : strlen(music_info.title);
+                           strlen(original_title) : strlen(music_info.title);
 
         size_t remaining_len = strlen(pos + title_len);
         // 移除包含的歌曲名部分
@@ -419,56 +426,57 @@ static void screen_music_btn_play_pause_event_handler (lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 切换按钮状态
-        g_play_pause_btn_state = !g_play_pause_btn_state;
-        if (g_play_pause_btn_state) {
-            // 设置为播放
-            lv_label_set_text(ui->screen_music_btn_play_pause_label, "I I");
-            lv_obj_set_style_text_font(ui->screen_music_btn_play_pause_label, &lv_font_Barlow__15, LV_PART_MAIN|LV_STATE_DEFAULT);
-            tape_rotate_start();
-            // 启动歌词滚动
-            lv_label_set_long_mode(ui->screen_music_lyric, LV_LABEL_LONG_SCROLL_CIRCULAR);
-            lv_demo_handle_music_play();
-        } else {
-            // 设置为暂停
-            lv_label_set_text(ui->screen_music_btn_play_pause_label, "   "LV_SYMBOL_PLAY " ");
-            lv_obj_set_style_text_font(ui->screen_music_btn_play_pause_label, &lv_font_Barlow__11, LV_PART_MAIN|LV_STATE_DEFAULT);
-            tape_rotate_stop();
-            // 停止歌词滚动
-            lv_label_set_long_mode(ui->screen_music_lyric, LV_LABEL_LONG_DOT);
-            lv_demo_handle_music_pause();
+    case LV_EVENT_CLICKED: {
+            // 切换按钮状态
+            g_play_pause_btn_state = !g_play_pause_btn_state;
+            if (g_play_pause_btn_state) {
+                // 设置为播放
+                lv_label_set_text(ui->screen_music_btn_play_pause_label, "I I");
+                lv_obj_set_style_text_font(ui->screen_music_btn_play_pause_label, &lv_font_Barlow__15, LV_PART_MAIN | LV_STATE_DEFAULT);
+                tape_rotate_start();
+                // 启动歌词滚动
+                lv_label_set_long_mode(ui->screen_music_lyric, LV_LABEL_LONG_SCROLL_CIRCULAR);
+                lv_demo_handle_music_play();
+            } else {
+                // 设置为暂停
+                lv_label_set_text(ui->screen_music_btn_play_pause_label, "   "LV_SYMBOL_PLAY " ");
+                lv_obj_set_style_text_font(ui->screen_music_btn_play_pause_label, &lv_font_Barlow__11, LV_PART_MAIN | LV_STATE_DEFAULT);
+                tape_rotate_stop();
+                // 停止歌词滚动
+                lv_label_set_long_mode(ui->screen_music_lyric, LV_LABEL_LONG_DOT);
+                lv_demo_handle_music_pause();
+            }
+            break;
         }
-        break;
-    }
     default:
         break;
     }
 }
 // 播放/暂停按钮显示处理函数
-void async_screen_music_btn_play_pause_show(void* param){
+void async_screen_music_btn_play_pause_show(void* param)
+{
     bool is_pause = (bool)(intptr_t)param;
-    if(!is_pause){
-       // 设置为播放
+    if (!is_pause) {
+        // 设置为播放
         g_play_pause_btn_state = 1;
         lv_label_set_text(guider_ui.screen_music_btn_play_pause_label, "I I");
-        lv_obj_set_style_text_font(guider_ui.screen_music_btn_play_pause_label, &lv_font_Barlow__15, LV_PART_MAIN|LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(guider_ui.screen_music_btn_play_pause_label, &lv_font_Barlow__15, LV_PART_MAIN | LV_STATE_DEFAULT);
         tape_rotate_start();
         // 启动歌词滚动
         lv_label_set_long_mode(guider_ui.screen_music_lyric, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    }else{
+    } else {
         g_play_pause_btn_state = 0;
-         // 设置为暂停
+        // 设置为暂停
         lv_label_set_text(guider_ui.screen_music_btn_play_pause_label, "   "LV_SYMBOL_PLAY " ");
-        lv_obj_set_style_text_font(guider_ui.screen_music_btn_play_pause_label, &lv_font_Barlow__11, LV_PART_MAIN|LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(guider_ui.screen_music_btn_play_pause_label, &lv_font_Barlow__11, LV_PART_MAIN | LV_STATE_DEFAULT);
         tape_rotate_stop();
         // 停止歌词滚动
         lv_label_set_long_mode(guider_ui.screen_music_lyric, LV_LABEL_LONG_DOT);
     }
 }
 // 异步调用播放/暂停按钮显示处理函数
-void screen_music_btn_play_pause_show(bool is_pause){
+void screen_music_btn_play_pause_show(bool is_pause)
+{
     printf("异步调用播放/暂停按钮显示处理函数: %s\n", is_pause ? "暂停" : "播放");
     lv_async_call(async_screen_music_btn_play_pause_show, (void *)is_pause);
 }
@@ -495,22 +503,23 @@ static void volume_bar_auto_hide_cb(lv_timer_t *timer)
  * 处理音量调节功能
  * 区分网络音乐和蓝牙音乐
  */
-void volume_icon_click_handler(void){
+void volume_icon_click_handler(void)
+{
     // 显示音量进度条
     extern lv_ui guider_ui;
 
-    if(!guider_ui.screen_music_bar_volume){
+    if (!guider_ui.screen_music_bar_volume) {
         printf("[错误] 音量进度条UI对象不存在\n");
         return;
     }
     lv_obj_clear_flag(guider_ui.screen_music_bar_volume, LV_OBJ_FLAG_HIDDEN);
 
-       // 删除定时器
+    // 删除定时器
     if (g_volume_bar_timer != NULL) {
         lv_timer_del(g_volume_bar_timer);
         g_volume_bar_timer = NULL;
     }
-   // 创建新的定时器，5秒后自动隐藏
+    // 创建新的定时器，5秒后自动隐藏
     g_volume_bar_timer = lv_timer_create(volume_bar_auto_hide_cb, 5000, &guider_ui);
 
     int32_t current_volume = lv_bar_get_value(guider_ui.screen_music_bar_volume);
@@ -525,10 +534,12 @@ static void screen_music_bar_volume_event_handler(lv_event_t *e)
     lv_event_code_t event_code = lv_event_get_code(e);  // 获取当前事件类型
 
     // 处理按下和拖拽事件
-    if(event_code == LV_EVENT_PRESSED || event_code == LV_EVENT_PRESSING) {
+    if (event_code == LV_EVENT_PRESSED || event_code == LV_EVENT_PRESSING) {
         // 获取当前输入设备和触摸点
         lv_indev_t *indev = lv_indev_get_act();
-        if(indev == NULL) return;
+        if (indev == NULL) {
+            return;
+        }
 
         lv_point_t point;
         lv_indev_get_point(indev, &point);
@@ -541,8 +552,12 @@ static void screen_music_bar_volume_event_handler(lv_event_t *e)
         int32_t volume = 100 - (relative_y * 100 / bar_height);
 
         static uint8_t last_volume_value = 0;
-        if(volume < 10) volume = 10;
-        if(volume > 100) volume = 100;
+        if (volume < 10) {
+            volume = 10;
+        }
+        if (volume > 100) {
+            volume = 100;
+        }
         if (last_volume_value && (last_volume_value == volume)) {
             printf("[音量事件] 音量未改变\n");
             return ;
@@ -551,8 +566,7 @@ static void screen_music_bar_volume_event_handler(lv_event_t *e)
         lv_bar_set_value(volume_bar, volume, LV_ANIM_OFF);
         printf("[音量事件] 点击调节至: %d%% (触摸Y: %d, 进度条高: %d)\n", volume, relative_y, bar_height);
         volume_icon_click_handler();
-    }
-    else if(event_code == LV_EVENT_VALUE_CHANGED) {
+    } else if (event_code == LV_EVENT_VALUE_CHANGED) {
         // 值改变事件
         int32_t current_volume = lv_bar_get_value(volume_bar);
         printf("[音量事件] 音量值已更改为: %d%%\n", (int)current_volume);
@@ -566,15 +580,14 @@ static void screen_music_img_volume_event_handler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 音量按钮点击事件处理逻辑
-        printf("音量按钮被点击\n");
+    case LV_EVENT_CLICKED: {
+            // 音量按钮点击事件处理逻辑
+            printf("音量按钮被点击\n");
 
-        // 调用音量图标点击处理函数
-        volume_icon_click_handler();
-        break;
-    }
+            // 调用音量图标点击处理函数
+            volume_icon_click_handler();
+            break;
+        }
     default:
         break;
     }
@@ -586,13 +599,12 @@ static void screen_music_img_prev_event_handler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 上一首按钮点击事件处理逻辑
-        printf("上一首按钮被点击\n");
-        lv_demo_handle_music_prev();
-        break;
-    }
+    case LV_EVENT_CLICKED: {
+            // 上一首按钮点击事件处理逻辑
+            printf("上一首按钮被点击\n");
+            lv_demo_handle_music_prev();
+            break;
+        }
     default:
         break;
     }
@@ -604,13 +616,12 @@ static void screen_music_img_next_event_handler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 下一首按钮点击事件处理逻辑
-        printf("下一首按钮被点击\n");
-        lv_demo_handle_music_next();
-        break;
-    }
+    case LV_EVENT_CLICKED: {
+            // 下一首按钮点击事件处理逻辑
+            printf("下一首按钮被点击\n");
+            lv_demo_handle_music_next();
+            break;
+        }
     default:
         break;
     }
@@ -626,40 +637,67 @@ static char g_music_current_lyrics[32] = "歌词加载中";           // 默认�
 void async_music_page_init(void* param)
 {
     // 根据新的模式ID更新模式名称和图标
-    switch(get_current_play_mode_id()) {
-        case MODE_NET_ID:
-            g_music_current_icon = &_play_random_alpha_20x20;
-            lv_imgbtn_set_src(guider_ui.screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, g_music_current_icon, NULL);
-            lv_label_set_text(guider_ui.screen_music_lyric, g_music_current_lyrics);
-            // 确保标签足够高以显示一行文本，避免垂直滚动
-            lv_obj_set_height(guider_ui.screen_music_lyric, lv_font_get_line_height(lv_obj_get_style_text_font(guider_ui.screen_music_lyric, LV_PART_MAIN)) + 4);
-            return;
-            // strcpy(g_music_current_title, "网络音乐");
-            break;
-        case MODE_BT_ID:
-            g_music_current_icon = &_BT_alpha_20x20;
-            strcpy(g_music_current_title, "蓝牙音乐");
-            break;
-        case MODE_SD_ID:
-            g_music_current_icon = &_shunxu_alpha_20x20;
-            strcpy(g_music_current_title, "SD卡音乐");
-            break;
-        default:
-            // 保持默认值，无需重复赋值
-            break;
+    switch (get_current_play_mode_id()) {
+    case MODE_NET_ID:
+        g_music_current_icon = &_play_random_alpha_20x20;
+        lv_imgbtn_set_src(guider_ui.screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, g_music_current_icon, NULL);
+        lv_label_set_text(guider_ui.screen_music_lyric, g_music_current_lyrics);
+        // 确保标签足够高以显示一行文本，避免垂直滚动
+        lv_obj_set_height(guider_ui.screen_music_lyric, lv_font_get_line_height(lv_obj_get_style_text_font(guider_ui.screen_music_lyric, LV_PART_MAIN)) + 4);
+#ifdef APPLAYER_ENABLE
+        if (lv_demo_is_app_music_stop()) {
+            if (lv_demo_active_audio_app_music_paused()) {
+                lv_demo_handle_music_play();
+                screen_music_btn_play_pause_show(0);
+            } else {
+                lv_demo_music_play(1, NULL);
+                screen_music_btn_play_pause_show(1);
+            }
+        } else {
+            screen_music_btn_play_pause_show(0);
+        }
+#endif
+        return;
+        // strcpy(g_music_current_title, "网络音乐");
+        break;
+    case MODE_BT_ID:
+        g_music_current_icon = &_BT_alpha_20x20;
+        strcpy(g_music_current_title, "蓝牙音乐");
+        break;
+    case MODE_SD_ID:
+        g_music_current_icon = &_shunxu_alpha_20x20;
+        strcpy(g_music_current_title, "SD卡音乐");
+        break;
+    default:
+        // 保持默认值，无需重复赋值
+        break;
     }
     // 使用全局变量设置UI，避免原代码中覆盖前面设置的问题
     lv_imgbtn_set_src(guider_ui.screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, g_music_current_icon, NULL);
-          // 刷新对象以确保设置生效
+    // 刷新对象以确保设置生效
     lv_obj_update_layout(guider_ui.screen_music_imgbtn_mode);
     lv_span_set_text(guider_ui.screen_music_span_title_span, g_music_current_title);
     lv_span_set_text(guider_ui.screen_music_span_singer_span, g_music_current_singer);
     lv_label_set_text(guider_ui.screen_music_lyric, g_music_current_lyrics);
-     // 确保标签足够高以显示一行文本，避免垂直滚动
+    // 确保标签足够高以显示一行文本，避免垂直滚动
     lv_obj_set_height(guider_ui.screen_music_lyric, lv_font_get_line_height(lv_obj_get_style_text_font(guider_ui.screen_music_lyric, LV_PART_MAIN)) + 4);
+#ifdef APPLAYER_ENABLE
+    if (lv_demo_is_app_music_stop()) {
+        if (lv_demo_active_audio_app_music_paused()) {
+            lv_demo_handle_music_play();
+            screen_music_btn_play_pause_show(0);
+        } else {
+            lv_demo_music_play(1, NULL);
+            screen_music_btn_play_pause_show(1);
+        }
+    } else {
+        screen_music_btn_play_pause_show(0);
+    }
+#endif
 }
 // 异步处理音乐页面切换初始化函数
-void music_page_init(void){
+void music_page_init(void)
+{
     // 使用异步调用处理UI更新和定时器清理，避免线程冲突
     lv_async_call(async_music_page_init, NULL);
 }
@@ -672,20 +710,24 @@ music_play_mode_t g_current_play_mode = {
 };
 
 // 获取当前播放模式ID
-int get_current_play_mode_id(void) {
+int get_current_play_mode_id(void)
+{
     return g_current_play_mode.mode_id;
 }
 
 // 设置当前播放模式ID
-void set_current_play_mode_id(int mode_id) {
+void set_current_play_mode_id(int mode_id)
+{
     g_current_play_mode.mode_id = mode_id;
 }
 // 获取当前播放模式状态
-char *get_current_play_mode_status(void) {
+char *get_current_play_mode_status(void)
+{
     return g_current_play_mode.mode_status;
 }
 // 设置当前播放模式状态
-void set_current_play_mode_status(char *status) {
+void set_current_play_mode_status(char *status)
+{
     strcpy(g_current_play_mode.mode_status, status);
 }
 // 模式切换按钮点击事件处理函数
@@ -694,18 +736,17 @@ static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 模式切换按钮点击事件处理逻辑
-        printf("模式切换按钮被点击\n");
-        // 切换点击状态
-        g_current_play_mode.is_clicked = !g_current_play_mode.is_clicked;
-        // 根据新的模式ID更新模式名称
-        switch(get_current_play_mode_id()) {
+    case LV_EVENT_CLICKED: {
+            // 模式切换按钮点击事件处理逻辑
+            printf("模式切换按钮被点击\n");
+            // 切换点击状态
+            g_current_play_mode.is_clicked = !g_current_play_mode.is_clicked;
+            // 根据新的模式ID更新模式名称
+            switch (get_current_play_mode_id()) {
             case MODE_NET_ID:
                 strcpy(g_current_play_mode.name, "网络模式");
                 // 根据按钮状态更新播放模式状态
-                if(g_current_play_mode.is_clicked) {
+                if (g_current_play_mode.is_clicked) {
                     set_current_play_mode_status("单曲循环");
                 } else {
                     set_current_play_mode_status("随机播放");
@@ -718,7 +759,7 @@ static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
             case MODE_SD_ID:
                 strcpy(g_current_play_mode.name, "SD卡模式");
                 // 根据按钮状态更新播放模式状态
-                if(g_current_play_mode.is_clicked) {
+                if (g_current_play_mode.is_clicked) {
                     set_current_play_mode_status("单曲循环");
                 } else {
                     set_current_play_mode_status("顺序循环");
@@ -726,26 +767,26 @@ static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
                 break;
             default:
                 break;
-        }
-        if(strcmp(g_current_play_mode.name, "网络模式") == 0) {
-            printf("网络模式：随机播放和单曲循环\n");
-            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_play_random_alpha_20x20, NULL);
-            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
-        }else if(strcmp(g_current_play_mode.name, "蓝牙模式") == 0) {
-            printf("蓝牙模式：蓝牙图标\n");
-            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_BT_alpha_20x20, NULL);
-            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_BT_alpha_20x20, NULL);
-        }else if(strcmp(g_current_play_mode.name, "SD卡模式") == 0) {
-            printf("SD卡模式：顺序播放和随机播放\n");
-            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_shunxu_alpha_20x20, NULL);
-            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
-        }
+            }
+            if (strcmp(g_current_play_mode.name, "网络模式") == 0) {
+                printf("网络模式：随机播放和单曲循环\n");
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_play_random_alpha_20x20, NULL);
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            } else if (strcmp(g_current_play_mode.name, "蓝牙模式") == 0) {
+                printf("蓝牙模式：蓝牙图标\n");
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_BT_alpha_20x20, NULL);
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_BT_alpha_20x20, NULL);
+            } else if (strcmp(g_current_play_mode.name, "SD卡模式") == 0) {
+                printf("SD卡模式：顺序播放和随机播放\n");
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_shunxu_alpha_20x20, NULL);
+                lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            }
 
-        printf("模式为%s\n", g_current_play_mode.name);
-        lv_demo_handle_music_mode_switch();
+            printf("模式为%s\n", g_current_play_mode.name);
+            lv_demo_handle_music_mode_switch();
 
-        break;
-    }
+            break;
+        }
     default:
         break;
     }
@@ -760,25 +801,25 @@ void lv_demo_handle_music_pause(void)
 {
 #ifdef APPLAYER_ENABLE
     // 根据新的模式ID更新模式名称
-    switch(get_current_play_mode_id()) {
-        case MODE_NET_ID:
-            net_music_play_pause(1);//1表示暂停
-            printf("[音乐控制] 暂停网络音乐\n");
-            break;
-        case MODE_BT_ID:
-            strcpy(g_current_play_mode.name, "蓝牙模式");
-            bt_music_play_pause_toggle();
-            printf("[音乐控制] 暂停蓝牙音乐\n");
-            break;
-        case MODE_SD_ID:
-            #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
-                extern int sd_music_play_pause(char pause);
-                sd_music_play_pause(1);//1表示暂停
-            #endif
-            printf("[音乐控制] 暂停SD卡音乐\n");
-            break;
-        default:
-            break;
+    switch (get_current_play_mode_id()) {
+    case MODE_NET_ID:
+        net_music_play_pause(1);//1表示暂停
+        printf("[音乐控制] 暂停网络音乐\n");
+        break;
+    case MODE_BT_ID:
+        strcpy(g_current_play_mode.name, "蓝牙模式");
+        bt_music_play_pause_toggle();
+        printf("[音乐控制] 暂停蓝牙音乐\n");
+        break;
+    case MODE_SD_ID:
+#ifdef CONFIG_SD_MUSIC_MODE_ENABLE
+        extern int sd_music_play_pause(char pause);
+        sd_music_play_pause(1);//1表示暂停
+#endif
+        printf("[音乐控制] 暂停SD卡音乐\n");
+        break;
+    default:
+        break;
     }
 #endif
 }
@@ -786,27 +827,28 @@ void lv_demo_handle_music_pause(void)
  * 处理音乐播放功能
  * 根据当前播放模式执行相应操作
  */
-void lv_demo_handle_music_play(void){
+void lv_demo_handle_music_play(void)
+{
 #ifdef APPLAYER_ENABLE
     // 根据当前播放模式执行相应操作
-    switch(get_current_play_mode_id()) {
-        case MODE_NET_ID:
-            net_music_play_pause(0);//0表示继续播放
-            printf("[音乐控制] 播放网络音乐\n");
-            break;
-        case MODE_BT_ID:
-            bt_music_play_pause_toggle();
-            printf("[音乐控制] 播放蓝牙音乐\n");
-            break;
-        case MODE_SD_ID:
-            #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
-                extern int sd_music_play_pause(char pause);
-                sd_music_play_pause(0);//0表示继续播放
-             #endif
-            printf("[音乐控制] 播放SD卡音乐\n");
-            break;
-        default:
-            break;
+    switch (get_current_play_mode_id()) {
+    case MODE_NET_ID:
+        net_music_play_pause(0);//0表示继续播放
+        printf("[音乐控制] 播放网络音乐\n");
+        break;
+    case MODE_BT_ID:
+        bt_music_play_pause_toggle();
+        printf("[音乐控制] 播放蓝牙音乐\n");
+        break;
+    case MODE_SD_ID:
+#ifdef CONFIG_SD_MUSIC_MODE_ENABLE
+        extern int sd_music_play_pause(char pause);
+        sd_music_play_pause(0);//0表示继续播放
+#endif
+        printf("[音乐控制] 播放SD卡音乐\n");
+        break;
+    default:
+        break;
     }
 #endif
 }
@@ -814,31 +856,32 @@ void lv_demo_handle_music_play(void){
  * 处理上一曲播放功能
  * 根据当前播放模式执行相应操作
  */
-void lv_demo_handle_music_prev(void){
+void lv_demo_handle_music_prev(void)
+{
 #ifdef APPLAYER_ENABLE
     // 根据当前播放模式执行相应操作
-    switch(get_current_play_mode_id()) {
-        case MODE_NET_ID:
-            if(net_music_play_last_chack()){
-                net_music_play_last_request();
-            }else{
-                net_music_play_next();
-            }
-            printf("[音乐控制] 播放上一曲网络音乐\n");
-            break;
-        case MODE_BT_ID:
-            BT_handle_music_play_prev();
-            printf("[音乐控制] 播放上一曲蓝牙音乐\n");
-            break;
-        case MODE_SD_ID:
-            #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
-                extern int sd_music_play_prev(void);
-                sd_music_play_prev();
-            #endif
-            printf("[音乐控制] 播放上一曲SD卡音乐\n");
-            break;
-        default:
-            break;
+    switch (get_current_play_mode_id()) {
+    case MODE_NET_ID:
+        if (net_music_play_last_chack()) {
+            net_music_play_last_request();
+        } else {
+            net_music_play_next();
+        }
+        printf("[音乐控制] 播放上一曲网络音乐\n");
+        break;
+    case MODE_BT_ID:
+        BT_handle_music_play_prev();
+        printf("[音乐控制] 播放上一曲蓝牙音乐\n");
+        break;
+    case MODE_SD_ID:
+#ifdef CONFIG_SD_MUSIC_MODE_ENABLE
+        extern int sd_music_play_prev(void);
+        sd_music_play_prev();
+#endif
+        printf("[音乐控制] 播放上一曲SD卡音乐\n");
+        break;
+    default:
+        break;
     }
 #endif
 }
@@ -846,27 +889,28 @@ void lv_demo_handle_music_prev(void){
  * 处理下一曲播放功能
  * 根据当前播放模式执行相应操作
  */
-void lv_demo_handle_music_next(void){
+void lv_demo_handle_music_next(void)
+{
 #ifdef APPLAYER_ENABLE
     // 根据当前播放模式执行相应操作
-    switch(get_current_play_mode_id()) {
-        case MODE_NET_ID:
-            net_music_play_next();
-            printf("[音乐控制] 播放下一曲网络音乐\n");
-            break;
-        case MODE_BT_ID:
-            BT_handle_music_play_next();
-            printf("[音乐控制] 播放下一曲蓝牙音乐\n");
-            break;
-        case MODE_SD_ID:
-            #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
-                extern int sd_music_play_next(void);
-                sd_music_play_next();
-            #endif
-            printf("[音乐控制] 播放下一曲SD卡音乐\n");
-            break;
-        default:
-            break;
+    switch (get_current_play_mode_id()) {
+    case MODE_NET_ID:
+        net_music_play_next();
+        printf("[音乐控制] 播放下一曲网络音乐\n");
+        break;
+    case MODE_BT_ID:
+        BT_handle_music_play_next();
+        printf("[音乐控制] 播放下一曲蓝牙音乐\n");
+        break;
+    case MODE_SD_ID:
+#ifdef CONFIG_SD_MUSIC_MODE_ENABLE
+        extern int sd_music_play_next(void);
+        sd_music_play_next();
+#endif
+        printf("[音乐控制] 播放下一曲SD卡音乐\n");
+        break;
+    default:
+        break;
     }
 #endif
 }
@@ -875,39 +919,41 @@ void lv_demo_handle_music_next(void){
  * 处理播放模式切换功能
  * 根据当前播放模式执行相应操作
  */
-void lv_demo_handle_music_mode_switch(void){
+void lv_demo_handle_music_mode_switch(void)
+{
 #ifdef APPLAYER_ENABLE
     // 根据当前播放模式执行相应操作
-    switch(get_current_play_mode_id()) {
-        case MODE_NET_ID:
-            printf("[网络音乐]当前播放模式状态：%s\n", get_current_play_mode_status());
-            if(strcmp(get_current_play_mode_status(), "单曲循环") == 0){
-                net_music_play_loop();
-            }else if(strcmp(get_current_play_mode_status(), "随机循环") == 0){
-                net_music_play_loop_clear();
-            }
-            break;
-        case MODE_BT_ID:
-            printf("[蓝牙音乐]当前播放模式状态：%s\n", get_current_play_mode_status());
+    switch (get_current_play_mode_id()) {
+    case MODE_NET_ID:
+        printf("[网络音乐]当前播放模式状态：%s\n", get_current_play_mode_status());
+        if (strcmp(get_current_play_mode_status(), "单曲循环") == 0) {
+            net_music_play_loop();
+        } else if (strcmp(get_current_play_mode_status(), "随机循环") == 0) {
+            net_music_play_loop_clear();
+        }
+        break;
+    case MODE_BT_ID:
+        printf("[蓝牙音乐]当前播放模式状态：%s\n", get_current_play_mode_status());
 
-            break;
-        case MODE_SD_ID:
-            #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
-                printf("[SD卡音乐]当前播放模式状态：%s\n", get_current_play_mode_status());
-                if(strcmp(get_current_play_mode_status(), "单曲循环") == 0){
-                    sd_music_play_loop_set(1);
-                }else if(strcmp(get_current_play_mode_status(), "顺序播放") == 0){
-                    sd_music_play_loop_set(0);
-                }
-            #endif
-            break;
-        default:
-            break;
+        break;
+    case MODE_SD_ID:
+#ifdef CONFIG_SD_MUSIC_MODE_ENABLE
+        printf("[SD卡音乐]当前播放模式状态：%s\n", get_current_play_mode_status());
+        if (strcmp(get_current_play_mode_status(), "单曲循环") == 0) {
+            sd_music_play_loop_set(1);
+        } else if (strcmp(get_current_play_mode_status(), "顺序播放") == 0) {
+            sd_music_play_loop_set(0);
+        }
+#endif
+        break;
+    default:
+        break;
     }
 #endif
 }
 
-void music_event_init(lv_ui *ui) {
+void music_event_init(lv_ui *ui)
+{
     // 添加这行代码完全禁止页面滚动
     lv_obj_set_scroll_dir(ui->screen_music, LV_DIR_NONE);
     // 禁用音量进度条的点击事件
@@ -920,7 +966,7 @@ void music_event_init(lv_ui *ui) {
     if (g_play_pause_btn_state) {
         // 设置为播放
         lv_label_set_text(ui->screen_music_btn_play_pause_label, "I I");
-        lv_obj_set_style_text_font(ui->screen_music_btn_play_pause_label, &lv_font_Barlow__15, LV_PART_MAIN|LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(ui->screen_music_btn_play_pause_label, &lv_font_Barlow__15, LV_PART_MAIN | LV_STATE_DEFAULT);
         tape_rotate_start();
         // 启动歌词滚动
         lv_label_set_long_mode(ui->screen_music_lyric, LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -947,7 +993,8 @@ void music_event_init(lv_ui *ui) {
 
 }
 
-void music_event_setup(void) {
+void music_event_setup(void)
+{
     music_event_init(&guider_ui);
 }
 

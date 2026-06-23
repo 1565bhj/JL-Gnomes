@@ -44,7 +44,7 @@ void speak_icon_show(uint8_t icon_flag);
  * @param type 气泡类型（接收或发送）
  * @return 创建的气泡对象指针
  */
-extern lv_obj_t * chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_type_t type);
+extern lv_obj_t *chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_type_t type);
 
 /**
  * @brief 统一的聊天对话函数
@@ -83,7 +83,8 @@ static uint8_t load_scr_flag = 0;
  * @param align 文本对齐方式
  */
 static void chat_bubble_style_init(lv_style_t *style, lv_color_t bg_color, lv_color_t text_color,
-                                 lv_align_t align) {
+                                   lv_align_t align)
+{
     lv_style_init(style);
 
     // 基础样式设置：圆角和背景
@@ -113,7 +114,8 @@ static void chat_bubble_style_init(lv_style_t *style, lv_color_t bg_color, lv_co
  * @param type 气泡类型（接收或发送）
  * @return 创建的气泡对象指针
  */
-lv_obj_t * chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_type_t type) {
+lv_obj_t *chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_type_t type)
+{
     // 参数有效性检查
     if (!text) {
         return NULL;  // 如果文本为空，直接返回
@@ -126,16 +128,16 @@ lv_obj_t * chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_ty
 
     // lv_obj_remove_style_all(bubble); // 移除默认样式，避免继承父容器样式
     // lv_obj_set_style_bg_opa(bubble, 0, LV_PART_MAIN|LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(bubble, 1, LV_PART_MAIN|LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(bubble, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     // 样式定义与应用：根据气泡类型应用不同样式
     static lv_style_t incoming_style, outgoing_style;  // 静态样式，避免重复创建
-    if(type == CHAT_BUBBLE_INCOMING) {  // 接收消息气泡（AI消息）
+    if (type == CHAT_BUBBLE_INCOMING) { // 接收消息气泡（AI消息）
         chat_bubble_style_init(&incoming_style, lv_color_hex(0xFFFFFF),
-                              lv_color_hex(0xFFFFFF), LV_TEXT_ALIGN_LEFT);
+                               lv_color_hex(0xFFFFFF), LV_TEXT_ALIGN_LEFT);
         lv_obj_add_style(bubble, &incoming_style, LV_PART_MAIN);
     } else {  // 发送消息气泡（用户消息）
         chat_bubble_style_init(&outgoing_style, lv_color_hex(0xFFFFFF),
-                              lv_color_hex(0xFFFFFF), LV_TEXT_ALIGN_LEFT);
+                               lv_color_hex(0xFFFFFF), LV_TEXT_ALIGN_LEFT);
         lv_obj_add_style(bubble, &outgoing_style, LV_PART_MAIN);
     }
 
@@ -144,7 +146,7 @@ lv_obj_t * chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_ty
     lv_label_set_text(label, text);  // 设置标签文本
 
     // 设置字体为自定义25号字体
-    lv_obj_set_style_text_font(label, &lv_font_MiSansDemibold_18, LV_PART_MAIN|LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(label, &lv_font_MiSansDemibold_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // 文本自动换行+高度自适应设置
     lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);  // 启用长文本自动换行
@@ -154,15 +156,15 @@ lv_obj_t * chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_ty
     lv_coord_t letter_space = 0;           // 字符间距
     lv_text_flag_t flag = LV_TEXT_FLAG_NONE;  // 文本标志
     lv_coord_t text_width = lv_txt_get_width(
-        text,
-        text_len,
-        &lv_font_MiSansDemibold_18,
-        letter_space,
-        flag
-    );  // 获取文本显示宽度
+                                text,
+                                text_len,
+                                &lv_font_MiSansDemibold_18,
+                                letter_space,
+                                flag
+                            );  // 获取文本显示宽度
 
     // 根据文本长度设置标签宽度：超过最大宽度时限制宽度
-    if(text_width > LABLE_MAX_WIDTH) {
+    if (text_width > LABLE_MAX_WIDTH) {
         lv_obj_set_width(label, LABLE_MAX_WIDTH);
     }
 
@@ -177,7 +179,8 @@ lv_obj_t * chat_bubble_create(lv_obj_t *parent, const char *text, chat_bubble_ty
  * @brief 创建聊天界面
  * @details 初始化聊天滚动容器、设置布局和样式，并添加示例消息
  */
-void chat_interface_create(void) {
+void chat_interface_create(void)
+{
     // 使用现有滚动容器：从UI对象中获取聊天框架容器
     lv_obj_t *chat_scroll = guider_ui.screen_conversation_cont_frame;
 
@@ -225,7 +228,8 @@ void chat_interface_create(void) {
  * @param message 消息文本内容
  * @param type 消息类型（接收或发送）
  */
-void add_chat_message(lv_obj_t *chat_container, const char *message, chat_bubble_type_t type) {
+void add_chat_message(lv_obj_t *chat_container, const char *message, chat_bubble_type_t type)
+{
     // 参数有效性检查
     if (!chat_container || !message) {
         return;  // 如果容器或消息为空，直接返回
@@ -236,9 +240,9 @@ void add_chat_message(lv_obj_t *chat_container, const char *message, chat_bubble
     lv_obj_set_width(message_row, lv_obj_get_width(chat_container));  // 宽度占满父容器
     lv_obj_set_height(message_row, LV_SIZE_CONTENT);  // 高度自适应内容
 
-     //Write style for photo_scr_photo_page_cont, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
-    lv_obj_set_style_bg_opa(message_row, 0, LV_PART_MAIN|LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(message_row, 0, LV_PART_MAIN|LV_STATE_DEFAULT);
+    //Write style for photo_scr_photo_page_cont, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
+    lv_obj_set_style_bg_opa(message_row, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(message_row, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // lv_obj_remove_style_all(message_row);  // 移除默认样式
     lv_obj_set_flex_flow(message_row, LV_FLEX_FLOW_ROW);  // 设置为行布局
@@ -286,7 +290,8 @@ void add_chat_message(lv_obj_t *chat_container, const char *message, chat_bubble
  * @details 用于外部异步添加聊天消息，自动使用全局UI对象的聊天容器
 
  */
-void user_add_chat_message_cb(void *message) {
+void user_add_chat_message_cb(void *message)
+{
     const char *message_str = (const char *)message;
     if (!message_str || !guider_ui.screen_conversation_cont_frame) {
         return;
@@ -298,8 +303,11 @@ void user_add_chat_message_cb(void *message) {
     free((void*)message_str);
 }
 
-void async_user_add_chat_message(const char *message) {
-    if (!message) return;
+void async_user_add_chat_message(const char *message)
+{
+    if (!message) {
+        return;
+    }
 
     // 复制字符串以确保异步调用时仍然有效
     char *message_copy = strdup(message);
@@ -313,7 +321,8 @@ void async_user_add_chat_message(const char *message) {
  * @details 用于外部异步添加聊天消息，自动使用全局UI对象的聊天容器
 
  */
-void ai_add_chat_message_cb(void *message) {
+void ai_add_chat_message_cb(void *message)
+{
     const char *message_str = (const char *)message;
     if (!message_str || !guider_ui.screen_conversation_cont_frame) {
         return;
@@ -325,8 +334,11 @@ void ai_add_chat_message_cb(void *message) {
     free((void*)message_str);
 }
 
-void async_ai_add_chat_message(const char *message) {
-    if (!message) return;
+void async_ai_add_chat_message(const char *message)
+{
+    if (!message) {
+        return;
+    }
 
     // 复制字符串以确保异步调用时仍然有效
     char *message_copy = strdup(message);
@@ -341,23 +353,25 @@ void async_ai_add_chat_message(const char *message) {
 static void speak_listen_icon_show(void *is_listen)
 {
     bool icon_flag = (bool)(intptr_t)is_listen;
-    if(icon_flag == 0)
-    {
+    if (icon_flag == 0) {
         lv_span_set_text(guider_ui.screen_conversation_span_listen_speak_span, "正在对话……");
 
-    } else if(icon_flag == 1) {
+    } else if (icon_flag == 1) {
         lv_span_set_text(guider_ui.screen_conversation_span_listen_speak_span, "正在聆听……");
 
     }
 
 }
-void async_speak_listen_icon_show(bool is_listen) {
+void async_speak_listen_icon_show(bool is_listen)
+{
     lv_async_call(speak_listen_icon_show, (void*)is_listen);
 }
 
 void unload_chat_ai_scr(void)
 {
-    lv_scr_load(guider_ui.screen_option);
+    if (guider_ui.screen_main) {
+        lv_scr_load(guider_ui.screen_main);
+    }
     lv_obj_del(guider_ui.screen_conversation);
 
 }
@@ -369,7 +383,8 @@ void load_chat_ai_scr(void)
 
 
 
-void conversation_event_init(lv_ui *ui) {
+void conversation_event_init(lv_ui *ui)
+{
     if (ui == NULL) {
         return;
     }
@@ -381,10 +396,10 @@ void conversation_event_init(lv_ui *ui) {
 
 }
 
-void conversation_event_setup(void) {
+void conversation_event_setup(void)
+{
     conversation_event_init(&guider_ui);
 }
-
 
 
 

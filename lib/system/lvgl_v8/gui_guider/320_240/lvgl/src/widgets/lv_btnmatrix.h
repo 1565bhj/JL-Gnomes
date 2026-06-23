@@ -50,14 +50,14 @@ enum {
 typedef uint16_t lv_btnmatrix_ctrl_t;
 
 typedef bool (*lv_btnmatrix_btn_draw_cb_t)(lv_obj_t * btnm, uint32_t btn_id, const lv_area_t * draw_area,
-                                           const lv_area_t * clip_area);
+        const lv_area_t *clip_area);
 
 /*Data of button matrix*/
 typedef struct {
     lv_obj_t obj;
-    const char ** map_p;                              /*Pointer to the current map*/
-    lv_area_t * button_areas;                         /*Array of areas of buttons*/
-    lv_btnmatrix_ctrl_t * ctrl_bits;                       /*Array of control bytes*/
+    const char **map_p;                               /*Pointer to the current map*/
+    lv_area_t *button_areas;                          /*Array of areas of buttons*/
+    lv_btnmatrix_ctrl_t *ctrl_bits;                        /*Array of control bytes*/
     uint16_t btn_cnt;                                 /*Number of button in 'map_p'(Handled by the library)*/
     uint16_t row_cnt;                                 /*Number of rows in 'map_p'(Handled by the library)*/
     uint16_t btn_id_sel;    /*Index of the active button (being pressed/released etc) or LV_BTNMATRIX_BTN_NONE*/
@@ -83,7 +83,7 @@ typedef enum {
  * @param parent    pointer to an object, it will be the parent of the new button matrix
  * @return          pointer to the created button matrix
  */
-lv_obj_t * lv_btnmatrix_create(lv_obj_t * parent);
+lv_obj_t *lv_btnmatrix_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -179,7 +179,7 @@ void lv_btnmatrix_set_one_checked(lv_obj_t * obj, bool en);
  * @param obj       pointer to a button matrix object
  * @return          the current map
  */
-const char ** lv_btnmatrix_get_map(const lv_obj_t * obj);
+const char **lv_btnmatrix_get_map(const lv_obj_t * obj);
 
 /**
  * Get the index of the lastly "activated" button by the user (pressed, released, focused etc)
@@ -195,7 +195,7 @@ uint16_t lv_btnmatrix_get_selected_btn(const lv_obj_t * obj);
  * @param btn_id    the index a button not counting new line characters.
  * @return          text of btn_index` button
  */
-const char * lv_btnmatrix_get_btn_text(const lv_obj_t * obj, uint16_t btn_id);
+const char *lv_btnmatrix_get_btn_text(const lv_obj_t * obj, uint16_t btn_id);
 
 /**
  * Get the whether a control value is enabled or disabled for button of a button matrix

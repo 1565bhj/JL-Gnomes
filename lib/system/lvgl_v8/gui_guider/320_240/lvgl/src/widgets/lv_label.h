@@ -52,9 +52,9 @@ typedef uint8_t lv_label_long_mode_t;
 
 typedef struct {
     lv_obj_t obj;
-    char * text;
+    char *text;
     union {
-        char * tmp_ptr; /*Pointer to the allocated memory containing the character replaced by dots*/
+        char *tmp_ptr;  /*Pointer to the allocated memory containing the character replaced by dots*/
         char tmp[LV_LABEL_DOT_NUM + 1]; /*Directly store the characters if <=4 characters*/
     } dot;
     uint32_t dot_end;  /*The real text length, used in dot mode*/
@@ -87,7 +87,7 @@ extern const lv_obj_class_t lv_label_class;
  * @param parent    pointer to an object, it will be the parent of the new label.
  * @return          pointer to the created button
  */
-lv_obj_t * lv_label_create(lv_obj_t * parent);
+lv_obj_t *lv_label_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -155,7 +155,7 @@ void lv_label_set_text_sel_end(lv_obj_t * obj, uint32_t index);
  * @param obj       pointer to a label object
  * @return          the text of the label
  */
-char * lv_label_get_text(const lv_obj_t * obj);
+char *lv_label_get_text(const lv_obj_t * obj);
 
 /**
  * Get the long mode of a label

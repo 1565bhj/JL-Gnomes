@@ -62,7 +62,7 @@ extern const lv_obj_class_t lv_roller_class;
  * @param parent    pointer to an object, it will be the parent of the new roller.
  * @return          pointer to the created roller
  */
-lv_obj_t * lv_roller_create(lv_obj_t * parent);
+lv_obj_t *lv_roller_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -116,7 +116,7 @@ void lv_roller_get_selected_str(const lv_obj_t * obj, char * buf, uint32_t buf_s
  * @param obj       pointer to roller object
  * @return          the options separated by '\n'-s (E.g. "Option1\nOption2\nOption3")
  */
-const char * lv_roller_get_options(const lv_obj_t * obj);
+const char *lv_roller_get_options(const lv_obj_t * obj);
 
 /**
  * Get the total number of options

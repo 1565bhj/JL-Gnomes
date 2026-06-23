@@ -41,8 +41,8 @@ enum {
 typedef uint8_t lv_span_mode_t;
 
 typedef struct {
-    char * txt;             /* a pointer to display text */
-    lv_obj_t * spangroup;   /* a pointer to spangroup */
+    char *txt;              /* a pointer to display text */
+    lv_obj_t *spangroup;    /* a pointer to spangroup */
     lv_style_t style;       /* display text style */
     uint8_t static_flag : 1;/* the text is static flag */
 } lv_span_t;
@@ -71,14 +71,14 @@ extern const lv_obj_class_t lv_spangroup_class;
  * @param par pointer to an object, it will be the parent of the new spangroup
  * @return pointer to the created spangroup
  */
-lv_obj_t * lv_spangroup_create(lv_obj_t * par);
+lv_obj_t *lv_spangroup_create(lv_obj_t * par);
 
 /**
  * Create a span string descriptor and add to spangroup.
  * @param obj pointer to a spangroup object.
  * @return pointer to the created span.
  */
-lv_span_t * lv_spangroup_new_span(lv_obj_t * obj);
+lv_span_t *lv_spangroup_new_span(lv_obj_t * obj);
 
 /**
  * Remove the span from the spangroup and free memory.
@@ -157,7 +157,7 @@ void lv_spangroup_set_lines(lv_obj_t * obj, int32_t lines);
  *              -2: the second youngest
  * @return      The child span at index `id`, or NULL if the ID does not exist
  */
-lv_span_t * lv_spangroup_get_child(const lv_obj_t * obj, int32_t id);
+lv_span_t *lv_spangroup_get_child(const lv_obj_t * obj, int32_t id);
 
 /**
  *

@@ -397,9 +397,9 @@ typedef enum {
 
 #if __WINRT__
 #include <Unknwn.h>
-typedef IUnknown * EGLNativeWindowType;
-typedef IUnknown * EGLNativePixmapType;
-typedef IUnknown * EGLNativeDisplayType;
+typedef IUnknown *EGLNativeWindowType;
+typedef IUnknown *EGLNativePixmapType;
+typedef IUnknown *EGLNativeDisplayType;
 #else
 typedef HDC     EGLNativeDisplayType;
 typedef HBITMAP EGLNativePixmapType;

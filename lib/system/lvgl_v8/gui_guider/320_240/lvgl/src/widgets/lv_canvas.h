@@ -45,7 +45,7 @@ typedef struct {
  * @param parent     pointer to an object, it will be the parent of the new canvas
  * @return           pointer to the created canvas
  */
-lv_obj_t * lv_canvas_create(lv_obj_t * parent);
+lv_obj_t *lv_canvas_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -122,7 +122,7 @@ lv_color_t lv_canvas_get_px(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y);
  * @param canvas pointer to a canvas object
  * @return pointer to the image descriptor.
  */
-lv_img_dsc_t * lv_canvas_get_img(lv_obj_t * canvas);
+lv_img_dsc_t *lv_canvas_get_img(lv_obj_t * canvas);
 
 /*=====================
  * Other functions
@@ -194,7 +194,7 @@ void lv_canvas_fill_bg(lv_obj_t * canvas, lv_color_t color, lv_opa_t opa);
  * @param draw_dsc descriptor of the rectangle
  */
 void lv_canvas_draw_rect(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h,
-                         const lv_draw_rect_dsc_t * draw_dsc);
+                         const lv_draw_rect_dsc_t *draw_dsc);
 
 /**
  * Draw a text on the canvas.
@@ -206,7 +206,7 @@ void lv_canvas_draw_rect(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord
  * @param txt      text to display
  */
 void lv_canvas_draw_text(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord_t max_w,
-                         lv_draw_label_dsc_t * draw_dsc, const char * txt);
+                         lv_draw_label_dsc_t *draw_dsc, const char *txt);
 
 /**
  * Draw an image on the canvas
@@ -217,7 +217,7 @@ void lv_canvas_draw_text(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord
  * @param draw_dsc pointer to a valid label descriptor `lv_draw_img_dsc_t`
  */
 void lv_canvas_draw_img(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, const void * src,
-                        const lv_draw_img_dsc_t * draw_dsc);
+                        const lv_draw_img_dsc_t *draw_dsc);
 
 /**
  * Draw a line on the canvas
@@ -227,7 +227,7 @@ void lv_canvas_draw_img(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, const voi
  * @param draw_dsc   pointer to an initialized `lv_draw_line_dsc_t` variable
  */
 void lv_canvas_draw_line(lv_obj_t * canvas, const lv_point_t points[], uint32_t point_cnt,
-                         const lv_draw_line_dsc_t * draw_dsc);
+                         const lv_draw_line_dsc_t *draw_dsc);
 
 /**
  * Draw a polygon on the canvas
@@ -237,7 +237,7 @@ void lv_canvas_draw_line(lv_obj_t * canvas, const lv_point_t points[], uint32_t 
  * @param draw_dsc  pointer to an initialized `lv_draw_rect_dsc_t` variable
  */
 void lv_canvas_draw_polygon(lv_obj_t * canvas, const lv_point_t points[], uint32_t point_cnt,
-                            const lv_draw_rect_dsc_t * draw_dsc);
+                            const lv_draw_rect_dsc_t *draw_dsc);
 
 /**
  * Draw an arc on the canvas
@@ -250,7 +250,7 @@ void lv_canvas_draw_polygon(lv_obj_t * canvas, const lv_point_t points[], uint32
  * @param draw_dsc    pointer to an initialized `lv_draw_line_dsc_t` variable
  */
 void lv_canvas_draw_arc(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord_t r, int32_t start_angle,
-                        int32_t end_angle, const lv_draw_arc_dsc_t * draw_dsc);
+                        int32_t end_angle, const lv_draw_arc_dsc_t *draw_dsc);
 
 /**********************
  *      MACROS

@@ -37,7 +37,7 @@ typedef enum {
 typedef uint32_t lv_style_selector_t;
 
 typedef struct {
-    lv_style_t * style;
+    lv_style_t *style;
     uint32_t selector : 24;
     uint32_t is_local : 1;
     uint32_t is_trans : 1;
@@ -50,7 +50,7 @@ typedef struct {
     lv_style_prop_t prop;
     lv_anim_path_cb_t path_cb;
 #if LV_USE_USER_DATA
-    void * user_data;
+    void *user_data;
 #endif
 } _lv_obj_style_transition_dsc_t;
 
@@ -144,7 +144,7 @@ void lv_obj_set_local_style_prop_meta(struct _lv_obj_t * obj, lv_style_prop_t pr
                                       lv_style_selector_t selector);
 
 lv_style_res_t lv_obj_get_local_style_prop(struct _lv_obj_t * obj, lv_style_prop_t prop, lv_style_value_t * value,
-                                           lv_style_selector_t selector);
+        lv_style_selector_t selector);
 
 /**
  * Remove a local style property from a part of an object with a given state.
@@ -169,7 +169,7 @@ lv_style_value_t _lv_obj_style_apply_color_filter(const struct _lv_obj_t * obj, 
  * @param tr
  */
 void _lv_obj_style_create_transition(struct _lv_obj_t * obj, lv_part_t part, lv_state_t prev_state,
-                                     lv_state_t new_state, const _lv_obj_style_transition_dsc_t * tr);
+                                     lv_state_t new_state, const _lv_obj_style_transition_dsc_t *tr);
 
 /**
  * Used internally to compare the appearance of an object in 2 states

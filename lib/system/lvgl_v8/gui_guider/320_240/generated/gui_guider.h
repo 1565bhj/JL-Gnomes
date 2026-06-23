@@ -62,14 +62,6 @@ typedef struct {
     lv_obj_t *screen_main_label_1;
     lv_obj_t *screen_main_img_set_4g;
     lv_obj_t *screen_main_img_no_4g;
-    lv_obj_t *screen_option;
-    bool screen_option_del;
-    lv_obj_t *screen_option_option_music;
-    lv_obj_t *screen_option_option_timer;
-    lv_obj_t *screen_option_option_set;
-    lv_obj_t *screen_option_option_conversation;
-    lv_obj_t *screen_option_option_alarm;
-    lv_obj_t *screen_option_op_name;
     lv_obj_t *screen_music;
     bool screen_music_del;
     lv_obj_t *screen_music_img_tape;
@@ -341,6 +333,33 @@ typedef struct {
     lv_obj_t *screen_podcast_btn_play_pause_label;
     lv_obj_t *screen_podcast_next;
     lv_obj_t *screen_podcast_last;
+
+    lv_obj_t *screen_agent;
+    bool screen_agent_del;
+    lv_obj_t *screen_agent_img_return;
+    lv_obj_t *screen_agent_label_title;
+    lv_obj_t *screen_agent_cont_6;
+    lv_obj_t *screen_agent_agent_6;
+    lv_obj_t *screen_agent_label_name_6;
+    lv_obj_t *screen_agent_cont_5;
+    lv_obj_t *screen_agent_agent_5;
+    lv_obj_t *screen_agent_label_name_5;
+    lv_obj_t *screen_agent_cont_4;
+    lv_obj_t *screen_agent_agent_4;
+    lv_obj_t *screen_agent_label_name_4;
+    lv_obj_t *screen_agent_cont_3;
+    lv_obj_t *screen_agent_agent_3;
+    lv_obj_t *screen_agent_label_name_3;
+    lv_obj_t *screen_agent_cont_2;
+    lv_obj_t *screen_agent_agent_2;
+    lv_obj_t *screen_agent_label_name_2;
+    lv_obj_t *screen_agent_cont_1;
+    lv_obj_t *screen_agent_agent_1;
+    lv_obj_t *screen_agent_label_name_1;
+    lv_obj_t *screen_agent_img_choose;
+
+    lv_obj_t *g_kb_top_layer;
+
 } lv_ui;
 
 typedef void (*ui_setup_scr_t)(lv_ui * ui);
@@ -365,7 +384,6 @@ extern lv_ui guider_ui;
 
 
 void setup_scr_screen_main(lv_ui *ui);
-void setup_scr_screen_option(lv_ui *ui);
 void setup_scr_screen_music(lv_ui *ui);
 void setup_scr_screen_conversation(lv_ui *ui);
 void setup_scr_screen_alarm(lv_ui *ui);
@@ -378,6 +396,18 @@ void setup_scr_screen_timer_remove(lv_ui *ui);
 void setup_scr_screen_dropdown(lv_ui *ui);
 void setup_scr_screen_story(lv_ui *ui);
 void setup_scr_screen_podcast(lv_ui *ui);
+void setup_scr_screen_agent(lv_ui *ui);
+
+
+LV_IMG_DECLARE(_choose_bg_320x240);
+LV_IMG_DECLARE(_return_alpha_20x20);
+LV_IMG_DECLARE(_agent_6_alpha_66x66);
+LV_IMG_DECLARE(_agent_5_alpha_66x66);
+LV_IMG_DECLARE(_agent_4_alpha_66x66);
+LV_IMG_DECLARE(_agent_3_alpha_66x66);
+LV_IMG_DECLARE(_agent_2_alpha_66x66);
+LV_IMG_DECLARE(_agent_1_alpha_66x66);
+LV_IMG_DECLARE(_choose_alpha_66x66);
 
 LV_IMG_DECLARE(_320x240_320x240);
 LV_IMG_DECLARE(_charging_battery_alpha_22x14);
@@ -413,11 +443,6 @@ LV_IMG_DECLARE(_set_4g_alpha_18x16);
 LV_IMG_DECLARE(_no_4g_alpha_18x16);
 
 LV_IMG_DECLARE(_background_320x240);
-LV_IMG_DECLARE(_music_option_alpha_100x100);
-LV_IMG_DECLARE(_timer_option_alpha_100x100);
-LV_IMG_DECLARE(_op_set_alpha_100x100);
-LV_IMG_DECLARE(_conversation_option_alpha_100x100);
-LV_IMG_DECLARE(_alarm_option_alpha_100x100);
 LV_IMG_DECLARE(_tape_alpha_62x62);
 LV_IMG_DECLARE(_tape_bar_alpha_35x68);
 LV_IMG_DECLARE(_volume_alpha_20x20);
@@ -506,6 +531,7 @@ LV_IMG_DECLARE(_last2_alpha_50x50);
 LV_FONT_DECLARE(lv_font_Barlow__54)
 LV_FONT_DECLARE(lv_font_Barlow__16)
 LV_FONT_DECLARE(lv_font_MiSansDemibold_18)
+LV_FONT_DECLARE(lv_font_MiSansDemibold_14)
 LV_FONT_DECLARE(lv_font_montserratMedium_16)
 LV_FONT_DECLARE(lv_font_Barlow__12)
 LV_FONT_DECLARE(lv_font_Barlow__11)

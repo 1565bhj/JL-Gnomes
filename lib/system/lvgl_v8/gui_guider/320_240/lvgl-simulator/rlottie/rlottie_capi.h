@@ -42,7 +42,7 @@ typedef enum {
     LOTTIE_ANIMATION_PROPERTY_TR_SCALE,       /*!< Transform Scale property of Layer and Group object , value type is float range[0 ..100] */
     LOTTIE_ANIMATION_PROPERTY_TR_ROTATION,    /*!< Transform Scale property of Layer and Group object , value type is float. range[0 .. 360] in degrees*/
     LOTTIE_ANIMATION_PROPERTY_TR_OPACITY      /*!< Transform Opacity property of Layer and Group object , value type is float [ 0 .. 100] */
-}Lottie_Animation_Property;
+} Lottie_Animation_Property;
 
 typedef struct Lottie_Animation_S Lottie_Animation;
 
@@ -302,7 +302,7 @@ RLOTTIE_API void lottie_animation_property_override(Lottie_Animation *animation,
  *  @ingroup Lottie_Animation
  *  @internal
  * */
-RLOTTIE_API const LOTMarkerList* lottie_animation_get_markerlist(Lottie_Animation *animation);
+RLOTTIE_API const LOTMarkerList *lottie_animation_get_markerlist(Lottie_Animation *animation);
 
 /**
  *  @brief Configures rlottie model cache policy.

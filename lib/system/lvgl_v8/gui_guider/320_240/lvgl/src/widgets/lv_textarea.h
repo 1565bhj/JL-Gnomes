@@ -39,11 +39,11 @@ LV_EXPORT_CONST_INT(LV_TEXTAREA_CURSOR_LAST);
 /*Data of text area*/
 typedef struct {
     lv_obj_t obj;
-    lv_obj_t * label;            /*Label of the text area*/
-    char * placeholder_txt;      /*Place holder label. only visible if text is an empty string*/
-    char * pwd_tmp;              /*Used to store the original text in password mode*/
-    char * pwd_bullet;           /*Replacement characters displayed in password mode*/
-    const char * accepted_chars; /*Only these characters will be accepted. NULL: accept all*/
+    lv_obj_t *label;             /*Label of the text area*/
+    char *placeholder_txt;       /*Place holder label. only visible if text is an empty string*/
+    char *pwd_tmp;               /*Used to store the original text in password mode*/
+    char *pwd_bullet;            /*Replacement characters displayed in password mode*/
+    const char *accepted_chars;  /*Only these characters will be accepted. NULL: accept all*/
     uint32_t max_length;         /*The max. number of characters. 0: no limit*/
     uint16_t pwd_show_time;      /*Time to show characters in password mode before change them to '*'*/
     struct {
@@ -81,7 +81,7 @@ enum {
  * @param parent    pointer to an object, it will be the parent of the new text area
  * @return          pointer to the created text area
  */
-lv_obj_t * lv_textarea_create(lv_obj_t * parent);
+lv_obj_t *lv_textarea_create(lv_obj_t * parent);
 
 /*======================
  * Add/remove functions
@@ -225,21 +225,21 @@ void lv_textarea_set_align(lv_obj_t * obj, lv_text_align_t align);
  * @param obj       pointer to a text area object
  * @return          pointer to the text
  */
-const char * lv_textarea_get_text(const lv_obj_t * obj);
+const char *lv_textarea_get_text(const lv_obj_t * obj);
 
 /**
  * Get the placeholder text of a text area
  * @param obj       pointer to a text area object
  * @return          pointer to the text
  */
-const char * lv_textarea_get_placeholder_text(lv_obj_t * obj);
+const char *lv_textarea_get_placeholder_text(lv_obj_t * obj);
 
 /**
  * Get the label of a text area
  * @param obj       pointer to a text area object
  * @return          pointer to the label object
  */
-lv_obj_t * lv_textarea_get_label(const lv_obj_t * obj);
+lv_obj_t *lv_textarea_get_label(const lv_obj_t * obj);
 
 /**
  * Get the current cursor position in character index
@@ -267,7 +267,7 @@ bool lv_textarea_get_password_mode(const lv_obj_t * obj);
  * @param obj       pointer to a text area object
  * @return          pointer to the replacement text
  */
-const char * lv_textarea_get_password_bullet(lv_obj_t * obj);
+const char *lv_textarea_get_password_bullet(lv_obj_t * obj);
 
 /**
  * Get the one line configuration attribute
@@ -281,7 +281,7 @@ bool lv_textarea_get_one_line(const lv_obj_t * obj);
  * @param obj       pointer to a text area object
  * @return          list of accented characters.
  */
-const char * lv_textarea_get_accepted_chars(lv_obj_t * obj);
+const char *lv_textarea_get_accepted_chars(lv_obj_t * obj);
 
 /**
  * Get max length of a Text Area.

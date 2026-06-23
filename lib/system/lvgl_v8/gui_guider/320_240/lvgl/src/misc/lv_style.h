@@ -166,7 +166,7 @@ typedef struct {
  */
 typedef union {
     int32_t num;         /**< Number integer number (opacity, enums, booleans or "normal" numbers)*/
-    const void * ptr;    /**< Constant pointers  (font, cone text, etc)*/
+    const void *ptr;     /**< Constant pointers  (font, cone text, etc)*/
     lv_color_t color;    /**< Colors*/
 } lv_style_value_t;
 
@@ -296,9 +296,9 @@ typedef uint8_t lv_style_res_t;
  * Descriptor for style transitions
  */
 typedef struct {
-    const lv_style_prop_t * props; /**< An array with the properties to animate.*/
+    const lv_style_prop_t *props;  /**< An array with the properties to animate.*/
 #if LV_USE_USER_DATA
-    void * user_data;              /**< A custom user data that will be passed to the animation's user_data */
+    void *user_data;               /**< A custom user data that will be passed to the animation's user_data */
 #endif
     lv_anim_path_cb_t path_xcb;     /**< A path for the animation.*/
     uint32_t time;                 /**< Duration of the transition in [ms]*/
@@ -326,8 +326,8 @@ typedef struct {
      *For more properties allocate an array*/
     union {
         lv_style_value_t value1;
-        uint8_t * values_and_props;
-        const lv_style_const_prop_t * const_props;
+        uint8_t *values_and_props;
+        const lv_style_const_prop_t *const_props;
     } v_p;
 
     uint16_t prop1;
@@ -427,7 +427,7 @@ lv_style_res_t lv_style_get_prop(const lv_style_t * style, lv_style_prop_t prop,
  *  lv_style_transition_dsc_init(&trans1, trans_props, NULL, 300, 0, NULL);
  */
 void lv_style_transition_dsc_init(lv_style_transition_dsc_t * tr, const lv_style_prop_t props[],
-                                  lv_anim_path_cb_t path_cb, uint32_t time, uint32_t delay, void * user_data);
+                                  lv_anim_path_cb_t path_cb, uint32_t time, uint32_t delay, void *user_data);
 
 /**
  * Get the default value of a property
@@ -447,17 +447,18 @@ lv_style_value_t lv_style_prop_get_default(lv_style_prop_t prop);
  * @note This function is the same as ::lv_style_get_prop but inlined. Use it only on performance critical places
  */
 static inline lv_style_res_t lv_style_get_prop_inlined(const lv_style_t * style, lv_style_prop_t prop,
-                                                       lv_style_value_t * value)
+        lv_style_value_t *value)
 {
-    if(style->prop1 == LV_STYLE_PROP_ANY) {
-        const lv_style_const_prop_t * const_prop;
+    if (style->prop1 == LV_STYLE_PROP_ANY) {
+        const lv_style_const_prop_t *const_prop;
         uint32_t i;
-        for(i = 0; i < style->prop_cnt; i++) {
+        for (i = 0; i < style->prop_cnt; i++) {
             const_prop = style->v_p.const_props + i;
             lv_style_prop_t prop_id = LV_STYLE_PROP_ID_MASK(const_prop->prop);
-            if(prop_id == prop) {
-                if(const_prop->prop & LV_STYLE_PROP_META_INHERIT)
+            if (prop_id == prop) {
+                if (const_prop->prop & LV_STYLE_PROP_META_INHERIT) {
                     return LV_STYLE_RES_INHERIT;
+                }
                 *value = (const_prop->prop & LV_STYLE_PROP_META_INITIAL) ? lv_style_prop_get_default(prop_id) : const_prop->value;
                 return LV_STYLE_RES_FOUND;
             }
@@ -465,32 +466,35 @@ static inline lv_style_res_t lv_style_get_prop_inlined(const lv_style_t * style,
         return LV_STYLE_RES_NOT_FOUND;
     }
 
-    if(style->prop_cnt == 0) return LV_STYLE_RES_NOT_FOUND;
+    if (style->prop_cnt == 0) {
+        return LV_STYLE_RES_NOT_FOUND;
+    }
 
-    if(style->prop_cnt > 1) {
-        uint8_t * tmp = style->v_p.values_and_props + style->prop_cnt * sizeof(lv_style_value_t);
-        uint16_t * props = (uint16_t *)tmp;
+    if (style->prop_cnt > 1) {
+        uint8_t *tmp = style->v_p.values_and_props + style->prop_cnt * sizeof(lv_style_value_t);
+        uint16_t *props = (uint16_t *)tmp;
         uint32_t i;
-        for(i = 0; i < style->prop_cnt; i++) {
+        for (i = 0; i < style->prop_cnt; i++) {
             lv_style_prop_t prop_id = LV_STYLE_PROP_ID_MASK(props[i]);
-            if(prop_id == prop) {
-                if(props[i] & LV_STYLE_PROP_META_INHERIT)
+            if (prop_id == prop) {
+                if (props[i] & LV_STYLE_PROP_META_INHERIT) {
                     return LV_STYLE_RES_INHERIT;
-                if(props[i] & LV_STYLE_PROP_META_INITIAL)
+                }
+                if (props[i] & LV_STYLE_PROP_META_INITIAL) {
                     *value = lv_style_prop_get_default(prop_id);
-                else {
-                    lv_style_value_t * values = (lv_style_value_t *)style->v_p.values_and_props;
+                } else {
+                    lv_style_value_t *values = (lv_style_value_t *)style->v_p.values_and_props;
                     *value = values[i];
                 }
                 return LV_STYLE_RES_FOUND;
             }
         }
-    }
-    else if(LV_STYLE_PROP_ID_MASK(style->prop1) == prop) {
-        if(style->prop1 & LV_STYLE_PROP_META_INHERIT)
+    } else if (LV_STYLE_PROP_ID_MASK(style->prop1) == prop) {
+        if (style->prop1 & LV_STYLE_PROP_META_INHERIT) {
             return LV_STYLE_RES_INHERIT;
+        }
         *value = (style->prop1 & LV_STYLE_PROP_META_INITIAL) ? lv_style_prop_get_default(LV_STYLE_PROP_ID_MASK(
-                                                                                             style->prop1)) : style->v_p.value1;
+                     style->prop1)) : style->v_p.value1;
         return LV_STYLE_RES_FOUND;
     }
     return LV_STYLE_RES_NOT_FOUND;

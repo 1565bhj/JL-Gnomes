@@ -42,13 +42,13 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_draw_layer_ctx_t * lv_draw_sdl_layer_init(lv_draw_ctx_t * draw_ctx, lv_draw_layer_ctx_t * layer_ctx,
-                                             lv_draw_layer_flags_t flags)
+lv_draw_layer_ctx_t *lv_draw_sdl_layer_init(lv_draw_ctx_t * draw_ctx, lv_draw_layer_ctx_t * layer_ctx,
+        lv_draw_layer_flags_t flags)
 {
-    lv_draw_sdl_ctx_t * ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
+    lv_draw_sdl_ctx_t *ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
     SDL_Renderer * renderer = ctx->renderer;
 
-    lv_draw_sdl_layer_ctx_t * transform_ctx = (lv_draw_sdl_layer_ctx_t *) layer_ctx;
+    lv_draw_sdl_layer_ctx_t *transform_ctx = (lv_draw_sdl_layer_ctx_t *) layer_ctx;
 
     transform_ctx->flags = flags;
     transform_ctx->orig_target = SDL_GetRenderTarget(renderer);
@@ -57,9 +57,9 @@ lv_draw_layer_ctx_t * lv_draw_sdl_layer_init(lv_draw_ctx_t * draw_ctx, lv_draw_l
     lv_coord_t target_h = lv_area_get_height(&layer_ctx->area_full);
 
     enum lv_draw_sdl_composite_texture_id_t texture_id = LV_DRAW_SDL_COMPOSITE_TEXTURE_ID_TRANSFORM0 +
-                                                         ctx->internals->transform_count;
+        ctx->internals->transform_count;
     transform_ctx->target = lv_draw_sdl_composite_texture_obtain(ctx, texture_id, target_w, target_h,
-                                                                 &transform_ctx->target_in_cache);
+                            &transform_ctx->target_in_cache);
     transform_ctx->target_rect.x = 0;
     transform_ctx->target_rect.y = 0;
     transform_ctx->target_rect.w = target_w;
@@ -86,19 +86,18 @@ lv_draw_layer_ctx_t * lv_draw_sdl_layer_init(lv_draw_ctx_t * draw_ctx, lv_draw_l
 }
 
 void lv_draw_sdl_layer_blend(lv_draw_ctx_t * draw_ctx, lv_draw_layer_ctx_t * layer_ctx,
-                             const lv_draw_img_dsc_t * draw_dsc)
+                             const lv_draw_img_dsc_t *draw_dsc)
 {
-    lv_draw_sdl_ctx_t * ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
-    lv_draw_sdl_layer_ctx_t * transform_ctx = (lv_draw_sdl_layer_ctx_t *) layer_ctx;
+    lv_draw_sdl_ctx_t *ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
+    lv_draw_sdl_layer_ctx_t *transform_ctx = (lv_draw_sdl_layer_ctx_t *) layer_ctx;
 
     SDL_Renderer * renderer = ctx->renderer;
 
     SDL_Rect trans_rect;
 
-    if(transform_ctx->flags & LV_DRAW_LAYER_FLAG_CAN_SUBDIVIDE) {
+    if (transform_ctx->flags & LV_DRAW_LAYER_FLAG_CAN_SUBDIVIDE) {
         lv_area_zoom_to_sdl_rect(&layer_ctx->area_act, &trans_rect, draw_dsc->zoom, &draw_dsc->pivot);
-    }
-    else {
+    } else {
         lv_area_zoom_to_sdl_rect(&layer_ctx->area_full, &trans_rect, draw_dsc->zoom, &draw_dsc->pivot);
     }
 
@@ -117,9 +116,9 @@ void lv_draw_sdl_layer_blend(lv_draw_ctx_t * draw_ctx, lv_draw_layer_ctx_t * lay
 
 void lv_draw_sdl_layer_destroy(lv_draw_ctx_t * draw_ctx, lv_draw_layer_ctx_t * layer_ctx)
 {
-    lv_draw_sdl_ctx_t * ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
-    lv_draw_sdl_layer_ctx_t * transform_ctx = (lv_draw_sdl_layer_ctx_t *) layer_ctx;
-    if(!transform_ctx->target_in_cache && transform_ctx->target != NULL) {
+    lv_draw_sdl_ctx_t *ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
+    lv_draw_sdl_layer_ctx_t *transform_ctx = (lv_draw_sdl_layer_ctx_t *) layer_ctx;
+    if (!transform_ctx->target_in_cache && transform_ctx->target != NULL) {
         LV_LOG_WARN("Texture is not cached, this will impact performance.");
         SDL_DestroyTexture(transform_ctx->target);
     }
@@ -127,15 +126,15 @@ void lv_draw_sdl_layer_destroy(lv_draw_ctx_t * draw_ctx, lv_draw_layer_ctx_t * l
 }
 
 void lv_draw_sdl_transform_areas_offset(lv_draw_sdl_ctx_t * ctx, bool has_composite, lv_area_t * apply_area,
-                                        lv_area_t * coords, lv_area_t * clip)
+                                        lv_area_t *coords, lv_area_t *clip)
 {
-    if(ctx->internals->transform_count == 0) {
+    if (ctx->internals->transform_count == 0) {
         return;
     }
-    lv_area_t * area = ctx->base_draw.buf_area;
+    lv_area_t *area = ctx->base_draw.buf_area;
     lv_area_move(coords, -area->x1, -area->y1);
     lv_area_move(clip, -area->x1, -area->y1);
-    if(has_composite) {
+    if (has_composite) {
         lv_area_move(apply_area, -area->x1, -area->y1);
     }
 }

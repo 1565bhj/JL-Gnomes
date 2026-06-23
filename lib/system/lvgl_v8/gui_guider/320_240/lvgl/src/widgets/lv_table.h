@@ -51,9 +51,9 @@ typedef struct {
     lv_obj_t obj;
     uint16_t col_cnt;
     uint16_t row_cnt;
-    char ** cell_data;
-    lv_coord_t * row_h;
-    lv_coord_t * col_w;
+    char **cell_data;
+    lv_coord_t *row_h;
+    lv_coord_t *col_w;
     uint16_t col_act;
     uint16_t row_act;
 } lv_table_t;
@@ -77,7 +77,7 @@ typedef enum {
  * @param parent        pointer to an object, it will be the parent of the new table
  * @return              pointer to the created table
  */
-lv_obj_t * lv_table_create(lv_obj_t * parent);
+lv_obj_t *lv_table_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -155,7 +155,7 @@ void lv_table_clear_cell_ctrl(lv_obj_t * obj, uint16_t row, uint16_t col, lv_tab
  * @param col       id of the column [0 .. col_cnt -1]
  * @return          text in the cell
  */
-const char * lv_table_get_cell_value(lv_obj_t * obj, uint16_t row, uint16_t col);
+const char *lv_table_get_cell_value(lv_obj_t * obj, uint16_t row, uint16_t col);
 
 /**
  * Get the number of rows.

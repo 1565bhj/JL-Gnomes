@@ -35,10 +35,10 @@
 // {
 //     // 计算当前已旋转的总时间（包含历史累计）
 //     uint32_t current_time = lv_tick_get() - start_time + pause_offset;
-    
+
 //     // 计算角度：(总时间 / 周期) * 360度，取模360确保在0-359范围
 //     int32_t angle = (current_time * 360 * 10) / ROTATE_PERIOD % (360 * 10);
-    
+
 //     // 设置角度
 //     lv_img_set_angle(guider_ui.screen_music_img_tape, angle);
 // }
@@ -51,7 +51,7 @@
 // {
 //     // 设置磁带条的角度为-50度
 //     lv_img_set_angle(guider_ui.screen_music_img_bar, -50);
-    
+
 //     // 启动定时器（从上次停止的角度继续）
 //     if (!rotate_timer) {
 //         start_time = lv_tick_get();  // 记录当前启动时间
@@ -72,7 +72,7 @@
 //         lv_timer_del(rotate_timer);
 //         rotate_timer = NULL;
 //     }
-    
+
 //     // 220
 //     lv_img_set_angle(guider_ui.screen_music_img_bar, 220);
 // }
@@ -116,11 +116,11 @@
 // static void volume_bar_auto_hide_cb(lv_timer_t *timer)
 // {
 //     lv_ui *ui = (lv_ui *)timer->user_data;
-    
+
 //     // 隐藏音量进度条
 //     lv_obj_add_flag(ui->screen_music_bar_volume, LV_OBJ_FLAG_HIDDEN);
 //     g_volume_bar_visible = false;
-    
+
 //     // 删除定时器
 //     if (g_volume_bar_timer != NULL) {
 //         lv_timer_del(g_volume_bar_timer);
@@ -156,7 +156,7 @@
 //     }
 //    // 创建新的定时器，5秒后自动隐藏
 //     g_volume_bar_timer = lv_timer_create(volume_bar_auto_hide_cb, 5000, &guider_ui);
-    
+
 //     int32_t current_volume = lv_bar_get_value(guider_ui.screen_music_bar_volume);
 
 //     // sys_all_volume_auto_set(current_volume);
@@ -205,7 +205,7 @@
 //         int32_t current_volume = lv_bar_get_value(volume_bar);
 //         printf("[音量事件] 音量值已更改为: %d%%\n", (int)current_volume);
 //         volume_icon_click_handler();
-        
+
 //     }
 // }
 // // 音量按钮点击事件处理函数
@@ -218,7 +218,7 @@
 //     {
 //         // 音量按钮点击事件处理逻辑
 //         printf("音量按钮被点击\n");
-        
+
 //         // 调用音量图标点击处理函数
 //         volume_icon_click_handler();
 //         break;
@@ -266,7 +266,7 @@
 // void music_event_init(lv_ui *ui) {
 //     // 添加这行代码完全禁止页面滚动
 //     lv_obj_set_scroll_dir(ui->screen_music, LV_DIR_NONE);
-    
+
 //     // 为播放/暂停按钮添加点击事件
 //     lv_obj_remove_event_cb(ui->screen_music_btn_play_pause, NULL);
 //     lv_obj_add_event_cb(ui->screen_music_btn_play_pause, screen_music_btn_play_pause_event_handler, LV_EVENT_ALL, ui);
@@ -279,19 +279,19 @@
 //         tape_rotate_start();
 //         // 启动歌词滚动
 //         lv_label_set_long_mode(ui->screen_music_lyric, LV_LABEL_LONG_SCROLL_CIRCULAR);
-//     } 
+//     }
 //     // 为音量按钮添加点击事件
 //     lv_obj_remove_event_cb(ui->screen_music_img_volume, NULL);
 //     lv_obj_add_event_cb(ui->screen_music_img_volume, screen_music_img_volume_event_handler, LV_EVENT_CLICKED, ui);
-    
+
 //     // 为上一首按钮添加点击事件
 //     lv_obj_remove_event_cb(ui->screen_music_img_prev, NULL);
 //     lv_obj_add_event_cb(ui->screen_music_img_prev, screen_music_img_prev_event_handler, LV_EVENT_CLICKED, ui);
-    
+
 //     // 为下一首按钮添加点击事件
 //     lv_obj_remove_event_cb(ui->screen_music_img_next, NULL);
 //     lv_obj_add_event_cb(ui->screen_music_img_next, screen_music_img_next_event_handler, LV_EVENT_CLICKED, ui);
-    
+
 //     // 为音量进度条添加上下移动（滑动）事件
 //     lv_obj_remove_event_cb(ui->screen_music_bar_volume, NULL);
 //     lv_obj_add_event_cb(ui->screen_music_bar_volume, screen_music_bar_volume_event_handler, LV_EVENT_ALL, ui);
@@ -303,4 +303,4 @@
 // }
 
 
-  
+

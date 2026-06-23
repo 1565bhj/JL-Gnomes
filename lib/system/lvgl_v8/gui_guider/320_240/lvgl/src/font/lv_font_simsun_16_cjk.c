@@ -5,13 +5,13 @@
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
-    #include "lvgl.h"
+#include "lvgl.h"
 #else
-    #include "../../lvgl.h"
+#include "../../lvgl.h"
 #endif
 
 #ifndef LV_FONT_SIMSUN_16_CJK
-    #define LV_FONT_SIMSUN_16_CJK 1
+#define LV_FONT_SIMSUN_16_CJK 1
 #endif
 
 #if LV_FONT_SIMSUN_16_CJK

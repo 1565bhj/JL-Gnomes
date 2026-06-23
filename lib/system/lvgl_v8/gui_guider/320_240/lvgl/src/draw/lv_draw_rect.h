@@ -39,8 +39,8 @@ typedef struct {
     lv_grad_dsc_t bg_grad;
 
     /*Background img*/
-    const void * bg_img_src;
-    const void * bg_img_symbol_font;
+    const void *bg_img_src;
+    const void *bg_img_symbol_font;
     lv_color_t bg_img_recolor;
     lv_opa_t bg_img_opa;
     lv_opa_t bg_img_recolor_opa;

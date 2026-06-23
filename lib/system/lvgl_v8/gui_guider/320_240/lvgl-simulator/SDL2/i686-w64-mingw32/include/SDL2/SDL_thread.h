@@ -94,8 +94,8 @@ typedef int (SDLCALL * SDL_ThreadFunction) (void *data);
 #include <process.h> /* _beginthreadex() and _endthreadex() */
 
 typedef uintptr_t (__cdecl * pfnSDL_CurrentBeginThread)
-                   (void *, unsigned, unsigned (__stdcall *func)(void *),
-                    void * /*arg*/, unsigned, unsigned * /* threadID */);
+(void *, unsigned, unsigned (__stdcall *func)(void *),
+ void * /*arg*/, unsigned, unsigned * /* threadID */);
 typedef void (__cdecl * pfnSDL_CurrentEndThread) (unsigned code);
 
 #ifndef SDL_beginthread
@@ -115,9 +115,9 @@ SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data,
 
 extern DECLSPEC SDL_Thread *SDLCALL
 SDL_CreateThreadWithStackSize(int (SDLCALL * fn) (void *),
-                 const char *name, const size_t stacksize, void *data,
-                 pfnSDL_CurrentBeginThread pfnBeginThread,
-                 pfnSDL_CurrentEndThread pfnEndThread);
+                              const char *name, const size_t stacksize, void *data,
+                              pfnSDL_CurrentBeginThread pfnBeginThread,
+                              pfnSDL_CurrentEndThread pfnEndThread);
 
 
 /**
@@ -162,8 +162,8 @@ SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data,
                  pfnSDL_CurrentEndThread pfnEndThread);
 extern DECLSPEC SDL_Thread *SDLCALL
 SDL_CreateThreadWithStackSize(SDL_ThreadFunction fn, const char *name, const size_t stacksize, void *data,
-                 pfnSDL_CurrentBeginThread pfnBeginThread,
-                 pfnSDL_CurrentEndThread pfnEndThread);
+                              pfnSDL_CurrentBeginThread pfnBeginThread,
+                              pfnSDL_CurrentEndThread pfnEndThread);
 
 #if defined(SDL_CreateThread) && SDL_DYNAMIC_API
 #undef SDL_CreateThread
@@ -299,7 +299,7 @@ extern DECLSPEC void SDLCALL SDL_DetachThread(SDL_Thread * thread);
  *  \code
  *  static SDL_SpinLock tls_lock;
  *  static SDL_TLSID thread_local_storage;
- * 
+ *
  *  void SetMyThreadData(void *value)
  *  {
  *      if (!thread_local_storage) {
@@ -311,7 +311,7 @@ extern DECLSPEC void SDLCALL SDL_DetachThread(SDL_Thread * thread);
  *      }
  *      SDL_TLSSet(thread_local_storage, value, 0);
  *  }
- *  
+ *
  *  void *GetMyThreadData(void)
  *  {
  *      return SDL_TLSGet(thread_local_storage);
@@ -333,7 +333,7 @@ extern DECLSPEC SDL_TLSID SDLCALL SDL_TLSCreate(void);
  *  \sa SDL_TLSCreate()
  *  \sa SDL_TLSSet()
  */
-extern DECLSPEC void * SDLCALL SDL_TLSGet(SDL_TLSID id);
+extern DECLSPEC void *SDLCALL SDL_TLSGet(SDL_TLSID id);
 
 /**
  *  \brief Set the value associated with a thread local storage ID for the current thread.

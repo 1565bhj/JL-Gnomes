@@ -75,32 +75,32 @@ const lv_obj_class_t lv_radiobtn_item_class = {
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_obj_t * lv_radiobtn_create(lv_obj_t * parent)
+lv_obj_t *lv_radiobtn_create(lv_obj_t * parent)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
 
     return obj;
 }
 
-lv_obj_t * lv_radiobtn_create_item(lv_obj_t * parent)
+lv_obj_t *lv_radiobtn_create_item(lv_obj_t * parent)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(ITEM_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(ITEM_CLASS, parent);
     lv_obj_class_init_obj(obj);
 
     return obj;
 }
 
-lv_obj_t * lv_radiobtn_add_item(lv_obj_t * parent, const char * txt)
+lv_obj_t *lv_radiobtn_add_item(lv_obj_t * parent, const char * txt)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_radiobtn_create_item(parent);
+    lv_obj_t *obj = lv_radiobtn_create_item(parent);
     lv_obj_class_init_obj(obj);
     lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_obj_set_size(obj, LV_PCT(100), LV_SIZE_CONTENT);
-    if(txt) {
+    if (txt) {
         lv_radiobtn_set_item_text(obj, txt);
     }
 
@@ -114,19 +114,24 @@ lv_obj_t * lv_radiobtn_add_item(lv_obj_t * parent, const char * txt)
 void lv_radiobtn_set_item_text(lv_obj_t * obj, const char * txt)
 {
     LV_LOG_INFO("begin");
-    lv_radiobtn_item_t * rb = (lv_radiobtn_item_t *)obj;
+    lv_radiobtn_item_t *rb = (lv_radiobtn_item_t *)obj;
 #if LV_USE_ARABIC_PERSIAN_CHARS
     size_t len = _lv_txt_ap_calc_bytes_cnt(txt);
 #else
     size_t len = strlen(txt);
 #endif
 
-    if(!rb->static_txt) rb->txt = lv_mem_realloc(rb->txt, len + 1);
-    else  rb->txt = lv_mem_alloc(len + 1);
+    if (!rb->static_txt) {
+        rb->txt = lv_mem_realloc(rb->txt, len + 1);
+    } else {
+        rb->txt = lv_mem_alloc(len + 1);
+    }
 #if LV_USE_ARABIC_PERSIAN_CHARS
     _lv_txt_ap_proc(txt, rb->txt);
 #else
-    if(rb->txt != NULL) strncpy(rb->txt, txt, len + 1);
+    if (rb->txt != NULL) {
+        strncpy(rb->txt, txt, len + 1);
+    }
 #endif
 
     rb->static_txt = 0;
@@ -137,9 +142,11 @@ void lv_radiobtn_set_item_text(lv_obj_t * obj, const char * txt)
 
 void lv_radiobtn_set_item_text_static(lv_obj_t * obj, const char * txt)
 {
-    lv_radiobtn_item_t * rb = (lv_radiobtn_item_t *)obj;
+    lv_radiobtn_item_t *rb = (lv_radiobtn_item_t *)obj;
 
-    if(!rb->static_txt) lv_mem_free(rb->txt);
+    if (!rb->static_txt) {
+        lv_mem_free(rb->txt);
+    }
 
     rb->txt = (char *)txt;
     rb->static_txt = 1;
@@ -152,18 +159,18 @@ void lv_radiobtn_set_item_text_static(lv_obj_t * obj, const char * txt)
  * Getter functions
  *====================*/
 
-lv_obj_t * lv_radiobtn_get_item(lv_obj_t * radiobtn, uint32_t index)
+lv_obj_t *lv_radiobtn_get_item(lv_obj_t * radiobtn, uint32_t index)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * item = lv_obj_get_child(radiobtn, index);
+    lv_obj_t *item = lv_obj_get_child(radiobtn, index);
     return item;
 }
 
-const char * lv_radiobtn_get_item_text(lv_obj_t * radiobtn, lv_obj_t * obj)
+const char *lv_radiobtn_get_item_text(lv_obj_t * radiobtn, lv_obj_t * obj)
 {
     LV_UNUSED(radiobtn);
 
-    lv_radiobtn_item_t * rb = (lv_radiobtn_item_t *)obj;
+    lv_radiobtn_item_t *rb = (lv_radiobtn_item_t *)obj;
     return rb->txt;
 }
 
@@ -181,7 +188,7 @@ static void lv_radiobtn_constructor(const lv_obj_class_t * class_p, lv_obj_t * o
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_radiobtn_t * rb = (lv_radiobtn_t *)obj;
+    lv_radiobtn_t *rb = (lv_radiobtn_t *)obj;
     rb->active_index = 0;
     rb->checked_txt = "";
     lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_COLUMN);
@@ -194,7 +201,7 @@ static void lv_radiobtn_item_constructor(const lv_obj_class_t * class_p, lv_obj_
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_radiobtn_item_t * btn = (lv_radiobtn_item_t *)obj;
+    lv_radiobtn_item_t *btn = (lv_radiobtn_item_t *)obj;
 
     btn->txt = "radio";
     btn->static_txt = 1;
@@ -210,8 +217,8 @@ static void lv_radiobtn_item_destructor(const lv_obj_class_t * class_p, lv_obj_t
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_radiobtn_item_t * btn = (lv_radiobtn_item_t *)obj;
-    if(!btn->static_txt) {
+    lv_radiobtn_item_t *btn = (lv_radiobtn_item_t *)obj;
+    if (!btn->static_txt) {
         lv_mem_free(btn->txt);
         btn->txt = NULL;
     }
@@ -225,16 +232,18 @@ static void lv_radiobtn_item_event(const lv_obj_class_t * class_p, lv_event_t * 
     lv_res_t res;
     /*Call the ancestor's event handler*/
     res = lv_obj_event_base(ITEM_CLASS, e);
-    if(res != LV_RES_OK) return;
+    if (res != LV_RES_OK) {
+        return;
+    }
 
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
-    if(code == LV_EVENT_GET_SELF_SIZE) {
-        lv_point_t * p = lv_event_get_param(e);
-        lv_radiobtn_item_t * btn = (lv_radiobtn_item_t *)obj;
+    if (code == LV_EVENT_GET_SELF_SIZE) {
+        lv_point_t *p = lv_event_get_param(e);
+        lv_radiobtn_item_t *btn = (lv_radiobtn_item_t *)obj;
 
-        const lv_font_t * font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
+        const lv_font_t *font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
         lv_coord_t font_h = lv_font_get_line_height(font);
         lv_coord_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
         lv_coord_t letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);
@@ -253,25 +262,25 @@ static void lv_radiobtn_item_event(const lv_obj_class_t * class_p, lv_event_t * 
 
         p->x = marker_size.x + txt_size.x + bg_colp;
         p->y = LV_MAX(marker_size.y, txt_size.y);
-    }
-    else if(code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
-        lv_coord_t * s = lv_event_get_param(e);
+    } else if (code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+        lv_coord_t *s = lv_event_get_param(e);
         lv_coord_t m = lv_obj_calculate_ext_draw_size(obj, LV_PART_INDICATOR);
         *s = LV_MAX(*s, m);
-    }
-    else if(code == LV_EVENT_DRAW_MAIN) {
+    } else if (code == LV_EVENT_DRAW_MAIN) {
         lv_radiobtn_item_draw(e);
     }
 }
 
 static void lv_radiobtn_item_draw(lv_event_t * e)
 {
-    lv_obj_t * obj = lv_event_get_target(e);
-    lv_radiobtn_item_t * btn = (lv_radiobtn_item_t *)obj;
+    lv_obj_t *obj = lv_event_get_target(e);
+    lv_radiobtn_item_t *btn = (lv_radiobtn_item_t *)obj;
 
-    lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
-    if(draw_ctx == NULL) return;
-    const lv_font_t * font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
+    lv_draw_ctx_t *draw_ctx = lv_event_get_draw_ctx(e);
+    if (draw_ctx == NULL) {
+        return;
+    }
+    const lv_font_t *font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
     lv_coord_t font_h = lv_font_get_line_height(font);
 
     lv_coord_t bg_border = lv_obj_get_style_border_width(obj, LV_PART_MAIN);
@@ -365,17 +374,21 @@ static void lv_radiobtn_event(const lv_obj_class_t * class_p, lv_event_t * e)
     lv_res_t res;
     /*Call the ancestor's event handler*/
     res = lv_obj_event_base(MY_CLASS, e);
-    if(res != LV_RES_OK) return;
+    if (res != LV_RES_OK) {
+        return;
+    }
 
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_current_target(e);
-    lv_obj_t * act_btn = lv_event_get_target(e);
-    if(code == LV_EVENT_CLICKED) {
-        lv_radiobtn_t * rb = (lv_radiobtn_t *)obj;
+    lv_obj_t *obj = lv_event_get_current_target(e);
+    lv_obj_t *act_btn = lv_event_get_target(e);
+    if (code == LV_EVENT_CLICKED) {
+        lv_radiobtn_t *rb = (lv_radiobtn_t *)obj;
         uint16_t active_id = rb->active_index;
-        lv_obj_t * old_btn = lv_radiobtn_get_item(obj, active_id);
+        lv_obj_t *old_btn = lv_radiobtn_get_item(obj, active_id);
 
-        if(act_btn == obj || old_btn == NULL) return;
+        if (act_btn == obj || old_btn == NULL) {
+            return;
+        }
 
         lv_obj_clear_state(old_btn, LV_STATE_CHECKED);
         lv_obj_add_state(act_btn, LV_STATE_CHECKED);

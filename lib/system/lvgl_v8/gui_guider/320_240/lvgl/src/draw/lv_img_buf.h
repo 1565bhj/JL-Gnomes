@@ -141,7 +141,7 @@ typedef struct {
 typedef struct {
     lv_img_header_t header; /**< A header describing the basics of the image*/
     uint32_t data_size;     /**< Size of the image in bytes*/
-    const uint8_t * data;   /**< Pointer to the data of the image*/
+    const uint8_t *data;    /**< Pointer to the data of the image*/
 } lv_img_dsc_t;
 
 /**********************
@@ -155,7 +155,7 @@ typedef struct {
  * @param cf a color format (`LV_IMG_CF_...`)
  * @return an allocated image, or NULL on failure
  */
-lv_img_dsc_t * lv_img_buf_alloc(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf);
+lv_img_dsc_t *lv_img_buf_alloc(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf);
 
 /**
  * Get the color of an image's pixel
@@ -236,7 +236,7 @@ uint32_t lv_img_buf_get_img_size(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf);
  * @param pivot x,y pivot coordinates of rotation
  */
 void _lv_img_buf_get_transformed_area(lv_area_t * res, lv_coord_t w, lv_coord_t h, int16_t angle, uint16_t zoom,
-                                      const lv_point_t * pivot);
+                                      const lv_point_t *pivot);
 
 /**********************
  *      MACROS

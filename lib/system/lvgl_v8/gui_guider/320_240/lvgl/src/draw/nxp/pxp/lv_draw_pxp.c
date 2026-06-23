@@ -37,7 +37,7 @@
 #include "lv_draw_pxp_blend.h"
 
 #if LV_COLOR_DEPTH != 32
-    #include "../../../core/lv_refr.h"
+#include "../../../core/lv_refr.h"
 #endif
 
 /*********************
@@ -46,7 +46,7 @@
 
 /* Minimum area (in pixels) for PXP blit/fill processing. */
 #ifndef LV_GPU_NXP_PXP_SIZE_LIMIT
-    #define LV_GPU_NXP_PXP_SIZE_LIMIT 5000
+#define LV_GPU_NXP_PXP_SIZE_LIMIT 5000
 #endif
 
 /**********************
@@ -62,11 +62,11 @@ static void lv_draw_pxp_wait_for_finish(lv_draw_ctx_t * draw_ctx);
 static void lv_draw_pxp_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc);
 
 static void lv_draw_pxp_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_dsc_t * dsc,
-                                    const lv_area_t * coords, const uint8_t * map_p, lv_img_cf_t cf);
+                                    const lv_area_t *coords, const uint8_t *map_p, lv_img_cf_t cf);
 
 static void lv_draw_pxp_buffer_copy(lv_draw_ctx_t * draw_ctx,
-                                    void * dest_buf, lv_coord_t dest_stride, const lv_area_t * dest_area,
-                                    void * src_buf, lv_coord_t src_stride, const lv_area_t * src_area);
+                                    void *dest_buf, lv_coord_t dest_stride, const lv_area_t *dest_area,
+                                    void *src_buf, lv_coord_t src_stride, const lv_area_t *src_area);
 
 /**********************
  *  STATIC VARIABLES
@@ -84,7 +84,7 @@ void lv_draw_pxp_ctx_init(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
 {
     lv_draw_sw_init_ctx(drv, draw_ctx);
 
-    lv_draw_pxp_ctx_t * pxp_draw_ctx = (lv_draw_sw_ctx_t *)draw_ctx;
+    lv_draw_pxp_ctx_t *pxp_draw_ctx = (lv_draw_sw_ctx_t *)draw_ctx;
     pxp_draw_ctx->base_draw.draw_img_decoded = lv_draw_pxp_img_decoded;
     pxp_draw_ctx->blend = lv_draw_pxp_blend;
     pxp_draw_ctx->base_draw.wait_for_finish = lv_draw_pxp_wait_for_finish;
@@ -112,10 +112,11 @@ void lv_draw_pxp_ctx_deinit(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
 static inline bool need_argb8565_support()
 {
 #if LV_COLOR_DEPTH != 32
-    lv_disp_t * disp = _lv_refr_get_disp_refreshing();
+    lv_disp_t *disp = _lv_refr_get_disp_refreshing();
 
-    if(disp->driver->screen_transp == 1)
+    if (disp->driver->screen_transp == 1) {
         return true;
+    }
 #endif
 
     return false;
@@ -130,36 +131,37 @@ static void lv_draw_pxp_wait_for_finish(lv_draw_ctx_t * draw_ctx)
 
 static void lv_draw_pxp_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc)
 {
-    if(dsc->opa <= (lv_opa_t)LV_OPA_MIN)
+    if (dsc->opa <= (lv_opa_t)LV_OPA_MIN) {
         return;
+    }
 
-    if(need_argb8565_support()) {
+    if (need_argb8565_support()) {
         lv_draw_sw_blend_basic(draw_ctx, dsc);
         return;
     }
 
     lv_area_t blend_area;
     /*Let's get the blend area which is the intersection of the area to draw and the clip area*/
-    if(!_lv_area_intersect(&blend_area, dsc->blend_area, draw_ctx->clip_area))
-        return; /*Fully clipped, nothing to do*/
+    if (!_lv_area_intersect(&blend_area, dsc->blend_area, draw_ctx->clip_area)) {
+        return;    /*Fully clipped, nothing to do*/
+    }
 
     /*Make the blend area relative to the buffer*/
     lv_area_move(&blend_area, -draw_ctx->buf_area->x1, -draw_ctx->buf_area->y1);
-    if(dsc->mask_buf != NULL || dsc->blend_mode != LV_BLEND_MODE_NORMAL ||
-       lv_area_get_size(&blend_area) < LV_GPU_NXP_PXP_SIZE_LIMIT) {
+    if (dsc->mask_buf != NULL || dsc->blend_mode != LV_BLEND_MODE_NORMAL ||
+        lv_area_get_size(&blend_area) < LV_GPU_NXP_PXP_SIZE_LIMIT) {
         lv_draw_sw_blend_basic(draw_ctx, dsc);
         return;
     }
 
     /*Fill/Blend only non masked, normal blended*/
-    lv_color_t * dest_buf = draw_ctx->buf;
+    lv_color_t *dest_buf = draw_ctx->buf;
     lv_coord_t dest_stride = lv_area_get_width(draw_ctx->buf_area);
-    const lv_color_t * src_buf = dsc->src_buf;
+    const lv_color_t *src_buf = dsc->src_buf;
 
-    if(src_buf == NULL) {
+    if (src_buf == NULL) {
         lv_gpu_nxp_pxp_fill(dest_buf, &blend_area, dest_stride, dsc->color, dsc->opa);
-    }
-    else {
+    } else {
         lv_area_t src_area;
         src_area.x1 = blend_area.x1 - (dsc->blend_area->x1 - draw_ctx->buf_area->x1);
         src_area.y1 = blend_area.y1 - (dsc->blend_area->y1 - draw_ctx->buf_area->y1);
@@ -173,18 +175,19 @@ static void lv_draw_pxp_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_d
 }
 
 static void lv_draw_pxp_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_dsc_t * dsc,
-                                    const lv_area_t * coords, const uint8_t * map_p, lv_img_cf_t cf)
+                                    const lv_area_t *coords, const uint8_t *map_p, lv_img_cf_t cf)
 {
-    if(dsc->opa <= (lv_opa_t)LV_OPA_MIN)
+    if (dsc->opa <= (lv_opa_t)LV_OPA_MIN) {
         return;
+    }
 
-    if(need_argb8565_support()) {
+    if (need_argb8565_support()) {
         lv_draw_sw_img_decoded(draw_ctx, dsc, coords, map_p, cf);
         return;
     }
 
-    const lv_color_t * src_buf = (const lv_color_t *)map_p;
-    if(!src_buf) {
+    const lv_color_t *src_buf = (const lv_color_t *)map_p;
+    if (!src_buf) {
         lv_draw_sw_img_decoded(draw_ctx, dsc, coords, map_p, cf);
         return;
     }
@@ -202,20 +205,21 @@ static void lv_draw_pxp_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_
     bool unsup_rotation = false;
 
     lv_area_t blend_area;
-    if(has_rotation)
+    if (has_rotation) {
         lv_area_copy(&blend_area, &rel_coords);
-    else if(!_lv_area_intersect(&blend_area, &rel_coords, &rel_clip_area))
-        return; /*Fully clipped, nothing to do*/
+    } else if (!_lv_area_intersect(&blend_area, &rel_coords, &rel_clip_area)) {
+        return;    /*Fully clipped, nothing to do*/
+    }
 
     bool has_mask = lv_draw_mask_is_any(&blend_area);
     lv_coord_t src_width = lv_area_get_width(coords);
     lv_coord_t src_height = lv_area_get_height(coords);
 
-    if(has_rotation) {
+    if (has_rotation) {
         /*
          * PXP can only rotate at 90x angles.
          */
-        if(dsc->angle % 900) {
+        if (dsc->angle % 900) {
             PXP_LOG_TRACE("Rotation angle %d is not supported. PXP can rotate only 90x angle.", dsc->angle);
             unsup_rotation = true;
         }
@@ -229,22 +233,22 @@ static void lv_draw_pxp_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_
          * size, the incorrect pixels could be truncated and the final output image
          * can look shifted.
          */
-        if(src_width % 16 || src_height % 16) {
+        if (src_width % 16 || src_height % 16) {
             PXP_LOG_TRACE("Rotation is not supported for image w/o alignment to block size 16x16.");
             unsup_rotation = true;
         }
     }
 
-    if(has_mask || has_scale || unsup_rotation || lv_area_get_size(&blend_area) < LV_GPU_NXP_PXP_SIZE_LIMIT
+    if (has_mask || has_scale || unsup_rotation || lv_area_get_size(&blend_area) < LV_GPU_NXP_PXP_SIZE_LIMIT
 #if LV_COLOR_DEPTH != 32
-       || lv_img_cf_has_alpha(cf)
+        || lv_img_cf_has_alpha(cf)
 #endif
-      ) {
+       ) {
         lv_draw_sw_img_decoded(draw_ctx, dsc, coords, map_p, cf);
         return;
     }
 
-    lv_color_t * dest_buf = draw_ctx->buf;
+    lv_color_t *dest_buf = draw_ctx->buf;
     lv_coord_t dest_stride = lv_area_get_width(draw_ctx->buf_area);
 
     lv_area_t src_area;
@@ -259,12 +263,12 @@ static void lv_draw_pxp_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_
 }
 
 static void lv_draw_pxp_buffer_copy(lv_draw_ctx_t * draw_ctx,
-                                    void * dest_buf, lv_coord_t dest_stride, const lv_area_t * dest_area,
-                                    void * src_buf, lv_coord_t src_stride, const lv_area_t * src_area)
+                                    void *dest_buf, lv_coord_t dest_stride, const lv_area_t *dest_area,
+                                    void *src_buf, lv_coord_t src_stride, const lv_area_t *src_area)
 {
     LV_UNUSED(draw_ctx);
 
-    if(lv_area_get_size(dest_area) < LV_GPU_NXP_PXP_SIZE_LIMIT) {
+    if (lv_area_get_size(dest_area) < LV_GPU_NXP_PXP_SIZE_LIMIT) {
         lv_draw_sw_buffer_copy(draw_ctx, dest_buf, dest_stride, dest_area, src_buf, src_stride, src_area);
         return;
     }

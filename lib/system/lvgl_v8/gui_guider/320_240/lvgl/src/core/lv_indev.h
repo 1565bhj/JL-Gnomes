@@ -47,7 +47,7 @@ void lv_indev_enable(lv_indev_t * indev, bool en);
  * @return pointer to the currently processed input device or NULL if no input device processing
  * right now
  */
-lv_indev_t * lv_indev_get_act(void);
+lv_indev_t *lv_indev_get_act(void);
 
 /**
  * Get the type of an input device
@@ -127,7 +127,7 @@ lv_dir_t lv_indev_get_scroll_dir(const lv_indev_t * indev);
  * @param indev pointer to an input device
  * @return pointer to the currently scrolled object or NULL if no scrolling by this indev
  */
-lv_obj_t * lv_indev_get_scroll_obj(const lv_indev_t * indev);
+lv_obj_t *lv_indev_get_scroll_obj(const lv_indev_t * indev);
 
 /**
  * Get the movement vector of an input device (for LV_INDEV_TYPE_POINTER and
@@ -147,7 +147,7 @@ void lv_indev_wait_release(lv_indev_t * indev);
  * Gets a pointer to the currently active object in the currently processed input device.
  * @return pointer to currently active object or NULL if no active object
  */
-lv_obj_t * lv_indev_get_obj_act(void);
+lv_obj_t *lv_indev_get_obj_act(void);
 
 /**
  * Get a pointer to the indev read timer to
@@ -155,7 +155,7 @@ lv_obj_t * lv_indev_get_obj_act(void);
  * @param indev pointer to an input device
  * @return pointer to the indev read refresher timer. (NULL on error)
  */
-lv_timer_t * lv_indev_get_read_timer(lv_disp_t * indev);
+lv_timer_t *lv_indev_get_read_timer(lv_disp_t * indev);
 
 /**
  * Search the most top, clickable object by a point
@@ -163,7 +163,7 @@ lv_timer_t * lv_indev_get_read_timer(lv_disp_t * indev);
  * @param point pointer to a point for searching the most top child
  * @return pointer to the found object or NULL if there was no suitable object
  */
-lv_obj_t * lv_indev_search_obj(lv_obj_t * obj, lv_point_t * point);
+lv_obj_t *lv_indev_search_obj(lv_obj_t * obj, lv_point_t * point);
 
 /**********************
  *      MACROS

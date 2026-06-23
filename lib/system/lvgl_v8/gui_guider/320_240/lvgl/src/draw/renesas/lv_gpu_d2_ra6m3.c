@@ -19,14 +19,14 @@
  *********************/
 #define LOG_ERRORS
 #ifdef LOG_ERRORS
-    #define STRINGIFY(x)                #x
-    #define TOSTRING(x)                 STRINGIFY(x)
+#define STRINGIFY(x)                #x
+#define TOSTRING(x)                 STRINGIFY(x)
 
-    #define ERROR_LIST_SIZE             (4)
-    #define D2_EXEC(a)                  lv_port_gpu_log_error(a, __func__,  __LINE__)
+#define ERROR_LIST_SIZE             (4)
+#define D2_EXEC(a)                  lv_port_gpu_log_error(a, __func__,  __LINE__)
 #else
-    /* here is error logging not enabled */
-    #define D2_EXEC(a)                  a;
+/* here is error logging not enabled */
+#define D2_EXEC(a)                  a;
 #endif
 
 /**********************
@@ -34,7 +34,7 @@
  **********************/
 typedef struct {
     d2_s32 error;
-    const char * func;
+    const char *func;
     int line;
 } log_error_entry;
 
@@ -42,7 +42,7 @@ typedef struct {
  *  STATIC PROTOTYPES
  **********************/
 #ifdef LOG_ERRORS
-    static void lv_port_gpu_log_error(d2_s32 status, const char * func, int line);
+static void lv_port_gpu_log_error(d2_s32 status, const char * func, int line);
 #endif
 static void invalidate_cache(void);
 
@@ -53,13 +53,13 @@ void lv_draw_gpu_letter(lv_draw_ctx_t * draw_ctx, const lv_draw_label_dsc_t * ds
  *  STATIC VARIABLES
  **********************/
 #ifdef LOG_ERRORS
-    static log_error_entry log_error_list[ERROR_LIST_SIZE];
-    static int error_list_index;
-    static int error_count;
+static log_error_entry log_error_list[ERROR_LIST_SIZE];
+static int error_list_index;
+static int error_count;
 #endif
 
-static d2_device * _d2_handle;
-static d2_renderbuffer * renderbuffer;
+static d2_device *_d2_handle;
+static d2_renderbuffer *renderbuffer;
 
 static d2_s32 src_cf_val, dst_cf_val;
 static lv_draw_img_dsc_t img_dsc;
@@ -73,53 +73,53 @@ static d2_s32 lv_port_gpu_cf_lv_to_d2(lv_img_cf_t cf)
     d2_s32 d2_cf;
 
 #if (DLG_LVGL_CF == 1)
-    switch(cf & ~(1 << 5)) {
+    switch (cf & ~(1 << 5)) {
 #else
-    switch(cf) {
+    switch (cf) {
 #endif /* (DLG_LVGL_CF == 1) */
-        case LV_IMG_CF_TRUE_COLOR:
-            d2_cf = d2_mode_rgb565;
-            break;
-        case LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED:
-            d2_cf = d2_mode_rgb565;
-            break;
-        case LV_IMG_CF_ALPHA_1BIT:
-            d2_cf = d2_mode_alpha1;
-            break;
-        case LV_IMG_CF_ALPHA_2BIT:
-            d2_cf = d2_mode_alpha2;
-            break;
-        case LV_IMG_CF_ALPHA_4BIT:
-            d2_cf = d2_mode_alpha4;
-            break;
-        case LV_IMG_CF_ALPHA_8BIT:
-            d2_cf = d2_mode_alpha8;
-            break;
-        case LV_IMG_CF_INDEXED_1BIT:
-            d2_cf = d2_mode_i1 | d2_mode_clut;
-            break;
-        case LV_IMG_CF_INDEXED_2BIT:
-            d2_cf = d2_mode_i2 | d2_mode_clut;
-            break;
-        case LV_IMG_CF_INDEXED_4BIT:
-            d2_cf = d2_mode_i4 | d2_mode_clut;
-            break;
-        case LV_IMG_CF_INDEXED_8BIT:
-            d2_cf = d2_mode_i8 | d2_mode_clut;
-            break;
+    case LV_IMG_CF_TRUE_COLOR:
+        d2_cf = d2_mode_rgb565;
+        break;
+    case LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED:
+        d2_cf = d2_mode_rgb565;
+        break;
+    case LV_IMG_CF_ALPHA_1BIT:
+        d2_cf = d2_mode_alpha1;
+        break;
+    case LV_IMG_CF_ALPHA_2BIT:
+        d2_cf = d2_mode_alpha2;
+        break;
+    case LV_IMG_CF_ALPHA_4BIT:
+        d2_cf = d2_mode_alpha4;
+        break;
+    case LV_IMG_CF_ALPHA_8BIT:
+        d2_cf = d2_mode_alpha8;
+        break;
+    case LV_IMG_CF_INDEXED_1BIT:
+        d2_cf = d2_mode_i1 | d2_mode_clut;
+        break;
+    case LV_IMG_CF_INDEXED_2BIT:
+        d2_cf = d2_mode_i2 | d2_mode_clut;
+        break;
+    case LV_IMG_CF_INDEXED_4BIT:
+        d2_cf = d2_mode_i4 | d2_mode_clut;
+        break;
+    case LV_IMG_CF_INDEXED_8BIT:
+        d2_cf = d2_mode_i8 | d2_mode_clut;
+        break;
 #if (DLG_LVGL_CF == 1)
-        case LV_IMG_CF_RGB565:
-            d2_cf = d2_mode_rgb565;
-            break;
-        case LV_IMG_CF_RGB888:
-            d2_cf = d2_mode_rgb888;
-            break;
-        case LV_IMG_CF_RGBA8888:
-            d2_cf = d2_mode_rgba8888;
-            break;
+    case LV_IMG_CF_RGB565:
+        d2_cf = d2_mode_rgb565;
+        break;
+    case LV_IMG_CF_RGB888:
+        d2_cf = d2_mode_rgb888;
+        break;
+    case LV_IMG_CF_RGBA8888:
+        d2_cf = d2_mode_rgba8888;
+        break;
 #endif /* DLG_LVGL_CF */
-        default:
-            return -1;
+    default:
+        return -1;
     }
 
 #if (DLG_LVGL_CF == 1)
@@ -131,57 +131,57 @@ static d2_s32 lv_port_gpu_cf_lv_to_d2(lv_img_cf_t cf)
 
 static bool lv_port_gpu_cf_fb_valid(d2_s32 cf)
 {
-    if((cf & (d2_mode_rle | d2_mode_clut)) || cf < 0) {
+    if ((cf & (d2_mode_rle | d2_mode_clut)) || cf < 0) {
         return false;
     }
 
-    switch(cf) {
-        case d2_mode_alpha8:
-        case d2_mode_rgb565:
-        case d2_mode_argb8888:
-        case d2_mode_argb4444:
-        case d2_mode_rgba8888:
-        case d2_mode_rgba4444:
-            return true;
-        default:
-            return false;
+    switch (cf) {
+    case d2_mode_alpha8:
+    case d2_mode_rgb565:
+    case d2_mode_argb8888:
+    case d2_mode_argb4444:
+    case d2_mode_rgba8888:
+    case d2_mode_rgba4444:
+        return true;
+    default:
+        return false;
     }
 }
 
 static bool lv_port_gpu_cf_has_alpha(d2_s32 cf)
 {
-    switch(cf & ~(d2_mode_clut | d2_mode_rle)) {
-        case d2_mode_argb8888:
-        case d2_mode_rgba8888:
-        case d2_mode_argb4444:
-        case d2_mode_rgba4444:
-        case d2_mode_argb1555:
-        case d2_mode_rgba5551:
-        case d2_mode_ai44:
-        case d2_mode_i8:
-        case d2_mode_i4:
-        case d2_mode_i2:
-        case d2_mode_i1:
-        case d2_mode_alpha8:
-        case d2_mode_alpha4:
-        case d2_mode_alpha2:
-        case d2_mode_alpha1:
-            return true;
-        default:
-            return false;
+    switch (cf & ~(d2_mode_clut | d2_mode_rle)) {
+    case d2_mode_argb8888:
+    case d2_mode_rgba8888:
+    case d2_mode_argb4444:
+    case d2_mode_rgba4444:
+    case d2_mode_argb1555:
+    case d2_mode_rgba5551:
+    case d2_mode_ai44:
+    case d2_mode_i8:
+    case d2_mode_i4:
+    case d2_mode_i2:
+    case d2_mode_i1:
+    case d2_mode_alpha8:
+    case d2_mode_alpha4:
+    case d2_mode_alpha2:
+    case d2_mode_alpha1:
+        return true;
+    default:
+        return false;
     }
 }
 
 static bool lv_port_gpu_cf_is_alpha(d2_s32 cf)
 {
-    switch(cf & ~d2_mode_rle) {
-        case d2_mode_alpha8:
-        case d2_mode_alpha4:
-        case d2_mode_alpha2:
-        case d2_mode_alpha1:
-            return true;
-        default:
-            return false;
+    switch (cf & ~d2_mode_rle) {
+    case d2_mode_alpha8:
+    case d2_mode_alpha4:
+    case d2_mode_alpha2:
+    case d2_mode_alpha1:
+        return true;
+    default:
+        return false;
     }
 }
 
@@ -220,26 +220,26 @@ static int lv_port_gpu_handle_indexed_color(const lv_color_t ** src, const d2_co
 {
     int clut_len = 0;
 
-    if(cf & d2_mode_clut) {
+    if (cf & d2_mode_clut) {
         /* Calculate CLUT length in entries */
-        switch(cf & ~(d2_mode_clut | d2_mode_rle)) {
-            case d2_mode_i1:
-                clut_len = 2;
-                break;
-            case d2_mode_i2:
-                clut_len = 4;
-                break;
-            case d2_mode_i4:
-                clut_len = 16;
-                break;
-            case d2_mode_i8:
-                clut_len = 256;
-                break;
-            case d2_mode_ai44:
-                clut_len = 16;
-                break;
-            default:
-                return 0;
+        switch (cf & ~(d2_mode_clut | d2_mode_rle)) {
+        case d2_mode_i1:
+            clut_len = 2;
+            break;
+        case d2_mode_i2:
+            clut_len = 4;
+            break;
+        case d2_mode_i4:
+            clut_len = 16;
+            break;
+        case d2_mode_i8:
+            clut_len = 256;
+            break;
+        case d2_mode_ai44:
+            clut_len = 16;
+            break;
+        default:
+            return 0;
         }
 
         *clut = (const d2_color *)*src;
@@ -250,43 +250,43 @@ static int lv_port_gpu_handle_indexed_color(const lv_color_t ** src, const d2_co
 
 static int lv_port_gpu_cf_bpp(d2_s32 cf)
 {
-    switch(cf & ~(d2_mode_clut | d2_mode_rle)) {
-        case d2_mode_argb8888:
-            return 32;
-        case d2_mode_rgba8888:
-            return 32;
-        case d2_mode_rgb888:
-            return 32;
-        case d2_mode_argb4444:
-            return 16;
-        case d2_mode_rgba4444:
-            return 16;
-        case d2_mode_argb1555:
-            return 16;
-        case d2_mode_rgba5551:
-            return 16;
-        case d2_mode_rgb565:
-            return 16;
-        case d2_mode_ai44:
-            return 8;
-        case d2_mode_i8:
-            return 8;
-        case d2_mode_i4:
-            return 4;
-        case d2_mode_i2:
-            return 2;
-        case d2_mode_i1:
-            return 1;
-        case d2_mode_alpha8:
-            return 8;
-        case d2_mode_alpha4:
-            return 4;
-        case d2_mode_alpha2:
-            return 2;
-        case d2_mode_alpha1:
-            return 1;
-        default:
-            return 0;
+    switch (cf & ~(d2_mode_clut | d2_mode_rle)) {
+    case d2_mode_argb8888:
+        return 32;
+    case d2_mode_rgba8888:
+        return 32;
+    case d2_mode_rgb888:
+        return 32;
+    case d2_mode_argb4444:
+        return 16;
+    case d2_mode_rgba4444:
+        return 16;
+    case d2_mode_argb1555:
+        return 16;
+    case d2_mode_rgba5551:
+        return 16;
+    case d2_mode_rgb565:
+        return 16;
+    case d2_mode_ai44:
+        return 8;
+    case d2_mode_i8:
+        return 8;
+    case d2_mode_i4:
+        return 4;
+    case d2_mode_i2:
+        return 2;
+    case d2_mode_i1:
+        return 1;
+    case d2_mode_alpha8:
+        return 8;
+    case d2_mode_alpha4:
+        return 4;
+    case d2_mode_alpha2:
+        return 2;
+    case d2_mode_alpha1:
+        return 1;
+    default:
+        return 0;
     }
 }
 
@@ -332,17 +332,18 @@ static void lv_port_gpu_rotate_point(int * x, int * y, float cos_angle, float si
 
 void lv_draw_ra6m3_g2d_init(void)
 {
-    if(_d2_handle != NULL) {
+    if (_d2_handle != NULL) {
         return;
     }
 
     _d2_handle = d2_opendevice(0);
 
-    if(_d2_handle == NULL)
+    if (_d2_handle == NULL) {
         return;
+    }
 
     /* set blocksize for default displaylist */
-    if(d2_setdlistblocksize(_d2_handle, 25) != D2_OK) {
+    if (d2_setdlistblocksize(_d2_handle, 25) != D2_OK) {
         LV_LOG_ERROR("Could NOT d2_setdlistblocksize\n");
         d2_closedevice(_d2_handle);
 
@@ -350,7 +351,7 @@ void lv_draw_ra6m3_g2d_init(void)
     }
 
     /* bind the hardware */
-    if(d2_inithw(_d2_handle, 0) != D2_OK) {
+    if (d2_inithw(_d2_handle, 0) != D2_OK) {
         LV_LOG_ERROR("Could NOT d2_inithw\n");
         d2_closedevice(_d2_handle);
 
@@ -358,7 +359,7 @@ void lv_draw_ra6m3_g2d_init(void)
     }
 
     renderbuffer = d2_newrenderbuffer(_d2_handle, 20, 20);
-    if(!renderbuffer) {
+    if (!renderbuffer) {
         LV_LOG_ERROR("NO renderbuffer\n");
         d2_closedevice(_d2_handle);
 
@@ -368,8 +369,9 @@ void lv_draw_ra6m3_g2d_init(void)
 
 static void lv_port_gpu_hw_deinit(void)
 {
-    if(_d2_handle == NULL)
+    if (_d2_handle == NULL) {
         return;
+    }
 
     D2_EXEC(d2_freerenderbuffer(_d2_handle, renderbuffer));
     D2_EXEC(d2_closedevice(_d2_handle));
@@ -402,7 +404,7 @@ void lv_port_gpu_wait(lv_draw_ctx_t * draw_ctx)
 
 static void lv_port_gpu_execute_render(void)
 {
-    if(_d2_handle) {
+    if (_d2_handle) {
         D2_EXEC(d2_executerenderbuffer(_d2_handle, renderbuffer, 0));
     }
 }
@@ -456,14 +458,14 @@ bool lv_port_gpu_config_blit(const lv_draw_img_dsc_t * draw_dsc,  lv_img_cf_t ds
 {
     d2_s32 d2_src_cf, d2_dst_cf;
 
-    if(blend_en && draw_dsc->blend_mode != LV_BLEND_MODE_NORMAL
-       && draw_dsc->blend_mode != LV_BLEND_MODE_ADDITIVE) {
+    if (blend_en && draw_dsc->blend_mode != LV_BLEND_MODE_NORMAL
+        && draw_dsc->blend_mode != LV_BLEND_MODE_ADDITIVE) {
         return false;
     }
 
     d2_src_cf = lv_port_gpu_cf_lv_to_d2(src_cf);
     d2_dst_cf = lv_port_gpu_cf_lv_to_d2(dst_cf);
-    if(d2_src_cf < 0 || !lv_port_gpu_cf_fb_valid(d2_dst_cf)) {
+    if (d2_src_cf < 0 || !lv_port_gpu_cf_fb_valid(d2_dst_cf)) {
         return false;
     }
     src_cf_val = d2_src_cf;
@@ -481,9 +483,9 @@ bool lv_port_gpu_config_blit(const lv_draw_img_dsc_t * draw_dsc,  lv_img_cf_t ds
 }
 
 static void lv_port_gpu_blit_internal(const lv_area_t * dest_area, const lv_color_t * src_buf,
-                                      const lv_area_t * src_area, d2_u32 flags)
+                                      const lv_area_t *src_area, d2_u32 flags)
 {
-    const lv_area_t * img_area = src_area;
+    const lv_area_t *img_area = src_area;
     lv_area_t img_area_scaled;
     lv_coord_t w, h, img_w, img_h;
     d2_s32 pitch;
@@ -494,7 +496,7 @@ static void lv_port_gpu_blit_internal(const lv_area_t * dest_area, const lv_colo
     pitch = w = lv_area_get_width(src_area);
     h = lv_area_get_height(src_area);
 
-    if(img_dsc.zoom != LV_IMG_ZOOM_NONE) {
+    if (img_dsc.zoom != LV_IMG_ZOOM_NONE) {
         img_area_scaled.x1 = src_area->x1 + ((((int32_t)0 - img_dsc.pivot.x) * img_dsc.zoom) >> 8) + img_dsc.pivot.x;
         img_area_scaled.x2 = src_area->x1 + ((((int32_t)w - img_dsc.pivot.x) * img_dsc.zoom) >> 8) + img_dsc.pivot.x;
         img_area_scaled.y1 = src_area->y1 + ((((int32_t)0 - img_dsc.pivot.y) * img_dsc.zoom) >> 8) + img_dsc.pivot.y;
@@ -505,17 +507,16 @@ static void lv_port_gpu_blit_internal(const lv_area_t * dest_area, const lv_colo
     img_w = lv_area_get_width(img_area);
     img_h = lv_area_get_height(img_area);
 
-    if(0 < bpp && bpp < 8) {
+    if (0 < bpp && bpp < 8) {
         pitch = (w + (8 - bpp)) & (~(8 - bpp));
     }
 
-    if(img_dsc.angle == 0) {
+    if (img_dsc.angle == 0) {
         D2_EXEC(d2_setblitsrc(_d2_handle, (void *) src_buf, pitch, w, h, src_cf_val));
 
         D2_EXEC(d2_blitcopy(_d2_handle, w, h, 0, 0,
                             D2_FIX4(img_w), D2_FIX4(img_h), D2_FIX4(img_area->x1), D2_FIX4(img_area->y1), flags));
-    }
-    else {
+    } else {
         int x, y, x1, y1, x2, y2, x3, y3, x4, y4, dxu, dxv, dyu, dyv, xx, xy, yx, yy;
         int pivot_scaled_x, pivot_scaled_y;
         int tex_offset = (flags & d2_bf_filter) ? -32767 : 0;
@@ -533,7 +534,7 @@ static void lv_port_gpu_blit_internal(const lv_area_t * dest_area, const lv_colo
         amode = flags & d2_bf_usealpha ? d2_to_copy : d2_to_one;
         cmode = flags & d2_bf_colorize2 ? d2_to_blend : d2_to_copy;
         D2_EXEC(d2_settextureoperation(_d2_handle, amode, cmode, cmode, cmode));
-        if(flags & d2_bf_colorize2) {
+        if (flags & d2_bf_colorize2) {
             d2_color cl = d2_getcolor(_d2_handle, 0), ch = d2_getcolor(_d2_handle, 1);
             D2_EXEC(d2_settexopparam(_d2_handle, d2_cc_red, (uint8_t)(cl >> 16UL),
                                      (uint8_t)(ch >> 16UL)));
@@ -585,7 +586,7 @@ static void lv_port_gpu_blit_internal(const lv_area_t * dest_area, const lv_colo
         int slice = (flags & d2_bf_filter) ? 6 : 8;
 
         /* Perform render operation in slices to acheive better performance */
-        for(int posx = minx; posx < maxx; posx += slice) {
+        for (int posx = minx; posx < maxx; posx += slice) {
             D2_EXEC(d2_cliprect(_d2_handle, posx, dest_area->y1, MIN(posx + slice - 1, maxx), dest_area->y2));
             D2_EXEC(d2_renderquad(_d2_handle, (d2_point)(x + x1), (d2_point)(y + y1),
                                   (d2_point)(x + x2), (d2_point)(y + y2),
@@ -597,7 +598,7 @@ static void lv_port_gpu_blit_internal(const lv_area_t * dest_area, const lv_colo
 }
 
 void lv_port_ra_gpu_blit(lv_color_t * dst, const lv_area_t * dst_area, lv_coord_t dest_stride,
-                         const lv_color_t * src, const lv_area_t * src_area, lv_opa_t opa)
+                         const lv_color_t *src, const lv_area_t *src_area, lv_opa_t opa)
 {
     d2_u32 flags = 0;
     const d2_color * clut = NULL;
@@ -616,17 +617,16 @@ void lv_port_ra_gpu_blit(lv_color_t * dst, const lv_area_t * dst_area, lv_coord_
 
     D2_EXEC(d2_setalpha(_d2_handle, opa > LV_OPA_MAX ? LV_OPA_COVER : opa));
 
-    if(clut) {
+    if (clut) {
         D2_EXEC(d2_writetexclut_direct(_d2_handle, clut, 0, clut_len));
     }
 
     flags |= color_key_enabled ? d2_bf_usealpha : 0;
     flags |= (colorize_enabled || img_dsc.recolor_opa != LV_OPA_TRANSP) ? d2_bf_colorize2 : 0;
-    if(colorize_enabled) {
+    if (colorize_enabled) {
         D2_EXEC(d2_setcolor(_d2_handle, 0, lv_port_gpu_color_lv_to_d2(img_dsc.recolor)));
         D2_EXEC(d2_setcolor(_d2_handle, 1, lv_port_gpu_color_lv_to_d2(img_dsc.recolor)));
-    }
-    else if(img_dsc.recolor_opa != LV_OPA_TRANSP) {
+    } else if (img_dsc.recolor_opa != LV_OPA_TRANSP) {
         d2_color cl = 0, ch = 0;
         lv_port_gpu_get_recolor_consts(&cl, &ch);
         D2_EXEC(d2_setcolor(_d2_handle, 0, cl));
@@ -635,12 +635,11 @@ void lv_port_ra_gpu_blit(lv_color_t * dst, const lv_area_t * dst_area, lv_coord_
 
     flags |= ((img_dsc.angle || img_dsc.zoom != LV_IMG_ZOOM_NONE) && img_dsc.antialias) ? d2_bf_filter : 0;
 
-    if(blend_enabled) {
+    if (blend_enabled) {
         D2_EXEC(d2_setblendmode(_d2_handle, d2_bm_alpha,
                                 img_dsc.blend_mode != LV_BLEND_MODE_NORMAL ? d2_bm_one : d2_bm_one_minus_alpha));
         D2_EXEC(d2_setalphablendmode(_d2_handle, d2_bm_one, d2_bm_one_minus_alpha));
-    }
-    else {
+    } else {
         D2_EXEC(d2_setblendmode(_d2_handle, d2_bm_one, d2_bm_zero));
         D2_EXEC(d2_setalphablendmode(_d2_handle, d2_bm_one, d2_bm_zero));
     }
@@ -653,17 +652,19 @@ void lv_port_ra_gpu_blit(lv_color_t * dst, const lv_area_t * dst_area, lv_coord_
 void lv_draw_ra6m3_2d_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc)
 {
     lv_area_t blend_area;
-    if(!_lv_area_intersect(&blend_area, dsc->blend_area, draw_ctx->clip_area)) return;
+    if (!_lv_area_intersect(&blend_area, dsc->blend_area, draw_ctx->clip_area)) {
+        return;
+    }
 
     bool done = false;
 
-    if(dsc->mask_buf == NULL && dsc->blend_mode == LV_BLEND_MODE_NORMAL && lv_area_get_size(&blend_area) > 100) {
+    if (dsc->mask_buf == NULL && dsc->blend_mode == LV_BLEND_MODE_NORMAL && lv_area_get_size(&blend_area) > 100) {
         lv_coord_t dest_stride = lv_area_get_width(draw_ctx->buf_area);
 
-        lv_color_t * dest_buf = draw_ctx->buf;
+        lv_color_t *dest_buf = draw_ctx->buf;
 
-        const lv_color_t * src_buf = dsc->src_buf;
-        if(src_buf) {
+        const lv_color_t *src_buf = dsc->src_buf;
+        if (src_buf) {
             lv_draw_sw_blend_basic(draw_ctx, dsc);
 
             lv_area_t src_area;
@@ -674,19 +675,20 @@ void lv_draw_ra6m3_2d_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc
 
             lv_port_ra_gpu_blit(dest_buf, &blend_area, dest_stride, src_buf, &src_area, dsc->opa);
             done = true;
-        }
-        else if(dsc->opa >= LV_OPA_MAX) {
+        } else if (dsc->opa >= LV_OPA_MAX) {
             lv_area_move(&blend_area, -draw_ctx->buf_area->x1, -draw_ctx->buf_area->y1);
             lv_port_gpu_fill(dest_buf, &blend_area, dest_stride, dsc->color, dsc->opa);
             done = true;
         }
     }
 
-    if(!done) lv_draw_sw_blend_basic(draw_ctx, dsc);
+    if (!done) {
+        lv_draw_sw_blend_basic(draw_ctx, dsc);
+    }
 }
 
 static void lv_port_gpu_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_dsc_t * dsc,
-                                    const lv_area_t * coords, const uint8_t * map_p, lv_img_cf_t color_format)
+                                    const lv_area_t *coords, const uint8_t *map_p, lv_img_cf_t color_format)
 {
     /*TODO basic ARGB8888 image can be handles here*/
 
@@ -697,7 +699,7 @@ void lv_draw_ra6m3_2d_ctx_init(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
 {
     lv_draw_sw_init_ctx(drv, draw_ctx);
 
-    lv_draw_ra6m3_dma2d_ctx_t * ra_2d_draw_ctx = (lv_draw_sw_ctx_t *)draw_ctx;
+    lv_draw_ra6m3_dma2d_ctx_t *ra_2d_draw_ctx = (lv_draw_sw_ctx_t *)draw_ctx;
 
     ra_2d_draw_ctx->blend = lv_draw_ra6m3_2d_blend;
     ra_2d_draw_ctx->base_draw.draw_img_decoded = lv_port_gpu_img_decoded;
@@ -714,14 +716,16 @@ void lv_draw_stm32_dma2d_ctx_deinit(lv_disp_t * disp, lv_draw_ctx_t * draw_ctx)
 
 static void invalidate_cache(void)
 {
-    lv_disp_t * disp = _lv_refr_get_disp_refreshing();
-    if(disp->driver->clean_dcache_cb) disp->driver->clean_dcache_cb(disp->driver);
+    lv_disp_t *disp = _lv_refr_get_disp_refreshing();
+    if (disp->driver->clean_dcache_cb) {
+        disp->driver->clean_dcache_cb(disp->driver);
+    }
 }
 
 #ifdef LOG_ERRORS
 static void lv_port_gpu_log_error(d2_s32 status, const char * func, int line)
 {
-    if(status) {
+    if (status) {
         log_error_list[error_list_index].error = status;
         log_error_list[error_list_index].func = func;
         log_error_list[error_list_index].line = line;
@@ -733,7 +737,7 @@ static void lv_port_gpu_log_error(d2_s32 status, const char * func, int line)
 
         error_count++;
         error_list_index++;
-        if(error_list_index >= ERROR_LIST_SIZE) {
+        if (error_list_index >= ERROR_LIST_SIZE) {
             error_list_index = 0;
         }
     }

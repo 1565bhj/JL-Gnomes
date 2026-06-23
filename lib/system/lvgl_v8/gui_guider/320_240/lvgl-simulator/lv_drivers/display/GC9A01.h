@@ -45,17 +45,17 @@ extern "C" {
 
 /* Init script function */
 struct GC9A01_function {
-	uint16_t cmd;
-	uint16_t data;
+    uint16_t cmd;
+    uint16_t data;
 };
 
 /* Init script commands */
 enum GC9A01_cmd {
-	GC9A01_START,
-	GC9A01_END,
-	GC9A01_CMD,
-	GC9A01_DATA,
-	GC9A01_DELAY
+    GC9A01_START,
+    GC9A01_END,
+    GC9A01_CMD,
+    GC9A01_DATA,
+    GC9A01_DELAY
 };
 
 /**********************

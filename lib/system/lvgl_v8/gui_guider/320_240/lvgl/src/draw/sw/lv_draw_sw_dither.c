@@ -21,8 +21,10 @@ void LV_ATTRIBUTE_FAST_MEM lv_dither_none(lv_grad_t * grad, lv_coord_t x, lv_coo
 {
     LV_UNUSED(x);
     LV_UNUSED(y);
-    if(grad == NULL || grad->filled) return;
-    for(lv_coord_t i = 0; i < w; i++) {
+    if (grad == NULL || grad->filled) {
+        return;
+    }
+    for (lv_coord_t i = 0; i < w; i++) {
         grad->map[i] = lv_color_hex(grad->hmap[i].full);
     }
     grad->filled = 1;
@@ -52,7 +54,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_dither_ordered_hor(lv_grad_t * grad, lv_coord_t x,
        Then we compute a complete row of ordered dither and store it in out. */
 
     /*The apply the algorithm for this patch*/
-    for(lv_coord_t j = 0; j < w; j++) {
+    for (lv_coord_t j = 0; j < w; j++) {
         int8_t factor = dither_ordered_threshold_matrix[(y & 7) * 8 + ((j) & 7)] - 32;
         lv_color32_t tmp = grad->hmap[LV_CLAMP(0, j - 4, grad->size)];
         lv_color32_t t;
@@ -78,7 +80,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_dither_ordered_ver(lv_grad_t * grad, lv_coord_t x,
     lv_color32_t tmp = grad->hmap[LV_CLAMP(0, y - 4, grad->size)];
 
     /*The apply the algorithm for this patch*/
-    for(lv_coord_t j = 0; j < 8; j++) {
+    for (lv_coord_t j = 0; j < 8; j++) {
         int8_t factor = dither_ordered_threshold_matrix[(y & 7) * 8 + ((j + x) & 7)] - 32;
         lv_color32_t t;
         t.ch.red   = LV_CLAMP(0, tmp.ch.red + factor, 255);
@@ -89,11 +91,11 @@ void LV_ATTRIBUTE_FAST_MEM lv_dither_ordered_ver(lv_grad_t * grad, lv_coord_t x,
     }
     /*Finally fill the line*/
     lv_coord_t j = 8;
-    for(; j < w - 8; j += 8) {
+    for (; j < w - 8; j += 8) {
         lv_memcpy(grad->map + j, grad->map, 8 * sizeof(*grad->map));
     }
     /* Prevent overwriting */
-    for(; j < w; j++) {
+    for (; j < w; j++) {
         grad->map[j] = grad->map[j & 7];
     }
 }
@@ -119,7 +121,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_dither_err_diff_hor(lv_grad_t * grad, lv_coord_t x
     lv_scolor24_t next_px_err = {0}, next_l = {0}, error;
     /*First last pixel are not dithered */
     grad->map[0] = lv_color_hex(grad->hmap[0].full);
-    for(lv_coord_t x = 1; x < grad->size - 1; x++) {
+    for (lv_coord_t x = 1; x < grad->size - 1; x++) {
         lv_color32_t t = grad->hmap[x];
         lv_color_t q;
         /*Add error term*/
@@ -183,11 +185,10 @@ void LV_ATTRIBUTE_FAST_MEM lv_dither_err_diff_ver(lv_grad_t * grad, lv_coord_t x
 
     lv_scolor24_t next_px_err, prev_l = grad->error_acc[0];
     /*Compute the error term for the current pixel (first pixel is never dithered)*/
-    if(xs == 0) {
+    if (xs == 0) {
         grad->map[0] = lv_color_hex(grad->hmap[y].full);
         FS_QUANT_ERROR(next_px_err, grad->hmap[y], grad->map[0]);
-    }
-    else {
+    } else {
         lv_color_t tmp = lv_color_hex(grad->hmap[y].full);
         lv_color32_t t = grad->hmap[y];
         FS_QUANT_ERROR(next_px_err, grad->hmap[y], tmp);
@@ -195,7 +196,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_dither_err_diff_ver(lv_grad_t * grad, lv_coord_t x
         grad->map[0] = lv_color_hex(t.full);
     }
 
-    for(lv_coord_t x = 1; x < w; x++) {
+    for (lv_coord_t x = 1; x < w; x++) {
         lv_color32_t t = grad->hmap[y];
         lv_color_t q;
         /*Add the current error term*/

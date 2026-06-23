@@ -6,6 +6,7 @@
 #include "gui_guider.h"
 #include "custom.h"
 #include "update/net_update.h"
+#include "lvgl_develop.h"
 /* 音量/亮度条较细，四向扩大可点区域（LVGL 在命中测试时会并入此边距） */
 #ifndef DROPDOWN_BAR_EXT_CLICK_PAD
 #define DROPDOWN_BAR_EXT_CLICK_PAD  5
@@ -13,7 +14,6 @@
 
 void img_nomute_is_show(bool muted)
 {
-#if 0
 #if UI_SHOW_SCREEN_MAIN_NOMUTE_ICON
     if (guider_ui.screen_main_img_nomute) {
         if (muted) {
@@ -32,8 +32,10 @@ void img_nomute_is_show(bool muted)
         }
     }
 #endif
-#endif
+
 }
+
+
 // 麦克风按钮点击事件处理函数
 static void dropdown_mic_event_handler(lv_event_t *e)
 {
@@ -69,12 +71,18 @@ static void dropdown_speaker_event_handler(lv_event_t *e)
         if (!speaker_state) {
 #ifdef APPLAYER_ENABLE
             // 开启扬声器
-            dac_mute_control(0, 1); // 0表示取消静音
+            dac_mute_control(0, 1);
+            music_play_res_file("NOMUTE.mp3");
+            printf("静音模式已关闭\n");
+            music_play_waite();
 #endif
         } else {
 #ifdef APPLAYER_ENABLE
             // 静音扬声器
-            dac_mute_control(1, 1); // 1表示静音
+            music_play_res_file("MUTE.mp3");
+            music_play_waite();
+            printf("静音模式已开启\n");
+            dac_mute_control(1, 1);
 #endif
         }
         img_nomute_is_show(speaker_state);
@@ -191,9 +199,9 @@ void init_screen_set_sliders(void)
     screen_dropdown_bars(light_value, volume_value);
 }
 
-void custom_ui_bars_set(int brightness_pct, int volume_pct, int music_playback_pct)
+void custom_ui_bars_set(int brightness_pct, int volume_pct)
 {
-    if (brightness_pct != -1) {
+    if (brightness_pct != CUSTOM_UI_BAR_OMIT) {
         int b = brightness_pct;
         if (b < 10) {
             b = 10;
@@ -205,7 +213,7 @@ void custom_ui_bars_set(int brightness_pct, int volume_pct, int music_playback_p
             lv_bar_set_value(guider_ui.screen_dropdown_light_bar, b, LV_ANIM_OFF);
         }
     }
-    if (volume_pct != -1) {
+    if (volume_pct != CUSTOM_UI_BAR_OMIT) {
         int v = volume_pct;
         if (v < 10) {
             v = 10;
@@ -220,23 +228,18 @@ void custom_ui_bars_set(int brightness_pct, int volume_pct, int music_playback_p
             lv_bar_set_value(guider_ui.screen_music_bar_volume, v, LV_ANIM_OFF);
         }
     }
-    if (music_playback_pct != -1) {
-        int p = music_playback_pct;
-        if (p < 0) {
-            p = 0;
-        }
-        if (p > 100) {
-            p = 100;
-        }
-        if (guider_ui.screen_music_slider) {
-            lv_bar_set_value(guider_ui.screen_music_slider, p, LV_ANIM_OFF);
-        }
-    }
+
 }
 
 void custom_ui_volume_bars_set(int volume_pct)
 {
-    custom_ui_bars_set(-1, volume_pct, volume_pct);
+    /* 注意：第三个参数是"音乐进度"，必须 OMIT。
+     * 之前这里误写成 volume_pct，会把音量值写进 screen_music_slider，
+     * 导致按键调音后从下拉页切回音乐页时，进度条先停在音量值上，
+     * 等下一次 music_update_current_time 推送真实进度才纠正，
+     * 视觉上表现为"进度条乱跑/突然闪走"。
+     */
+    custom_ui_bars_set(CUSTOM_UI_BAR_OMIT, volume_pct);
 }
 
 // 设置亮度函数
@@ -382,7 +385,7 @@ static void dropdown_light_bar_event_handler(lv_event_t *e)
 
 
 
-#if 0
+
 /** 将下拉页「设备版本」标签更新为当前 OTA 版本号 */
 static void dropdown_refresh_device_version_label(lv_ui *ui)
 {
@@ -405,15 +408,13 @@ static void dropdown_widen_bar_touch_targets(lv_ui *ui)
         lv_obj_set_ext_click_area(ui->screen_dropdown_light_bar, DROPDOWN_BAR_EXT_CLICK_PAD);
     }
 }
-#endif
 
 // 初始化下拉框事件
 void dropdown_event_init(lv_ui *ui)
 {
-#if 0
     lv_obj_set_scroll_dir(ui->screen_dropdown, LV_DIR_NONE);
     dropdown_refresh_device_version_label(ui);
-#endif
+
     // 注册麦克风按钮点击事件
     lv_obj_remove_event_cb(ui->screen_dropdown_imgbtn_mic, dropdown_mic_event_handler);
     lv_obj_add_event_cb(ui->screen_dropdown_imgbtn_mic, dropdown_mic_event_handler, LV_EVENT_CLICKED, NULL);
@@ -433,10 +434,10 @@ void dropdown_event_init(lv_ui *ui)
     // 注册亮度条拖动事件
     lv_obj_remove_event_cb(ui->screen_dropdown_light_bar, NULL);
     lv_obj_add_event_cb(ui->screen_dropdown_light_bar, dropdown_light_bar_event_handler, LV_EVENT_ALL, NULL);
-#if 0
+
     dropdown_widen_bar_touch_targets(ui);
+
     img_nomute_is_show(false);
-#endif
 }
 
 void dropdown_event_setup(void)

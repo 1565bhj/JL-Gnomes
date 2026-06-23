@@ -75,14 +75,14 @@ typedef void (*lv_anim_deleted_cb_t)(struct _lv_anim_t *);
 
 /** Describes an animation*/
 typedef struct _lv_anim_t {
-    void * var;                          /**<Variable to animate*/
+    void *var;                           /**<Variable to animate*/
     lv_anim_exec_xcb_t exec_cb;          /**< Function to execute to animate*/
     lv_anim_start_cb_t start_cb;         /**< Call it when the animation is starts (considering `delay`)*/
     lv_anim_ready_cb_t ready_cb;         /**< Call it when the animation is ready*/
     lv_anim_deleted_cb_t deleted_cb;     /**< Call it when the animation is deleted*/
     lv_anim_get_value_cb_t get_value_cb; /**< Get the current value in relative mode*/
 #if LV_USE_USER_DATA
-    void * user_data; /**< Custom user data*/
+    void *user_data;  /**< Custom user data*/
 #endif
     lv_anim_path_cb_t path_cb;         /**< Describe the path (curve) of animations*/
     int32_t start_value;               /**< Start value*/
@@ -312,7 +312,7 @@ static inline void lv_anim_set_user_data(lv_anim_t * a, void * user_data)
  * @param a         an initialized 'anim_t' variable. Not required after call.
  * @return          pointer to the created animation (different from the `a` parameter)
  */
-lv_anim_t * lv_anim_start(const lv_anim_t * a);
+lv_anim_t *lv_anim_start(const lv_anim_t * a);
 
 /**
  * Get a delay before starting the animation
@@ -337,7 +337,7 @@ uint32_t lv_anim_get_playtime(lv_anim_t * a);
  * @return  the pointer to the custom user_data of the animation
  */
 #if LV_USE_USER_DATA
-static inline void * lv_anim_get_user_data(lv_anim_t * a)
+static inline void *lv_anim_get_user_data(lv_anim_t * a)
 {
     return a->user_data;
 }
@@ -381,13 +381,13 @@ void lv_anim_del_all(void);
  * @param exec_cb   a function pointer which is animating 'var', or NULL to return first matching 'var'
  * @return          pointer to the animation.
  */
-lv_anim_t * lv_anim_get(void * var, lv_anim_exec_xcb_t exec_cb);
+lv_anim_t *lv_anim_get(void * var, lv_anim_exec_xcb_t exec_cb);
 
 /**
  * Get global animation refresher timer.
  * @return pointer to the animation refresher timer.
  */
-struct _lv_timer_t * lv_anim_get_timer(void);
+struct _lv_timer_t *lv_anim_get_timer(void);
 
 /**
  * Delete an animation by getting the animated variable from `a`.
@@ -414,7 +414,7 @@ static inline bool lv_anim_custom_del(lv_anim_t * a, lv_anim_custom_exec_cb_t ex
  * @param exec_cb   a function pointer which is animating 'var', or NULL to return first matching 'var'
  * @return          pointer to the animation.
  */
-static inline lv_anim_t * lv_anim_custom_get(lv_anim_t * a, lv_anim_custom_exec_cb_t exec_cb)
+static inline lv_anim_t *lv_anim_custom_get(lv_anim_t * a, lv_anim_custom_exec_cb_t exec_cb)
 {
     return lv_anim_get(a ? a->var : NULL, (lv_anim_exec_xcb_t)exec_cb);
 }

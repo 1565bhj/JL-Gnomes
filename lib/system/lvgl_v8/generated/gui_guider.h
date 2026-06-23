@@ -15,6 +15,7 @@ extern "C" {
 
 #include "lvgl.h"
 #include "app_config.h"
+#include "lvgl_develop.h"
 
 typedef struct {
 
@@ -26,7 +27,9 @@ typedef struct {
     lv_obj_t *screen_main_img_no_wifi;
     lv_obj_t *screen_main_img_location;
     lv_obj_t *screen_main_img_normol_battery;
+    lv_obj_t *screen_main_img_normal_fully_battery;
     lv_obj_t *screen_main_img_no_BT;
+    lv_obj_t *screen_main_img_nomute;
     lv_obj_t *screen_main_img_location_set;
     lv_obj_t *screen_main_img_low_battery;
     lv_obj_t *screen_main_img_snow;
@@ -57,6 +60,8 @@ typedef struct {
     lv_obj_t *screen_main_btn_alarm_label;
     lv_obj_t *screen_main_btn_timer;
     lv_obj_t *screen_main_btn_timer_label;
+    lv_obj_t *screen_main_btn_content;
+    lv_obj_t *screen_main_btn_content_label;
     lv_obj_t *screen_main_label_1;
 //    lv_obj_t *screen_main_btn_bird_game;
 //    lv_obj_t *screen_main_btn_bird_game_label;
@@ -69,14 +74,6 @@ typedef struct {
     lv_obj_t *screen_main_btn_podcast;
     lv_obj_t *screen_main_btn_podcast_label;
 
-    lv_obj_t *screen_option;
-    bool screen_option_del;
-    lv_obj_t *screen_option_option_music;
-    lv_obj_t *screen_option_option_timer;
-    lv_obj_t *screen_option_option_set;
-    lv_obj_t *screen_option_option_conversation;
-    lv_obj_t *screen_option_option_alarm;
-    lv_obj_t *screen_option_op_name;
     lv_obj_t *screen_music;
     bool screen_music_del;
     lv_obj_t *screen_music_img_tape;
@@ -99,8 +96,10 @@ typedef struct {
     lv_obj_t *screen_music_imgbtn_mode;
     lv_obj_t *screen_music_imgbtn_mode_label;
     lv_obj_t *screen_music_label_1;
+    lv_obj_t *screen_music_img_return;
     lv_obj_t *screen_conversation;
     bool screen_conversation_del;
+    lv_obj_t *screen_conversation_img_return;
     lv_obj_t *screen_conversation_cont_frame;
     lv_obj_t *screen_conversation_span_listen_speak;
     lv_span_t *screen_conversation_span_listen_speak_span;
@@ -112,6 +111,7 @@ typedef struct {
     lv_obj_t *screen_conversation_label_user;
     lv_obj_t *screen_alarm;
     bool screen_alarm_del;
+    lv_obj_t *screen_alarm_img_return;
     lv_obj_t *screen_alarm_alarm_add;
     lv_obj_t *screen_alarm_alarm_del;
     lv_obj_t *screen_alarm_name;
@@ -216,6 +216,7 @@ typedef struct {
     lv_obj_t *screen_alarm_remove_img_del;
     lv_obj_t *screen_timer;
     bool screen_timer_del;
+    lv_obj_t *screen_timer_img_return;
     lv_obj_t *screen_timer_img_add;
     lv_obj_t *screen_timer_span_timer;
     lv_span_t *screen_timer_span_timer_span;
@@ -284,6 +285,7 @@ typedef struct {
     lv_obj_t *screen_timer_remove_img_del;
     lv_obj_t *screen_dropdown;
     bool screen_dropdown_del;
+    lv_obj_t *screen_dropdown_img_return;
     lv_obj_t *screen_dropdown_max_volumn;
     lv_obj_t *screen_dropdown_min_light;
     lv_obj_t *screen_dropdown_max_light;
@@ -302,101 +304,193 @@ typedef struct {
     lv_obj_t *screen_dropdown_img_set_wifi;
     lv_obj_t *screen_dropdown_img_fully_battery;
     lv_obj_t *screen_dropdown_img_normal_battery;
+    lv_obj_t *screen_dropdown_img_normal_fully_battery;
     lv_obj_t *screen_dropdown_img_no_wifi;
     lv_obj_t *screen_dropdown_img_no_BT;
     lv_obj_t *screen_dropdown_img_no_alarm;
+    lv_obj_t *screen_dropdown_img_nomute;
     lv_obj_t *screen_dropdown_time;
     lv_span_t *screen_dropdown_time_span;
     lv_obj_t *screen_dropdown_volumn_bar;
     lv_obj_t *screen_dropdown_light_bar;
+    lv_obj_t *screen_dropdown_label_version;
 
-    lv_obj_t *screen_draw_lots_game;
-    bool screen_draw_lots_game_del;
-
-    lv_obj_t *screen_dice_game;
-    bool screen_dice_game_del;
-    lv_obj_t *screen_dice_game_img_enter_game;
-    lv_obj_t *screen_dice_game_btn_enter_game;
-    lv_obj_t *screen_dice_game_btn_enter_game_label;
-    lv_obj_t *screen_dice_game_img_goal;
-    lv_obj_t *screen_dice_game_img_shake;
-    lv_obj_t *screen_dice_game_die1;
-    lv_obj_t *screen_dice_game_die2;
-    lv_obj_t *screen_dice_game_die4;
-    lv_obj_t *screen_dice_game_die6;
-    lv_obj_t *screen_dice_game_die3;
-    lv_obj_t *screen_dice_game_die5;
-    lv_obj_t *screen_dice_game_pdie5;
-    lv_obj_t *screen_dice_game_pdie3;
-    lv_obj_t *screen_dice_game_pdie6;
-    lv_obj_t *screen_dice_game_pdie4;
-    lv_obj_t *screen_dice_game_pdie2;
-    lv_obj_t *screen_dice_game_pdie1;
-    lv_obj_t *screen_dice_game_score;
-    lv_span_t *screen_dice_game_score_span;
-    lv_obj_t *screen_dice_game_fail;
-    lv_obj_t *screen_dice_game_btn_fail_again;
-    lv_obj_t *screen_dice_game_btn_fail_again_label;
-    lv_obj_t *screen_dice_game_black_bg;
-    lv_obj_t *screen_dice_game_btn_vic_again;
-    lv_obj_t *screen_dice_game_btn_vic_again_label;
-    lv_obj_t *screen_dice_game_victory;
-    lv_obj_t *screen_bird_game;
-    bool screen_bird_game_del;
-    lv_obj_t *screen_whack_game;
-    bool screen_whack_game_del;
-    lv_obj_t *screen_whack_game_img_countdown;
-    lv_obj_t *screen_whack_game_cave1;
-    lv_obj_t *screen_whack_game_cave3;
-    lv_obj_t *screen_whack_game_cave5;
-    lv_obj_t *screen_whack_game_cave4;
-    lv_obj_t *screen_whack_game_cave6;
-    lv_obj_t *screen_whack_game_cave2;
-    lv_obj_t *screen_whack_game_mouse;
-    lv_obj_t *screen_whack_game_mouse2;
-    lv_obj_t *screen_whack_game_black_bg;
-    lv_obj_t *screen_whack_game_btn_again;
-    lv_obj_t *screen_whack_game_btn_again_label;
-    lv_obj_t *screen_whack_game_img_score;
-    lv_obj_t *screen_whack_game_score_num;
-    lv_span_t *screen_whack_game_score_num_span;
-    lv_obj_t *screen_whack_game_time;
-    lv_span_t *screen_whack_game_time_span;
-    lv_obj_t *screen_whack_game_img_enter_bg;
-    lv_obj_t *screen_whack_game_btn_enter_game;
-    lv_obj_t *screen_whack_game_btn_enter_game_label;
-
-    lv_obj_t *screen_podcast;
-    bool screen_podcast_del;
-    lv_obj_t *screen_podcast_next;
-    lv_obj_t *screen_podcast_last;
-    lv_obj_t *screen_podcast_slider;
-    lv_obj_t *screen_podcast_time_start;
-    lv_span_t *screen_podcast_time_start_span;
-    lv_obj_t *screen_podcast_time_end;
-    lv_span_t *screen_podcast_time_end_span;
-    lv_obj_t *screen_podcast_cont;
-    lv_obj_t *screen_podcast_img_music;
-    lv_obj_t *screen_podcast_img_tape_right;
-    lv_obj_t *screen_podcast_img_tape;
-    lv_obj_t *screen_podcast_img_tape_left;
-    lv_obj_t *screen_podcast_img_bar;
-    lv_obj_t *screen_podcast_podcast_title;
-    lv_obj_t *screen_podcast_btn_play_pause;
-    lv_obj_t *screen_podcast_btn_play_pause_label;
 
     lv_obj_t *screen_ring;
     bool screen_ring_del;
+    lv_obj_t *screen_ring_img_return;
     lv_obj_t *screen_ring_light;
     lv_obj_t *screen_ring_ring;
 
     lv_obj_t *screen_tomato;
     bool screen_tomato_del;
+    lv_obj_t *screen_tomato_img_return;
     lv_obj_t *screen_tomato_img_add;
     lv_obj_t *screen_tomato_img_reset;
     lv_obj_t *screen_tomato_circle;
     lv_obj_t *screen_tomato_time;
     lv_obj_t *screen_tomato_hide_part;
+
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+    lv_obj_t *screen_wifi_show;
+    bool screen_wifi_show_del;
+    lv_obj_t *screen_wifi_show_cont_wifi_disconnected;
+    lv_obj_t *screen_wifi_show_span_net;
+    lv_span_t *screen_wifi_show_span_net_span;
+    lv_obj_t *screen_wifi_show_cont_wifi1;
+    lv_obj_t *screen_wifi_show_span_wifi_name1;
+    lv_span_t *screen_wifi_show_span_wifi_name1_span;
+    lv_obj_t *screen_wifi_show_img_wifi1;
+    lv_obj_t *screen_wifi_show_img_lock1;
+    lv_obj_t *screen_wifi_show_cont_wifi2;
+    lv_obj_t *screen_wifi_show_span_wifi_name2;
+    lv_span_t *screen_wifi_show_span_wifi_name2_span;
+    lv_obj_t *screen_wifi_show_img_wifi2;
+    lv_obj_t *screen_wifi_show_img_lock2;
+    lv_obj_t *screen_wifi_show_cont_wifi;
+    lv_obj_t *screen_wifi_show_span_connect_suc;
+    lv_span_t *screen_wifi_show_span_connect_suc_span;
+    lv_obj_t *screen_wifi_show_cont_wifi_success;
+    lv_obj_t *screen_wifi_show_span_wifi_success;
+    lv_span_t *screen_wifi_show_span_wifi_success_span;
+    lv_obj_t *screen_wifi_show_img_suceess;
+    lv_obj_t *screen_wifi_show_img_wifi_success;
+    lv_obj_t *screen_wifi_show_cont_title;
+    lv_obj_t *screen_wifi_show_img_return;
+    lv_obj_t *screen_wifi_show_cont_QR_code;
+    lv_obj_t *screen_wifi_show_img_QR_code;
+    lv_obj_t *screen_wifi_show_label_QR_code;
+    lv_obj_t *screen_wifi_show_cont_refresh;
+    lv_obj_t *screen_wifi_show_img_refresh;
+    lv_obj_t *screen_wifi_show_label_refresh;
+    lv_obj_t *screen_wifi_show_span_wifi;
+    lv_span_t *screen_wifi_show_span_wifi_span;
+    lv_obj_t *screen_wifi_show_cont_wifi_choose;
+    lv_obj_t *screen_wifi_show_img_wifi;
+    lv_obj_t *screen_wifi_show_span_wifi_name;
+    lv_span_t *screen_wifi_show_span_wifi_name_span;
+    lv_obj_t *screen_wifi_show_span_wifi_status;
+    lv_span_t *screen_wifi_show_span_wifi_status_span;
+    lv_obj_t *screen_wifi_show_btn_del;
+    lv_obj_t *screen_wifi_show_btn_del_label;
+    lv_obj_t *screen_wifi_show_img_return_choose;
+
+    lv_obj_t *screen_wifi_psw;
+    bool screen_wifi_psw_del;
+    lv_obj_t *screen_wifi_psw_ta_input;
+    lv_obj_t *screen_wifi_psw_img_return;
+    lv_obj_t *screen_wifi_psw_span_wifi_name;
+    lv_span_t *screen_wifi_psw_span_wifi_name_span;
+    lv_obj_t *screen_wifi_psw_span_tip;
+    lv_span_t *screen_wifi_psw_span_tip_span;
+    lv_obj_t *screen_wifi_psw_btn_connect;
+    lv_obj_t *screen_wifi_psw_btn_connect_label;
+    lv_obj_t *screen_wifi_psw_btn_del;
+    lv_obj_t *screen_wifi_psw_btn_del_label;
+    lv_obj_t *screen_wifi_psw_cont_err;
+    lv_obj_t *screen_wifi_psw_img_err;
+    lv_obj_t *screen_wifi_psw_span_tip_err;
+    lv_span_t *screen_wifi_psw_span_tip_err_span;
+    lv_obj_t *screen_wifi_psw_btn_know;
+    lv_obj_t *screen_wifi_psw_btn_know_label;
+    lv_obj_t *screen_wifi_psw_cont_connecting;
+    lv_obj_t *screen_wifi_psw_spangroup_1;
+    lv_span_t *screen_wifi_psw_spangroup_1_span;
+    lv_obj_t *screen_wifi_psw_spinner_wifi;
+#if CONFIG_LVGL_WIFI_PASSWORD_IMGBTN_ENABLE
+    lv_obj_t *screen_wifi_psw_imgbtn_psw;
+    lv_obj_t *screen_wifi_psw_imgbtn_psw_label;
+#endif
+#endif
+    lv_obj_t *g_kb_top_layer;
+    lv_obj_t *screen_net;
+    bool screen_net_del;
+    lv_obj_t *screen_net_img_return;
+    lv_obj_t *screen_net_net_name;
+    lv_span_t *screen_net_net_name_span;
+    lv_obj_t *screen_net_img_ios;
+
+#if CONFIG_LVGL_AGENT_ENABLE
+    lv_obj_t *screen_agent;
+    bool screen_agent_del;
+    lv_obj_t *screen_agent_img_return;
+    lv_obj_t *screen_agent_label_title;
+    lv_obj_t *screen_agent_cont_6;
+    lv_obj_t *screen_agent_agent_6;
+    lv_obj_t *screen_agent_label_name_6;
+    lv_obj_t *screen_agent_cont_5;
+    lv_obj_t *screen_agent_agent_5;
+    lv_obj_t *screen_agent_label_name_5;
+    lv_obj_t *screen_agent_cont_4;
+    lv_obj_t *screen_agent_agent_4;
+    lv_obj_t *screen_agent_label_name_4;
+    lv_obj_t *screen_agent_cont_3;
+    lv_obj_t *screen_agent_agent_3;
+    lv_obj_t *screen_agent_label_name_3;
+    lv_obj_t *screen_agent_cont_2;
+    lv_obj_t *screen_agent_agent_2;
+    lv_obj_t *screen_agent_label_name_2;
+    lv_obj_t *screen_agent_cont_1;
+    lv_obj_t *screen_agent_agent_1;
+    lv_obj_t *screen_agent_label_name_1;
+    lv_obj_t *screen_agent_img_choose;
+#endif
+#if CONFIG_LVGL_CALCULATOR_ENABLE
+    lv_obj_t *screen_calculator;
+    bool screen_calculator_del;
+    lv_obj_t *screen_calculator_btnm_calculate;
+    lv_obj_t *screen_calculator_label_calculate;
+    lv_obj_t *screen_calculator_img_return;
+#endif
+#if CONFIG_LVGL_CONTENT_LIST_ENABLE
+    lv_obj_t *screen_list;
+    bool screen_list_del;
+    lv_obj_t *screen_list_cont_1;
+    lv_obj_t *screen_list_img_return;
+    lv_obj_t *screen_list_label_name;
+    lv_obj_t *screen_list_cont_content1;
+    lv_obj_t *screen_list_study_english;
+    lv_obj_t *screen_list_chinese_classics;
+    lv_obj_t *screen_list_excellent_essay;
+    lv_obj_t *screen_list_study_QA;
+    lv_obj_t *screen_list_general_QA;
+    lv_obj_t *screen_list_cont_content2;
+    lv_obj_t *screen_list_label_1;
+    lv_obj_t *screen_list_label_2;
+    lv_obj_t *screen_list_label_3;
+    lv_obj_t *screen_list_label_4;
+    lv_obj_t *screen_list_label_5;
+    lv_obj_t *screen_list_label_6;
+    lv_obj_t *screen_content;
+    bool screen_content_del;
+    lv_obj_t *screen_content_label_name;
+    lv_obj_t *screen_content_img_return;
+    lv_obj_t *screen_content_cont_1;
+    lv_obj_t *screen_content_label_last_page;
+    lv_obj_t *screen_content_label_next_page;
+    lv_obj_t *screen_content_label_repeat;
+#endif
+#if CONFIG_LVGL_SLEEP_MUSIC_ENABLE
+    lv_obj_t *screen_sleep_music;
+    bool screen_sleep_music_del;
+    lv_obj_t *screen_sleep_music_span_name;
+    lv_span_t *screen_sleep_music_span_name_span;
+    lv_obj_t *screen_sleep_music_img_return;
+    lv_obj_t *screen_sleep_music_cont;
+    lv_obj_t *screen_sleep_music_label_5;
+    lv_obj_t *screen_sleep_music_label_6;
+    lv_obj_t *screen_sleep_music_label_7;
+    lv_obj_t *screen_sleep_music_label_8;
+    lv_obj_t *screen_sleep_music_label_4;
+    lv_obj_t *screen_sleep_music_label_3;
+    lv_obj_t *screen_sleep_music_label_2;
+    lv_obj_t *screen_sleep_music_label_1;
+#if GUIDER_UI_SLEEP_MUSIC_DURATION_LABELS
+    lv_obj_t *screen_sleep_music_label_30min;
+    lv_obj_t *screen_sleep_music_label_90min;
+#endif
+#endif
+
 } lv_ui;
 
 typedef void (*ui_setup_scr_t)(lv_ui * ui);
@@ -421,7 +515,6 @@ extern lv_ui guider_ui;
 
 
 void setup_scr_screen_main(lv_ui *ui);
-void setup_scr_screen_option(lv_ui *ui);
 void setup_scr_screen_music(lv_ui *ui);
 void setup_scr_screen_conversation(lv_ui *ui);
 void setup_scr_screen_alarm(lv_ui *ui);
@@ -432,9 +525,24 @@ void setup_scr_screen_timer(lv_ui *ui);
 void setup_scr_screen_timer_add(lv_ui *ui);
 void setup_scr_screen_timer_remove(lv_ui *ui);
 void setup_scr_screen_dropdown(lv_ui *ui);
-void setup_scr_screen_story(lv_ui *ui);
-void setup_scr_screen_podcast(lv_ui *ui);
 
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+void setup_scr_screen_wifi_show(lv_ui *ui);
+void setup_scr_screen_wifi_psw(lv_ui *ui);
+#endif
+#if CONFIG_LVGL_CONTENT_LIST_ENABLE
+void setup_scr_screen_list(lv_ui *ui);
+void setup_scr_screen_content(lv_ui *ui);
+#endif
+#if CONFIG_LVGL_AGENT_ENABLE
+void setup_scr_screen_agent(lv_ui *ui);
+#endif
+#if CONFIG_LVGL_CALCULATOR_ENABLE
+void setup_scr_screen_calculator(lv_ui *ui);
+#endif
+#if CONFIG_LVGL_SLEEP_MUSIC_ENABLE
+void setup_scr_screen_sleep_music(lv_ui *ui);
+#endif
 
 LV_IMG_DECLARE(_charging_battery_alpha_22x14);
 LV_IMG_DECLARE(_fully_charged_battery_alpha_22x14);
@@ -443,6 +551,8 @@ LV_IMG_DECLARE(_no_wifi_alpha_18x16);
 LV_IMG_DECLARE(_no_4g_alpha_18x16);
 LV_IMG_DECLARE(_location_alpha_15x18);
 LV_IMG_DECLARE(_normol_battery_alpha_22x14);
+LV_IMG_DECLARE(_nomute_alpha_17x18);
+LV_IMG_DECLARE(_normal_fully_battery_alpha_22x14);
 LV_IMG_DECLARE(_no_BT_alpha_14x16);
 LV_IMG_DECLARE(_location_set_alpha_15x18);
 LV_IMG_DECLARE(_low_battery_alpha_22x14);
@@ -457,22 +567,44 @@ LV_IMG_DECLARE(_rain_alpha_25x20);
 LV_IMG_DECLARE(_overcast_alpha_25x20);
 LV_IMG_DECLARE(_BT_alpha_14x16);
 
+LV_IMG_DECLARE(_choose_bg_320x240);
+LV_IMG_DECLARE(_return_alpha_20x20);
+LV_IMG_DECLARE(_agent_6_alpha_66x66);
+LV_IMG_DECLARE(_agent_5_alpha_66x66);
+LV_IMG_DECLARE(_agent_4_alpha_66x66);
+LV_IMG_DECLARE(_agent_3_alpha_66x66);
+LV_IMG_DECLARE(_agent_2_alpha_66x66);
+LV_IMG_DECLARE(_agent_1_alpha_66x66);
+LV_IMG_DECLARE(_choose_alpha_66x66);
 
-LV_IMG_DECLARE(_op_music_66x85);
-LV_IMG_DECLARE(_op_conversation_66x85);
-LV_IMG_DECLARE(_op_alarm_66x85);
-LV_IMG_DECLARE(_op_timer_66x85);
-LV_IMG_DECLARE(_op_podcast_66x85);
+LV_IMG_DECLARE(_op_music_alpha_66x85);
+LV_IMG_DECLARE(_op_conversation_alpha_66x85);
+LV_IMG_DECLARE(_op_alarm_alpha_66x85);
+LV_IMG_DECLARE(_op_timer_alpha_66x85);
+LV_IMG_DECLARE(_op_content_alpha_66x85);
+LV_IMG_DECLARE(_op_wifi_alpha_66x85);
+LV_IMG_DECLARE(_op_sleep_music_alpha_66x85);
+LV_IMG_DECLARE(_op_agent_alpha_66x85);
+LV_IMG_DECLARE(_op_calculator_alpha_66x85);
+#if defined(CONFIG_LVGL_GAMES_ENABLE) && CONFIG_LVGL_GAMES_ENABLE && \
+    defined(CONFIG_LVGL_MOUSE_GAME_ENABLE) && CONFIG_LVGL_MOUSE_GAME_ENABLE
 LV_IMG_DECLARE(_op_whack_game_66x85);
-LV_IMG_DECLARE(_op_dice_game_66x85);
-LV_IMG_DECLARE(_op_draw_lots_game_66x85);
+#endif
+LV_IMG_DECLARE(_ios_alpha_100x100);
 
+LV_IMG_DECLARE(_set_wifi_alpha_16x14);
+LV_IMG_DECLARE(_lock_alpha_18x16);
+LV_IMG_DECLARE(_return_alpha_20x20);
+LV_IMG_DECLARE(_wifi_err_alpha_80x80);
+LV_IMG_DECLARE(_connect_success_alpha_20x20);
+#if CONFIG_LVGL_WIFI_PASSWORD_IMGBTN_ENABLE
+LV_IMG_DECLARE(_close_alpha_20x20);
+LV_IMG_DECLARE(_open_alpha_20x20);
+#endif
+LV_IMG_DECLARE(_QR_code_alpha_30x30);
+LV_IMG_DECLARE(_refresh_alpha_15x15);
+LV_IMG_DECLARE(_set_wifi_alpha_80x62);
 
-LV_IMG_DECLARE(_music_option_alpha_100x100);
-LV_IMG_DECLARE(_timer_option_alpha_100x100);
-LV_IMG_DECLARE(_op_set_alpha_100x100);
-LV_IMG_DECLARE(_conversation_option_alpha_100x100);
-LV_IMG_DECLARE(_alarm_option_alpha_100x100);
 LV_IMG_DECLARE(_tape_alpha_62x62);
 LV_IMG_DECLARE(_tape_bar_alpha_35x68);
 LV_IMG_DECLARE(_volume_alpha_20x20);
@@ -534,6 +666,12 @@ LV_IMG_DECLARE(_no_wifi_alpha_18x16);
 LV_IMG_DECLARE(_no_BT_alpha_14x16);
 LV_IMG_DECLARE(_no_alarm_alpha_17x15);
 
+/* screen_list 分类入口图（generated/images） */
+LV_IMG_DECLARE(_study_english_alpha_240x82);
+LV_IMG_DECLARE(_study_chinese_alpha_240x82);
+LV_IMG_DECLARE(_excellent_essays_alpha_240x82);
+LV_IMG_DECLARE(_study_QA_alpha_240x82);
+LV_IMG_DECLARE(_general_QA_alpha_240x82);
 
 LV_IMG_DECLARE(_next2_alpha_50x50);
 LV_IMG_DECLARE(_last2_alpha_50x50);
@@ -568,6 +706,7 @@ LV_FONT_DECLARE(lv_font_Barlow__16)
 LV_FONT_DECLARE(lv_font_MiSansDemibold_18)
 LV_FONT_DECLARE(lv_font_MiSansDemibold_24)
 LV_FONT_DECLARE(lv_font_MiSansDemibold_12)
+LV_FONT_DECLARE(lv_font_MiSansDemibold_14)
 LV_FONT_DECLARE(lv_font_Barlow__12)
 LV_FONT_DECLARE(lv_font_Barlow__11)
 LV_FONT_DECLARE(lv_font_Barlow__15)
@@ -575,6 +714,8 @@ LV_FONT_DECLARE(lv_font_Barlow__24)
 LV_FONT_DECLARE(lv_font_Barlow__28)
 LV_FONT_DECLARE(lv_font_Barlow__18)
 LV_FONT_DECLARE(lv_font_Barlow__40)
+LV_FONT_DECLARE(lv_font_Barlow__72)
+LV_FONT_DECLARE(lv_font_Barlow__80)
 
 #ifdef __cplusplus
 }

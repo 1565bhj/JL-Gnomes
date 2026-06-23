@@ -11,6 +11,7 @@
  *********************/
 #define BOOL_DEFINE_CONFLICT
 #include "lv_port_disp.h"
+#include "app_config.h"
 //#include "lcd_drive.h"
 
 /*********************
@@ -36,6 +37,34 @@
 static void disp_init(void);
 
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
+
+#if defined(TCFG_LCD_AXS15252_ENABLE) && TCFG_LCD_AXS15252_ENABLE
+/**
+ * AXS15252 等屏 1x4 像素开窗：列窗口需满足 x1=4*N、x2=4*N+3（宽度为 4 的倍数）。
+ */
+static void disp_hor_4px_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_t *area)
+{
+    lv_coord_t hor_max = disp_drv->hor_res - 1;
+
+    area->x1 &= ~(lv_coord_t)3;
+
+    {
+        lv_coord_t x2 = area->x2;
+        lv_coord_t r = x2 & 3;
+        if (r != 3) {
+            x2 += (lv_coord_t)((3 - r + 4) & 3);
+        }
+        if (x2 > hor_max) {
+            x2 = hor_max;
+        }
+        area->x2 = x2;
+    }
+
+    if (area->x1 > area->x2) {
+        area->x1 = area->x2 & ~(lv_coord_t)3;
+    }
+}
+#endif
 
 /**********************
  *  STATIC VARIABLES
@@ -66,9 +95,7 @@ static struct lv_fb_t next_offline_disp;/* 上一帧online_fb，也是下一帧o
 static spinlock_t fb_lock; //双核互斥锁
 #endif
 
-void __attribute__((weak)) lvgl_disp_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_t *area)
-{
-}
+
 void __attribute__((weak)) lvgl_disp_init(void)
 {
     //user_lcd_init();
@@ -187,7 +214,10 @@ void lv_port_disp_init(void)
     /*Used to copy the buffer's content to the display*/
     disp_drv.flush_cb = disp_flush;
 
-    disp_drv.rounder_cb = lvgl_disp_rounder_cb;
+#if defined(TCFG_LCD_AXS15252_ENABLE) && TCFG_LCD_AXS15252_ENABLE
+    disp_drv.rounder_cb = disp_hor_4px_rounder_cb;
+#endif
+
     /*Set a display buffer*/
     disp_drv.draw_buf = &draw_buf_dsc_3;
 

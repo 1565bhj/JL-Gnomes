@@ -11,8 +11,8 @@
 #if LV_USE_ZH_KEYBOARD
 
 struct PINYIN_initials {
-    char * PINYIN;
-    char * PINYIN_mp;
+    char *PINYIN;
+    char *PINYIN_mp;
 };
 
 #if LV_ZH_KEYBOARD_MINI

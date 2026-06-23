@@ -43,8 +43,8 @@ enum {
 typedef uint8_t lv_draw_mask_res_t;
 
 typedef struct {
-    void * param;
-    void * custom_id;
+    void *param;
+    void *custom_id;
 } _lv_draw_mask_saved_t;
 
 typedef _lv_draw_mask_saved_t _lv_draw_mask_saved_arr_t[_LV_MASK_MAX_NUM];
@@ -90,8 +90,8 @@ enum {
  * Used internally by the library.
  */
 typedef lv_draw_mask_res_t (*lv_draw_mask_xcb_t)(lv_opa_t * mask_buf, lv_coord_t abs_x, lv_coord_t abs_y,
-                                                 lv_coord_t len,
-                                                 void * p);
+        lv_coord_t len,
+        void *p);
 
 typedef uint8_t lv_draw_mask_line_side_t;
 
@@ -154,10 +154,10 @@ typedef struct {
 } lv_draw_mask_angle_param_t;
 
 typedef struct  {
-    uint8_t * buf;
-    lv_opa_t * cir_opa;         /*Opacity of values on the circumference of an 1/4 circle*/
-    uint16_t * x_start_on_y;        /*The x coordinate of the circle for each y value*/
-    uint16_t * opa_start_on_y;      /*The index of `cir_opa` for each y value*/
+    uint8_t *buf;
+    lv_opa_t *cir_opa;          /*Opacity of values on the circumference of an 1/4 circle*/
+    uint16_t *x_start_on_y;         /*The x coordinate of the circle for each y value*/
+    uint16_t *opa_start_on_y;       /*The index of `cir_opa` for each y value*/
     int32_t life;               /*How many times the entry way used*/
     uint32_t used_cnt;          /*Like a semaphore to count the referencing masks*/
     lv_coord_t radius;          /*The radius of the entry*/
@@ -176,7 +176,7 @@ typedef struct {
         uint8_t outer: 1;
     } cfg;
 
-    _lv_draw_mask_radius_circle_dsc_t * circle;
+    _lv_draw_mask_radius_circle_dsc_t *circle;
 } lv_draw_mask_radius_param_t;
 
 
@@ -201,7 +201,7 @@ typedef struct _lv_draw_mask_map_param_t {
 
     struct {
         lv_area_t coords;
-        const lv_opa_t * map;
+        const lv_opa_t *map;
     } cfg;
 } lv_draw_mask_map_param_t;
 
@@ -210,7 +210,7 @@ typedef struct {
     _lv_draw_mask_common_dsc_t dsc;
 
     struct {
-        lv_point_t * points;
+        lv_point_t *points;
         uint16_t point_cnt;
     } cfg;
 } lv_draw_mask_polygon_param_t;
@@ -242,7 +242,7 @@ int16_t lv_draw_mask_add(void * param, void * custom_id);
  * - `LV_DRAW_MASK_RES_CHANGED`: `mask_buf` has changed, it shows the desired opacity of each pixel in the given line
  */
 lv_draw_mask_res_t /* LV_ATTRIBUTE_FAST_MEM */ lv_draw_mask_apply(lv_opa_t * mask_buf, lv_coord_t abs_x,
-                                                                  lv_coord_t abs_y, lv_coord_t len);
+        lv_coord_t abs_y, lv_coord_t len);
 
 /**
  * Apply the specified buffers on a line. Used internally by the library's drawing routines.
@@ -258,8 +258,8 @@ lv_draw_mask_res_t /* LV_ATTRIBUTE_FAST_MEM */ lv_draw_mask_apply(lv_opa_t * mas
  * - `LV_DRAW_MASK_RES_CHANGED`: `mask_buf` has changed, it shows the desired opacity of each pixel in the given line
  */
 lv_draw_mask_res_t /* LV_ATTRIBUTE_FAST_MEM */ lv_draw_mask_apply_ids(lv_opa_t * mask_buf, lv_coord_t abs_x,
-                                                                      lv_coord_t abs_y, lv_coord_t len,
-                                                                      const int16_t * ids, int16_t ids_count);
+        lv_coord_t abs_y, lv_coord_t len,
+        const int16_t *ids, int16_t ids_count);
 
 //! @endcond
 
@@ -269,7 +269,7 @@ lv_draw_mask_res_t /* LV_ATTRIBUTE_FAST_MEM */ lv_draw_mask_apply_ids(lv_opa_t *
  * @return the parameter of the removed mask.
  * If more masks have `custom_id` ID then the last mask's parameter will be returned
  */
-void * lv_draw_mask_remove_id(int16_t id);
+void *lv_draw_mask_remove_id(int16_t id);
 
 /**
  * Remove all mask with a given custom ID
@@ -277,7 +277,7 @@ void * lv_draw_mask_remove_id(int16_t id);
  * @return return the parameter of the removed mask.
  * If more masks have `custom_id` ID then the last mask's parameter will be returned
  */
-void * lv_draw_mask_remove_custom(void * custom_id);
+void *lv_draw_mask_remove_custom(void * custom_id);
 
 /**
  * Free the data from the parameter.

@@ -67,14 +67,14 @@ enum {
 typedef uint8_t lv_analogclock_indicator_type_t;
 
 typedef struct {
-    lv_analogclock_scale_t * scale;
+    lv_analogclock_scale_t *scale;
     lv_analogclock_indicator_type_t type;
     lv_opa_t opa;
     int32_t start_value;
     int32_t end_value;
     union {
         struct {
-            const void * src;
+            const void *src;
             lv_point_t pivot;
         } needle_img;
         struct {
@@ -84,7 +84,7 @@ typedef struct {
         } needle_line;
         struct {
             uint16_t width;
-            const void * src;
+            const void *src;
             lv_color_t color;
             int16_t r_mod;
         } arc;
@@ -101,12 +101,12 @@ typedef struct {
 typedef struct {
     lv_obj_t obj;
     lv_ll_t scale_ll;
-    lv_analogclock_scale_t * scale;
+    lv_analogclock_scale_t *scale;
     lv_ll_t indicator_ll;
     bool hide_point;
-    lv_analogclock_indicator_t * hour_indic;
-    lv_analogclock_indicator_t * min_indic;
-    lv_analogclock_indicator_t * sec_indic;
+    lv_analogclock_indicator_t *hour_indic;
+    lv_analogclock_indicator_t *min_indic;
+    lv_analogclock_indicator_t *sec_indic;
 } lv_analogclock_t;
 
 extern const lv_obj_class_t lv_analogclock_class;
@@ -131,7 +131,7 @@ typedef enum {
  * @param parent pointer to an object, it will be the parent of the new bar.
  * @return pointer to the created analogclock
  */
-lv_obj_t * lv_analogclock_create(lv_obj_t * parent);
+lv_obj_t *lv_analogclock_create(lv_obj_t * parent);
 
 /*=====================
  * Add scale
@@ -143,7 +143,7 @@ lv_obj_t * lv_analogclock_create(lv_obj_t * parent);
  * @return      the new scale
  * @note        Indicators can be attached to scales.
  */
-lv_analogclock_scale_t * lv_analogclock_add_scale(lv_obj_t * obj);
+lv_analogclock_scale_t *lv_analogclock_add_scale(lv_obj_t * obj);
 
 /*=====================
  * Add scale
@@ -217,11 +217,11 @@ void lv_analogclock_hide_point(lv_obj_t * obj, bool hide_point);
  * @param r_mod         the radius modifier (added to the scale's radius) to get the lines length
  * @return              the new indicator
  */
-lv_analogclock_indicator_t * lv_analogclock_add_needle_line(lv_obj_t * obj, lv_analogclock_scale_t * scale,
-                                                            uint16_t width,
-                                                            lv_color_t color, int16_t r_mod);
+lv_analogclock_indicator_t *lv_analogclock_add_needle_line(lv_obj_t * obj, lv_analogclock_scale_t * scale,
+        uint16_t width,
+        lv_color_t color, int16_t r_mod);
 void lv_analogclock_set_hour_needle_line(lv_obj_t * obj, uint16_t width,
-                                         lv_color_t color, int16_t r_mod);
+        lv_color_t color, int16_t r_mod);
 void lv_analogclock_set_min_needle_line(lv_obj_t * obj, uint16_t width,
                                         lv_color_t color, int16_t r_mod);
 void lv_analogclock_set_sec_needle_line(lv_obj_t * obj, uint16_t width,
@@ -237,9 +237,9 @@ void lv_analogclock_set_sec_needle_line(lv_obj_t * obj, uint16_t width,
  * @return              the new indicator
  * @note                the needle image should point to the right, like -O----->
  */
-lv_analogclock_indicator_t * lv_analogclock_add_needle_img(lv_obj_t * obj, lv_analogclock_scale_t * scale,
-                                                           const void * src,
-                                                           lv_coord_t pivot_x, lv_coord_t pivot_y);
+lv_analogclock_indicator_t *lv_analogclock_add_needle_img(lv_obj_t * obj, lv_analogclock_scale_t * scale,
+        const void *src,
+        lv_coord_t pivot_x, lv_coord_t pivot_y);
 void lv_analogclock_set_hour_needle_img(lv_obj_t * obj, const void * src,
                                         lv_coord_t pivot_x, lv_coord_t pivot_y);
 void lv_analogclock_set_min_needle_img(lv_obj_t * obj, const void * src,
@@ -256,8 +256,8 @@ void lv_analogclock_set_sec_needle_img(lv_obj_t * obj, const void * src,
  * @param r_mod         the radius modifier (added to the scale's radius) to get the outer radius of the arc
  * @return              the new indicator
  */
-lv_analogclock_indicator_t * lv_analogclock_add_arc(lv_obj_t * obj, uint16_t width, lv_color_t color,
-                                                    int16_t r_mod);
+lv_analogclock_indicator_t *lv_analogclock_add_arc(lv_obj_t * obj, uint16_t width, lv_color_t color,
+        int16_t r_mod);
 
 
 /**
@@ -270,8 +270,8 @@ lv_analogclock_indicator_t * lv_analogclock_add_arc(lv_obj_t * obj, uint16_t wid
  * @param width_mod     add this the affected tick's width
  * @return              the new indicator
  */
-lv_analogclock_indicator_t * lv_analogclock_add_scale_lines(lv_obj_t * obj, lv_color_t color_start,
-                                                            lv_color_t color_end, bool local, int16_t width_mod);
+lv_analogclock_indicator_t *lv_analogclock_add_scale_lines(lv_obj_t * obj, lv_color_t color_start,
+        lv_color_t color_end, bool local, int16_t width_mod);
 
 /*=====================
  * Set indicator value

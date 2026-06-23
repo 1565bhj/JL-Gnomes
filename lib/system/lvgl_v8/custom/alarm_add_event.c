@@ -30,26 +30,26 @@ static void generate_roller_options(lv_obj_t *roller, int start, int end, bool i
     if (infinite) {
         // 无限循环模式：直接生成所有选项
         for (int i = start; i <= end; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
     } else {
         // 正常模式但需要视觉上的无缝循环：添加额外的边界选项
         // 在开始之前添加3个结束的数字
         for (int i = end - 2; i <= end; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
 
         // 生成主要选项
         for (int i = start; i <= end; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
 
         // 在结束之后添加3个开始的数字
         for (int i = start; i <= start + 2; i++) {
-            sprintf(buffer, "%d\n", i);
+            sprintf(buffer, "%02d\n", i);
             strcat(options, buffer);
         }
     }
@@ -297,6 +297,7 @@ void alarm_add_event_init(lv_ui *ui)
     lv_obj_remove_event_cb(ui->screen_alarm_add_roller_min, min_sec_roller_event_handler);
     // 注册返回按钮点击事件
     lv_obj_add_event_cb(ui->screen_alarm_add_return, alarm_add_return_event_handler, LV_EVENT_CLICKED, ui);
+    ui_subpage_return_set_large_touch_area(ui->screen_alarm_add_return, (lv_coord_t)UI_SUBPAGE_RETURN_EXT_PAD);
 
     // 注册确认按钮点击事件
     lv_obj_add_event_cb(ui->screen_alarm_add_yes, alarm_add_yes_event_handler, LV_EVENT_CLICKED, ui);

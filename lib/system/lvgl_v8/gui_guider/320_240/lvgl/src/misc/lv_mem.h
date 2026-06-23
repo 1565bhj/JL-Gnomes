@@ -44,7 +44,7 @@ typedef struct {
 } lv_mem_monitor_t;
 
 typedef struct {
-    void * p;
+    void *p;
     uint16_t size;
     uint8_t used : 1;
 } lv_mem_buf_t;
@@ -71,7 +71,7 @@ void lv_mem_deinit(void);
  * @param size size of the memory to allocate in bytes
  * @return pointer to the allocated memory
  */
-void * lv_mem_alloc(size_t size);
+void *lv_mem_alloc(size_t size);
 
 /**
  * Free an allocated data
@@ -86,7 +86,7 @@ void lv_mem_free(void * data);
  * @param new_size the desired new size in byte
  * @return pointer to the new memory, NULL on failure
  */
-void * lv_mem_realloc(void * data_p, size_t new_size);
+void *lv_mem_realloc(void * data_p, size_t new_size);
 
 /**
  *
@@ -106,7 +106,7 @@ void lv_mem_monitor(lv_mem_monitor_t * mon_p);
  * Get a temporal buffer with the given size.
  * @param size the required size
  */
-void * lv_mem_buf_get(uint32_t size);
+void *lv_mem_buf_get(uint32_t size);
 
 /**
  * Release a memory buffer
@@ -129,7 +129,7 @@ void lv_mem_buf_free_all(void);
  * @param src pointer to the source buffer
  * @param len number of byte to copy
  */
-static inline void * lv_memcpy(void * dst, const void * src, size_t len)
+static inline void *lv_memcpy(void * dst, const void * src, size_t len)
 {
     return memcpy(dst, src, len);
 }
@@ -140,7 +140,7 @@ static inline void * lv_memcpy(void * dst, const void * src, size_t len)
  * @param src pointer to the source buffer
  * @param len number of byte to copy
  */
-static inline void * lv_memcpy_small(void * dst, const void * src, size_t len)
+static inline void *lv_memcpy_small(void * dst, const void * src, size_t len)
 {
     return memcpy(dst, src, len);
 }
@@ -191,12 +191,12 @@ void * /* LV_ATTRIBUTE_FAST_MEM */ lv_memcpy(void * dst, const void * src, size_
  * @param src pointer to the source buffer
  * @param len number of byte to copy
  */
-static inline void * LV_ATTRIBUTE_FAST_MEM lv_memcpy_small(void * dst, const void * src, size_t len)
+static inline void *LV_ATTRIBUTE_FAST_MEM lv_memcpy_small(void * dst, const void * src, size_t len)
 {
-    uint8_t * d8 = (uint8_t *)dst;
-    const uint8_t * s8 = (const uint8_t *)src;
+    uint8_t *d8 = (uint8_t *)dst;
+    const uint8_t *s8 = (const uint8_t *)src;
 
-    while(len) {
+    while (len) {
         *d8 = *s8;
         d8++;
         s8++;

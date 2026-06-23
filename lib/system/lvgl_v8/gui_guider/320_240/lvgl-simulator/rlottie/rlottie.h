@@ -28,28 +28,29 @@
 #include <memory>
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef RLOTTIE_BUILD_DLL
-    #ifdef RLOTTIE_BUILD
-      #define RLOTTIE_API __declspec(dllexport)
-    #else
-      #define RLOTTIE_API __declspec(dllimport)
-    #endif
-  #else
-    #define RLOTTIE_API
-  #endif
+#ifdef RLOTTIE_BUILD_DLL
+#ifdef RLOTTIE_BUILD
+#define RLOTTIE_API __declspec(dllexport)
 #else
-  #ifdef RLOTTIE_BUILD
-      #define RLOTTIE_API __attribute__ ((visibility ("default")))
-  #else
-      #define RLOTTIE_API
-  #endif
+#define RLOTTIE_API __declspec(dllimport)
+#endif
+#else
+#define RLOTTIE_API
+#endif
+#else
+#ifdef RLOTTIE_BUILD
+#define RLOTTIE_API __attribute__ ((visibility ("default")))
+#else
+#define RLOTTIE_API
+#endif
 #endif
 
 class AnimationImpl;
 struct LOTNode;
 struct LOTLayerNode;
 
-namespace rlottie {
+namespace rlottie
+{
 
 /**
  *  @brief Configures rlottie model cache policy.
@@ -70,10 +71,19 @@ RLOTTIE_API void configureModelCacheSize(size_t cacheSize);
 
 struct Color {
     Color() = default;
-    Color(float r, float g , float b):_r(r), _g(g), _b(b){}
-    float r() const {return _r;}
-    float g() const {return _g;}
-    float b() const {return _b;}
+    Color(float r, float g, float b): _r(r), _g(g), _b(b) {}
+    float r() const
+    {
+        return _r;
+    }
+    float g() const
+    {
+        return _g;
+    }
+    float b() const
+    {
+        return _b;
+    }
 private:
     float _r{0};
     float _g{0};
@@ -82,9 +92,15 @@ private:
 
 struct Size {
     Size() = default;
-    Size(float w, float h):_w(w), _h(h){}
-    float w() const {return _w;}
-    float h() const {return _h;}
+    Size(float w, float h): _w(w), _h(h) {}
+    float w() const
+    {
+        return _w;
+    }
+    float h() const
+    {
+        return _h;
+    }
 private:
     float _w{0};
     float _h{0};
@@ -92,17 +108,26 @@ private:
 
 struct Point {
     Point() = default;
-    Point(float x, float y):_x(x), _y(y){}
-    float x() const {return _x;}
-    float y() const {return _y;}
+    Point(float x, float y): _x(x), _y(y) {}
+    float x() const
+    {
+        return _x;
+    }
+    float y() const
+    {
+        return _y;
+    }
 private:
     float _x{0};
     float _y{0};
 };
 
 struct FrameInfo {
-    explicit FrameInfo(uint32_t frame): _frameNo(frame){}
-    uint32_t curFrame() const {return _frameNo;}
+    explicit FrameInfo(uint32_t frame): _frameNo(frame) {}
+    uint32_t curFrame() const
+    {
+        return _frameNo;
+    }
 private:
     uint32_t _frameNo;
 };
@@ -120,13 +145,14 @@ enum class Property {
     TrOpacity      /*!< Transform Opacity property of Layer and Group object , value type is float [ 0 .. 100] */
 };
 
-struct Color_Type{};
-struct Point_Type{};
-struct Size_Type{};
-struct Float_Type{};
+struct Color_Type {};
+struct Point_Type {};
+struct Size_Type {};
+struct Float_Type {};
 template <typename T> struct MapType;
 
-class RLOTTIE_API Surface {
+class RLOTTIE_API Surface
+{
 public:
     /**
      *  @brief Surface object constructor.
@@ -168,7 +194,10 @@ public:
      *  @internal
      *
      */
-    size_t width() const {return mWidth;}
+    size_t width() const
+    {
+        return mWidth;
+    }
 
     /**
      *  @brief Returns height of the surface.
@@ -177,7 +206,10 @@ public:
      *
      *  @internal
      */
-    size_t height() const {return mHeight;}
+    size_t height() const
+    {
+        return mHeight;
+    }
 
     /**
      *  @brief Returns number of bytes in the surface scanline.
@@ -186,7 +218,10 @@ public:
      *
      *  @internal
      */
-    size_t  bytesPerLine() const {return mBytesPerLine;}
+    size_t  bytesPerLine() const
+    {
+        return mBytesPerLine;
+    }
 
     /**
      *  @brief Returns buffer attached tp the surface.
@@ -195,7 +230,10 @@ public:
      *
      *  @internal
      */
-    uint32_t *buffer() const {return mBuffer;}
+    uint32_t *buffer() const
+    {
+        return mBuffer;
+    }
 
     /**
      *  @brief Returns drawable area width of the surface.
@@ -207,7 +245,10 @@ public:
      *  @internal
      *
      */
-    size_t drawRegionWidth() const {return mDrawArea.w;}
+    size_t drawRegionWidth() const
+    {
+        return mDrawArea.w;
+    }
 
     /**
      *  @brief Returns drawable area height of the surface.
@@ -218,7 +259,10 @@ public:
      *
      *  @internal
      */
-    size_t drawRegionHeight() const {return mDrawArea.h;}
+    size_t drawRegionHeight() const
+    {
+        return mDrawArea.h;
+    }
 
     /**
      *  @brief Returns drawable area's x position of the surface.
@@ -229,7 +273,10 @@ public:
      *
      *  @internal
      */
-    size_t drawRegionPosX() const {return mDrawArea.x;}
+    size_t drawRegionPosX() const
+    {
+        return mDrawArea.x;
+    }
 
     /**
      *  @brief Returns drawable area's y position of the surface.
@@ -240,7 +287,10 @@ public:
      *
      *  @internal
      */
-    size_t drawRegionPosY() const {return mDrawArea.y;}
+    size_t drawRegionPosY() const
+    {
+        return mDrawArea.y;
+    }
 
     /**
      *  @brief Default constructor.
@@ -256,10 +306,10 @@ private:
         size_t   y{0};
         size_t   w{0};
         size_t   h{0};
-    }mDrawArea;
+    } mDrawArea;
 };
 
-using MarkerList = std::vector<std::tuple<std::string, int , int>>;
+using MarkerList = std::vector<std::tuple<std::string, int, int>>;
 /**
  *  @brief https://helpx.adobe.com/after-effects/using/layer-markers-composition-markers.html
  *  Markers exported form AE are used to describe a segmnet of an animation {comment/tag , startFrame, endFrame}
@@ -267,12 +317,13 @@ using MarkerList = std::vector<std::tuple<std::string, int , int>>;
  *  start frame and duration of that segment.
  */
 
-using LayerInfoList = std::vector<std::tuple<std::string, int , int>>;
+using LayerInfoList = std::vector<std::tuple<std::string, int, int>>;
 
 
-using ColorFilter = std::function<void(float &r , float &g, float &b)>;
+using ColorFilter = std::function<void(float &r, float &g, float &b)>;
 
-class RLOTTIE_API Animation {
+class RLOTTIE_API Animation
+{
 public:
 
     /**
@@ -290,7 +341,7 @@ public:
      *  @internal
      */
     static std::unique_ptr<Animation>
-    loadFromFile(const std::string &path, bool cachePolicy=true);
+    loadFromFile(const std::string &path, bool cachePolicy = true);
 
     /**
      *  @brief Constructs an animation object from JSON string data.
@@ -310,7 +361,7 @@ public:
      */
     static std::unique_ptr<Animation>
     loadFromData(std::string jsonData, const std::string &key,
-                 const std::string &resourcePath="", bool cachePolicy=true);
+                 const std::string &resourcePath = "", bool cachePolicy = true);
 
     /**
      *  @brief Constructs an animation object from JSON string data and update.
@@ -411,7 +462,7 @@ public:
      *  @see Surface
      *  @internal
      */
-    std::future<Surface> render(size_t frameNo, Surface surface, bool keepAspectRatio=true);
+    std::future<Surface> render(size_t frameNo, Surface surface, bool keepAspectRatio = true);
 
     /**
      *  @brief Renders the content to surface synchronously.
@@ -423,7 +474,7 @@ public:
      *
      *  @internal
      */
-    void              renderSync(size_t frameNo, Surface surface, bool keepAspectRatio=true);
+    void              renderSync(size_t frameNo, Surface surface, bool keepAspectRatio = true);
 
     /**
      *  @brief Returns root layer of the composition updated with
@@ -437,7 +488,7 @@ public:
      *
      *  @internal
      */
-    const LOTLayerNode * renderTree(size_t frameNo, size_t width, size_t height) const;
+    const LOTLayerNode *renderTree(size_t frameNo, size_t width, size_t height) const;
 
     /**
      *  @brief Returns Composition Markers.
@@ -448,7 +499,7 @@ public:
      *  @see MarkerList
      *  @internal
      */
-    const MarkerList& markers() const;
+    const MarkerList &markers() const;
 
     /**
      *  @brief Returns Layer information{name, inFrame, outFrame} of all the child layers  of the composition.
@@ -459,7 +510,7 @@ public:
      *  @see LayerInfoList
      *  @internal
      */
-    const LayerInfoList& layers() const;
+    const LayerInfoList &layers() const;
 
     /**
      *  @brief Sets property value for the specified {@link KeyPath}. This {@link KeyPath} can resolve
@@ -481,7 +532,7 @@ public:
     template<Property prop, typename AnyValue>
     void setValue(const std::string &keypath, AnyValue value)
     {
-        setValue(MapType<std::integral_constant<Property, prop>>{}, prop, keypath, value);
+        setValue(MapType<std::integral_constant<Property, prop>> {}, prop, keypath, value);
     }
 
     /**
@@ -512,16 +563,16 @@ private:
 };
 
 //Map Property to Value type
-template<> struct MapType<std::integral_constant<Property, Property::FillColor>>: Color_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::StrokeColor>>: Color_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::FillOpacity>>: Float_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::StrokeOpacity>>: Float_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::StrokeWidth>>: Float_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::TrRotation>>: Float_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::TrOpacity>>: Float_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::TrAnchor>>: Point_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::TrPosition>>: Point_Type{};
-template<> struct MapType<std::integral_constant<Property, Property::TrScale>>: Size_Type{};
+template<> struct MapType<std::integral_constant<Property, Property::FillColor>>: Color_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::StrokeColor>>: Color_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::FillOpacity>>: Float_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::StrokeOpacity>>: Float_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::StrokeWidth>>: Float_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::TrRotation>>: Float_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::TrOpacity>>: Float_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::TrAnchor>>: Point_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::TrPosition>>: Point_Type {};
+template<> struct MapType<std::integral_constant<Property, Property::TrScale>>: Size_Type {};
 
 
 }  // namespace lotplayer

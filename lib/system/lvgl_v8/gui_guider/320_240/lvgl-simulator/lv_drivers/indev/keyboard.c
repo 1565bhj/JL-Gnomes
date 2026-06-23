@@ -64,16 +64,16 @@ void keyboard_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 void keyboard_handler(SDL_Event * event)
 {
     /* We only care about SDL_KEYDOWN and SDL_KEYUP events */
-    switch(event->type) {
-        case SDL_KEYDOWN:                       /*Button press*/
-            last_key = event->key.keysym.sym;   /*Save the pressed key*/
-            state = LV_INDEV_STATE_PRESSED;          /*Save the key is pressed now*/
-            break;
-        case SDL_KEYUP:                         /*Button release*/
-            state = LV_INDEV_STATE_RELEASED;         /*Save the key is released but keep the last key*/
-            break;
-        default:
-            break;
+    switch (event->type) {
+    case SDL_KEYDOWN:                       /*Button press*/
+        last_key = event->key.keysym.sym;   /*Save the pressed key*/
+        state = LV_INDEV_STATE_PRESSED;          /*Save the key is pressed now*/
+        break;
+    case SDL_KEYUP:                         /*Button release*/
+        state = LV_INDEV_STATE_RELEASED;         /*Save the key is released but keep the last key*/
+        break;
+    default:
+        break;
 
     }
 }
@@ -90,45 +90,45 @@ void keyboard_handler(SDL_Event * event)
 static uint32_t keycode_to_ascii(uint32_t sdl_key)
 {
     /*Remap some key to LV_KEY_... to manage groups*/
-    switch(sdl_key) {
-        case SDLK_RIGHT:
-        case SDLK_KP_PLUS:
-            return LV_KEY_RIGHT;
+    switch (sdl_key) {
+    case SDLK_RIGHT:
+    case SDLK_KP_PLUS:
+        return LV_KEY_RIGHT;
 
-        case SDLK_LEFT:
-        case SDLK_KP_MINUS:
-            return LV_KEY_LEFT;
+    case SDLK_LEFT:
+    case SDLK_KP_MINUS:
+        return LV_KEY_LEFT;
 
-        case SDLK_UP:
-            return LV_KEY_UP;
+    case SDLK_UP:
+        return LV_KEY_UP;
 
-        case SDLK_DOWN:
-            return LV_KEY_DOWN;
+    case SDLK_DOWN:
+        return LV_KEY_DOWN;
 
-        case SDLK_ESCAPE:
-            return LV_KEY_ESC;
+    case SDLK_ESCAPE:
+        return LV_KEY_ESC;
 
 #ifdef  LV_KEY_BACKSPACE        /*For backward compatibility*/
-        case SDLK_BACKSPACE:
-            return LV_KEY_BACKSPACE;
+    case SDLK_BACKSPACE:
+        return LV_KEY_BACKSPACE;
 #endif
 
 #ifdef  LV_KEY_DEL        /*For backward compatibility*/
-        case SDLK_DELETE:
-            return LV_KEY_DEL;
+    case SDLK_DELETE:
+        return LV_KEY_DEL;
 #endif
-        case SDLK_KP_ENTER:
-        case '\r':
-            return LV_KEY_ENTER;
+    case SDLK_KP_ENTER:
+    case '\r':
+        return LV_KEY_ENTER;
 
-        case SDLK_PAGEDOWN:
-            return LV_KEY_NEXT;
+    case SDLK_PAGEDOWN:
+        return LV_KEY_NEXT;
 
-        case SDLK_PAGEUP:
-            return LV_KEY_PREV;
+    case SDLK_PAGEUP:
+        return LV_KEY_PREV;
 
-        default:
-            return sdl_key;
+    default:
+        return sdl_key;
     }
 }
 #endif

@@ -1,6 +1,6 @@
 {
 	"projectName": "320_240",
-	"version": "1.10.1-GA",
+	"version": "1.9.0-GA",
 	"lvglVersion": "v8",
 	"projectSettings": {
 		"keyBoard": {
@@ -10,8 +10,6 @@
 			"keyboard_font_type": "SourceHanSerifSC_Regular",
 			"keyboard_font_size": 18
 		},
-		"defaultFamily": "montserratMedium",
-		"defaultScreen": "",
 		"board_radius": 18,
 		"resolution": {
 			"width": "320",
@@ -31,7 +29,7 @@
 		"support_functions": []
 	},
 	"boardPlatformSettings": {
-		"id": 547,
+		"id": 377,
 		"name": "Simulator",
 		"version": "v1.0.0",
 		"description": "Simulator",
@@ -39,9 +37,9 @@
 		"lvgl_version_minor": 3,
 		"lvgl_version_micro": 10,
 		"author": "NXP",
-		"checksum": "2e06fb913b787ebb6b1dac914d1cdd55",
+		"checksum": "bdf767343ca3c5165f30e1d190630430",
 		"images": [
-			"C:\\Users\\14939\\AppData\\Roaming\\gui-guider\\1.10.1-GA\\template\\board\\v8\\Simulator\\images\\simulator.png"
+			"C:\\Users\\14939\\AppData\\Roaming\\gui-guider\\1.9.0-GA\\template\\board\\v8\\Simulator\\images\\simulator.png"
 		],
 		"type": "Simulator",
 		"core": "",
@@ -50,9 +48,6 @@
 		"configuration": {
 			"OS": "Windows/Linux/MacOS",
 			"Processor": "Simulator",
-			"core_freq": [
-				"Based on host"
-			],
 			"color_depth": [
 				16,
 				24,
@@ -64,7 +59,6 @@
 				"Zephyr"
 			],
 			"Optimizations": "Balance",
-			"device_memory": "Based on host",
 			"display_panels": [
 				{
 					"width": 480,
@@ -118,41 +112,12 @@
 			"support_sdCard": true,
 			"mcuxpresso_config": {
 				"CMAKE_BUILD_TYPE": "null"
-			},
-			"support_applications": [
-				"Aircon",
-				"ButtonCounter",
-				"CameraPreview",
-				"CanvasChart",
-				"CoffeePourAnimation",
-				"DashBoardMenu",
-				"DigitalCluster",
-				"EVCharger",
-				"EmptyUI",
-				"LottieDemo",
-				"MultiLanguage",
-				"MusicPlayer",
-				"PriceTag",
-				"Printer",
-				"ProgressBar",
-				"SDcardStorage",
-				"ScreenTransition",
-				"SliderProgress",
-				"SmartAppliance",
-				"SmartBuilding",
-				"SmartWatch",
-				"SwitchWidgets",
-				"VideoPlayer",
-				"Widgets"
-			]
+			}
 		},
 		"lv_conf": {
 			"LV_MEM_ADR": 0,
 			"LV_USE_GPU": 1,
-			"LV_USE_LOG": 0,
 			"LV_MEM_SIZE": 320,
-			"LV_LOG_LEVEL": "LV_LOG_LEVEL_ERROR",
-			"LV_LOG_PRINTF": 1,
 			"LV_MEM_CUSTOM": 0,
 			"LV_COLOR_DEPTH": 16,
 			"LV_HOR_RES_MAX": "(480)",
@@ -176,7 +141,8 @@
 		"old_name": null,
 		"origin_type": "download",
 		"uid": "Simulator_v1.0.0_v8",
-		"status": "normal"
+		"status": "normal",
+		"preview": "https://d28lg7mcfo5ft3.cloudfront.net/1.9.0/board/Simulator/v8/images/simulator.png"
 	},
 	"demoTemplateSettings": {
 		"id": 297,
@@ -234,10 +200,7 @@
 	"lvConf": {
 		"LV_MEM_ADR": false,
 		"LV_USE_GPU": true,
-		"LV_USE_LOG": 0,
 		"LV_MEM_SIZE": 320,
-		"LV_LOG_LEVEL": "LV_LOG_LEVEL_ERROR",
-		"LV_LOG_PRINTF": 1,
 		"LV_MEM_CUSTOM": false,
 		"LV_COLOR_DEPTH": 16,
 		"LV_HOR_RES_MAX": "(320)",
@@ -293,70 +256,6 @@
 			"flag": [],
 			"list": [
 				{
-					"name": "img_no_4g",
-					"id": "aybbeu92",
-					"type": "img",
-					"left": 331,
-					"top": -27,
-					"visible": true,
-					"isLock": false,
-					"flag": [],
-					"width": 18,
-					"height": 16,
-					"default_style": false,
-					"use_fs": false,
-					"fs_type": "flash",
-					"sd_path": "",
-					"img_path": "import\\image\\no_4g.png",
-					"rotate": 0,
-					"x": 50,
-					"y": 50,
-					"color_format": "true-color-alpha",
-					"style": [
-						{
-							"part": "LV_PART_MAIN",
-							"state": "LV_STATE_DEFAULT",
-							"disable": false,
-							"image_recolor": "#ffffff",
-							"image_recolor_opa": 0,
-							"image_opa": 255,
-							"radius": 0
-						}
-					]
-				},
-				{
-					"name": "img_set_4g",
-					"id": "fs7ukz38",
-					"type": "img",
-					"left": 288,
-					"top": -34,
-					"visible": true,
-					"isLock": false,
-					"flag": [],
-					"width": 18,
-					"height": 16,
-					"default_style": false,
-					"use_fs": false,
-					"fs_type": "flash",
-					"sd_path": "",
-					"img_path": "import\\image\\set_4g.png",
-					"rotate": 0,
-					"x": 50,
-					"y": 50,
-					"color_format": "true-color-alpha",
-					"style": [
-						{
-							"part": "LV_PART_MAIN",
-							"state": "LV_STATE_DEFAULT",
-							"disable": false,
-							"image_recolor": "#ffffff",
-							"image_recolor_opa": 0,
-							"image_opa": 255,
-							"radius": 0
-						}
-					]
-				},
-				{
 					"name": "label_1",
 					"id": "ge025g0a",
 					"type": "label",
@@ -370,7 +269,6 @@
 					"default_style": false,
 					"text": "欢迎使用轻语AI智能设备，请使用“小语小语“唤醒我。",
 					"long_mode": "LV_LABEL_LONG_CLIP",
-					"is_static": false,
 					"custom_attribute": [],
 					"attribute_type": "",
 					"style": [
@@ -2273,7 +2171,6 @@
 					"default_style": false,
 					"text": "名称",
 					"long_mode": "LV_LABEL_LONG_WRAP",
-					"is_static": false,
 					"custom_attribute": [],
 					"attribute_type": "",
 					"style": [
@@ -2592,7 +2489,6 @@
 					"default_style": false,
 					"text": "Label",
 					"long_mode": "LV_LABEL_LONG_WRAP",
-					"is_static": false,
 					"custom_attribute": [],
 					"attribute_type": "",
 					"style": [
@@ -3141,7 +3037,6 @@
 					"default_style": false,
 					"text": "歌词加载中加载中加载中歌词加载中加载中加载中",
 					"long_mode": "LV_LABEL_LONG_DOT",
-					"is_static": false,
 					"custom_attribute": [],
 					"attribute_type": "",
 					"style": [
@@ -3772,7 +3667,6 @@
 							"default_style": false,
 							"text": "那当然是火爆已久的歌手周杰伦啦！",
 							"long_mode": "LV_LABEL_LONG_WRAP",
-							"is_static": false,
 							"custom_attribute": [],
 							"attribute_type": "",
 							"style": [
@@ -3955,7 +3849,6 @@
 							"default_style": false,
 							"text": "你好，谁的歌曲专辑？",
 							"long_mode": "LV_LABEL_LONG_WRAP",
-							"is_static": false,
 							"custom_attribute": [],
 							"attribute_type": "",
 							"style": [
@@ -16212,7 +16105,7 @@
 			"keyboard_font_type": "SourceHanSerifSC_Regular",
 			"keyboard_font_size": 18
 		},
-		"default_scr": "screen_main",
+		"default_scr": "screen_podcast",
 		"theme": "LV_THEME_MATERIAL_FLAG_LIGHT",
 		"screen": [
 			{
@@ -16265,7 +16158,7 @@
 						"bg_grad_stop": 255,
 						"bg_grad_color": "#2195f6",
 						"bg_opa": 0,
-						"bg_img_src": "import\\image\\320x240.png",
+						"bg_img_src": "import\\image\\background.png",
 						"bg_img_opa": 255,
 						"bg_img_recolor": "#ffffff",
 						"bg_img_recolor_opa": 0
@@ -17230,12 +17123,12 @@
 								"visible": true,
 								"flag": [],
 								"pos": [
-									0,
+									8,
 									16
 								],
 								"size": [
 									65,
-									82
+									65
 								],
 								"default_style": false,
 								"text_align": "center",
@@ -17412,18 +17305,18 @@
 								"toggle": false
 							},
 							{
-								"name": "screen_main_btn_1",
-								"id": "yhi0scq6",
+								"name": "screen_main_btn_conversation",
+								"id": "estpvbc7",
 								"type": "btn",
 								"visible": true,
 								"flag": [],
 								"pos": [
-									78,
+									81,
 									16
 								],
 								"size": [
 									65,
-									82
+									65
 								],
 								"default_style": false,
 								"text_align": "center",
@@ -17432,9 +17325,9 @@
 										"part": "LV_PART_MAIN",
 										"state": "LV_STATE_DEFAULT",
 										"disable": false,
-										"bg_color": "#B6E1BB",
+										"bg_color": "#ffffff",
 										"bg_grad_color": "#2195f6",
-										"bg_opa": 0,
+										"bg_opa": 15,
 										"bg_grad_dir": "LV_GRAD_DIR_NONE",
 										"bg_dither_mode": "LV_DITHER_NONE",
 										"bg_main_stop": 0,
@@ -17446,13 +17339,13 @@
 										"border_opa": 255,
 										"border_color": "#2195f6",
 										"radius": 15,
-										"shadow_color": "#B6E1BB",
+										"shadow_color": "#C3BB38",
 										"shadow_opa": 128,
 										"shadow_width": 0,
 										"shadow_spread": 0,
 										"shadow_ofs_x": 0,
 										"shadow_ofs_y": 0,
-										"bg_img_src": "import\\image\\op_music.png",
+										"bg_img_src": "import\\image\\op_conversation.png",
 										"bg_img_opa": 255,
 										"bg_img_recolor": "#ffffff",
 										"bg_img_recolor_opa": 0,
@@ -17600,18 +17493,18 @@
 								"toggle": false
 							},
 							{
-								"name": "screen_main_btn_2",
-								"id": "h7zpnpck",
+								"name": "screen_main_btn_alarm",
+								"id": "beb0e6y2",
 								"type": "btn",
 								"visible": true,
 								"flag": [],
 								"pos": [
-									155,
+									154,
 									16
 								],
 								"size": [
 									65,
-									82
+									65
 								],
 								"default_style": false,
 								"text_align": "center",
@@ -17620,9 +17513,9 @@
 										"part": "LV_PART_MAIN",
 										"state": "LV_STATE_DEFAULT",
 										"disable": false,
-										"bg_color": "#B6E1BB",
+										"bg_color": "#ffffff",
 										"bg_grad_color": "#2195f6",
-										"bg_opa": 0,
+										"bg_opa": 20,
 										"bg_grad_dir": "LV_GRAD_DIR_NONE",
 										"bg_dither_mode": "LV_DITHER_NONE",
 										"bg_main_stop": 0,
@@ -17634,13 +17527,13 @@
 										"border_opa": 255,
 										"border_color": "#2195f6",
 										"radius": 15,
-										"shadow_color": "#B6E1BB",
+										"shadow_color": "#37B5ED",
 										"shadow_opa": 128,
 										"shadow_width": 0,
 										"shadow_spread": 0,
 										"shadow_ofs_x": 0,
 										"shadow_ofs_y": 0,
-										"bg_img_src": "import\\image\\op_music.png",
+										"bg_img_src": "import\\image\\op_alarm.png",
 										"bg_img_opa": 255,
 										"bg_img_recolor": "#ffffff",
 										"bg_img_recolor_opa": 0,
@@ -17788,18 +17681,18 @@
 								"toggle": false
 							},
 							{
-								"name": "screen_main_btn_3",
-								"id": "sd33vg0d",
+								"name": "screen_main_btn_timer",
+								"id": "lsnweoyb",
 								"type": "btn",
 								"visible": true,
 								"flag": [],
 								"pos": [
-									234,
-									15
+									227,
+									16
 								],
 								"size": [
 									65,
-									82
+									65
 								],
 								"default_style": false,
 								"text_align": "center",
@@ -17808,9 +17701,9 @@
 										"part": "LV_PART_MAIN",
 										"state": "LV_STATE_DEFAULT",
 										"disable": false,
-										"bg_color": "#B6E1BB",
+										"bg_color": "#ffffff",
 										"bg_grad_color": "#2195f6",
-										"bg_opa": 0,
+										"bg_opa": 20,
 										"bg_grad_dir": "LV_GRAD_DIR_NONE",
 										"bg_dither_mode": "LV_DITHER_NONE",
 										"bg_main_stop": 0,
@@ -17822,13 +17715,13 @@
 										"border_opa": 255,
 										"border_color": "#2195f6",
 										"radius": 15,
-										"shadow_color": "#B6E1BB",
+										"shadow_color": "#F686C2",
 										"shadow_opa": 128,
 										"shadow_width": 0,
 										"shadow_spread": 0,
 										"shadow_ofs_x": 0,
 										"shadow_ofs_y": 0,
-										"bg_img_src": "import\\image\\op_music.png",
+										"bg_img_src": "import\\image\\op_timer.png",
 										"bg_img_opa": 255,
 										"bg_img_recolor": "#ffffff",
 										"bg_img_recolor_opa": 0,
@@ -18125,7 +18018,7 @@
 						"flag": [],
 						"pos": [
 							14,
-							214
+							209
 						],
 						"size": [
 							297,
@@ -18135,8 +18028,7 @@
 						"attribute_type": "",
 						"custom_attribute": [],
 						"text": "欢迎使用轻语AI智能设备，请使用“小语小语“唤醒我。",
-						"long_mode": "LV_LABEL_LONG_CLIP",
-						"is_static": false,
+						"long_mode": "LV_LABEL_LONG_SCROLL_CIRCULAR",
 						"style": [
 							{
 								"part": "LV_PART_MAIN",
@@ -18217,76 +18109,6 @@
 								"shadow_spread": 0,
 								"shadow_ofs_x": 0,
 								"shadow_ofs_y": 0
-							}
-						]
-					},
-					{
-						"name": "screen_main_img_set_4g",
-						"id": "fs7ukz38",
-						"type": "img",
-						"visible": true,
-						"flag": [],
-						"pos": [
-							288,
-							-34
-						],
-						"size": [
-							18,
-							16
-						],
-						"default_style": false,
-						"img_path": "import\\image\\set_4g.png",
-						"color_format": "true-color-alpha",
-						"rotate": 0,
-						"pivot": "50,50",
-						"use_fs": false,
-						"fs_type": "flash",
-						"img_flash_path": "F:/set_4g.png",
-						"img_sd_path": "S:/set_4g.png",
-						"style": [
-							{
-								"part": "LV_PART_MAIN",
-								"state": "LV_STATE_DEFAULT",
-								"disable": false,
-								"image_recolor": "#ffffff",
-								"image_recolor_opa": 0,
-								"image_opa": 255,
-								"radius": 0
-							}
-						]
-					},
-					{
-						"name": "screen_main_img_no_4g",
-						"id": "aybbeu92",
-						"type": "img",
-						"visible": true,
-						"flag": [],
-						"pos": [
-							331,
-							-27
-						],
-						"size": [
-							18,
-							16
-						],
-						"default_style": false,
-						"img_path": "import\\image\\no_4g.png",
-						"color_format": "true-color-alpha",
-						"rotate": 0,
-						"pivot": "50,50",
-						"use_fs": false,
-						"fs_type": "flash",
-						"img_flash_path": "F:/no_4g.png",
-						"img_sd_path": "S:/no_4g.png",
-						"style": [
-							{
-								"part": "LV_PART_MAIN",
-								"state": "LV_STATE_DEFAULT",
-								"disable": false,
-								"image_recolor": "#ffffff",
-								"image_recolor_opa": 0,
-								"image_opa": 255,
-								"radius": 0
 							}
 						]
 					}
@@ -18547,7 +18369,6 @@
 						"custom_attribute": [],
 						"text": "名称",
 						"long_mode": "LV_LABEL_LONG_WRAP",
-						"is_static": false,
 						"style": [
 							{
 								"part": "LV_PART_MAIN",
@@ -18842,7 +18663,7 @@
 						"flag": [],
 						"pos": [
 							97,
-							196
+							197
 						],
 						"size": [
 							14,
@@ -19199,7 +19020,6 @@
 						"custom_attribute": [],
 						"text": "歌词加载中加载中加载中歌词加载中加载中加载中",
 						"long_mode": "LV_LABEL_LONG_DOT",
-						"is_static": false,
 						"style": [
 							{
 								"part": "LV_PART_MAIN",
@@ -19781,7 +19601,6 @@
 						"custom_attribute": [],
 						"text": "Label",
 						"long_mode": "LV_LABEL_LONG_WRAP",
-						"is_static": false,
 						"style": [
 							{
 								"part": "LV_PART_MAIN",
@@ -20112,7 +19931,6 @@
 								"custom_attribute": [],
 								"text": "你好，谁的歌曲专辑？",
 								"long_mode": "LV_LABEL_LONG_WRAP",
-								"is_static": false,
 								"style": [
 									{
 										"part": "LV_PART_MAIN",
@@ -20304,7 +20122,6 @@
 								"custom_attribute": [],
 								"text": "那当然是火爆已久的歌手周杰伦啦！",
 								"long_mode": "LV_LABEL_LONG_WRAP",
-								"is_static": false,
 								"style": [
 									{
 										"part": "LV_PART_MAIN",
@@ -22320,8 +22137,8 @@
 						"visible": true,
 						"flag": [],
 						"pos": [
-							115,
-							20
+							62,
+							22
 						],
 						"size": [
 							73,
@@ -23523,210 +23340,7 @@
 															"value": 255
 														}
 													},
-													"dst_type": "btn",
-													"_target": {
-														"name": "btn_7",
-														"id": "00io900e",
-														"type": "btn",
-														"left": 6,
-														"top": 42,
-														"visible": true,
-														"isLock": false,
-														"flag": [],
-														"width": 30,
-														"height": 30,
-														"default_style": false,
-														"long_mode": "LV_LABEL_LONG_WRAP",
-														"text": "日",
-														"toggle": false,
-														"style": [
-															{
-																"part": "LV_PART_MAIN",
-																"state": "LV_STATE_DEFAULT",
-																"disable": false,
-																"bg_color": "#ffffff",
-																"bg_grad_color": "#2195f6",
-																"bg_opa": 37,
-																"bg_grad_dir": "LV_GRAD_DIR_NONE",
-																"bg_dither_mode": "LV_DITHER_NONE",
-																"bg_main_stop": 0,
-																"bg_grad_stop": 255,
-																"border_side": [
-																	"LV_BORDER_SIDE_FULL"
-																],
-																"border_width": 0,
-																"border_opa": 255,
-																"border_color": "#2195f6",
-																"radius": 30,
-																"shadow_color": "#2195f6",
-																"shadow_opa": 255,
-																"shadow_width": 0,
-																"shadow_spread": 0,
-																"shadow_ofs_x": 0,
-																"shadow_ofs_y": 0,
-																"bg_img_src": "",
-																"bg_img_opa": 255,
-																"bg_img_recolor": "#ffffff",
-																"bg_img_recolor_opa": 0,
-																"font": 18,
-																"font_family": "MiSansDemibold",
-																"text_color": "#9e9e9e",
-																"text_opa": 255,
-																"text_align": "LV_TEXT_ALIGN_CENTER"
-															},
-															{
-																"part": "LV_PART_MAIN",
-																"state": "LV_STATE_FOCUSED",
-																"disable": true,
-																"bg_color": "#2195f6",
-																"bg_grad_color": "#2195f6",
-																"bg_opa": 255,
-																"bg_grad_dir": "LV_GRAD_DIR_NONE",
-																"bg_dither_mode": "LV_DITHER_NONE",
-																"bg_main_stop": 0,
-																"bg_grad_stop": 255,
-																"border_side": [
-																	"LV_BORDER_SIDE_FULL"
-																],
-																"border_width": 0,
-																"border_color": "#2195f6",
-																"border_opa": 255,
-																"radius": 5,
-																"shadow_color": "#2195f6",
-																"shadow_opa": 255,
-																"shadow_width": 0,
-																"shadow_spread": 0,
-																"shadow_ofs_x": 0,
-																"shadow_ofs_y": 0,
-																"bg_img_src": "",
-																"bg_img_opa": 255,
-																"bg_img_recolor": "#ffffff",
-																"bg_img_recolor_opa": 0,
-																"font": 16,
-																"font_family": "montserratMedium",
-																"text_opa": 255,
-																"text_color": "#ffffff"
-															},
-															{
-																"part": "LV_PART_MAIN",
-																"state": "LV_STATE_PRESSED",
-																"disable": true,
-																"bg_color": "#2195f6",
-																"bg_grad_color": "#2195f6",
-																"bg_opa": 255,
-																"bg_grad_dir": "LV_GRAD_DIR_NONE",
-																"bg_dither_mode": "LV_DITHER_NONE",
-																"bg_main_stop": 0,
-																"bg_grad_stop": 255,
-																"border_side": [
-																	"LV_BORDER_SIDE_FULL"
-																],
-																"border_width": 0,
-																"border_color": "#2195f6",
-																"border_opa": 255,
-																"radius": 5,
-																"shadow_color": "#2195f6",
-																"shadow_opa": 255,
-																"shadow_width": 0,
-																"shadow_spread": 0,
-																"shadow_ofs_x": 0,
-																"shadow_ofs_y": 0,
-																"bg_img_src": "",
-																"bg_img_opa": 255,
-																"bg_img_recolor": "#ffffff",
-																"bg_img_recolor_opa": 0,
-																"font": 16,
-																"font_family": "montserratMedium",
-																"text_opa": 255,
-																"text_color": "#ffffff"
-															},
-															{
-																"part": "LV_PART_MAIN",
-																"state": "LV_STATE_CHECKED",
-																"disable": true,
-																"bg_color": "#2195f6",
-																"bg_grad_color": "#2195f6",
-																"bg_opa": 255,
-																"bg_grad_dir": "LV_GRAD_DIR_NONE",
-																"bg_dither_mode": "LV_DITHER_NONE",
-																"bg_main_stop": 0,
-																"bg_grad_stop": 255,
-																"border_side": [
-																	"LV_BORDER_SIDE_FULL"
-																],
-																"border_width": 0,
-																"border_opa": 255,
-																"border_color": "#2195f6",
-																"radius": 5,
-																"shadow_color": "#2195f6",
-																"shadow_opa": 255,
-																"shadow_width": 0,
-																"shadow_spread": 0,
-																"shadow_ofs_x": 0,
-																"shadow_ofs_y": 0,
-																"bg_img_src": "",
-																"bg_img_opa": 255,
-																"bg_img_recolor": "#ffffff",
-																"bg_img_recolor_opa": 0,
-																"font": 12,
-																"font_family": "montserratMedium",
-																"text_opa": 255,
-																"text_color": "#000000"
-															},
-															{
-																"part": "LV_PART_MAIN",
-																"state": "LV_STATE_DISABLED",
-																"disable": true,
-																"bg_color": "#2195f6",
-																"bg_grad_color": "#2195f6",
-																"bg_opa": 255,
-																"bg_grad_dir": "LV_GRAD_DIR_NONE",
-																"bg_dither_mode": "LV_DITHER_NONE",
-																"bg_main_stop": 0,
-																"bg_grad_stop": 255,
-																"border_side": [
-																	"LV_BORDER_SIDE_FULL"
-																],
-																"border_width": 0,
-																"border_opa": 255,
-																"border_color": "#2195f6",
-																"radius": 5,
-																"shadow_color": "#2195f6",
-																"shadow_opa": 255,
-																"shadow_width": 0,
-																"shadow_spread": 0,
-																"shadow_ofs_x": 0,
-																"shadow_ofs_y": 0,
-																"bg_img_src": "",
-																"bg_img_opa": 255,
-																"bg_img_recolor": "#ffffff",
-																"bg_img_recolor_opa": 0,
-																"font": 12,
-																"font_family": "montserratMedium",
-																"text_opa": 255,
-																"text_color": "#000000"
-															}
-														],
-														"event": {
-															"widget": {
-																"clicked": {
-																	"condition": [],
-																	"action": [
-																		{
-																			"dst": "00io900e",
-																			"bindCondi": "",
-																			"actionList": {
-																				"bg_opa": {
-																					"value": 255
-																				}
-																			}
-																		}
-																	]
-																}
-															}
-														},
-														"layerName": "screen_alarm_set"
-													}
+													"dst_type": "btn"
 												}
 											]
 										}

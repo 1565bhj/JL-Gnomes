@@ -40,34 +40,33 @@ extern "C" {
 /* *INDENT-ON* */
 #endif
 
-/**
- *  \brief SDL_sensor.h
- *
- *  In order to use these functions, SDL_Init() must have been called
- *  with the ::SDL_INIT_SENSOR flag.  This causes SDL to scan the system
- *  for sensors, and load appropriate drivers.
- */
+    /**
+     *  \brief SDL_sensor.h
+     *
+     *  In order to use these functions, SDL_Init() must have been called
+     *  with the ::SDL_INIT_SENSOR flag.  This causes SDL to scan the system
+     *  for sensors, and load appropriate drivers.
+     */
 
-struct _SDL_Sensor;
-typedef struct _SDL_Sensor SDL_Sensor;
+    struct _SDL_Sensor;
+    typedef struct _SDL_Sensor SDL_Sensor;
 
-/**
- * This is a unique ID for a sensor for the time it is connected to the system,
- * and is never reused for the lifetime of the application.
- *
- * The ID value starts at 0 and increments from there. The value -1 is an invalid ID.
- */
-typedef Sint32 SDL_SensorID;
+    /**
+     * This is a unique ID for a sensor for the time it is connected to the system,
+     * and is never reused for the lifetime of the application.
+     *
+     * The ID value starts at 0 and increments from there. The value -1 is an invalid ID.
+     */
+    typedef Sint32 SDL_SensorID;
 
-/* The different sensors defined by SDL
- *
- * Additional sensors may be available, using platform dependent semantics.
- *
- * Hare are the additional Android sensors:
- * https://developer.android.com/reference/android/hardware/SensorEvent.html#values
- */
-typedef enum
-{
+    /* The different sensors defined by SDL
+     *
+     * Additional sensors may be available, using platform dependent semantics.
+     *
+     * Hare are the additional Android sensors:
+     * https://developer.android.com/reference/android/hardware/SensorEvent.html#values
+     */
+typedef enum {
     SDL_SENSOR_INVALID = -1,    /**< Returned for an invalid sensor */
     SDL_SENSOR_UNKNOWN,         /**< Unknown sensor type */
     SDL_SENSOR_ACCEL,           /**< Accelerometer */
@@ -89,7 +88,7 @@ typedef enum
  * -X ... +X : left ... right
  * -Y ... +Y : bottom ... top
  * -Z ... +Z : farther ... closer
- * 
+ *
  * The axis data is not changed when the phone is rotated.
  *
  * \sa SDL_GetDisplayOrientation()
@@ -113,7 +112,7 @@ typedef enum
  * -X ... +X : left ... right
  * -Y ... +Y : bottom ... top
  * -Z ... +Z : farther ... closer
- * 
+ *
  * The axis data is not changed when the phone is rotated.
  *
  * \sa SDL_GetDisplayOrientation()
@@ -130,7 +129,7 @@ extern DECLSPEC int SDLCALL SDL_NumSensors(void);
  *  \brief Get the implementation dependent name of a sensor.
  *
  *  This can be called before any sensors are opened.
- * 
+ *
  *  \return The sensor name, or NULL if device_index is out of range.
  */
 extern DECLSPEC const char *SDLCALL SDL_SensorGetDeviceName(int device_index);

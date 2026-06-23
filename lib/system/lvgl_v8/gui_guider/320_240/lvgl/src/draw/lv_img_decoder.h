@@ -52,7 +52,7 @@ struct _lv_img_decoder_t;
  * @return LV_RES_OK: info written correctly; LV_RES_INV: failed
  */
 typedef lv_res_t (*lv_img_decoder_info_f_t)(struct _lv_img_decoder_t * decoder, const void * src,
-                                            lv_img_header_t * header);
+        lv_img_header_t *header);
 
 /**
  * Open an image for decoding. Prepare it as it is required to read it later
@@ -73,7 +73,7 @@ typedef lv_res_t (*lv_img_decoder_open_f_t)(struct _lv_img_decoder_t * decoder, 
  * @return LV_RES_OK: ok; LV_RES_INV: failed
  */
 typedef lv_res_t (*lv_img_decoder_read_line_f_t)(struct _lv_img_decoder_t * decoder, struct _lv_img_decoder_dsc_t * dsc,
-                                                 lv_coord_t x, lv_coord_t y, lv_coord_t len, uint8_t * buf);
+        lv_coord_t x, lv_coord_t y, lv_coord_t len, uint8_t *buf);
 
 /**
  * Close the pending decoding. Free resources etc.
@@ -90,7 +90,7 @@ typedef struct _lv_img_decoder_t {
     lv_img_decoder_close_f_t close_cb;
 
 #if LV_USE_USER_DATA
-    void * user_data;
+    void *user_data;
 #endif
 } lv_img_decoder_t;
 
@@ -98,10 +98,10 @@ typedef struct _lv_img_decoder_t {
 /**Describe an image decoding session. Stores data about the decoding*/
 typedef struct _lv_img_decoder_dsc_t {
     /**The decoder which was able to open the image source*/
-    lv_img_decoder_t * decoder;
+    lv_img_decoder_t *decoder;
 
     /**The image source. A file path like "S:my_img.png" or pointer to an `lv_img_dsc_t` variable*/
-    const void * src;
+    const void *src;
 
     /**Color to draw the image. USed when the image has alpha channel only*/
     lv_color_t color;
@@ -117,7 +117,7 @@ typedef struct _lv_img_decoder_dsc_t {
 
     /** Pointer to a buffer where the image's data (pixels) are stored in a decoded, plain format.
      *  MUST be set in `open` function*/
-    const uint8_t * img_data;
+    const uint8_t *img_data;
 
     /** How much time did it take to open the image. [ms]
      *  If not set `lv_img_cache` will measure and set the time to open*/
@@ -125,10 +125,10 @@ typedef struct _lv_img_decoder_dsc_t {
 
     /**A text to display instead of the image when the image can't be opened.
      * Can be set in `open` function or set NULL.*/
-    const char * error_msg;
+    const char *error_msg;
 
     /**Store any custom data here is required*/
-    void * user_data;
+    void *user_data;
 } lv_img_decoder_dsc_t;
 
 /**********************
@@ -177,7 +177,7 @@ lv_res_t lv_img_decoder_open(lv_img_decoder_dsc_t * dsc, const void * src, lv_co
  * @return LV_RES_OK: success; LV_RES_INV: an error occurred
  */
 lv_res_t lv_img_decoder_read_line(lv_img_decoder_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_coord_t len,
-                                  uint8_t * buf);
+                                  uint8_t *buf);
 
 /**
  * Close a decoding session
@@ -189,7 +189,7 @@ void lv_img_decoder_close(lv_img_decoder_dsc_t * dsc);
  * Create a new image decoder
  * @return pointer to the new image decoder
  */
-lv_img_decoder_t * lv_img_decoder_create(void);
+lv_img_decoder_t *lv_img_decoder_create(void);
 
 /**
  * Delete an image decoder
@@ -254,7 +254,7 @@ lv_res_t lv_img_decoder_built_in_open(lv_img_decoder_t * decoder, lv_img_decoder
  * @return LV_RES_OK: ok; LV_RES_INV: failed
  */
 lv_res_t lv_img_decoder_built_in_read_line(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc, lv_coord_t x,
-                                           lv_coord_t y, lv_coord_t len, uint8_t * buf);
+        lv_coord_t y, lv_coord_t len, uint8_t *buf);
 
 /**
  * Close the pending decoding. Free resources etc.

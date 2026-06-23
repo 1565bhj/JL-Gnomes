@@ -33,7 +33,7 @@ typedef struct {
     int repeat_status;       // 闹钟重复状态引用(0: 只响一次, 1: 每天, 2: 自定义)
     bool is_selected;        // 是否被选择用于删除
     bool is_enabled;         // 闹钟开关状态（true:开启, false:关闭）
-}AlarmItem;
+} AlarmItem;
 
 // 全局闹钟管理变量声明
 extern int g_alarm_count; // 当前闹钟总数

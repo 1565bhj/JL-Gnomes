@@ -95,7 +95,7 @@ void setup_scr_screen_main(lv_ui *ui)
     lv_img_set_src(ui->screen_main_img_location, &_location_alpha_15x18);
     lv_img_set_pivot(ui->screen_main_img_location, 50, 50);
     lv_img_set_angle(ui->screen_main_img_location, 0);
-    lv_obj_set_pos(ui->screen_main_img_location, 10, 13);
+    lv_obj_set_pos(ui->screen_main_img_location, LOCATION_ICON_X, LOCATION_ICON_Y);
     lv_obj_set_size(ui->screen_main_img_location, 15, 18);
 
     //Write style for screen_main_img_location, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -411,7 +411,7 @@ void setup_scr_screen_main(lv_ui *ui)
     lv_style_set_text_color(&ui->screen_main_span_direction_span->style, lv_color_hex(0xc5c5c5));
     lv_style_set_text_decor(&ui->screen_main_span_direction_span->style, LV_TEXT_DECOR_NONE);
     lv_style_set_text_font(&ui->screen_main_span_direction_span->style, &lv_font_MiSansDemibold_18);
-    lv_obj_set_pos(ui->screen_main_span_direction, 29, 13);
+    lv_obj_set_pos(ui->screen_main_span_direction, CITY_ADDRESS_SPAN_X, CITY_ADDRESS_SPAN_Y);
     lv_obj_set_size(ui->screen_main_span_direction, 75, 18);
 
     //Write style state: LV_STATE_DEFAULT for &style_screen_main_span_direction_main_main_default

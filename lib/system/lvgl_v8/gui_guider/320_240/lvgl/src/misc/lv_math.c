@@ -50,20 +50,19 @@ int16_t LV_ATTRIBUTE_FAST_MEM lv_trigo_sin(int16_t angle)
     int16_t ret = 0;
     angle       = angle % 360;
 
-    if(angle < 0) angle = 360 + angle;
-
-    if(angle < 90) {
-        ret = sin0_90_table[angle];
+    if (angle < 0) {
+        angle = 360 + angle;
     }
-    else if(angle >= 90 && angle < 180) {
+
+    if (angle < 90) {
+        ret = sin0_90_table[angle];
+    } else if (angle >= 90 && angle < 180) {
         angle = 180 - angle;
         ret   = sin0_90_table[angle];
-    }
-    else if(angle >= 180 && angle < 270) {
+    } else if (angle >= 180 && angle < 270) {
         angle = angle - 180;
         ret   = -sin0_90_table[angle];
-    }
-    else {   /*angle >=270*/
+    } else { /*angle >=270*/
         angle = 360 - angle;
         ret   = -sin0_90_table[angle];
     }
@@ -115,9 +114,11 @@ void LV_ATTRIBUTE_FAST_MEM lv_sqrt(uint32_t x, lv_sqrt_res_t * q, uint32_t mask)
     // http://ww1.microchip.com/...en/AppNotes/91040a.pdf
     do {
         trial = root + mask;
-        if(trial * trial <= x) root = trial;
+        if (trial * trial <= x) {
+            root = trial;
+        }
         mask = mask >> 1;
-    } while(mask);
+    } while (mask);
 
     q->i = root >> 4;
     q->f = (root & 0xf) << 4;
@@ -150,57 +151,74 @@ uint16_t lv_atan2(int x, int y)
 
     // Save the sign flags then remove signs and get XY as unsigned ints
     negflag = 0;
-    if(x < 0) {
+    if (x < 0) {
         negflag += 0x01;    // x flag bit
         x = (0 - x);        // is now +
     }
     ux = x;                // copy to unsigned var before multiply
-    if(y < 0) {
+    if (y < 0) {
         negflag += 0x02;    // y flag bit
         y = (0 - y);        // is now +
     }
     uy = y;                // copy to unsigned var before multiply
 
     // 1. Calc the scaled "degrees"
-    if(ux > uy) {
+    if (ux > uy) {
         degree = (uy * 45) / ux;   // degree result will be 0-45 range
         negflag += 0x10;    // octant flag bit
-    }
-    else {
+    } else {
         degree = (ux * 45) / uy;   // degree result will be 0-45 range
     }
 
     // 2. Compensate for the 4 degree error curve
     comp = 0;
     tempdegree = degree;    // use an unsigned char for speed!
-    if(tempdegree > 22) {    // if top half of range
-        if(tempdegree <= 44) comp++;
-        if(tempdegree <= 41) comp++;
-        if(tempdegree <= 37) comp++;
-        if(tempdegree <= 32) comp++;  // max is 4 degrees compensated
-    }
-    else {   // else is lower half of range
-        if(tempdegree >= 2) comp++;
-        if(tempdegree >= 6) comp++;
-        if(tempdegree >= 10) comp++;
-        if(tempdegree >= 15) comp++;  // max is 4 degrees compensated
+    if (tempdegree > 22) {   // if top half of range
+        if (tempdegree <= 44) {
+            comp++;
+        }
+        if (tempdegree <= 41) {
+            comp++;
+        }
+        if (tempdegree <= 37) {
+            comp++;
+        }
+        if (tempdegree <= 32) {
+            comp++;    // max is 4 degrees compensated
+        }
+    } else { // else is lower half of range
+        if (tempdegree >= 2) {
+            comp++;
+        }
+        if (tempdegree >= 6) {
+            comp++;
+        }
+        if (tempdegree >= 10) {
+            comp++;
+        }
+        if (tempdegree >= 15) {
+            comp++;    // max is 4 degrees compensated
+        }
     }
     degree += comp;   // degree is now accurate to +/- 1 degree!
 
     // Invert degree if it was X>Y octant, makes 0-45 into 90-45
-    if(negflag & 0x10) degree = (90 - degree);
+    if (negflag & 0x10) {
+        degree = (90 - degree);
+    }
 
     // 3. Degree is now 0-90 range for this quadrant,
     // need to invert it for whichever quadrant it was in
-    if(negflag & 0x02) { // if -Y
-        if(negflag & 0x01)   // if -Y -X
+    if (negflag & 0x02) { // if -Y
+        if (negflag & 0x01) { // if -Y -X
             degree = (180 + degree);
-        else        // else is -Y +X
+        } else {    // else is -Y +X
             degree = (180 - degree);
-    }
-    else {   // else is +Y
-        if(negflag & 0x01)   // if +Y -X
+        }
+    } else { // else is +Y
+        if (negflag & 0x01) { // if +Y -X
             degree = (360 - degree);
+        }
     }
     return degree;
 }
@@ -214,9 +232,10 @@ uint16_t lv_atan2(int x, int y)
 int64_t lv_pow(int64_t base, int8_t exp)
 {
     int64_t result = 1;
-    while(exp) {
-        if(exp & 1)
+    while (exp) {
+        if (exp & 1) {
             result *= base;
+        }
         exp >>= 1;
         base *= base;
     }
@@ -235,11 +254,19 @@ int64_t lv_pow(int64_t base, int8_t exp)
  */
 int32_t lv_map(int32_t x, int32_t min_in, int32_t max_in, int32_t min_out, int32_t max_out)
 {
-    if(max_in >= min_in && x >= max_in) return max_out;
-    if(max_in >= min_in && x <= min_in) return min_out;
+    if (max_in >= min_in && x >= max_in) {
+        return max_out;
+    }
+    if (max_in >= min_in && x <= min_in) {
+        return min_out;
+    }
 
-    if(max_in <= min_in && x <= max_in) return max_out;
-    if(max_in <= min_in && x >= min_in) return min_out;
+    if (max_in <= min_in && x <= max_in) {
+        return max_out;
+    }
+    if (max_in <= min_in && x >= min_in) {
+        return min_out;
+    }
 
     /**
      * The equation should be:

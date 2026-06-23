@@ -1,0 +1,1 @@
+GEN_CSRCS += lv_font_Barlow__54.c lv_font_Barlow__16.c lv_font_MiSansDemibold_18.c lv_font_montserratMedium_16.c lv_font_montserratMedium_12.c lv_font_Barlow__12.c lv_font_Barlow__11.c lv_font_Barlow__15.c lv_font_MiSansDemibold_12.c lv_font_Barlow__24.c lv_font_Barlow__28.c lv_font_Barlow__18.c

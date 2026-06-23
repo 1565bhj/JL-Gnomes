@@ -131,6 +131,10 @@ void lv_txt_get_size(lv_point_t *size_res, const char *text, const lv_font_t *fo
 
     /*Make the text one line taller if the last character is '\n' or '\r'*/
     if ((line_start != 0) && (text[line_start - 1] == '\n' || text[line_start - 1] == '\r')) {
+        if ((unsigned long)size_res->y + (unsigned long)letter_height + (unsigned long)line_space > LV_MAX_OF(lv_coord_t)) {
+            LV_LOG_WARN("lv_txt_get_size: integer overflow while calculating text height");
+            return;
+        }
         size_res->y += letter_height + line_space;
     }
 

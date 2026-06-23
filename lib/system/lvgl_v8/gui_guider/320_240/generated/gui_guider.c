@@ -77,7 +77,6 @@ void init_scr_del_flag(lv_ui *ui)
 {
 
     ui->screen_main_del = true;
-    ui->screen_option_del = true;
     ui->screen_music_del = true;
     ui->screen_conversation_del = true;
     ui->screen_alarm_del = true;
@@ -102,5 +101,8 @@ void setup_ui(lv_ui *ui)
 
 void init_keyboard(lv_ui *ui)
 {
-
+    ui->g_kb_top_layer = lv_keyboard_create(lv_layer_top());
+    lv_obj_add_event_cb(ui->g_kb_top_layer, kb_event_cb, LV_EVENT_ALL, NULL);
+    lv_obj_add_flag(ui->g_kb_top_layer, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_text_font(ui->g_kb_top_layer, &lv_font_MiSansDemibold_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 }

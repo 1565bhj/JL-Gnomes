@@ -75,6 +75,8 @@ void alarm_del_event_setup(void);
 void Dynamic_add_new_alarm(lv_ui *ui, int hour, int minute, int second, int status);
 void refresh_alarm_del_page(lv_ui *ui);
 void refresh_alarm_page(lv_ui *ui);
+/** ntp2utc_add_alarm 已在 flash 写入后，异步从 NV 同步 g_alarms 并刷新闹钟页（内部走 load_alarms_on_initialization；勿再走 Voice 添加以免重复写 flash） */
+void lv_demo_alarms_refresh_list_from_nv(void);
 bool Voice_delete_alarm(int hour, int minute, int second); // 语音删除闹钟函数（秒参数会被忽略，仅使用小时和分钟进行匹配）
 
 #ifdef __cplusplus

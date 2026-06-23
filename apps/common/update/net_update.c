@@ -541,3 +541,7 @@ int net_fwrite(void *fd, unsigned char *buf, int len, int end)
     }
     return ret;
 }
+const char *net_update_get_ota_version(void)
+{
+    return OTA_VERSON;
+}

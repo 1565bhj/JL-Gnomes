@@ -37,10 +37,10 @@ LV_EXPORT_CONST_INT(LV_DROPDOWN_POS_LAST);
 
 typedef struct {
     lv_obj_t obj;
-    lv_obj_t * list;                /**< The dropped down list*/
-    const char * text;              /**< Text to display on the dropdown's button*/
-    const void * symbol;            /**< Arrow or other icon when the drop-down list is closed*/
-    char * options;                 /**< Options in a '\n' separated list*/
+    lv_obj_t *list;                 /**< The dropped down list*/
+    const char *text;               /**< Text to display on the dropdown's button*/
+    const void *symbol;             /**< Arrow or other icon when the drop-down list is closed*/
+    char *options;                  /**< Options in a '\n' separated list*/
     uint16_t option_cnt;            /**< Number of options*/
     uint16_t sel_opt_id;            /**< Index of the currently selected option*/
     uint16_t sel_opt_id_orig;       /**< Store the original index on focus*/
@@ -52,7 +52,7 @@ typedef struct {
 
 typedef struct {
     lv_obj_t obj;
-    lv_obj_t * dropdown;
+    lv_obj_t *dropdown;
 } lv_dropdown_list_t;
 
 extern const  lv_obj_class_t lv_dropdown_class;
@@ -67,7 +67,7 @@ extern const  lv_obj_class_t lv_dropdownlist_class;
  * @param parent pointer to an object, it will be the parent of the new drop-down list
  * @return pointer to the created drop-down list
  */
-lv_obj_t * lv_dropdown_create(lv_obj_t * parent);
+lv_obj_t *lv_dropdown_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -151,21 +151,21 @@ void lv_dropdown_set_selected_highlight(lv_obj_t * obj, bool en);
  * @param obj       pointer to a drop-down list object
  * @return          pointer to the list of the drop-down
  */
-lv_obj_t * lv_dropdown_get_list(lv_obj_t * obj);
+lv_obj_t *lv_dropdown_get_list(lv_obj_t * obj);
 
 /**
  * Get text of the drop-down list's button.
  * @param obj   pointer to a drop-down list object
  * @return      the text as string, `NULL` if no text
  */
-const char * lv_dropdown_get_text(lv_obj_t * obj);
+const char *lv_dropdown_get_text(lv_obj_t * obj);
 
 /**
  * Get the options of a drop-down list
  * @param obj       pointer to drop-down list object
  * @return          the options separated by '\n'-s (E.g. "Option1\nOption2\nOption3")
  */
-const char * lv_dropdown_get_options(const lv_obj_t * obj);
+const char *lv_dropdown_get_options(const lv_obj_t * obj);
 
 /**
  * Get the index of the selected option
@@ -202,7 +202,7 @@ int32_t lv_dropdown_get_option_index(lv_obj_t * obj, const char * option);
  * @param obj       pointer to drop-down list object
  * @return          the symbol or NULL if not enabled
  */
-const char * lv_dropdown_get_symbol(lv_obj_t * obj);
+const char *lv_dropdown_get_symbol(lv_obj_t * obj);
 
 /**
  * Get whether the selected option in the list should be highlighted or not

@@ -38,7 +38,7 @@ enum {
 typedef uint8_t lv_bar_mode_t;
 
 typedef struct {
-    lv_obj_t * bar;
+    lv_obj_t *bar;
     int32_t anim_start;
     int32_t anim_end;
     int32_t anim_state;
@@ -75,7 +75,7 @@ typedef enum {
  * @param parent    pointer to an object, it will be the parent of the new bar
  * @return          pointer to the created bar
  */
-lv_obj_t * lv_bar_create(lv_obj_t * parent);
+lv_obj_t *lv_bar_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions

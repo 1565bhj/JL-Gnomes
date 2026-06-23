@@ -53,9 +53,9 @@
 //*********************************************************************************//
 //                            所有样机板子                                         //
 //*********************************************************************************//
-#define SXY_QYAI_DEVELEP_BOARD          1   //QYAI-开发板
+#define SXY_QYAI_DEVELEP_BOARD          0   //QYAI-开发板
 #define SXY_QYAI_4G_DEMO_BOARD          0   //QYAI-4G-demo板
-#define SXY_QYAI_UI_BOARD               0   //QYAI-UI-开发板
+#define SXY_QYAI_UI_BOARD               1   //QYAI-UI-开发板
 
 
 //*********************************************************************************//
@@ -252,6 +252,28 @@
 #define CONFIG_LVGL_UI_ENABLE
 //#define CONFIG_UI_PLAY_EMOJI                        //开启眼睛表情显示
 
+//是否开启(需要重编LVGL库)
+#ifdef CONFIG_LVGL_UI_ENABLE
+#define CONFIG_LVGL_AGENT_ENABLE            1  //开启智能体页面
+#define CONFIG_LVGL_TIMER_SLEEP_ENABLE      1  //开启定时休眠页面
+#define CONFIG_LVGL_SLEEP_MUSIC_ENABLE      1  //开启睡眠音乐页面
+#define CONFIG_LVGL_OPTION_WIFI_ENABLE      1  //开启WiFi页面
+#define CONFIG_LVGL_CONTENT_LIST_ENABLE     1  //开启内容页面
+#define CONFIG_LVGL_CALCULATOR_ENABLE       1  //开启计算器页面
+
+// 宏定义是否使能LVGL游戏
+#define CONFIG_LVGL_GAMES_ENABLE            0
+#if CONFIG_LVGL_GAMES_ENABLE
+#define CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE   0//使能抽签游戏
+#define CONFIG_LVGL_DICE_GAME_ENABLE        0//使能骰子游戏
+#define CONFIG_LVGL_MOUSE_GAME_ENABLE       1//使能打地鼠游戏
+#endif
+#define CONFIG_LVGL_RANDOM_GAME_ENABLE      0//使能随机游戏
+#define TOMATO_TIMER_ENABLE                 1//番茄倒计时
+#endif
+
+
+
 #ifdef CONFIG_UI_PLAY_EMOJI
 //#define CONFIG_UI_TOW_EYE                           //开2个眼睛显示
 //#define CONFIG_UI_GIF_EYE                           //开启GIF眼睛显示
@@ -260,8 +282,6 @@
 #define CONFIG_UI_MIRROR_EYE                        //开启另外眼睛镜像显示
 #endif
 #endif
-
-//#define TOMATO_TIMER_ENABLE                 1//是否开启(需要重编LVGL库)番茄倒计时
 
 //#define TCFG_TOUCH_GST820_ENABLE            1 //触摸
 //#define TCFG_TOUCH_GST328_ENABLE            1 //触摸
@@ -276,7 +296,6 @@
 //#define CONFIG_LVGL_DICE_GAME_ENABLE        1//使能骰子游戏
 //#define CONFIG_LVGL_SHAKE_GAME_ENABLE       1//使能摇一摇游戏
 //#endif
-//#define CONFIG_LVGL_RANDOM_GAME_ENABLE       1//使能随机游戏
 
 //#define TCFG_EQ_ONLINE_ENABLE     1            //1:支持在线EQ调试
 

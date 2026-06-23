@@ -41,7 +41,7 @@ typedef struct {
     lv_img_t img;
     lv_anim_t anim;
     /*picture sequence */
-    const void ** dsc;
+    const void **dsc;
     int8_t  pic_count;
 } lv_animimg_t;
 
@@ -61,7 +61,7 @@ typedef uint8_t lv_animimg_part_t;
  * @param parent pointer to an object, it will be the parent of the new button
  * @return pointer to the created animation image object
  */
-lv_obj_t * lv_animimg_create(lv_obj_t * parent);
+lv_obj_t *lv_animimg_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions

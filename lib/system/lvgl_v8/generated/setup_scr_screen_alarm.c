@@ -28,13 +28,26 @@ void setup_scr_screen_alarm(lv_ui *ui)
     lv_obj_set_style_bg_color(ui->screen_alarm, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui->screen_alarm, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    //Write codes screen_alarm_img_return
+    ui->screen_alarm_img_return = lv_img_create(ui->screen_alarm);
+    lv_obj_add_flag(ui->screen_alarm_img_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_alarm_img_return, &_return_alpha_22x22);
+    lv_img_set_pivot(ui->screen_alarm_img_return, 50, 50);
+    lv_img_set_angle(ui->screen_alarm_img_return, 0);
+    lv_obj_set_pos(ui->screen_alarm_img_return, 20, 10);
+    lv_obj_set_size(ui->screen_alarm_img_return, 22, 22);
+    lv_obj_set_style_img_recolor_opa(ui->screen_alarm_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_alarm_img_return, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_alarm_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_alarm_img_return, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     //Write codes screen_alarm_alarm_add
     ui->screen_alarm_alarm_add = lv_img_create(ui->screen_alarm);
     lv_obj_add_flag(ui->screen_alarm_alarm_add, LV_OBJ_FLAG_CLICKABLE);
     lv_img_set_src(ui->screen_alarm_alarm_add, &_add_alpha_30x30);
     lv_img_set_pivot(ui->screen_alarm_alarm_add, 50, 50);
     lv_img_set_angle(ui->screen_alarm_alarm_add, 0);
-    lv_obj_set_pos(ui->screen_alarm_alarm_add, 253, 15);
+    lv_obj_set_pos(ui->screen_alarm_alarm_add, 256, 10);
     lv_obj_set_size(ui->screen_alarm_alarm_add, 30, 30);
 
     //Write style for screen_alarm_alarm_add, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -49,7 +62,7 @@ void setup_scr_screen_alarm(lv_ui *ui)
     lv_img_set_src(ui->screen_alarm_alarm_del, &_clear_alpha_30x30);
     lv_img_set_pivot(ui->screen_alarm_alarm_del, 50, 50);
     lv_img_set_angle(ui->screen_alarm_alarm_del, 0);
-    lv_obj_set_pos(ui->screen_alarm_alarm_del, 33, 15);
+    lv_obj_set_pos(ui->screen_alarm_alarm_del, 210, 9);
     lv_obj_set_size(ui->screen_alarm_alarm_del, 30, 30);
 
     //Write style for screen_alarm_alarm_del, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -69,8 +82,8 @@ void setup_scr_screen_alarm(lv_ui *ui)
     lv_style_set_text_color(&ui->screen_alarm_name_span->style, lv_color_hex(0xffffff));
     lv_style_set_text_decor(&ui->screen_alarm_name_span->style, LV_TEXT_DECOR_NONE);
     lv_style_set_text_font(&ui->screen_alarm_name_span->style, &lv_font_MiSansDemibold_18);
-    lv_obj_set_pos(ui->screen_alarm_name, 139, 22);
-    lv_obj_set_size(ui->screen_alarm_name, 39, 18);
+    lv_obj_set_pos(ui->screen_alarm_name, 52, 10);
+    lv_obj_set_size(ui->screen_alarm_name, 39, 22);
 
     //Write style state: LV_STATE_DEFAULT for &style_screen_alarm_name_main_main_default
     static lv_style_t style_screen_alarm_name_main_main_default;

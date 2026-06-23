@@ -251,7 +251,7 @@ typedef lv_color_t (*lv_color_filter_cb_t)(const struct _lv_color_filter_dsc_t *
 
 typedef struct _lv_color_filter_dsc_t {
     lv_color_filter_cb_t filter_cb;
-    void * user_data;
+    void *user_data;
 } lv_color_filter_dsc_t;
 
 
@@ -301,24 +301,21 @@ static inline uint8_t lv_color_to1(lv_color_t color)
 #if LV_COLOR_DEPTH == 1
     return color.full;
 #elif LV_COLOR_DEPTH == 8
-    if((LV_COLOR_GET_R(color) & 0x4) || (LV_COLOR_GET_G(color) & 0x4) || (LV_COLOR_GET_B(color) & 0x2)) {
+    if ((LV_COLOR_GET_R(color) & 0x4) || (LV_COLOR_GET_G(color) & 0x4) || (LV_COLOR_GET_B(color) & 0x2)) {
         return 1;
-    }
-    else {
+    } else {
         return 0;
     }
 #elif LV_COLOR_DEPTH == 16
-    if((LV_COLOR_GET_R(color) & 0x10) || (LV_COLOR_GET_G(color) & 0x20) || (LV_COLOR_GET_B(color) & 0x10)) {
+    if ((LV_COLOR_GET_R(color) & 0x10) || (LV_COLOR_GET_G(color) & 0x20) || (LV_COLOR_GET_B(color) & 0x10)) {
         return 1;
-    }
-    else {
+    } else {
         return 0;
     }
 #elif LV_COLOR_DEPTH == 32
-    if((LV_COLOR_GET_R(color) & 0x80) || (LV_COLOR_GET_G(color) & 0x80) || (LV_COLOR_GET_B(color) & 0x80)) {
+    if ((LV_COLOR_GET_R(color) & 0x80) || (LV_COLOR_GET_G(color) & 0x80) || (LV_COLOR_GET_B(color) & 0x80)) {
         return 1;
-    }
-    else {
+    } else {
         return 0;
     }
 #endif
@@ -327,10 +324,11 @@ static inline uint8_t lv_color_to1(lv_color_t color)
 static inline uint8_t lv_color_to8(lv_color_t color)
 {
 #if LV_COLOR_DEPTH == 1
-    if(color.full == 0)
+    if (color.full == 0) {
         return 0;
-    else
+    } else {
         return 0xFF;
+    }
 #elif LV_COLOR_DEPTH == 8
     return color.full;
 #elif LV_COLOR_DEPTH == 16
@@ -351,10 +349,11 @@ static inline uint8_t lv_color_to8(lv_color_t color)
 static inline uint16_t lv_color_to16(lv_color_t color)
 {
 #if LV_COLOR_DEPTH == 1
-    if(color.full == 0)
+    if (color.full == 0) {
         return 0;
-    else
+    } else {
         return 0xFFFF;
+    }
 #elif LV_COLOR_DEPTH == 8
     lv_color16_t ret;
     LV_COLOR_SET_R16(ret, LV_COLOR_GET_R(color) * 4);  /*(2^5 - 1)/(2^3 - 1) = 31/7 = 4*/
@@ -375,10 +374,11 @@ static inline uint16_t lv_color_to16(lv_color_t color)
 static inline uint32_t lv_color_to32(lv_color_t color)
 {
 #if LV_COLOR_DEPTH == 1
-    if(color.full == 0)
+    if (color.full == 0) {
         return 0xFF000000;
-    else
+    } else {
         return 0xFFFFFFFF;
+    }
 #elif LV_COLOR_DEPTH == 8
     lv_color32_t ret;
     LV_COLOR_SET_R32(ret, LV_COLOR_GET_R(color) * 36); /*(2^8 - 1)/(2^3 - 1) = 255/7 = 36*/
@@ -529,21 +529,21 @@ static inline lv_color_t LV_ATTRIBUTE_FAST_MEM lv_color_mix_premult(uint16_t * p
  * @param res_opa the result opacity
  */
 static inline void LV_ATTRIBUTE_FAST_MEM lv_color_mix_with_alpha(lv_color_t bg_color, lv_opa_t bg_opa,
-                                                                 lv_color_t fg_color, lv_opa_t fg_opa,
-                                                                 lv_color_t * res_color, lv_opa_t * res_opa)
+        lv_color_t fg_color, lv_opa_t fg_opa,
+        lv_color_t *res_color, lv_opa_t *res_opa)
 {
     /*Pick the foreground if it's fully opaque or the Background is fully transparent*/
-    if(fg_opa >= LV_OPA_MAX || bg_opa <= LV_OPA_MIN) {
+    if (fg_opa >= LV_OPA_MAX || bg_opa <= LV_OPA_MIN) {
         res_color->full = fg_color.full;
         *res_opa = fg_opa;
     }
     /*Transparent foreground: use the Background*/
-    else if(fg_opa <= LV_OPA_MIN) {
+    else if (fg_opa <= LV_OPA_MIN) {
         res_color->full = bg_color.full;
         *res_opa = bg_opa;
     }
     /*Opaque background: use simple mix*/
-    else if(bg_opa >= LV_OPA_MAX) {
+    else if (bg_opa >= LV_OPA_MAX) {
         *res_color = lv_color_mix(fg_color, bg_color, fg_opa);
         *res_opa = LV_OPA_COVER;
     }
@@ -557,8 +557,8 @@ static inline void LV_ATTRIBUTE_FAST_MEM lv_color_mix_with_alpha(lv_color_t bg_c
         static lv_color_t res_color_saved = _LV_COLOR_ZERO_INITIALIZER;
         static lv_opa_t res_opa_saved = 0;
 
-        if(fg_opa != fg_opa_save || bg_opa != bg_opa_save || fg_color.full != fg_color_save.full ||
-           bg_color.full != bg_color_save.full) {
+        if (fg_opa != fg_opa_save || bg_opa != bg_opa_save || fg_color.full != fg_color_save.full ||
+            bg_color.full != bg_color_save.full) {
             fg_opa_save        = fg_opa;
             bg_opa_save        = bg_opa;
             fg_color_save.full = fg_color.full;

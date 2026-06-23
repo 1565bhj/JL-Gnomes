@@ -98,14 +98,14 @@ typedef struct _lv_indev_drv_t {
     void (*feedback_cb)(struct _lv_indev_drv_t *, uint8_t);
 
 #if LV_USE_USER_DATA
-    void * user_data;
+    void *user_data;
 #endif
 
     /**< Pointer to the assigned display*/
-    struct _lv_disp_t * disp;
+    struct _lv_disp_t *disp;
 
     /**< Timer to periodically read the input device*/
-    lv_timer_t * read_timer;
+    lv_timer_t *read_timer;
 
     /**< Number of pixels to slide before actually drag the object*/
     uint8_t scroll_limit;
@@ -148,10 +148,10 @@ typedef struct _lv_indev_proc_t {
             lv_point_t scroll_sum; /*Count the dragged pixels to check LV_INDEV_DEF_SCROLL_LIMIT*/
             lv_point_t scroll_throw_vect;
             lv_point_t scroll_throw_vect_ori;
-            struct _lv_obj_t * act_obj;      /*The object being pressed*/
-            struct _lv_obj_t * last_obj;     /*The last object which was pressed*/
-            struct _lv_obj_t * scroll_obj;   /*The object being scrolled*/
-            struct _lv_obj_t * last_pressed; /*The lastly pressed object*/
+            struct _lv_obj_t *act_obj;       /*The object being pressed*/
+            struct _lv_obj_t *last_obj;      /*The last object which was pressed*/
+            struct _lv_obj_t *scroll_obj;    /*The object being scrolled*/
+            struct _lv_obj_t *last_pressed;  /*The lastly pressed object*/
             lv_area_t scroll_area;
 
             lv_point_t gesture_sum; /*Count the gesture pixels to check LV_INDEV_DEF_GESTURE_LIMIT*/
@@ -174,11 +174,11 @@ typedef struct _lv_indev_proc_t {
 /** The main input device descriptor with driver, runtime data ('proc') and some additional
  * information*/
 typedef struct _lv_indev_t {
-    struct _lv_indev_drv_t * driver;
+    struct _lv_indev_drv_t *driver;
     _lv_indev_proc_t proc;
-    struct _lv_obj_t * cursor;     /**< Cursor for LV_INPUT_TYPE_POINTER*/
-    struct _lv_group_t * group;    /**< Keypad destination group*/
-    const lv_point_t * btn_points; /**< Array points assigned to the button ()screen will be pressed
+    struct _lv_obj_t *cursor;      /**< Cursor for LV_INPUT_TYPE_POINTER*/
+    struct _lv_group_t *group;     /**< Keypad destination group*/
+    const lv_point_t *btn_points; /**< Array points assigned to the button ()screen will be pressed
                                       here by the buttons*/
 } lv_indev_t;
 
@@ -199,7 +199,7 @@ void lv_indev_drv_init(struct _lv_indev_drv_t * driver);
  * @param driver pointer to an initialized 'lv_indev_drv_t' variable (can be local variable)
  * @return pointer to the new input device or NULL on error
  */
-lv_indev_t * lv_indev_drv_register(struct _lv_indev_drv_t * driver);
+lv_indev_t *lv_indev_drv_register(struct _lv_indev_drv_t * driver);
 
 /**
  * Update the driver in run time.
@@ -220,7 +220,7 @@ void lv_indev_delete(lv_indev_t * indev);
  * @return the next input device or NULL if there are no more. Provide the first input device when
  * the parameter is NULL
  */
-lv_indev_t * lv_indev_get_next(lv_indev_t * indev);
+lv_indev_t *lv_indev_get_next(lv_indev_t * indev);
 
 /**
  * Read data from an input device.

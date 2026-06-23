@@ -34,24 +34,6 @@ void events_init_screen_main(lv_ui *ui)
     lv_obj_add_event_cb(ui->screen_main, screen_main_event_handler, LV_EVENT_ALL, ui);
 }
 
-static void screen_option_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-    case LV_EVENT_SCREEN_LOADED: {
-            scrollicon();
-            break;
-        }
-    default:
-        break;
-    }
-}
-
-void events_init_screen_option(lv_ui *ui)
-{
-    lv_obj_add_event_cb(ui->screen_option, screen_option_event_handler, LV_EVENT_ALL, ui);
-}
-
 static void screen_music_event_handler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);

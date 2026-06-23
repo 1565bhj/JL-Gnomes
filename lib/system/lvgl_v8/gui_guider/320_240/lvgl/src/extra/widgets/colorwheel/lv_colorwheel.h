@@ -60,7 +60,7 @@ extern const lv_obj_class_t lv_colorwheel_class;
  * @param knob_recolor true: set the knob's color to the current color
  * @return pointer to the created color picker
  */
-lv_obj_t * lv_colorwheel_create(lv_obj_t * parent, bool knob_recolor);
+lv_obj_t *lv_colorwheel_create(lv_obj_t * parent, bool knob_recolor);
 
 /*=====================
  * Setter functions

@@ -38,7 +38,7 @@ extern const lv_obj_class_t lv_qrcode_class;
  * @param light_color light color of the QR code
  * @return pointer to the created QR code object
  */
-lv_obj_t * lv_qrcode_create(lv_obj_t * parent, lv_coord_t size, lv_color_t dark_color, lv_color_t light_color);
+lv_obj_t *lv_qrcode_create(lv_obj_t * parent, lv_coord_t size, lv_color_t dark_color, lv_color_t light_color);
 
 /**
  * Set the data of a QR code object

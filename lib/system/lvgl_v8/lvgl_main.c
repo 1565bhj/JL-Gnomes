@@ -12,6 +12,7 @@
 #include "lvgl.h"
 #include "sys_time.h"
 #include "gui_guider.h"
+#include "custom.h"
 #include "cJSON_common\cJSON.h"
 #include "app_config.h"
 
@@ -25,7 +26,7 @@ void charge_status_check(void);
 
 // 系统状态检测函数声明
 extern void ai_speaker_check_network_status(void);
-extern void BT_check_bluetooth_status(void);
+extern int BT_check_bluetooth_status(void);
 extern void alarm_status_check(void);
 void charge_status_init(void);
 
@@ -89,9 +90,14 @@ static void lvgl_main_task(void *priv)
 
 //    //定时检测系统状态
     lv_timer_create(system_status_check, 2 * 1000, NULL);
-
+    /////////////////////////////////////////////////////////////////
+    ///从flash里面读取不能放在event_init里面，会白屏/////////////
+    /////////////////////////////////////////////////////////////////
     //初始化进度条
     init_screen_set_sliders();
+    sub_pages_bind_return_buttons(&guider_ui);
+    /* agent：按 Flash 恢复选中框改在首次进入 agent 页时执行一次，见 agent_choose_restore_from_saved_id_first_enter_only */
+
     printf("[LVGL] 进入主循环...\n");
 
 #else //LVGL官方DEMO
@@ -106,6 +112,9 @@ static void lvgl_main_task(void *priv)
 #endif
     // 主事件循环
     while (1) {
+        // 处理LVGL定时器和事件
+        uint32_t wait_time = lv_timer_handler();
+
         time_ui_update();    // 立即更新UI
         u32 time_till_next = lv_timer_handler();//跑lv_timer_handler刷新UI
         if (LV_DISP_DEF_REFR_PERIOD > 1 && time_till_next >= 1000 / OS_TICKS_PER_SEC) {

@@ -30,7 +30,7 @@ typedef struct {
     lv_coord_t width;
     uint16_t start_angle;
     uint16_t end_angle;
-    const void * img_src;
+    const void *img_src;
     lv_opa_t opa;
     lv_blend_mode_t blend_mode  : 2;
     uint8_t rounded : 1;
@@ -70,7 +70,7 @@ void lv_draw_arc(struct _lv_draw_ctx_t * draw_ctx, const lv_draw_arc_dsc_t * dsc
  * @param area          store the area to invalidate here
  */
 void lv_draw_arc_get_area(lv_coord_t x, lv_coord_t y, uint16_t radius,  uint16_t start_angle, uint16_t end_angle,
-                          lv_coord_t w, bool rounded, lv_area_t * area);
+                          lv_coord_t w, bool rounded, lv_area_t *area);
 
 /**********************
  *      MACROS

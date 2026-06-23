@@ -37,14 +37,14 @@ typedef struct {
 /*Data of calendar*/
 typedef struct {
     lv_obj_t obj;
-    lv_obj_t * btnm;
+    lv_obj_t *btnm;
     /*New data for this type*/
     lv_calendar_date_t today;               /*Date of today*/
     lv_calendar_date_t showed_date;         /*Currently visible month (day is ignored)*/
     lv_calendar_date_t *
     highlighted_dates; /*Apply different style on these days (pointer to an array defined by the user)*/
     uint16_t highlighted_dates_num;          /*Number of elements in `highlighted_days`*/
-    const char * map[8 * 7];
+    const char *map[8 * 7];
     char nums [7 * 6][4];
 } lv_calendar_t;
 
@@ -54,7 +54,7 @@ extern const lv_obj_class_t lv_calendar_class;
  * GLOBAL PROTOTYPES
  **********************/
 
-lv_obj_t * lv_calendar_create(lv_obj_t * parent);
+lv_obj_t *lv_calendar_create(lv_obj_t * parent);
 
 /*======================
  * Add/remove functions
@@ -109,28 +109,28 @@ void lv_calendar_set_day_names(lv_obj_t * obj, const char ** day_names);
  * @param obj   pointer to a calendar object
  * @return      pointer to a the button matrix
  */
-lv_obj_t * lv_calendar_get_btnmatrix(const lv_obj_t * obj);
+lv_obj_t *lv_calendar_get_btnmatrix(const lv_obj_t * obj);
 
 /**
  * Get the today's date
  * @param calendar pointer to a calendar object
  * @return return pointer to an `lv_calendar_date_t` variable containing the date of today.
  */
-const lv_calendar_date_t * lv_calendar_get_today_date(const lv_obj_t * calendar);
+const lv_calendar_date_t *lv_calendar_get_today_date(const lv_obj_t * calendar);
 
 /**
  * Get the currently showed
  * @param calendar pointer to a calendar object
  * @return pointer to an `lv_calendar_date_t` variable containing the date is being shown.
  */
-const lv_calendar_date_t * lv_calendar_get_showed_date(const lv_obj_t * calendar);
+const lv_calendar_date_t *lv_calendar_get_showed_date(const lv_obj_t * calendar);
 
 /**
  * Get the highlighted dates
  * @param calendar pointer to a calendar object
  * @return pointer to an `lv_calendar_date_t` array containing the dates.
  */
-lv_calendar_date_t * lv_calendar_get_highlighted_dates(const lv_obj_t * calendar);
+lv_calendar_date_t *lv_calendar_get_highlighted_dates(const lv_obj_t * calendar);
 
 /**
  * Get the number of the highlighted dates

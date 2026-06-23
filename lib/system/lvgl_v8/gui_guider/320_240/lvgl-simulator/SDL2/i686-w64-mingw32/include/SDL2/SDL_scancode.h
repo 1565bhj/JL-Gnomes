@@ -40,8 +40,7 @@
  *  The values in this enumeration are based on the USB usage page standard:
  *  https://www.usb.org/sites/default/files/documents/hut1_12v2.pdf
  */
-typedef enum
-{
+typedef enum {
     SDL_SCANCODE_UNKNOWN = 0,
 
     /**
@@ -238,10 +237,10 @@ typedef enum
     SDL_SCANCODE_MUTE = 127,
     SDL_SCANCODE_VOLUMEUP = 128,
     SDL_SCANCODE_VOLUMEDOWN = 129,
-/* not sure whether there's a reason to enable these */
-/*     SDL_SCANCODE_LOCKINGCAPSLOCK = 130,  */
-/*     SDL_SCANCODE_LOCKINGNUMLOCK = 131, */
-/*     SDL_SCANCODE_LOCKINGSCROLLLOCK = 132, */
+    /* not sure whether there's a reason to enable these */
+    /*     SDL_SCANCODE_LOCKINGCAPSLOCK = 130,  */
+    /*     SDL_SCANCODE_LOCKINGNUMLOCK = 131, */
+    /*     SDL_SCANCODE_LOCKINGSCROLLLOCK = 132, */
     SDL_SCANCODE_KP_COMMA = 133,
     SDL_SCANCODE_KP_EQUALSAS400 = 134,
 

@@ -28,7 +28,7 @@ extern "C" {
 
 typedef struct {
     lv_obj_t obj;
-    char * txt;
+    char *txt;
     uint32_t static_txt : 1;
 } lv_checkbox_t;
 
@@ -51,7 +51,7 @@ typedef enum {
  * @param parent    pointer to an object, it will be the parent of the new button
  * @return          pointer to the created check box
  */
-lv_obj_t * lv_checkbox_create(lv_obj_t * parent);
+lv_obj_t *lv_checkbox_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -82,7 +82,7 @@ void lv_checkbox_set_text_static(lv_obj_t * obj, const char * txt);
  * @param cb    pointer to check box object
  * @return      pointer to the text of the check box
  */
-const char * lv_checkbox_get_text(const lv_obj_t * obj);
+const char *lv_checkbox_get_text(const lv_obj_t * obj);
 
 /**********************
  *      MACROS

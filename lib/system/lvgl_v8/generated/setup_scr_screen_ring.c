@@ -28,6 +28,19 @@ void setup_scr_screen_ring(lv_ui *ui)
     lv_obj_set_style_bg_color(ui->screen_ring, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui->screen_ring, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    //Write codes screen_ring_img_return
+    ui->screen_ring_img_return = lv_img_create(ui->screen_ring);
+    lv_obj_add_flag(ui->screen_ring_img_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_ring_img_return, &_return_alpha_22x22);
+    lv_img_set_pivot(ui->screen_ring_img_return, 50, 50);
+    lv_img_set_angle(ui->screen_ring_img_return, 0);
+    lv_obj_set_pos(ui->screen_ring_img_return, 20, 10);
+    lv_obj_set_size(ui->screen_ring_img_return, 22, 22);
+    lv_obj_set_style_img_recolor_opa(ui->screen_ring_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_ring_img_return, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_ring_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_ring_img_return, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     //Write codes screen_ring_light
     ui->screen_ring_light = lv_img_create(ui->screen_ring);
     lv_obj_add_flag(ui->screen_ring_light, LV_OBJ_FLAG_CLICKABLE);

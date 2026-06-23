@@ -48,12 +48,12 @@ static uint32_t arc_length_param;
  * @param parent pointer to an object, it will be the parent of the new spinner
  * @return pointer to the created spinner
  */
-lv_obj_t * lv_spinner_create(lv_obj_t * parent, uint32_t time, uint32_t arc_length)
+lv_obj_t *lv_spinner_create(lv_obj_t * parent, uint32_t time, uint32_t arc_length)
 {
     time_param = time;
     arc_length_param = arc_length;
 
-    lv_obj_t * obj = lv_obj_class_create_obj(&lv_spinner_class, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(&lv_spinner_class, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }

@@ -55,7 +55,7 @@ int main(void)
     pfd.events = POLLIN;
 
     /* Currently, the wayland driver calls lv_timer_handler internaly */
-    while(1) {
+    while (1) {
         /* Periodically call the lv_task handler.
          * It could be done in a timer interrupt or an OS task too.*/
         time_till_next = lv_wayland_timer_handler();
@@ -69,17 +69,17 @@ int main(void)
         } else if (time_till_next > INT_MAX) {
             sleep_time = INT_MAX;
         } else {
-           sleep_time = time_till_next;
+            sleep_time = time_till_next;
         }
         while ((poll(&pfd, 1, sleep_time) < 0) && (errno == EINTR));
     }
 #else
     uint32_t idle_time;
 
-    while(1) {
+    while (1) {
         /* Returns the time to the next timer execution */
         idle_time = lv_timer_handler();
-	usleep(idle_time * 1000);
+        usleep(idle_time * 1000);
     }
 #endif
 
@@ -95,7 +95,7 @@ static void hal_init(void)
     lv_wayland_init();
 
     /* Create a display */
-    lv_disp_t * disp = lv_wayland_create_window(LV_HOR_RES_MAX, LV_VER_RES_MAX, "GUI Guider", close_cb);
+    lv_disp_t *disp = lv_wayland_create_window(LV_HOR_RES_MAX, LV_VER_RES_MAX, "GUI Guider", close_cb);
 #elif USE_DRM
     /*DRM init*/
     static lv_color_t buf[2][LV_HOR_RES_MAX * LV_VER_RES_MAX];
@@ -127,7 +127,7 @@ static void hal_init(void)
     lv_indev_t *mouse_indev = lv_indev_drv_register(&indev_drv);
 
     LV_IMG_DECLARE(mouse_cursor_icon)
-    lv_obj_t * cursor_obj = lv_img_create(lv_scr_act());
+    lv_obj_t *cursor_obj = lv_img_create(lv_scr_act());
     lv_img_set_src(cursor_obj, &mouse_cursor_icon);
     lv_indev_set_cursor(mouse_indev, cursor_obj);
 #endif
@@ -141,7 +141,7 @@ static void hal_init(void)
 uint32_t custom_tick_get(void)
 {
     static uint64_t start_ms = 0;
-    if(start_ms == 0) {
+    if (start_ms == 0) {
         struct timeval tv_start;
         gettimeofday(&tv_start, NULL);
         start_ms = (tv_start.tv_sec * 1000000 + tv_start.tv_usec) / 1000;

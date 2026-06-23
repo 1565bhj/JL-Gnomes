@@ -44,10 +44,10 @@ static void rotate_timer_cb(lv_timer_t *timer)
 {
     // 计算当前已旋转的总时间（包含历史累计）
     uint32_t current_time = lv_tick_get() - start_time + pause_offset;
-    
+
     // 计算角度：(总时间 / 周期) * 360度，取模360确保在0-359范围
     int32_t angle = (current_time * 360 * 10) / ROTATE_PERIOD % (360 * 10);
-    
+
     // 设置角度
     lv_img_set_angle(guider_ui.screen_story_img_tape, angle);
 }
@@ -60,7 +60,7 @@ static void tape_rotate_start(void)
 {
     // 设置磁带条的角度为-80度
     lv_img_set_angle(guider_ui.screen_story_img_bar, -80);
-    
+
     // 启动定时器（从上次停止的角度继续）
     if (!rotate_timer) {
         start_time = lv_tick_get();  // 记录当前启动时间
@@ -81,7 +81,7 @@ static void tape_rotate_stop(void)
         lv_timer_del(rotate_timer);
         rotate_timer = NULL;
     }
-    
+
     // 设置磁带条的角度为110度
     lv_img_set_angle(guider_ui.screen_story_img_bar, 110);
 }
@@ -94,7 +94,7 @@ static void img_music_anim_end_cb(lv_anim_t *anim)
 {
     // 切换动画方向
     img_music_anim_reverse = !img_music_anim_reverse;
-    
+
     // 重新配置并启动动画
     lv_anim_t a;
     lv_anim_init(&a);
@@ -104,7 +104,7 @@ static void img_music_anim_end_cb(lv_anim_t *anim)
     lv_anim_set_playback_delay(&a, 200); // 延迟200ms后开始反向动画
     lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
     lv_anim_set_ready_cb(&a, img_music_anim_end_cb);
-    
+
     if (img_music_anim_reverse) {
         // 从最小宽度恢复到原始宽度
         lv_anim_set_values(&a, IMG_MUSIC_ZOOM_MIN, IMG_MUSIC_ZOOM_ORIGINAL);
@@ -112,7 +112,7 @@ static void img_music_anim_end_cb(lv_anim_t *anim)
         // 从原始宽度缩短到最小宽度
         lv_anim_set_values(&a, IMG_MUSIC_ZOOM_ORIGINAL, IMG_MUSIC_ZOOM_MIN);
     }
-    
+
     lv_anim_start(&a);
 }
 
@@ -123,7 +123,7 @@ static void start_img_music_animation(void)
 {
     // 确保不会同时启动多个动画
     lv_anim_del(guider_ui.screen_story_img_music, (lv_anim_exec_xcb_t)lv_img_set_zoom);
-    
+
     // 初始化动画
     lv_anim_t a;
     lv_anim_init(&a);
@@ -132,39 +132,38 @@ static void start_img_music_animation(void)
     lv_anim_set_time(&a, IMG_MUSIC_ANIM_TIME);
     lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
     lv_anim_set_ready_cb(&a, img_music_anim_end_cb);
-    
+
     // 设置动画从原始大小到缩小比例
     lv_anim_set_values(&a, IMG_MUSIC_ZOOM_ORIGINAL, IMG_MUSIC_ZOOM_MIN);
-    
+
     // 启动动画
     lv_anim_start(&a);
 }
 
 // 播放/暂停按钮点击事件处理函数
-static void screen_story_btn_play_pause_event_handler (lv_event_t *e)
+static void screen_story_btn_play_pause_event_handler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 切换按钮状态
-        g_play_pause_btn_state = !g_play_pause_btn_state;
-        if (g_play_pause_btn_state) {
-            // 设置为播放
-            lv_label_set_text(ui->screen_story_btn_play_pause_label, "I I");
-            lv_obj_set_style_text_font(ui->screen_story_btn_play_pause_label, &lv_font_Barlow__18, LV_PART_MAIN|LV_STATE_DEFAULT);
-            tape_rotate_start();
-            // start_img_music_animation(); // 开始 img_music 动画
-        } else {
-            // 设置为暂停
-            lv_label_set_text(ui->screen_story_btn_play_pause_label, "   "LV_SYMBOL_PLAY " ");
-            lv_obj_set_style_text_font(ui->screen_story_btn_play_pause_label, &lv_font_Barlow__18, LV_PART_MAIN|LV_STATE_DEFAULT);
-            tape_rotate_stop();
-            // lv_anim_del(guider_ui.screen_story_img_music, (lv_anim_exec_xcb_t)lv_img_set_zoom); // 停止 img_music 动画
+    case LV_EVENT_CLICKED: {
+            // 切换按钮状态
+            g_play_pause_btn_state = !g_play_pause_btn_state;
+            if (g_play_pause_btn_state) {
+                // 设置为播放
+                lv_label_set_text(ui->screen_story_btn_play_pause_label, "I I");
+                lv_obj_set_style_text_font(ui->screen_story_btn_play_pause_label, &lv_font_Barlow__18, LV_PART_MAIN | LV_STATE_DEFAULT);
+                tape_rotate_start();
+                // start_img_music_animation(); // 开始 img_music 动画
+            } else {
+                // 设置为暂停
+                lv_label_set_text(ui->screen_story_btn_play_pause_label, "   "LV_SYMBOL_PLAY " ");
+                lv_obj_set_style_text_font(ui->screen_story_btn_play_pause_label, &lv_font_Barlow__18, LV_PART_MAIN | LV_STATE_DEFAULT);
+                tape_rotate_stop();
+                // lv_anim_del(guider_ui.screen_story_img_music, (lv_anim_exec_xcb_t)lv_img_set_zoom); // 停止 img_music 动画
+            }
+            break;
         }
-        break;
-    }
     default:
         break;
     }
@@ -176,13 +175,12 @@ static void screen_story_last_event_handler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 上一个按钮点击事件处理逻辑
-        printf("上一个故事按钮被点击\n");
-        // 这里可以添加切换到上一个故事的具体实现
-        break;
-    }
+    case LV_EVENT_CLICKED: {
+            // 上一个按钮点击事件处理逻辑
+            printf("上一个故事按钮被点击\n");
+            // 这里可以添加切换到上一个故事的具体实现
+            break;
+        }
     default:
         break;
     }
@@ -194,13 +192,12 @@ static void screen_story_next_event_handler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_ui *ui = lv_event_get_user_data(e);
     switch (code) {
-    case LV_EVENT_CLICKED:
-    {
-        // 下一个按钮点击事件处理逻辑
-        printf("下一个故事按钮被点击\n");
-        // 这里可以添加切换到下一个故事的具体实现
-        break;
-    }
+    case LV_EVENT_CLICKED: {
+            // 下一个按钮点击事件处理逻辑
+            printf("下一个故事按钮被点击\n");
+            // 这里可以添加切换到下一个故事的具体实现
+            break;
+        }
     default:
         break;
     }
@@ -211,12 +208,12 @@ static void screen_story_slider_event_handler(lv_event_t *e)
 {
     lv_obj_t *slider = lv_event_get_target(e);
     lv_event_code_t event_code = lv_event_get_code(e);
-    
-    if(event_code == LV_EVENT_VALUE_CHANGED) {
+
+    if (event_code == LV_EVENT_VALUE_CHANGED) {
         // 进度条值改变事件
         int32_t value = lv_slider_get_value(slider);
         printf("[进度事件] 进度值已更改为: %d%%\n", (int)value);
-        
+
         // 这里可以添加根据进度更新故事播放位置的实现
     }
 }
@@ -225,32 +222,33 @@ static void screen_story_slider_event_handler(lv_event_t *e)
  * @brief 故事界面事件初始化函数
  * 为故事界面的各个组件添加事件处理
  */
-void story_event_init(lv_ui *ui) {
+void story_event_init(lv_ui *ui)
+{
     // 添加这行代码完全禁止页面滚动
     lv_obj_set_scroll_dir(ui->screen_story, LV_DIR_NONE);
-    
+
     // 为播放/暂停按钮添加点击事件
     lv_obj_remove_event_cb(ui->screen_story_btn_play_pause, NULL);
     lv_obj_add_event_cb(ui->screen_story_btn_play_pause, screen_story_btn_play_pause_event_handler, LV_EVENT_ALL, ui);
-    
+
     // 初始化磁带动画状态
     init_tape_animation_state();
     if (g_play_pause_btn_state) {
         // 设置为播放
         lv_label_set_text(ui->screen_story_btn_play_pause_label, "I I");
-        lv_obj_set_style_text_font(ui->screen_story_btn_play_pause_label, &lv_font_Barlow__18, LV_PART_MAIN|LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(ui->screen_story_btn_play_pause_label, &lv_font_Barlow__18, LV_PART_MAIN | LV_STATE_DEFAULT);
         tape_rotate_start();
         // start_img_music_animation(); // 开始 img_music 动画
     }
-    
+
     // 为上一个按钮添加点击事件
     lv_obj_remove_event_cb(ui->screen_story_last, NULL);
     lv_obj_add_event_cb(ui->screen_story_last, screen_story_last_event_handler, LV_EVENT_CLICKED, ui);
-    
+
     // 为下一个按钮添加点击事件
     lv_obj_remove_event_cb(ui->screen_story_next, NULL);
     lv_obj_add_event_cb(ui->screen_story_next, screen_story_next_event_handler, LV_EVENT_CLICKED, ui);
-    
+
     // 为进度条添加事件
     lv_obj_remove_event_cb(ui->screen_story_slider, NULL);
     lv_obj_add_event_cb(ui->screen_story_slider, screen_story_slider_event_handler, LV_EVENT_ALL, ui);
@@ -260,9 +258,10 @@ void story_event_init(lv_ui *ui) {
  * @brief 故事界面事件设置函数
  * 初始化故事界面的所有事件
  */
-void story_event_setup(void) {
+void story_event_setup(void)
+{
     story_event_init(&guider_ui);
 }
 
 
-  
+

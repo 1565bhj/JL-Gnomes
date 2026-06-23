@@ -465,7 +465,6 @@ int lv_demo_music_play_pause_button(char pause)
 {
     PRODUCTION_TEST_FUNC_CHECK();
     screen_music_btn_play_pause_show(pause);
-    screen_podcast_btn_play_pause_show(pause);
     return 0;
 }
 
@@ -478,7 +477,6 @@ int lv_demo_music_update_title(char *title)
 {
     PRODUCTION_TEST_FUNC_CHECK();
     music_update_title(title);
-    podcast_update_title(title);
     return 0;
 }
 
@@ -516,7 +514,6 @@ int lv_demo_music_update_total_time(int sec)
 {
     PRODUCTION_TEST_FUNC_CHECK();
     music_update_time(sec);
-    podcast_update_time(sec);
     return 0;
 }
 
@@ -529,7 +526,6 @@ int lv_demo_music_update_current_time(int sec)
 {
     PRODUCTION_TEST_FUNC_CHECK();
     music_update_current_time(sec);
-    podcast_update_current_time(sec);
     return 0;
 }
 
@@ -555,7 +551,6 @@ void lv_demo_music_play_pause(char stop, char *type)
     struct key_event key = {0};
     key.type = KEY_EVENT_USER;
     key.action = KEY_EVENT_CLICK;
-
     if (ai_speaker_app()) {
         if (stop) {
             net_music_play_puase();
@@ -717,7 +712,6 @@ int lv_demo_switch_to_music_page(void *priv)
                 if (*type == ':' || *type == '_') {
                     type++;
                 }
-                switch_to_podcast_page(type);//播客
             }
         }
     }
@@ -1144,7 +1138,58 @@ int lv_demo_system_bt_music_playing(void)
     return !bt_music_play_get_pause();
 }
 
+/**
+ * @brief 当前前台音乐应用是否处于暂停（与“无音源/已停止”区分，用于进入音乐页时不要误切下一首）
+ */
+int lv_demo_active_audio_app_music_paused(void)
+{
+    extern int audio_app_mode_check(void);
+    extern int net_music_play_pause_status(void);
+    int paused = 0;
 
+    PRODUCTION_TEST_FUNC_CHECK();
+    switch (audio_app_mode_check()) {
+    case 0:
+        paused = net_music_play_pause_status();
+        break;
+    case 1:
+#ifdef CONFIG_BT_MUSIC_MODE_ENABLE
+        extern int bt_music_play_get_pause(void);
+        paused = bt_music_play_get_pause();
+#else
+        paused = 0;
+#endif
+        break;
+    case 2:
+#ifdef CONFIG_SD_MUSIC_MODE_ENABLE
+        extern int sd_music_pause_status(void);
+        paused = sd_music_pause_status();
+#else
+        paused = 0;
+#endif
+        break;
+    case 3:
+#ifdef CONFIG_USB_DISK_MUSIC_MODE_ENABLE
+        extern int usbdisk_music_pause_status(void);
+        paused = usbdisk_music_pause_status();
+#else
+        paused = 0;
+#endif
+        break;
+    case 4:
+#ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
+        extern int aux_music_pause_status(void);
+        paused = aux_music_pause_status();
+#else
+        paused = 0;
+#endif
+        break;
+    default:
+        paused = 0;
+        break;
+    }
+    return paused;
+}
 #endif
 
 

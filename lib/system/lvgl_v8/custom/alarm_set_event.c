@@ -441,6 +441,7 @@ void alarm_set_event_init(lv_ui *ui)
     // 注册返回按钮点击事件
     lv_obj_remove_event_cb(ui->screen_alarm_set_return, alarm_set_return_event_handler);
     lv_obj_add_event_cb(ui->screen_alarm_set_return, alarm_set_return_event_handler, LV_EVENT_CLICKED, ui);
+    ui_subpage_return_set_large_touch_area(ui->screen_alarm_set_return, (lv_coord_t)UI_SUBPAGE_RETURN_EXT_PAD);
 
     // 注册p_circle、p_once、p_set样式切换事件
 

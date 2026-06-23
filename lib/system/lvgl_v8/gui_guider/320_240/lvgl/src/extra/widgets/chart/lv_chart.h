@@ -69,8 +69,8 @@ typedef uint8_t lv_chart_axis_t;
  * Descriptor a chart series
  */
 typedef struct {
-    lv_coord_t * x_points;
-    lv_coord_t * y_points;
+    lv_coord_t *x_points;
+    lv_coord_t *y_points;
     lv_color_t color;
     uint16_t start_point;
     uint8_t hidden : 1;
@@ -84,7 +84,7 @@ typedef struct {
     lv_point_t pos;
     lv_coord_t point_id;
     lv_color_t color;
-    lv_chart_series_t * ser;
+    lv_chart_series_t *ser;
     lv_dir_t dir;
     uint8_t pos_set: 1; /*1: pos is set; 0: point_id is set*/
 } lv_chart_cursor_t;
@@ -143,7 +143,7 @@ typedef enum {
  * @param parent    pointer to an object, it will be the parent of the new chart
  * @return          pointer to the created chart
  */
-lv_obj_t * lv_chart_create(lv_obj_t * parent);
+lv_obj_t *lv_chart_create(lv_obj_t * parent);
 
 /**
  * Set a new type for a chart
@@ -273,7 +273,7 @@ void lv_chart_refresh(lv_obj_t * obj);
  * @param axis      the y axis to which the series should be attached (::LV_CHART_AXIS_PRIMARY_Y or ::LV_CHART_AXIS_SECONDARY_Y)
  * @return          pointer to the allocated data series
  */
-lv_chart_series_t * lv_chart_add_series(lv_obj_t * obj, lv_color_t color, lv_chart_axis_t axis);
+lv_chart_series_t *lv_chart_add_series(lv_obj_t * obj, lv_color_t color, lv_chart_axis_t axis);
 
 /**
  * Deallocate and remove a data series from a chart
@@ -313,7 +313,7 @@ void lv_chart_set_x_start_point(lv_obj_t * obj, lv_chart_series_t * ser, uint16_
  * @param ser      the previous series or NULL to get the first
  * @return          the next series or NULL if there is no more.
  */
-lv_chart_series_t * lv_chart_get_series_next(const lv_obj_t * chart, const lv_chart_series_t * ser);
+lv_chart_series_t *lv_chart_get_series_next(const lv_obj_t * chart, const lv_chart_series_t * ser);
 
 
 
@@ -328,7 +328,7 @@ lv_chart_series_t * lv_chart_get_series_next(const lv_obj_t * chart, const lv_ch
  * @param dir       direction of the cursor. `LV_DIR_RIGHT/LEFT/TOP/DOWN/HOR/VER/ALL`. OR-ed values are possible
  * @return          pointer to the created cursor
  */
-lv_chart_cursor_t  * lv_chart_add_cursor(lv_obj_t * obj, lv_color_t color, lv_dir_t dir);
+lv_chart_cursor_t   *lv_chart_add_cursor(lv_obj_t * obj, lv_color_t color, lv_dir_t dir);
 
 /**
  * Set the coordinate of the cursor with respect to the paddings
@@ -430,7 +430,7 @@ void lv_chart_set_ext_x_array(lv_obj_t * obj, lv_chart_series_t * ser, lv_coord_
  * @param ser   pointer to a data series on 'chart'
  * @return      the array of values with 'point_count' elements
  */
-lv_coord_t * lv_chart_get_y_array(const lv_obj_t * obj, lv_chart_series_t * ser);
+lv_coord_t *lv_chart_get_y_array(const lv_obj_t * obj, lv_chart_series_t * ser);
 
 /**
  * Get the array of x values of a series
@@ -438,7 +438,7 @@ lv_coord_t * lv_chart_get_y_array(const lv_obj_t * obj, lv_chart_series_t * ser)
  * @param ser   pointer to a data series on 'chart'
  * @return      the array of values with 'point_count' elements
  */
-lv_coord_t * lv_chart_get_x_array(const lv_obj_t * obj, lv_chart_series_t * ser);
+lv_coord_t *lv_chart_get_x_array(const lv_obj_t * obj, lv_chart_series_t * ser);
 
 /**
  * Get the index of the currently pressed point. It's the same for every series.

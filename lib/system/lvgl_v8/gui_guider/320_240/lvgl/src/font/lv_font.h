@@ -66,7 +66,7 @@ typedef struct _lv_font_t {
     bool (*get_glyph_dsc)(const struct _lv_font_t *, lv_font_glyph_dsc_t *, uint32_t letter, uint32_t letter_next);
 
     /** Get a glyph's bitmap from a font*/
-    const uint8_t * (*get_glyph_bitmap)(const struct _lv_font_t *, uint32_t);
+    const uint8_t *(*get_glyph_bitmap)(const struct _lv_font_t *, uint32_t);
 
     /*Pointer to the font in a font pack (must have the same line height)*/
     lv_coord_t line_height;         /**< The real line height where any text fits*/
@@ -76,10 +76,10 @@ typedef struct _lv_font_t {
     int8_t underline_position;      /**< Distance between the top of the underline and base line (< 0 means below the base line)*/
     int8_t underline_thickness;     /**< Thickness of the underline*/
 
-    const void * dsc;               /**< Store implementation specific or run_time data or caching here*/
-    const struct _lv_font_t * fallback;   /**< Fallback font for missing glyph. Resolved recursively */
+    const void *dsc;                /**< Store implementation specific or run_time data or caching here*/
+    const struct _lv_font_t *fallback;    /**< Fallback font for missing glyph. Resolved recursively */
 #if LV_USE_USER_DATA
-    void * user_data;               /**< Custom user data for font.*/
+    void *user_data;                /**< Custom user data for font.*/
 #endif
 } lv_font_t;
 
@@ -93,7 +93,7 @@ typedef struct _lv_font_t {
  * @param letter a UNICODE character code
  * @return pointer to the bitmap of the letter
  */
-const uint8_t * lv_font_get_glyph_bitmap(const lv_font_t * font_p, uint32_t letter);
+const uint8_t *lv_font_get_glyph_bitmap(const lv_font_t * font_p, uint32_t letter);
 
 /**
  * Get the descriptor of a glyph
@@ -249,7 +249,7 @@ LV_FONT_CUSTOM_DECLARE
  * Just a wrapper around LV_FONT_DEFAULT because it might be more convenient to use a function in some cases
  * @return  pointer to LV_FONT_DEFAULT
  */
-static inline const lv_font_t * lv_font_default(void)
+static inline const lv_font_t *lv_font_default(void)
 {
     return LV_FONT_DEFAULT;
 }

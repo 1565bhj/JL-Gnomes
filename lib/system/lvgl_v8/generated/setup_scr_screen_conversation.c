@@ -31,6 +31,19 @@ void setup_scr_screen_conversation(lv_ui *ui)
     lv_obj_set_style_bg_img_src(ui->screen_conversation, "m:mnt/sdfile/app/uipackres/ui/bg1.bin", LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_opa(ui->screen_conversation, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    //Write codes screen_conversation_img_return
+    ui->screen_conversation_img_return = lv_img_create(ui->screen_conversation);
+    lv_obj_add_flag(ui->screen_conversation_img_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_conversation_img_return, &_return_alpha_22x22);
+    lv_img_set_pivot(ui->screen_conversation_img_return, 50, 50);
+    lv_img_set_angle(ui->screen_conversation_img_return, 0);
+    lv_obj_set_pos(ui->screen_conversation_img_return, 20, 10);
+    lv_obj_set_size(ui->screen_conversation_img_return, 22, 22);
+    lv_obj_set_style_img_recolor_opa(ui->screen_conversation_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_conversation_img_return, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_conversation_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_conversation_img_return, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     //Write codes screen_conversation_cont_frame
     ui->screen_conversation_cont_frame = lv_obj_create(ui->screen_conversation);
     lv_obj_set_pos(ui->screen_conversation_cont_frame, 8, 44);
@@ -61,7 +74,7 @@ void setup_scr_screen_conversation(lv_ui *ui)
     lv_style_set_text_color(&ui->screen_conversation_span_listen_speak_span->style, lv_color_hex(0xffffff));
     lv_style_set_text_decor(&ui->screen_conversation_span_listen_speak_span->style, LV_TEXT_DECOR_NONE);
     lv_style_set_text_font(&ui->screen_conversation_span_listen_speak_span->style, &lv_font_MiSansDemibold_18);
-    lv_obj_set_pos(ui->screen_conversation_span_listen_speak, 107, 18);
+    lv_obj_set_pos(ui->screen_conversation_span_listen_speak, 119, 11);
     lv_obj_set_size(ui->screen_conversation_span_listen_speak, 131, 14);
 
     //Write style state: LV_STATE_DEFAULT for &style_screen_conversation_span_listen_speak_main_main_default

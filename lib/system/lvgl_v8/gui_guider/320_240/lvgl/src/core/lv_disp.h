@@ -54,7 +54,7 @@ typedef enum {
  * screen)
  * @return pointer to the active screen object (loaded by 'lv_scr_load()')
  */
-lv_obj_t * lv_disp_get_scr_act(lv_disp_t * disp);
+lv_obj_t *lv_disp_get_scr_act(lv_disp_t * disp);
 
 /**
  * Return with a pointer to the previous screen. Only used during screen transitions.
@@ -62,7 +62,7 @@ lv_obj_t * lv_disp_get_scr_act(lv_disp_t * disp);
  * screen)
  * @return pointer to the previous screen object or NULL if not used now
  */
-lv_obj_t * lv_disp_get_scr_prev(lv_disp_t * disp);
+lv_obj_t *lv_disp_get_scr_prev(lv_disp_t * disp);
 
 /**
  * Make a screen active
@@ -75,7 +75,7 @@ void lv_disp_load_scr(lv_obj_t * scr);
  * @param disp pointer to display which top layer should be get. (NULL to use the default screen)
  * @return pointer to the top layer object (transparent screen sized lv_obj)
  */
-lv_obj_t * lv_disp_get_layer_top(lv_disp_t * disp);
+lv_obj_t *lv_disp_get_layer_top(lv_disp_t * disp);
 
 /**
  * Return with the sys. layer. (Same on every screen and it is above the normal screen and the top
@@ -83,7 +83,7 @@ lv_obj_t * lv_disp_get_layer_top(lv_disp_t * disp);
  * @param disp pointer to display which sys. layer should be retrieved. (NULL to use the default screen)
  * @return pointer to the sys layer object (transparent screen sized lv_obj)
  */
-lv_obj_t * lv_disp_get_layer_sys(lv_disp_t * disp);
+lv_obj_t *lv_disp_get_layer_sys(lv_disp_t * disp);
 
 /**
  * Set the theme of a display
@@ -96,7 +96,7 @@ void lv_disp_set_theme(lv_disp_t * disp, lv_theme_t * th);
  * @param disp pointer to a display
  * @return the display's theme (can be NULL)
  */
-lv_theme_t * lv_disp_get_theme(lv_disp_t * disp);
+lv_theme_t *lv_disp_get_theme(lv_disp_t * disp);
 
 /**
  * Set the background color of a display
@@ -168,7 +168,7 @@ bool lv_disp_is_invalidation_enabled(lv_disp_t * disp);
  * @param disp pointer to a display
  * @return pointer to the display refresher timer. (NULL on error)
  */
-lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp);
+lv_timer_t *_lv_disp_get_refr_timer(lv_disp_t * disp);
 
 /*------------------------------------------------
  * To improve backward compatibility
@@ -179,7 +179,7 @@ lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp);
  * Get the active screen of the default display
  * @return pointer to the active screen
  */
-static inline lv_obj_t * lv_scr_act(void)
+static inline lv_obj_t *lv_scr_act(void)
 {
     return lv_disp_get_scr_act(lv_disp_get_default());
 }
@@ -188,7 +188,7 @@ static inline lv_obj_t * lv_scr_act(void)
  * Get the top layer  of the default display
  * @return pointer to the top layer
  */
-static inline lv_obj_t * lv_layer_top(void)
+static inline lv_obj_t *lv_layer_top(void)
 {
     return lv_disp_get_layer_top(lv_disp_get_default());
 }
@@ -197,7 +197,7 @@ static inline lv_obj_t * lv_layer_top(void)
  * Get the active screen of the default display
  * @return  pointer to the sys layer
  */
-static inline lv_obj_t * lv_layer_sys(void)
+static inline lv_obj_t *lv_layer_sys(void)
 {
     return lv_disp_get_layer_sys(lv_disp_get_default());
 }

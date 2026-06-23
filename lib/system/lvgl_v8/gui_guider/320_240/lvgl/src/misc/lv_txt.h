@@ -97,7 +97,7 @@ void lv_txt_get_size(lv_point_t * size_res, const char * text, const lv_font_t *
  * they are different)
  */
 uint32_t _lv_txt_get_next_line(const char * txt, const lv_font_t * font, lv_coord_t letter_space,
-                               lv_coord_t max_width, lv_coord_t * used_width, lv_text_flag_t flag);
+                               lv_coord_t max_width, lv_coord_t *used_width, lv_text_flag_t flag);
 
 /**
  * Give the length of a text with a given font
@@ -144,7 +144,7 @@ void _lv_txt_cut(char * txt, uint32_t pos, uint32_t len);
  * @param fmt `printf`-like format
  * @return pointer to the allocated text string.
  */
-char * _lv_txt_set_text_vfmt(const char * fmt, va_list ap) LV_FORMAT_ATTRIBUTE(1, 0);
+char *_lv_txt_set_text_vfmt(const char * fmt, va_list ap) LV_FORMAT_ATTRIBUTE(1, 0);
 
 /**
  * Decode two encoded character from a string.
@@ -168,13 +168,13 @@ static inline bool _lv_txt_is_break_char(uint32_t letter)
     bool ret = false;
 
     /* each chinese character can be break */
-    if(letter >= 0x4E00 && letter <= 0x9FA5) {
+    if (letter >= 0x4E00 && letter <= 0x9FA5) {
         return true;
     }
 
     /*Compare the letter to TXT_BREAK_CHARS*/
-    for(i = 0; LV_TXT_BREAK_CHARS[i] != '\0'; i++) {
-        if(letter == (uint32_t)LV_TXT_BREAK_CHARS[i]) {
+    for (i = 0; LV_TXT_BREAK_CHARS[i] != '\0'; i++) {
+        if (letter == (uint32_t)LV_TXT_BREAK_CHARS[i]) {
             ret = true; /*If match then it is break char*/
             break;
         }

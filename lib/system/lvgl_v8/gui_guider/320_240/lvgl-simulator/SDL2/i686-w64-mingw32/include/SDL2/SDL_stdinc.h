@@ -158,8 +158,7 @@ char *alloca();
 #define SDL_TRUE 1
 typedef int SDL_bool;
 #else
-typedef enum
-{
+typedef enum {
     SDL_FALSE = 0,
     SDL_TRUE = 1
 } SDL_bool;
@@ -333,9 +332,8 @@ SDL_COMPILE_TIME_ASSERT(sint64, sizeof(Sint64) == 8);
 /** \cond */
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #if !defined(__ANDROID__)
-   /* TODO: include/SDL_stdinc.h:174: error: size of array 'SDL_dummy_enum' is negative */
-typedef enum
-{
+/* TODO: include/SDL_stdinc.h:174: error: size of array 'SDL_dummy_enum' is negative */
+typedef enum {
     DUMMY_ENUM_VALUE
 } SDL_DUMMY_ENUM;
 
@@ -372,9 +370,9 @@ typedef void (SDLCALL *SDL_free_func)(void *mem);
  *  \brief Get the current set of SDL memory functions
  */
 extern DECLSPEC void SDLCALL SDL_GetMemoryFunctions(SDL_malloc_func *malloc_func,
-                                                    SDL_calloc_func *calloc_func,
-                                                    SDL_realloc_func *realloc_func,
-                                                    SDL_free_func *free_func);
+        SDL_calloc_func *calloc_func,
+        SDL_realloc_func *realloc_func,
+        SDL_free_func *free_func);
 
 /**
  *  \brief Replace SDL's memory allocation functions with a custom set
@@ -385,9 +383,9 @@ extern DECLSPEC void SDLCALL SDL_GetMemoryFunctions(SDL_malloc_func *malloc_func
  *        allocated by the previous memory allocation functions.
  */
 extern DECLSPEC int SDLCALL SDL_SetMemoryFunctions(SDL_malloc_func malloc_func,
-                                                   SDL_calloc_func calloc_func,
-                                                   SDL_realloc_func realloc_func,
-                                                   SDL_free_func free_func);
+        SDL_calloc_func calloc_func,
+        SDL_realloc_func realloc_func,
+        SDL_free_func free_func);
 
 /**
  *  \brief Get the number of outstanding (unfreed) allocations
@@ -397,7 +395,7 @@ extern DECLSPEC int SDLCALL SDL_GetNumAllocations(void);
 extern DECLSPEC char *SDLCALL SDL_getenv(const char *name);
 extern DECLSPEC int SDLCALL SDL_setenv(const char *name, const char *value, int overwrite);
 
-extern DECLSPEC void SDLCALL SDL_qsort(void *base, size_t nmemb, size_t size, int (*compare) (const void *, const void *));
+extern DECLSPEC void SDLCALL SDL_qsort(void *base, size_t nmemb, size_t size, int (*compare)(const void *, const void *));
 
 extern DECLSPEC int SDLCALL SDL_abs(int x);
 
@@ -426,26 +424,31 @@ SDL_FORCE_INLINE void SDL_memset4(void *dst, Uint32 val, size_t dwords)
     memset_pattern4(dst, &val, dwords * 4);
 #elif defined(__GNUC__) && defined(i386)
     int u0, u1, u2;
-    __asm__ __volatile__ (
+    __asm__ __volatile__(
         "cld \n\t"
         "rep ; stosl \n\t"
-        : "=&D" (u0), "=&a" (u1), "=&c" (u2)
-        : "0" (dst), "1" (val), "2" (SDL_static_cast(Uint32, dwords))
+        : "=&D"(u0), "=&a"(u1), "=&c"(u2)
+        : "0"(dst), "1"(val), "2"(SDL_static_cast(Uint32, dwords))
         : "memory"
     );
 #else
     size_t _n = (dwords + 3) / 4;
     Uint32 *_p = SDL_static_cast(Uint32 *, dst);
     Uint32 _val = (val);
-    if (dwords == 0)
+    if (dwords == 0) {
         return;
-    switch (dwords % 4)
-    {
-        case 0: do {    *_p++ = _val;   /* fallthrough */
-        case 3:         *_p++ = _val;   /* fallthrough */
-        case 2:         *_p++ = _val;   /* fallthrough */
-        case 1:         *_p++ = _val;   /* fallthrough */
-        } while ( --_n );
+    }
+    switch (dwords % 4) {
+    case 0:
+        do {
+            *_p++ = _val;   /* fallthrough */
+        case 3:
+            *_p++ = _val;   /* fallthrough */
+        case 2:
+            *_p++ = _val;   /* fallthrough */
+        case 1:
+            *_p++ = _val;   /* fallthrough */
+        } while (--_n);
     }
 #endif
 }
@@ -500,7 +503,7 @@ extern DECLSPEC int SDLCALL SDL_strncasecmp(const char *str1, const char *str2, 
 
 extern DECLSPEC int SDLCALL SDL_sscanf(const char *text, SDL_SCANF_FORMAT_STRING const char *fmt, ...) SDL_SCANF_VARARG_FUNC(2);
 extern DECLSPEC int SDLCALL SDL_vsscanf(const char *text, const char *fmt, va_list ap);
-extern DECLSPEC int SDLCALL SDL_snprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, SDL_PRINTF_FORMAT_STRING const char *fmt, ... ) SDL_PRINTF_VARARG_FUNC(3);
+extern DECLSPEC int SDLCALL SDL_snprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, SDL_PRINTF_FORMAT_STRING const char *fmt, ...) SDL_PRINTF_VARARG_FUNC(3);
 extern DECLSPEC int SDLCALL SDL_vsnprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, const char *fmt, va_list ap);
 
 #ifndef HAVE_M_PI
@@ -555,19 +558,19 @@ extern DECLSPEC float SDLCALL SDL_tanf(float x);
 /* SDL_iconv_* are now always real symbols/types, not macros or inlined. */
 typedef struct _SDL_iconv_t *SDL_iconv_t;
 extern DECLSPEC SDL_iconv_t SDLCALL SDL_iconv_open(const char *tocode,
-                                                   const char *fromcode);
+        const char *fromcode);
 extern DECLSPEC int SDLCALL SDL_iconv_close(SDL_iconv_t cd);
 extern DECLSPEC size_t SDLCALL SDL_iconv(SDL_iconv_t cd, const char **inbuf,
-                                         size_t * inbytesleft, char **outbuf,
-                                         size_t * outbytesleft);
+        size_t *inbytesleft, char **outbuf,
+        size_t *outbytesleft);
 /**
  *  This function converts a string between encodings in one pass, returning a
  *  string that must be freed with SDL_free() or NULL on error.
  */
 extern DECLSPEC char *SDLCALL SDL_iconv_string(const char *tocode,
-                                               const char *fromcode,
-                                               const char *inbuf,
-                                               size_t inbytesleft);
+        const char *fromcode,
+        const char *inbuf,
+        size_t inbytesleft);
 #define SDL_iconv_utf8_locale(S)    SDL_iconv_string("", "UTF-8", S, SDL_strlen(S)+1)
 #define SDL_iconv_utf8_ucs2(S)      (Uint16 *)SDL_iconv_string("UCS-2-INTERNAL", "UTF-8", S, SDL_strlen(S)+1)
 #define SDL_iconv_utf8_ucs4(S)      (Uint32 *)SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S)+1)
@@ -601,7 +604,7 @@ extern DECLSPEC char *SDLCALL SDL_iconv_string(const char *tocode,
 #define SDL_vsnprintf vsnprintf
 #endif
 
-SDL_FORCE_INLINE void *SDL_memcpy4(SDL_OUT_BYTECAP(dwords*4) void *dst, SDL_IN_BYTECAP(dwords*4) const void *src, size_t dwords)
+SDL_FORCE_INLINE void *SDL_memcpy4(SDL_OUT_BYTECAP(dwords * 4) void *dst, SDL_IN_BYTECAP(dwords * 4) const void *src, size_t dwords)
 {
     return SDL_memcpy(dst, src, dwords * 4);
 }

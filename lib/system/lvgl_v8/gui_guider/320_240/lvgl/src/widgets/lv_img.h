@@ -39,7 +39,7 @@ extern "C" {
  */
 typedef struct {
     lv_obj_t obj;
-    const void * src; /*Image source: Pointer to an array or a file or a symbol*/
+    const void *src;  /*Image source: Pointer to an array or a file or a symbol*/
     lv_point_t offset;
     lv_coord_t w;          /*Width of the image (Handled by the library)*/
     lv_coord_t h;          /*Height of the image (Handled by the library)*/
@@ -80,7 +80,7 @@ typedef uint8_t lv_img_size_mode_t;
  * @param parent pointer to an object, it will be the parent of the new image
  * @return pointer to the created image
  */
-lv_obj_t * lv_img_create(lv_obj_t * parent);
+lv_obj_t *lv_img_create(lv_obj_t * parent);
 
 /*=====================
  * Setter functions
@@ -167,7 +167,7 @@ void lv_img_set_size_mode(lv_obj_t * obj, lv_img_size_mode_t mode);
  * @param obj       pointer to an image object
  * @return          the image source (symbol, file name or ::lv-img_dsc_t for C arrays)
  */
-const void * lv_img_get_src(lv_obj_t * obj);
+const void *lv_img_get_src(lv_obj_t * obj);
 
 /**
  * Get the offset's x attribute of the image object.

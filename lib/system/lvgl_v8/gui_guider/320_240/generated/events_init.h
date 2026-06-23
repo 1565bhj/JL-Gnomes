@@ -19,7 +19,6 @@ extern "C" {
 void events_init(lv_ui *ui);
 
 void events_init_screen_main(lv_ui *ui);
-void events_init_screen_option(lv_ui *ui);
 void events_init_screen_music(lv_ui *ui);
 void events_init_screen_conversation(lv_ui *ui);
 void events_init_screen_alarm(lv_ui *ui);

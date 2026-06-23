@@ -23,7 +23,7 @@ typedef struct gd_GCE {
 
 typedef struct gd_GIF {
     lv_fs_file_t fd;
-    const char * data;
+    const char *data;
     uint8_t is_file;
     uint32_t f_rw_p;
     int32_t anim_start;
@@ -45,9 +45,9 @@ typedef struct gd_GIF {
     uint8_t *canvas, *frame;
 } gd_GIF;
 
-gd_GIF * gd_open_gif_file(const char *fname);
+gd_GIF *gd_open_gif_file(const char *fname);
 
-gd_GIF * gd_open_gif_data(const void *data);
+gd_GIF *gd_open_gif_data(const void *data);
 
 void gd_render_frame(gd_GIF *gif, uint8_t *buffer);
 

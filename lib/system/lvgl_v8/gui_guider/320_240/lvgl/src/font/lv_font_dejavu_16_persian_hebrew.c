@@ -5,13 +5,13 @@
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
-    #include "lvgl.h"
+#include "lvgl.h"
 #else
-    #include "../../lvgl.h"
+#include "../../lvgl.h"
 #endif
 
 #ifndef LV_FONT_DEJAVU_16_PERSIAN_HEBREW
-    #define LV_FONT_DEJAVU_16_PERSIAN_HEBREW 1
+#define LV_FONT_DEJAVU_16_PERSIAN_HEBREW 1
 #endif
 
 #if LV_FONT_DEJAVU_16_PERSIAN_HEBREW

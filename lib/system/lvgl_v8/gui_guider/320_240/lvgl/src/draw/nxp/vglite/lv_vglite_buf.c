@@ -40,11 +40,11 @@
  *********************/
 
 #if LV_COLOR_DEPTH == 16
-    #define VG_LITE_PX_FMT VG_LITE_RGB565
+#define VG_LITE_PX_FMT VG_LITE_RGB565
 #elif LV_COLOR_DEPTH == 32
-    #define VG_LITE_PX_FMT VG_LITE_BGRA8888
+#define VG_LITE_PX_FMT VG_LITE_BGRA8888
 #else
-    #error Only 16bit and 32bit color depth are supported. Set LV_COLOR_DEPTH to 16 or 32.
+#error Only 16bit and 32bit color depth are supported. Set LV_COLOR_DEPTH to 16 or 32.
 #endif
 
 /**********************
@@ -78,12 +78,12 @@ void lv_gpu_nxp_vglite_init_buf(const lv_color_t * buf, const lv_area_t * area, 
     lv_vglite_set_dest_buf(buf, area, stride);
 }
 
-vg_lite_buffer_t * lv_vglite_get_dest_buf(void)
+vg_lite_buffer_t *lv_vglite_get_dest_buf(void)
 {
     return &dest_vgbuf;
 }
 
-vg_lite_buffer_t * lv_vglite_get_src_buf(void)
+vg_lite_buffer_t *lv_vglite_get_src_buf(void)
 {
     return &src_vgbuf;
 }
@@ -100,12 +100,13 @@ void lv_vglite_set_src_buf_ptr(const lv_color_t * buf)
 
 void lv_vglite_set_src_buf(const lv_color_t * buf, const lv_area_t * area, lv_coord_t stride)
 {
-    if(src_vgbuf.memory != (void *)buf)
+    if (src_vgbuf.memory != (void *)buf) {
         lv_vglite_set_buf(&src_vgbuf, buf, area, stride);
+    }
 }
 
 void lv_vglite_set_buf(vg_lite_buffer_t * vgbuf, const lv_color_t * buf,
-                       const lv_area_t * area, lv_coord_t stride)
+                       const lv_area_t *area, lv_coord_t stride)
 {
     vgbuf->format = VG_LITE_PX_FMT;
     vgbuf->tiled = VG_LITE_LINEAR;

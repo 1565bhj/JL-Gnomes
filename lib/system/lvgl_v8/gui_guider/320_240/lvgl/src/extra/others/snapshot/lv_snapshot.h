@@ -39,7 +39,7 @@ extern "C" {
  *
  * @return a pointer to an image descriptor, or NULL if failed.
  */
-lv_img_dsc_t * lv_snapshot_take(lv_obj_t * obj, lv_img_cf_t cf);
+lv_img_dsc_t *lv_snapshot_take(lv_obj_t * obj, lv_img_cf_t cf);
 
 /** Free the snapshot image returned by @ref lv_snapshot_take
  *

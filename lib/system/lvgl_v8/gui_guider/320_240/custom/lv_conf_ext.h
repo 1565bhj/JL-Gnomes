@@ -11,7 +11,7 @@
  * lv_conf_ext.h for custom lvconf file.
  * Created on: Feb 8, 2023
  * example :
- *	#undef LV_FONT_FMT_TXT_LARGE
+ *  #undef LV_FONT_FMT_TXT_LARGE
  *  #define LV_FONT_FMT_TXT_LARGE 1
  */
 
@@ -34,9 +34,9 @@
 /* code for board begin */
 
 
-/* code for board end */	
+/* code for board end */
 #endif
 
 
 
-#endif  /* LV_CONF_EXT_H */	
+#endif  /* LV_CONF_EXT_H */

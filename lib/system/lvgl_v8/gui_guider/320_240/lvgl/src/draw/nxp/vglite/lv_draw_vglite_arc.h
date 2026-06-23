@@ -68,7 +68,7 @@ extern "C" {
  * @retval LV_RES_INV Error occurred (\see LV_GPU_NXP_VG_LITE_LOG_ERRORS)
  */
 lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, int32_t start_angle, int32_t end_angle,
-                                    const lv_area_t * clip_area, const lv_draw_arc_dsc_t * dsc);
+                                    const lv_area_t *clip_area, const lv_draw_arc_dsc_t *dsc);
 
 /**********************
  *      MACROS

@@ -19,7 +19,6 @@ extern "C" {
 void events_init(lv_ui *ui);
 
 void events_init_screen_main(lv_ui *ui);
-void events_init_screen_option(lv_ui *ui);
 void events_init_screen_music(lv_ui *ui);
 void events_init_screen_alarm(lv_ui *ui);
 void events_init_screen_alarm_add(lv_ui *ui);
@@ -30,6 +29,8 @@ void events_init_screen_timer_add(lv_ui *ui);
 void events_init_screen_timer_remove(lv_ui *ui);
 void events_init_screen_dropdown(lv_ui *ui);
 void events_init_screen_story(lv_ui *ui);
+void events_init_screen_list(lv_ui *ui);
+void events_init_screen_content(lv_ui *ui);
 
 #ifdef __cplusplus
 }

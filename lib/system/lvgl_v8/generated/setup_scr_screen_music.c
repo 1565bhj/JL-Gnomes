@@ -28,13 +28,26 @@ void setup_scr_screen_music(lv_ui *ui)
     lv_obj_set_style_bg_color(ui->screen_music, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui->screen_music, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    //Write codes screen_music_img_return
+    ui->screen_music_img_return = lv_img_create(ui->screen_music);
+    lv_obj_add_flag(ui->screen_music_img_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_img_set_src(ui->screen_music_img_return, &_return_alpha_22x22);
+    lv_img_set_pivot(ui->screen_music_img_return, 50, 50);
+    lv_img_set_angle(ui->screen_music_img_return, 0);
+    lv_obj_set_pos(ui->screen_music_img_return, 20, 10);
+    lv_obj_set_size(ui->screen_music_img_return, 22, 22);
+    lv_obj_set_style_img_recolor_opa(ui->screen_music_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(ui->screen_music_img_return, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui->screen_music_img_return, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_clip_corner(ui->screen_music_img_return, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     //Write codes screen_music_img_tape
     ui->screen_music_img_tape = lv_img_create(ui->screen_music);
     lv_obj_add_flag(ui->screen_music_img_tape, LV_OBJ_FLAG_CLICKABLE);
     lv_img_set_src(ui->screen_music_img_tape, &_tape_alpha_62x62);
     lv_img_set_pivot(ui->screen_music_img_tape, 31, 31);
     lv_img_set_angle(ui->screen_music_img_tape, 0);
-    lv_obj_set_pos(ui->screen_music_img_tape, 41, 28);
+    lv_obj_set_pos(ui->screen_music_img_tape, 61, 28);
     lv_obj_set_size(ui->screen_music_img_tape, 62, 62);
 
     //Write style for screen_music_img_tape, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -49,7 +62,7 @@ void setup_scr_screen_music(lv_ui *ui)
     lv_img_set_src(ui->screen_music_img_bar, &_tape_bar_alpha_35x68);
     lv_img_set_pivot(ui->screen_music_img_bar, 5, 5);
     lv_img_set_angle(ui->screen_music_img_bar, 220);
-    lv_obj_set_pos(ui->screen_music_img_bar, 31, 25);
+    lv_obj_set_pos(ui->screen_music_img_bar, 51, 25);
     lv_obj_set_size(ui->screen_music_img_bar, 35, 68);
 
     //Write style for screen_music_img_bar, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -65,7 +78,7 @@ void setup_scr_screen_music(lv_ui *ui)
     lv_img_set_src(ui->screen_music_img_volume, &_volume_alpha_20x20);
     lv_img_set_pivot(ui->screen_music_img_volume, 50, 50);
     lv_img_set_angle(ui->screen_music_img_volume, 0);
-    lv_obj_set_pos(ui->screen_music_img_volume, 250, 193);
+    lv_obj_set_pos(ui->screen_music_img_volume, 250, 192);
     lv_obj_set_size(ui->screen_music_img_volume, 20, 20);
 
     //Write style for screen_music_img_volume, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -97,7 +110,7 @@ void setup_scr_screen_music(lv_ui *ui)
     lv_img_set_src(ui->screen_music_img_prev, &_last_alpha_14x14);
     lv_img_set_pivot(ui->screen_music_img_prev, 50, 50);
     lv_img_set_angle(ui->screen_music_img_prev, 0);
-    lv_obj_set_pos(ui->screen_music_img_prev, 97, 197);
+    lv_obj_set_pos(ui->screen_music_img_prev, 97, 196);
     lv_obj_set_size(ui->screen_music_img_prev, 14, 14);
 
     //Write style for screen_music_img_prev, Part: LV_PART_MAIN, State: LV_STATE_DEFAULT.
@@ -143,8 +156,8 @@ void setup_scr_screen_music(lv_ui *ui)
     lv_obj_set_style_text_color(ui->screen_music_label_title, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_decor(ui->screen_music_label_title, LV_TEXT_DECOR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui->screen_music_label_title, &lv_font_MiSansDemibold_18, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_pos(ui->screen_music_label_title, 120, 50);
-    lv_obj_set_size(ui->screen_music_label_title, 170, 22);
+    lv_obj_set_pos(ui->screen_music_label_title, 138, 50);
+    lv_obj_set_size(ui->screen_music_label_title, 152, 22);
 
 
     // 设置文本对齐方式（居中）

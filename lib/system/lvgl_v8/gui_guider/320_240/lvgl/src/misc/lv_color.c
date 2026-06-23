@@ -37,16 +37,16 @@ void LV_ATTRIBUTE_FAST_MEM lv_color_fill(lv_color_t * buf, lv_color_t color, uin
 {
 #if LV_COLOR_DEPTH == 16
     uintptr_t buf_int = (uintptr_t)buf;
-    if(buf_int & 0x3) {
+    if (buf_int & 0x3) {
         *buf = color;
         buf++;
         px_num--;
     }
 
     uint32_t c32 = (uint32_t)color.full + ((uint32_t)color.full << 16);
-    uint32_t * buf32 = (uint32_t *)buf;
+    uint32_t *buf32 = (uint32_t *)buf;
 
-    while(px_num > 16) {
+    while (px_num > 16) {
         *buf32 = c32;
         buf32++;
         *buf32 = c32;
@@ -70,13 +70,13 @@ void LV_ATTRIBUTE_FAST_MEM lv_color_fill(lv_color_t * buf, lv_color_t color, uin
 
     buf = (lv_color_t *)buf32;
 
-    while(px_num) {
+    while (px_num) {
         *buf = color;
         buf++;
         px_num--;
     }
 #else
-    while(px_num > 16) {
+    while (px_num > 16) {
         *buf = color;
         buf++;
         *buf = color;
@@ -115,7 +115,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_color_fill(lv_color_t * buf, lv_color_t color, uin
 
         px_num -= 16;
     }
-    while(px_num) {
+    while (px_num) {
         *buf = color;
         buf++;
         px_num--;
@@ -136,9 +136,13 @@ lv_color_t lv_color_darken(lv_color_t c, lv_opa_t lvl)
 lv_color_t lv_color_change_lightness(lv_color_t c, lv_opa_t lvl)
 {
     /*It'd be better to convert the color to HSL, change L and convert back to RGB.*/
-    if(lvl == LV_OPA_50) return c;
-    else if(lvl < LV_OPA_50) return lv_color_darken(c, (LV_OPA_50 - lvl) * 2);
-    else return lv_color_lighten(c, (lvl - LV_OPA_50) * 2);
+    if (lvl == LV_OPA_50) {
+        return c;
+    } else if (lvl < LV_OPA_50) {
+        return lv_color_darken(c, (LV_OPA_50 - lvl) * 2);
+    } else {
+        return lv_color_lighten(c, (lvl - LV_OPA_50) * 2);
+    }
 }
 
 /**
@@ -158,7 +162,7 @@ lv_color_t lv_color_hsv_to_rgb(uint16_t h, uint8_t s, uint8_t v)
 
     uint8_t region, remainder, p, q, t;
 
-    if(s == 0) {
+    if (s == 0) {
         return lv_color_make(v, v, v);
     }
 
@@ -169,37 +173,37 @@ lv_color_t lv_color_hsv_to_rgb(uint16_t h, uint8_t s, uint8_t v)
     q = (v * (255 - ((s * remainder) >> 8))) >> 8;
     t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
 
-    switch(region) {
-        case 0:
-            r = v;
-            g = t;
-            b = p;
-            break;
-        case 1:
-            r = q;
-            g = v;
-            b = p;
-            break;
-        case 2:
-            r = p;
-            g = v;
-            b = t;
-            break;
-        case 3:
-            r = p;
-            g = q;
-            b = v;
-            break;
-        case 4:
-            r = t;
-            g = p;
-            b = v;
-            break;
-        default:
-            r = v;
-            g = p;
-            b = q;
-            break;
+    switch (region) {
+    case 0:
+        r = v;
+        g = t;
+        b = p;
+        break;
+    case 1:
+        r = q;
+        g = v;
+        b = p;
+        break;
+    case 2:
+        r = p;
+        g = v;
+        b = t;
+        break;
+    case 3:
+        r = p;
+        g = q;
+        b = v;
+        break;
+    case 4:
+        r = t;
+        g = p;
+        b = v;
+        break;
+    default:
+        r = v;
+        g = p;
+        b = q;
+        break;
     }
 
     lv_color_t result = lv_color_make(r, g, b);
@@ -228,7 +232,7 @@ lv_color_hsv_t lv_color_rgb_to_hsv(uint8_t r8, uint8_t g8, uint8_t b8)
     hsv.v = (100 * rgbMax) >> 10;
 
     int32_t delta = rgbMax - rgbMin;
-    if(delta < 3) {
+    if (delta < 3) {
         hsv.h = 0;
         hsv.s = 0;
         return hsv;
@@ -236,24 +240,27 @@ lv_color_hsv_t lv_color_rgb_to_hsv(uint8_t r8, uint8_t g8, uint8_t b8)
 
     // https://en.wikipedia.org/wiki/HSL_and_HSV#Saturation
     hsv.s = 100 * delta / rgbMax;
-    if(hsv.s < 3) {
+    if (hsv.s < 3) {
         hsv.h = 0;
         return hsv;
     }
 
     // https://en.wikipedia.org/wiki/HSL_and_HSV#Hue_and_chroma
     int32_t h;
-    if(rgbMax == r)
-        h = (((g - b) << 10) / delta) + (g < b ? (6 << 10) : 0); // between yellow & magenta
-    else if(rgbMax == g)
-        h = (((b - r) << 10) / delta) + (2 << 10); // between cyan & yellow
-    else if(rgbMax == b)
-        h = (((r - g) << 10) / delta) + (4 << 10); // between magenta & cyan
-    else
+    if (rgbMax == r) {
+        h = (((g - b) << 10) / delta) + (g < b ? (6 << 10) : 0);    // between yellow & magenta
+    } else if (rgbMax == g) {
+        h = (((b - r) << 10) / delta) + (2 << 10);    // between cyan & yellow
+    } else if (rgbMax == b) {
+        h = (((r - g) << 10) / delta) + (4 << 10);    // between magenta & cyan
+    } else {
         h = 0;
+    }
     h *= 60;
     h >>= 10;
-    if(h < 0) h += 360;
+    if (h < 0) {
+        h += 360;
+    }
 
     hsv.h = h;
     return hsv;
@@ -281,7 +288,7 @@ lv_color_t lv_palette_main(lv_palette_t p)
         LV_COLOR_MAKE(0x79, 0x55, 0x48), LV_COLOR_MAKE(0x60, 0x7D, 0x8B), LV_COLOR_MAKE(0x9E, 0x9E, 0x9E)
     };
 
-    if(p >= _LV_PALETTE_LAST) {
+    if (p >= _LV_PALETTE_LAST) {
         LV_LOG_WARN("Invalid palette: %d", p);
         return lv_color_black();
     }
@@ -314,12 +321,12 @@ lv_color_t lv_palette_lighten(lv_palette_t p, uint8_t lvl)
         {LV_COLOR_MAKE(0xBD, 0xBD, 0xBD), LV_COLOR_MAKE(0xE0, 0xE0, 0xE0), LV_COLOR_MAKE(0xEE, 0xEE, 0xEE), LV_COLOR_MAKE(0xF5, 0xF5, 0xF5), LV_COLOR_MAKE(0xFA, 0xFA, 0xFA)},
     };
 
-    if(p >= _LV_PALETTE_LAST) {
+    if (p >= _LV_PALETTE_LAST) {
         LV_LOG_WARN("Invalid palette: %d", p);
         return lv_color_black();
     }
 
-    if(lvl == 0 || lvl > 5) {
+    if (lvl == 0 || lvl > 5) {
         LV_LOG_WARN("Invalid level: %d. Must be 1..5", lvl);
         return lv_color_black();
     }
@@ -353,12 +360,12 @@ lv_color_t lv_palette_darken(lv_palette_t p, uint8_t lvl)
         {LV_COLOR_MAKE(0x75, 0x75, 0x75), LV_COLOR_MAKE(0x61, 0x61, 0x61), LV_COLOR_MAKE(0x42, 0x42, 0x42), LV_COLOR_MAKE(0x21, 0x21, 0x21)},
     };
 
-    if(p >= _LV_PALETTE_LAST) {
+    if (p >= _LV_PALETTE_LAST) {
         LV_LOG_WARN("Invalid palette: %d", p);
         return lv_color_black();
     }
 
-    if(lvl == 0 || lvl > 4) {
+    if (lvl == 0 || lvl > 4) {
         LV_LOG_WARN("Invalid level: %d. Must be 1..4", lvl);
         return lv_color_black();
     }

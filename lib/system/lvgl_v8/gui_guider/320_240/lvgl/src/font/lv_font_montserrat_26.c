@@ -5,13 +5,13 @@
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
-    #include "lvgl.h"
+#include "lvgl.h"
 #else
-    #include "../../lvgl.h"
+#include "../../lvgl.h"
 #endif
 
 #ifndef LV_FONT_MONTSERRAT_26
-    #define LV_FONT_MONTSERRAT_26 1
+#define LV_FONT_MONTSERRAT_26 1
 #endif
 
 #if LV_FONT_MONTSERRAT_26

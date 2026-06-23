@@ -33,7 +33,7 @@ typedef struct {
     bool is_enabled;         // 计时器开关状态（true:开启, false:关闭）
     lv_timer_t *countdown_timer; // 倒计时定时器（驱动秒数递减）
 
-}TimerItem;
+} TimerItem;
 
 // 全局变量声明
 extern int g_timer_count; // 当前倒计时总数
@@ -43,7 +43,7 @@ extern TimerItem g_timers[MAX_TIMERS]; // 倒计时数组
 void refresh_timer_page(lv_ui *ui); // 刷新倒计时主页面
 void refresh_timer_del_page(lv_ui *ui); // 刷新倒计时删除页面
 #ifdef APPLAYER_ENABLE
-int start_timer_countdown(uint8_t hour, uint8_t min, uint8_t sec,bool enable); // 倒计时功能函数
+int start_timer_countdown(uint8_t hour, uint8_t min, uint8_t sec, bool enable); // 倒计时功能函数
 #endif
 #ifdef __cplusplus
 }

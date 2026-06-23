@@ -23,17 +23,17 @@
 
 // for run on target function.
 #if !LV_USE_GUIDER_SIMULATOR
-    #include "FreeRTOS.h"
-    #include "task.h"
-    #include "sdcard.h"
-    #include "h264_dec.h"
-    #include "fsl_common.h"
-    #include "fsl_debug_console.h"
-    #include "fsl_pxp.h"
-    #include "fsl_cache.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "sdcard.h"
+#include "h264_dec.h"
+#include "fsl_common.h"
+#include "fsl_debug_console.h"
+#include "fsl_pxp.h"
+#include "fsl_cache.h"
 #else
-    #include "decoder.h"
-    #include <unistd.h>
+#include "decoder.h"
+#include <unistd.h>
 #endif
 
 /*********************
@@ -42,10 +42,10 @@
 #define MY_CLASS &lv_video_class
 #define LV_COLOR_SIZE 16
 #ifndef DEMO_FILE_BUF_SIZE
-    #define DEMO_FILE_BUF_SIZE (16 * 1024)
+#define DEMO_FILE_BUF_SIZE (16 * 1024)
 #endif
 #ifndef DEMO_DECODE_BUF_SIZE
-    #define DEMO_DECODE_BUF_SIZE (64 * 1024)
+#define DEMO_DECODE_BUF_SIZE (64 * 1024)
 #endif
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -69,18 +69,18 @@ static void lv_video_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
 
 static void PXP_DisplayFrame(uint16_t width,
                              uint16_t height,
-                             const uint8_t * Y,
-                             const uint8_t * U,
-                             const uint8_t * V,
+                             const uint8_t *Y,
+                             const uint8_t *U,
+                             const uint8_t *V,
                              uint32_t Y_Stride,
                              uint32_t UV_Stride,
-                             lv_obj_t * obj);
+                             lv_obj_t *obj);
 #else
 static void yuv420pToRgb565(int oriWidth,
                             int oriHeight,
                             int width, int height,
-                            uint8_t * py, uint8_t * pu, uint8_t * pv,
-                            unsigned short * dst);
+                            uint8_t *py, uint8_t *pu, uint8_t *pv,
+                            unsigned short *dst);
 static void CPU_DisplayFrame(SBufferInfo sDstBufInfo, unsigned char ** dst, lv_obj_t * obj);
 #endif
 /**********************
@@ -96,15 +96,15 @@ const lv_obj_class_t lv_video_class = {
 };
 
 #if !LV_USE_GUIDER_SIMULATOR
-    /* PXP Usage */
-    static pxp_output_buffer_config_t s_pxpOutputBufferConfig;
-    static pxp_ps_buffer_config_t s_pxpPsBufferConfig;
-    static volatile uint8_t s_lcdActiveFbIdx = 0;
-    static int buffer_byte_per_pixel = 2;
-    static uint8_t * s_lcdBuffer[2];
+/* PXP Usage */
+static pxp_output_buffer_config_t s_pxpOutputBufferConfig;
+static pxp_ps_buffer_config_t s_pxpPsBufferConfig;
+static volatile uint8_t s_lcdActiveFbIdx = 0;
+static int buffer_byte_per_pixel = 2;
+static uint8_t *s_lcdBuffer[2];
 #else
-    static int mallocInit = 0;
-    static uint8_t * rgb, *py, *pu, *pv;
+static int mallocInit = 0;
+static uint8_t *rgb, *py, *pu, *pv;
 #endif
 
 static uint8_t s_decodeBuf[DEMO_DECODE_BUF_SIZE];
@@ -122,7 +122,7 @@ static uint8_t s_decodeBuf[DEMO_DECODE_BUF_SIZE];
  * @param parent pointer to an object, it will be the parent of the new image button
  * @return pointer to the created image button
  */
-lv_obj_t * lv_video_create(lv_obj_t * parent, int widgetWidth, int widgetHeight)
+lv_obj_t *lv_video_create(lv_obj_t * parent, int widgetWidth, int widgetHeight)
 {
     LV_LOG_INFO("begin");
 
@@ -134,14 +134,14 @@ lv_obj_t * lv_video_create(lv_obj_t * parent, int widgetWidth, int widgetHeight)
     s_lcdBuffer[1] = malloc(widgetWidth * widgetHeight * buffer_byte_per_pixel);
 #endif
 
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }
 
 void lv_video_play(lv_obj_t * obj)
 {
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
     Read_HFile(video->file_name, obj);
 }
 
@@ -149,14 +149,14 @@ static int search_nalu(const uint8_t * data, int32_t len)
 {
     int i;
     /* parse NALU 00 00 00 01 or 00 00 01 */
-    for(i = 1; i < len - 4; i++) {
-        if((data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 0 && data[i + 3] == 1) ||
-           (data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 1)) {
+    for (i = 1; i < len - 4; i++) {
+        if ((data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 0 && data[i + 3] == 1) ||
+            (data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 1)) {
             return i;
         }
     }
 
-    if(data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 1) {
+    if (data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 1) {
         return i;
     }
 
@@ -165,24 +165,24 @@ static int search_nalu(const uint8_t * data, int32_t len)
 
 int Decoder_Data(const uint8_t * data, int len, bool isStartOfFile, bool isEndOfFile, lv_obj_t * obj)
 {
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
     SBufferInfo sDstBufInfo = {0};
     int32_t copiedLen = 0;
     int32_t sliceSize = 0;
-    uint8_t * dst[3];
+    uint8_t *dst[3];
     int32_t num_of_frames_in_buffer = 0;
     int32_t leftDataLen;
 
     static int32_t decodeBufStart = 0;
     static int32_t decodeBufEnd   = 0;
 
-    if(isStartOfFile) {
+    if (isStartOfFile) {
         decodeBufStart         = 0;
         decodeBufEnd           = 0;
     }
     leftDataLen = len;
 
-    while(leftDataLen > 0) {
+    while (leftDataLen > 0) {
         copiedLen = MIN(leftDataLen, ((int32_t)sizeof(s_decodeBuf) - decodeBufEnd));
 
         /* Copy the input data to the end of decode buffer. */
@@ -191,20 +191,19 @@ int Decoder_Data(const uint8_t * data, int len, bool isStartOfFile, bool isEndOf
         data += copiedLen;
         leftDataLen -= copiedLen;
 
-        while(decodeBufStart < decodeBufEnd) {
+        while (decodeBufStart < decodeBufEnd) {
             sliceSize = search_nalu(&s_decodeBuf[decodeBufStart], decodeBufEnd - decodeBufStart);
-            if(video->exist) {
+            if (video->exist) {
                 return 0;
             }
             /* Could not find NALU. */
-            if(sliceSize < 0) {
+            if (sliceSize < 0) {
                 /* This is the file end part, pass them all to H264 decoder. */
-                if(isEndOfFile && (0 == leftDataLen)) {
+                if (isEndOfFile && (0 == leftDataLen)) {
                     sliceSize = decodeBufEnd - decodeBufStart;
-                }
-                else {
+                } else {
                     /* After searching the full buffer, no slice found, then drop the data in buffer. */
-                    if((decodeBufStart == 0) && (decodeBufEnd == sizeof(s_decodeBuf))) {
+                    if ((decodeBufStart == 0) && (decodeBufEnd == sizeof(s_decodeBuf))) {
                         /* Drop the decode buffer, fill using left input data. */
                         decodeBufEnd   = 0;
                         decodeBufStart = 0;
@@ -215,13 +214,13 @@ int Decoder_Data(const uint8_t * data, int len, bool isStartOfFile, bool isEndOf
                 }
             }
             /* Slice size too small, skip it. */
-            else if(sliceSize < 4) {
+            else if (sliceSize < 4) {
                 decodeBufStart += sliceSize;
                 continue;
             }
             /* Found NALU, decode. */
-            if(OpenH264_Decode(&s_decodeBuf[decodeBufStart], sliceSize, dst, &sDstBufInfo) == 0) {
-                if(sDstBufInfo.iBufferStatus == 1) {
+            if (OpenH264_Decode(&s_decodeBuf[decodeBufStart], sliceSize, dst, &sDstBufInfo) == 0) {
+                if (sDstBufInfo.iBufferStatus == 1) {
 #if LV_USE_GUIDER_SIMULATOR
                     CPU_DisplayFrame(sDstBufInfo, dst, obj);
 #else
@@ -232,8 +231,7 @@ int Decoder_Data(const uint8_t * data, int len, bool isStartOfFile, bool isEndOf
 #endif
                 }
 
-            }
-            else {
+            } else {
                 LV_LOG_ERROR("decode error\r\n");
             }
 
@@ -248,15 +246,15 @@ int Decoder_Data(const uint8_t * data, int len, bool isStartOfFile, bool isEndOf
         decodeBufStart = 0;
     }
 
-    if(isEndOfFile) {
+    if (isEndOfFile) {
         OpenH264_GetOption(&num_of_frames_in_buffer);
-        for(int32_t i = 0; i < num_of_frames_in_buffer; i++) {
+        for (int32_t i = 0; i < num_of_frames_in_buffer; i++) {
             dst[0] = NULL;
             dst[1] = NULL;
             dst[2] = NULL;
 
             OpenH264_FlashFrame(dst, &sDstBufInfo);
-            if(sDstBufInfo.iBufferStatus == 1) {
+            if (sDstBufInfo.iBufferStatus == 1) {
 #if LV_USE_GUIDER_SIMULATOR
                 CPU_DisplayFrame(sDstBufInfo, dst, obj);
 #else
@@ -274,18 +272,18 @@ int Decoder_Data(const uint8_t * data, int len, bool isStartOfFile, bool isEndOf
 
 void Read_HFile(const char * fileName, lv_obj_t * obj)
 {
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
     uint32_t bytesRead;
-    while(1) {
+    while (1) {
         int error = lv_fs_open(&video->h264File, video->file_name, LV_FS_MODE_RD);
-        if(error != LV_FS_RES_OK) {
+        if (error != LV_FS_RES_OK) {
             break;
         }
         video->fileStart = true;
-        while(1) {
-            if(video->play_status == 1) {
+        while (1) {
+            if (video->play_status == 1) {
                 error = lv_fs_read(&video->h264File, video->blk.data, DEMO_FILE_BUF_SIZE, &bytesRead);
-                if(error != LV_FS_RES_OK) {
+                if (error != LV_FS_RES_OK) {
                     break;
                 }
                 video->blk.len           = bytesRead;
@@ -293,16 +291,15 @@ void Read_HFile(const char * fileName, lv_obj_t * obj)
                 video->blk.isStartOfFile = video->fileStart;
                 video->fileStart         = false;
                 Decoder_Data(video->blk.data, video->blk.len, video->blk.isStartOfFile, video->blk.isEndOfFile, obj);
-                if(video->blk.isEndOfFile) {
+                if (video->blk.isEndOfFile) {
                     break;
                 }
-                if(video->exist) {
+                if (video->exist) {
                     video->blk.data = NULL;
                     lv_fs_close(&video->h264File);
                     return;
                 }
-            }
-            else {
+            } else {
 
 #if LV_USE_GUIDER_SIMULATOR
                 lv_task_handler();
@@ -351,15 +348,15 @@ int Video_InitPXP()
 
 static void PXP_DisplayFrame(uint16_t width,
                              uint16_t height,
-                             const uint8_t * Y,
-                             const uint8_t * U,
-                             const uint8_t * V,
+                             const uint8_t *Y,
+                             const uint8_t *U,
+                             const uint8_t *V,
                              uint32_t Y_Stride,
                              uint32_t UV_Stride,
-                             lv_obj_t * obj)
+                             lv_obj_t *obj)
 {
-    lv_video_t * video = (lv_video_t *)obj;
-    void * lcdFrameAddr;
+    lv_video_t *video = (lv_video_t *)obj;
+    void *lcdFrameAddr;
     bool rotate                    = false;
     static uint16_t oldInputWidth  = 0U;
     static uint16_t oldInputHeight = 0U;
@@ -380,19 +377,18 @@ static void PXP_DisplayFrame(uint16_t width,
     PXP_SetProcessSurfaceBufferConfig(PXP, &s_pxpPsBufferConfig);
 
     /* Input frame size changed. */
-    if((oldInputHeight != height) || (oldInputWidth != width)) {
+    if ((oldInputHeight != height) || (oldInputWidth != width)) {
 
         rotate = (height > width);
 
-        if(rotate) {
+        if (rotate) {
             s_pxpOutputBufferConfig.width  = lcdHeight;
             s_pxpOutputBufferConfig.height = lcdWidth;
 
             PXP_SetRotateConfig(PXP, kPXP_RotateOutputBuffer, kPXP_Rotate90, kPXP_FlipDisable);
             PXP_SetProcessSurfaceScaler(PXP, width, height, lcdHeight, lcdWidth);
             PXP_SetProcessSurfacePosition(PXP, 0, 0, lcdHeight - 1, lcdWidth - 1);
-        }
-        else {
+        } else {
             s_pxpOutputBufferConfig.width  = lcdWidth;
             s_pxpOutputBufferConfig.height = lcdHeight;
 
@@ -410,7 +406,7 @@ static void PXP_DisplayFrame(uint16_t width,
     PXP_SetOutputBufferConfig(PXP, &s_pxpOutputBufferConfig);
     PXP_Start(PXP);
 
-    while(0U == (kPXP_CompleteFlag & PXP_GetStatusFlags(PXP))) {
+    while (0U == (kPXP_CompleteFlag & PXP_GetStatusFlags(PXP))) {
     }
     PXP_ClearStatusFlags(PXP, kPXP_CompleteFlag);
 
@@ -421,16 +417,16 @@ static void PXP_DisplayFrame(uint16_t width,
 #else
 static void CPU_DisplayFrame(SBufferInfo sDstBufInfo, unsigned char ** dst, lv_obj_t * obj)
 {
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
     int width = 0;
     int height = 0;
-    if(sDstBufInfo.iBufferStatus == 1) {
+    if (sDstBufInfo.iBufferStatus == 1) {
         width = sDstBufInfo.UsrData.sSystemBuffer.iWidth;
         height = sDstBufInfo.UsrData.sSystemBuffer.iHeight;
         int YStride = sDstBufInfo.UsrData.sSystemBuffer.iStride[0];
         int UVStride = sDstBufInfo.UsrData.sSystemBuffer.iStride[1];
-        unsigned char * pPtr = NULL;
-        if(mallocInit == 0) {
+        unsigned char *pPtr = NULL;
+        if (mallocInit == 0) {
             rgb = malloc(2 * width * height);
             py = malloc(width * height);
             pu = malloc(width * height / 4);
@@ -438,7 +434,7 @@ static void CPU_DisplayFrame(SBufferInfo sDstBufInfo, unsigned char ** dst, lv_o
             mallocInit = 1;
         }
         pPtr = dst[0];
-        for(int i = 0; i < height; i++) {
+        for (int i = 0; i < height; i++) {
             memcpy(py + i * width, pPtr, width);
             pPtr += YStride;
         }
@@ -446,12 +442,12 @@ static void CPU_DisplayFrame(SBufferInfo sDstBufInfo, unsigned char ** dst, lv_o
         height = height / 2;
         width = width / 2;
         pPtr = dst[1];
-        for(int i = 0; i < height; i++) {
+        for (int i = 0; i < height; i++) {
             memcpy(pu + i * width, pPtr, width);
             pPtr += UVStride;
         }
         pPtr = dst[2];
-        for(int i = 0; i < height; i++) {
+        for (int i = 0; i < height; i++) {
             memcpy(pv + i * width, pPtr, width);
             pPtr += UVStride;
         }
@@ -467,15 +463,15 @@ static void CPU_DisplayFrame(SBufferInfo sDstBufInfo, unsigned char ** dst, lv_o
 }
 
 static void yuv420pToRgb565(int oriWidth, int oriHeight, int width, int height, uint8_t * py, uint8_t * pu,
-                            uint8_t * pv, unsigned short * dst)
+                            uint8_t *pv, unsigned short *dst)
 {
     int y, u, v, yy, vr, ug, vg, ub;
     int r, g, b;
     int oriLine, oriCol;
 
-    for(int i = 0; i < height; i++) {
+    for (int i = 0; i < height; i++) {
         oriLine = i * oriHeight / height;
-        for(int j = 0; j < width; j++) {
+        for (int j = 0; j < width; j++) {
             oriCol = j * oriWidth / width;
             y = py[oriLine * oriWidth + oriCol];
             yy = y << 8;
@@ -489,20 +485,26 @@ static void yuv420pToRgb565(int oriWidth, int oriHeight, int width, int height, 
             r = (yy + vr) >> 8;
             g = (yy - ug - vg) >> 8;
             b = (yy + ub) >> 8;
-            if(r < 0)
+            if (r < 0) {
                 r = 0;
-            if(r > 255)
+            }
+            if (r > 255) {
                 r = 255;
-            if(g < 0)
+            }
+            if (g < 0) {
                 g = 0;
-            if(g > 255)
+            }
+            if (g > 255) {
                 g = 255;
-            if(b < 0)
+            }
+            if (b < 0) {
                 b = 0;
-            if(b > 255)
+            }
+            if (b > 255) {
                 b = 255;
+            }
             dst[i * width + j] = (((unsigned short)r >> 3) << 11) | (((unsigned short)g >> 2) << 5) | (((
-                                                                                                            unsigned short)b >> 3) << 0);
+                                     unsigned short)b >> 3) << 0);
         }
     }
 }
@@ -516,7 +518,7 @@ void lv_video_set_src(lv_obj_t * obj, const char * src)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
 
     video->file_name = src;
 }
@@ -525,7 +527,7 @@ void lv_video_set_status(lv_obj_t * obj, int status)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
 
     video->play_status = status;
 }
@@ -537,17 +539,17 @@ int lv_video_get_status(lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
 
     return video->play_status;
 }
 
 
-const char * lv_video_get_src(lv_obj_t * obj)
+const char *lv_video_get_src(lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
 
     return video->file_name;
 }
@@ -560,7 +562,7 @@ const char * lv_video_get_src(lv_obj_t * obj)
 static void lv_video_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
 {
     LV_UNUSED(class_p);
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
 
     video->play_status = 1;
     video->exist = false;
@@ -580,23 +582,23 @@ static void lv_video_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
 static void lv_video_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
 {
     LV_UNUSED(class_p);
-    lv_video_t * video = (lv_video_t *)obj;
+    lv_video_t *video = (lv_video_t *)obj;
     video->exist = true;
-    if(video->blk.data) {
+    if (video->blk.data) {
         free(video->blk.data);
         video->blk.data = NULL;
     }
 
 #if LV_USE_GUIDER_SIMULATOR
     mallocInit = 0;
-    if(rgb) {
+    if (rgb) {
         free(py);
         free(pu);
         free(pv);
         free(rgb);
     }
 #else
-    if(s_lcdBuffer[0] != NULL && s_lcdBuffer[1] != NULL) {
+    if (s_lcdBuffer[0] != NULL && s_lcdBuffer[1] != NULL) {
         free(s_lcdBuffer[0]);
         free(s_lcdBuffer[1]);
         s_lcdBuffer[0] = NULL;

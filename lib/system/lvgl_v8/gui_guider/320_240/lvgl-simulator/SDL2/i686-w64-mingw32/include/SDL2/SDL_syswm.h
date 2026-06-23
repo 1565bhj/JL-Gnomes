@@ -119,8 +119,7 @@ extern "C" {
 /**
  *  These are the various supported windowing subsystems
  */
-typedef enum
-{
+typedef enum {
     SDL_SYSWM_UNKNOWN,
     SDL_SYSWM_WINDOWS,
     SDL_SYSWM_X11,
@@ -139,12 +138,10 @@ typedef enum
 /**
  *  The custom event structure.
  */
-struct SDL_SysWMmsg
-{
+struct SDL_SysWMmsg {
     SDL_version version;
     SDL_SYSWM_TYPE subsystem;
-    union
-    {
+    union {
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
         struct {
             HWND hwnd;                  /**< The window for the message */
@@ -164,8 +161,7 @@ struct SDL_SysWMmsg
         } dfb;
 #endif
 #if defined(SDL_VIDEO_DRIVER_COCOA)
-        struct
-        {
+        struct {
             /* Latest version of Xcode clang complains about empty structs in C v. C++:
                  error: empty struct has size 0 in C, size 1 in C++
              */
@@ -174,15 +170,13 @@ struct SDL_SysWMmsg
         } cocoa;
 #endif
 #if defined(SDL_VIDEO_DRIVER_UIKIT)
-        struct
-        {
+        struct {
             int dummy;
             /* No UIKit window events yet */
         } uikit;
 #endif
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
-        struct
-        {
+        struct {
             int dummy;
             /* No Vivante window events yet */
         } vivante;
@@ -198,44 +192,37 @@ struct SDL_SysWMmsg
  *  When this structure is returned, it holds information about which
  *  low level system it is using, and will be one of SDL_SYSWM_TYPE.
  */
-struct SDL_SysWMinfo
-{
+struct SDL_SysWMinfo {
     SDL_version version;
     SDL_SYSWM_TYPE subsystem;
-    union
-    {
+    union {
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
-        struct
-        {
+        struct {
             HWND window;                /**< The window handle */
             HDC hdc;                    /**< The window device context */
             HINSTANCE hinstance;        /**< The instance handle */
         } win;
 #endif
 #if defined(SDL_VIDEO_DRIVER_WINRT)
-        struct
-        {
-            IInspectable * window;      /**< The WinRT CoreWindow */
+        struct {
+            IInspectable *window;       /**< The WinRT CoreWindow */
         } winrt;
 #endif
 #if defined(SDL_VIDEO_DRIVER_X11)
-        struct
-        {
+        struct {
             Display *display;           /**< The X11 display */
             Window window;              /**< The X11 window */
         } x11;
 #endif
 #if defined(SDL_VIDEO_DRIVER_DIRECTFB)
-        struct
-        {
+        struct {
             IDirectFB *dfb;             /**< The directfb main interface */
             IDirectFBWindow *window;    /**< The directfb window handle */
             IDirectFBSurface *surface;  /**< The directfb client surface */
         } dfb;
 #endif
 #if defined(SDL_VIDEO_DRIVER_COCOA)
-        struct
-        {
+        struct {
 #if defined(__OBJC__) && defined(__has_feature) && __has_feature(objc_arc)
             NSWindow __unsafe_unretained *window; /**< The Cocoa window */
 #else
@@ -244,8 +231,7 @@ struct SDL_SysWMinfo
         } cocoa;
 #endif
 #if defined(SDL_VIDEO_DRIVER_UIKIT)
-        struct
-        {
+        struct {
 #if defined(__OBJC__) && defined(__has_feature) && __has_feature(objc_arc)
             UIWindow __unsafe_unretained *window; /**< The UIKit window */
 #else
@@ -257,32 +243,28 @@ struct SDL_SysWMinfo
         } uikit;
 #endif
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
-        struct
-        {
+        struct {
             struct wl_display *display;            /**< Wayland display */
             struct wl_surface *surface;            /**< Wayland surface */
             struct wl_shell_surface *shell_surface; /**< Wayland shell_surface (window manager handle) */
         } wl;
 #endif
 #if defined(SDL_VIDEO_DRIVER_MIR)  /* no longer available, left for API/ABI compatibility. Remove in 2.1! */
-        struct
-        {
+        struct {
             void *connection;  /**< Mir display server connection */
             void *surface;  /**< Mir surface */
         } mir;
 #endif
 
 #if defined(SDL_VIDEO_DRIVER_ANDROID)
-        struct
-        {
+        struct {
             ANativeWindow *window;
             EGLSurface surface;
         } android;
 #endif
 
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
-        struct
-        {
+        struct {
             EGLNativeDisplayType display;
             EGLNativeWindowType window;
         } vivante;
@@ -317,7 +299,7 @@ typedef struct SDL_SysWMinfo SDL_SysWMinfo;
  *  \endcode
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_GetWindowWMInfo(SDL_Window * window,
-                                                     SDL_SysWMinfo * info);
+        SDL_SysWMinfo * info);
 
 
 /* Ends C function definitions when using C++ */

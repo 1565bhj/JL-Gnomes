@@ -118,13 +118,13 @@ void lv_obj_set_style_grid_cell_row_span(lv_obj_t * obj, lv_coord_t value, lv_st
 void lv_obj_set_style_grid_cell_x_align(lv_obj_t * obj, lv_coord_t value, lv_style_selector_t selector);
 void lv_obj_set_style_grid_cell_y_align(lv_obj_t * obj, lv_coord_t value, lv_style_selector_t selector);
 
-static inline const lv_coord_t * lv_obj_get_style_grid_row_dsc_array(const lv_obj_t * obj, uint32_t part)
+static inline const lv_coord_t *lv_obj_get_style_grid_row_dsc_array(const lv_obj_t * obj, uint32_t part)
 {
     lv_style_value_t v = lv_obj_get_style_prop(obj, part, LV_STYLE_GRID_ROW_DSC_ARRAY);
     return (const lv_coord_t *)v.ptr;
 }
 
-static inline const lv_coord_t * lv_obj_get_style_grid_column_dsc_array(const lv_obj_t * obj, uint32_t part)
+static inline const lv_coord_t *lv_obj_get_style_grid_column_dsc_array(const lv_obj_t * obj, uint32_t part)
 {
     lv_style_value_t v = lv_obj_get_style_prop(obj, part, LV_STYLE_GRID_COLUMN_DSC_ARRAY);
     return (const lv_coord_t *)v.ptr;

@@ -1446,6 +1446,14 @@ static int ai_speaker_state_machine(struct application *app, enum app_state stat
 
     return 0;
 }
+/**
+ * @brief 设置配网模式状态
+ * @param value 状态值：0-退出配网模式，1-进入配网模式，2-wifi连接成功状态
+ */
+void set_keyworld_wifi_enter_config(int value)
+{
+    keyworld_wifi_enter_congfig = value;
+}
 
 static const struct application_operation ai_speaker_ops = {
     .state_machine  = ai_speaker_state_machine,

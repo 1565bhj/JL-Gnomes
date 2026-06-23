@@ -10,6 +10,7 @@
 #include "stdlib.h"
 #include "time.h"
 #include "stdbool.h"
+#include <stdint.h>
 #include "gui_guider.h"
 #include "custom.h"
 
@@ -457,26 +458,31 @@ void async_ai_add_chat_message(const char *message)
  * @brief 控制说话图标显示状态
  * @param icon_flag 图标状态标志：0表示显示说话中图标，1表示显示聆听图标
  */
-static void speak_listen_icon_show(void *is_listen)
+static void speak_listen_icon_show(void *user_data)
 {
-    bool icon_flag = (bool)(intptr_t)is_listen;
-    if (icon_flag == 0) {
-        lv_span_set_text(guider_ui.screen_conversation_span_listen_speak_span, "正在对话……");
-
-    } else if (icon_flag == 1) {
-        lv_span_set_text(guider_ui.screen_conversation_span_listen_speak_span, "正在聆听……");
-
+    int v = (int)(intptr_t)user_data;
+    if (!guider_ui.screen_conversation_span_listen_speak_span) {
+        return;
     }
-
+    if (v == 0) {
+        lv_span_set_text(guider_ui.screen_conversation_span_listen_speak_span, "正在对话……");
+    } else {
+        lv_span_set_text(guider_ui.screen_conversation_span_listen_speak_span, "正在聆听……");
+    }
+    if (guider_ui.screen_conversation_span_listen_speak) {
+        lv_spangroup_refr_mode(guider_ui.screen_conversation_span_listen_speak);
+    }
 }
 void async_speak_listen_icon_show(bool is_listen)
 {
-    lv_async_call(speak_listen_icon_show, (void*)is_listen);
+    lv_async_call(speak_listen_icon_show, (void *)(intptr_t)(is_listen ? 1 : 0));
 }
 
 void unload_chat_ai_scr(void)
 {
-    lv_scr_load(guider_ui.screen_option);
+    if (guider_ui.screen_main) {
+        lv_scr_load(guider_ui.screen_main);
+    }
     lv_obj_del(guider_ui.screen_conversation);
 
 }
@@ -488,6 +494,27 @@ void load_chat_ai_scr(void)
 
 
 
+/** 禁止对象被手指拖动滚动：清 SCROLLABLE flag + 滚动方向置 NONE
+ *  仅关 scrollbar 模式不够，那个只影响滚动条显示，不拦截拖动 */
+static void conversation_freeze_scroll(lv_obj_t *obj)
+{
+    if (obj == NULL) {
+        return;
+    }
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(obj, LV_DIR_NONE);
+}
+
+/** 仅允许对象在垂直方向被手指拖动滚动（横向锁死，避免斜划带偏） */
+static void conversation_allow_vscroll(lv_obj_t *obj)
+{
+    if (obj == NULL) {
+        return;
+    }
+    lv_obj_add_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(obj, LV_DIR_VER);
+}
+
 void conversation_event_init(lv_ui *ui)
 {
     if (ui == NULL) {
@@ -498,7 +525,13 @@ void conversation_event_init(lv_ui *ui)
     lv_obj_add_flag(ui->screen_conversation_cont_ai, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui->screen_conversation_cont_user, LV_OBJ_FLAG_HIDDEN);
 
+    /* 页面与外层聊天框位置固定：禁止被手指拖动 */
+    conversation_freeze_scroll(ui->screen_conversation);
+    conversation_freeze_scroll(ui->screen_conversation_cont_frame);
 
+    /* AI / 用户消息容器内部允许上下滑动浏览长文本 */
+    conversation_allow_vscroll(ui->screen_conversation_cont_ai);
+    conversation_allow_vscroll(ui->screen_conversation_cont_user);
 }
 
 void conversation_event_setup(void)

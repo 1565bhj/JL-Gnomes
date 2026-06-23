@@ -12,8 +12,7 @@
 #define SCREEN_BUFFER_COUNT (1)
 #define SCREEN_DIRTY_RECTS_MAX (128)
 
-typedef struct _qnx_window
-{
+typedef struct _qnx_window {
     /* Screen content */
     screen_context_t screen_ctx;
     screen_window_t screen_win;
@@ -60,8 +59,7 @@ lv_disp_t *lv_qnx_create_window(lv_coord_t hor_res, lv_coord_t ver_res, const ch
 
     window = lv_mem_alloc(sizeof(*window));
     LV_ASSERT_MALLOC(window);
-    if (!window)
-    {
+    if (!window) {
         perror("lv_mem_alloc failed");
         goto fail;
     }
@@ -74,20 +72,19 @@ lv_disp_t *lv_qnx_create_window(lv_coord_t hor_res, lv_coord_t ver_res, const ch
 #error Unsupported LV_COLOR_DEPTH.
 #endif
 
-    if (screen_create_context(&window->screen_ctx, 0))
-    {
+    if (screen_create_context(&window->screen_ctx, 0)) {
         perror("screen_context_create");
         goto fail;
     }
-    if (screen_create_window(&window->screen_win, window->screen_ctx))
-    {
+    if (screen_create_window(&window->screen_win, window->screen_ctx)) {
         perror("screen_create_window");
         goto fail;
     }
 
-    status = screen_set_window_property_iv(window->screen_win, SCREEN_PROPERTY_FORMAT, (const int[]){window->screen_format});
-    if (status)
-    {
+    status = screen_set_window_property_iv(window->screen_win, SCREEN_PROPERTY_FORMAT, (const int[]) {
+        window->screen_format
+    });
+    if (status) {
         perror("error SCREEN_PROPERTY_FORMAT");
         goto fail;
     }
@@ -95,63 +92,54 @@ lv_disp_t *lv_qnx_create_window(lv_coord_t hor_res, lv_coord_t ver_res, const ch
     window->screen_size[0] = hor_res;
     window->screen_size[1] = ver_res;
     status = screen_set_window_property_iv(window->screen_win, SCREEN_PROPERTY_SIZE, window->screen_size);
-    if (status)
-    {
+    if (status) {
         perror("error SCREEN_PROPERTY_SIZE");
         goto fail;
     }
 
     status = screen_set_window_property_iv(window->screen_win, SCREEN_PROPERTY_TRANSPARENCY, &transp);
-    if (status)
-    {
+    if (status) {
         perror("screen_set_window_property_iv(SCREEN_PROPERTY_TRANSPARENCY)");
         goto fail;
     }
 
     status = screen_set_window_property_iv(window->screen_win, SCREEN_PROPERTY_ZORDER, &zorder);
-    if (status)
-    {
+    if (status) {
         perror("screen_set_window_property_iv(SCREEN_PROPERTY_ZORDER)");
         goto fail;
     }
 
     (void)screen_set_window_property_cv(window->screen_win, SCREEN_PROPERTY_ID_STRING, strlen(name), name);
 
-    if (screen_create_window_buffers(window->screen_win, SCREEN_BUFFER_COUNT))
-    {
+    if (screen_create_window_buffers(window->screen_win, SCREEN_BUFFER_COUNT)) {
         perror("screen_create_window_buffers() failed");
         goto fail;
     }
     status = screen_get_window_property_pv(window->screen_win, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)&window->screen_wbuf);
-    if (status)
-    {
+    if (status) {
         perror("screen_get_window_property_pv(SCREEN_PROPERTY_RENDER_BUFFERS) failed");
         goto fail;
     }
 
     status = screen_get_buffer_property_pv(window->screen_wbuf[0], SCREEN_PROPERTY_POINTER, &window->screen_wbuf_pointer);
-    if (status)
-    {
+    if (status) {
         perror("screen_get_buffer_property_pv(SCREEN_PROPERTY_POINTER)");
         goto fail;
     }
     status = screen_get_buffer_property_iv(window->screen_wbuf[0], SCREEN_PROPERTY_STRIDE, (void *)&window->screen_wbuf_stride);
-    if (status)
-    {
+    if (status) {
         perror("screen_get_buffer_property_iv(SCREEN_PROPERTY_STRIDE)");
         goto fail;
     }
     /* Stride is in bytes, make it in px */
     window->screen_wbuf_stride /= LV_COLOR_DEPTH >> 3;
-    if (window->screen_wbuf_stride < hor_res)
-    {
+    if (window->screen_wbuf_stride < hor_res) {
         printf("Unexpected stride %i\n", window->screen_wbuf_stride);
         goto fail;
     }
 #if !LV_MEM_CUSTOM
 #warning Performance might be degraded. Use LV_MEM_CUSTOM.
-    if (size > LV_MEM_SIZE)
-    {
+    if (size > LV_MEM_SIZE) {
         /* LVGL could draw to buffer with size smaller then the screen size */
         printf("Warning: performance might be degraded!\n");
         area >>= 3;
@@ -161,8 +149,7 @@ lv_disp_t *lv_qnx_create_window(lv_coord_t hor_res, lv_coord_t ver_res, const ch
     /* Initialize draw buffer for LVGL */
     window->lv_wbuf_pointer = lv_mem_alloc(size);
 
-    if (!window->lv_wbuf_pointer)
-    {
+    if (!window->lv_wbuf_pointer) {
 #if !LV_MEM_CUSTOM
         perror("Cannot allocate lv_wbuf_pointer. Check LV_MEM_SIZE.");
 #else
@@ -182,15 +169,13 @@ lv_disp_t *lv_qnx_create_window(lv_coord_t hor_res, lv_coord_t ver_res, const ch
 
     window->lv_disp = lv_disp_drv_register(&window->lv_disp_drv);
 
-    if (!window->lv_disp)
-    {
+    if (!window->lv_disp) {
         perror("lv_disp_drv_register failed.");
         goto fail;
     }
 
     status = screen_create_event(&window->screen_ev);
-    if (status)
-    {
+    if (status) {
         perror("screen_create_event");
         goto fail;
     }
@@ -201,8 +186,7 @@ lv_disp_t *lv_qnx_create_window(lv_coord_t hor_res, lv_coord_t ver_res, const ch
     window->lv_indev_drv_pointer.read_cb = qnx_pointer_read;
     window->lv_indev_drv_pointer.disp = window->lv_disp;
     window->lv_indev_pointer = lv_indev_drv_register(&window->lv_indev_drv_pointer);
-    if (!window->lv_indev_pointer)
-    {
+    if (!window->lv_indev_pointer) {
         perror("failed to register pointer indev");
         goto fail;
     }
@@ -236,29 +220,22 @@ static void qnx_pointer_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
     data->point.y = 0;
     data->state = 0;
 
-    while (!screen_get_event(window->screen_ctx, window->screen_ev, 0))
-    {
+    while (!screen_get_event(window->screen_ctx, window->screen_ev, 0)) {
         status = screen_get_event_property_iv(window->screen_ev, SCREEN_PROPERTY_TYPE, &val);
-        if (status || val == SCREEN_EVENT_NONE)
-        {
+        if (status || val == SCREEN_EVENT_NONE) {
             return;
         }
-        switch (val)
-        {
+        switch (val) {
         case SCREEN_EVENT_POINTER:
             screen_get_event_property_iv(window->screen_ev, SCREEN_PROPERTY_BUTTONS, &val);
-            if (val)
-            {
+            if (val) {
                 screen_get_event_property_iv(window->screen_ev, SCREEN_PROPERTY_POSITION, pos);
                 data->point.x = pos[0];
                 data->point.y = pos[1];
                 data->state = LV_INDEV_STATE_PRESSED;
                 pressed = 1;
-            }
-            else
-            {
-                if (pressed)
-                {
+            } else {
+                if (pressed) {
                     data->point.x = pos[0];
                     data->point.y = pos[1];
                     data->state = LV_INDEV_STATE_RELEASED;
@@ -274,48 +251,37 @@ static int qnx_destroy_window(qnx_window_t *window)
 {
     int status;
     int ret = 0;
-    if (window)
-    {
-        if (window->lv_disp)
-        {
+    if (window) {
+        if (window->lv_disp) {
             lv_disp_remove(window->lv_disp);
         }
-        if (window->lv_wbuf_pointer)
-        {
+        if (window->lv_wbuf_pointer) {
             lv_mem_free(window->lv_wbuf_pointer);
         }
-        if (window->screen_win)
-        {
-            if (window->screen_wbuf)
-            {
+        if (window->screen_win) {
+            if (window->screen_wbuf) {
                 status = screen_destroy_window_buffers(window->screen_win);
-                if (status)
-                {
+                if (status) {
                     perror("screen_destroy_window_buffers failed");
                     ret = -1;
                 }
             }
             status = screen_destroy_window(window->screen_win);
-            if (status)
-            {
+            if (status) {
                 perror("screen_destroy_window failed");
                 ret = -1;
             }
         }
-        if (window->screen_ev)
-        {
+        if (window->screen_ev) {
             status = screen_destroy_event(window->screen_ev);
-            if (status)
-            {
+            if (status) {
                 perror("screen_destroy_event failed.");
                 ret = -1;
             }
         }
-        if (window->screen_ctx)
-        {
+        if (window->screen_ctx) {
             status = screen_destroy_context(window->screen_ctx);
-            if (status)
-            {
+            if (status) {
                 perror("screen_destroy_context failed.");
                 ret = -1;
             }
@@ -336,8 +302,7 @@ static void qnx_screen_flush(struct _lv_disp_drv_t *disp_drv, const lv_area_t *a
     LV_ASSERT(window);
 
     /* Manage dirty rectangles up to SCREEN_DIRTY_RECTS_MAX otherwise refresh complete screen */
-    if (window->dirty_rects_cnt < SCREEN_DIRTY_RECTS_MAX)
-    {
+    if (window->dirty_rects_cnt < SCREEN_DIRTY_RECTS_MAX) {
         window->dirty_rects[0 + (4 * window->dirty_rects_cnt)] = area->x1;
         window->dirty_rects[1 + (4 * window->dirty_rects_cnt)] = area->y1;
         window->dirty_rects[2 + (4 * window->dirty_rects_cnt)] = area->x2;
@@ -347,10 +312,8 @@ static void qnx_screen_flush(struct _lv_disp_drv_t *disp_drv, const lv_area_t *a
     }
 
     /* Update data in screen buffer */
-    for (y = area->y1; y <= area->y2 && y < disp_drv->ver_res; y++)
-    {
-        for (x = area->x1; x <= area->x2 && x < disp_drv->hor_res; x++)
-        {
+    for (y = area->y1; y <= area->y2 && y < disp_drv->ver_res; y++) {
+        for (x = area->x1; x <= area->x2 && x < disp_drv->hor_res; x++) {
             int offset = (y * window->screen_wbuf_stride) + x;
             lv_color_t *const buf = (lv_color_t *)window->screen_wbuf_pointer + offset;
             buf->full = color_p->full;
@@ -358,11 +321,9 @@ static void qnx_screen_flush(struct _lv_disp_drv_t *disp_drv, const lv_area_t *a
         }
     }
 
-    if (lv_disp_flush_is_last(disp_drv))
-    {
+    if (lv_disp_flush_is_last(disp_drv)) {
         status = screen_post_window(window->screen_win, window->screen_wbuf[0], count, p_dirty, SCREEN_WAIT_IDLE);
-        if (status)
-        {
+        if (status) {
             perror("error screen_post_window");
         }
         window->dirty_rects_cnt = 0;

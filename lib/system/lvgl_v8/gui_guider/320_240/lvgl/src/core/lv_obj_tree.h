@@ -108,21 +108,21 @@ void lv_obj_move_to_index(struct _lv_obj_t * obj, int32_t index);
  * @param obj       pointer to an object
  * @return          pointer to the object's screen
  */
-struct _lv_obj_t * lv_obj_get_screen(const struct _lv_obj_t * obj);
+struct _lv_obj_t *lv_obj_get_screen(const struct _lv_obj_t * obj);
 
 /**
  * Get the display of the object
  * @param obj       pointer to an object
  * @return          pointer to the object's display
  */
-lv_disp_t * lv_obj_get_disp(const struct _lv_obj_t * obj);
+lv_disp_t *lv_obj_get_disp(const struct _lv_obj_t * obj);
 
 /**
  * Get the parent of an object
  * @param obj       pointer to an object
  * @return          the parent of the object. (NULL if `obj` was a screen)
  */
-struct _lv_obj_t * lv_obj_get_parent(const struct _lv_obj_t * obj);
+struct _lv_obj_t *lv_obj_get_parent(const struct _lv_obj_t * obj);
 
 /**
  * Get the child of an object by the child's index.
@@ -135,7 +135,7 @@ struct _lv_obj_t * lv_obj_get_parent(const struct _lv_obj_t * obj);
  *                  -2: the second youngest
  * @return          pointer to the child or NULL if the index was invalid
  */
-struct _lv_obj_t * lv_obj_get_child(const struct _lv_obj_t * obj, int32_t id);
+struct _lv_obj_t *lv_obj_get_child(const struct _lv_obj_t * obj, int32_t id);
 
 /**
  * Get the number of children

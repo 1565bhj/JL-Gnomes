@@ -58,7 +58,7 @@ static inline void invalidate_cache(void);
  *  STATIC VARIABLES
  **********************/
 
-static lv_nxp_pxp_cfg_t * pxp_cfg;
+static lv_nxp_pxp_cfg_t *pxp_cfg;
 
 /**********************
  *      MACROS
@@ -74,9 +74,10 @@ lv_res_t lv_gpu_nxp_pxp_init(void)
     pxp_cfg = lv_gpu_nxp_pxp_get_cfg();
 #endif
 
-    if(!pxp_cfg || !pxp_cfg->pxp_interrupt_deinit || !pxp_cfg->pxp_interrupt_init ||
-       !pxp_cfg->pxp_run || !pxp_cfg->pxp_wait)
+    if (!pxp_cfg || !pxp_cfg->pxp_interrupt_deinit || !pxp_cfg->pxp_interrupt_init ||
+        !pxp_cfg->pxp_run || !pxp_cfg->pxp_wait) {
         PXP_RETURN_INV("PXP configuration error.");
+    }
 
     PXP_Init(LV_GPU_NXP_PXP_ID);
 
@@ -85,7 +86,7 @@ lv_res_t lv_gpu_nxp_pxp_init(void)
 
     PXP_EnableInterrupts(LV_GPU_NXP_PXP_ID, kPXP_CompleteInterruptEnable);
 
-    if(pxp_cfg->pxp_interrupt_init() != LV_RES_OK) {
+    if (pxp_cfg->pxp_interrupt_init() != LV_RES_OK) {
         PXP_DisableInterrupts(LV_GPU_NXP_PXP_ID, kPXP_CompleteInterruptEnable);
         PXP_Deinit(LV_GPU_NXP_PXP_ID);
         PXP_RETURN_INV("PXP interrupt init failed.");
@@ -130,9 +131,10 @@ void lv_gpu_nxp_pxp_wait(void)
 
 static inline void invalidate_cache(void)
 {
-    lv_disp_t * disp = _lv_refr_get_disp_refreshing();
-    if(disp->driver->clean_dcache_cb)
+    lv_disp_t *disp = _lv_refr_get_disp_refreshing();
+    if (disp->driver->clean_dcache_cb) {
         disp->driver->clean_dcache_cb(disp->driver);
+    }
 }
 
 #endif /*LV_USE_GPU_NXP_PXP*/

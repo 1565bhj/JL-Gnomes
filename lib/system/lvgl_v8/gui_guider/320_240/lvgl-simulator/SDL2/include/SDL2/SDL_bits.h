@@ -48,7 +48,7 @@ extern "C" {
  *  \return Index of the most significant bit, or -1 if the value is 0.
  */
 #if defined(__WATCOMC__) && defined(__386__)
-extern _inline int _SDL_clz_watcom (Uint32);
+extern _inline int _SDL_clz_watcom(Uint32);
 #pragma aux _SDL_clz_watcom = \
     "bsr eax, eax" \
     "xor eax, 31" \
@@ -88,10 +88,8 @@ SDL_MostSignificantBitIndex32(Uint32 x)
         return -1;
     }
 
-    for (i = 4; i >= 0; i--)
-    {
-        if (x & b[i])
-        {
+    for (i = 4; i >= 0; i--) {
+        if (x & b[i]) {
             x >>= S[i];
             msbIndex |= S[i];
         }

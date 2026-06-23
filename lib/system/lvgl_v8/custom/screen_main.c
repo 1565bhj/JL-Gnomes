@@ -5,16 +5,97 @@
 #include "stdbool.h"
 #include "gui_guider.h"
 #include "custom.h"
+#include "lvgl_develop.h"
 
-// 图标数量
-#define OPTION_ICON_COUNT          8
+/* 与 jieli-chatbot custom/screen_option.c 一致：枚举 + CONFIG 条件片段拼出 ICON_DEFINITIONS，索引与 open_icon_screen 共用；游戏见 lvgl_develop.h CONFIG_LVGL_GAMES_ENABLE 及子项 */
+typedef enum {
+    ICON_ID_COUNTDOWN = 0,
+    ICON_ID_ALARM,
+    ICON_ID_MUSIC,
+    ICON_ID_AI_CONVERSATION,
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+    ICON_ID_WIFI,
+#endif
+#if CONFIG_LVGL_SLEEP_MUSIC_ENABLE
+    ICON_ID_SLEEP_MUSIC,
+#endif
+#if CONFIG_LVGL_AGENT_ENABLE
+    ICON_ID_AGENT,
+#endif
+#if CONFIG_LVGL_CALCULATOR_ENABLE
+    ICON_ID_CALCULATOR,
+#endif
+#if defined(CONFIG_LVGL_GAMES_ENABLE) && CONFIG_LVGL_GAMES_ENABLE
+#if defined(CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE) && CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE
+    ICON_ID_DRAW_LOTS,
+#endif
+#if defined(CONFIG_LVGL_DICE_GAME_ENABLE) && CONFIG_LVGL_DICE_GAME_ENABLE
+    ICON_ID_DICE,
+#endif
+#if defined(CONFIG_LVGL_MOUSE_GAME_ENABLE) && CONFIG_LVGL_MOUSE_GAME_ENABLE
+    ICON_ID_WHACK,
+#endif
+#endif
+#if CONFIG_LVGL_CONTENT_LIST_ENABLE
+    ICON_ID_CONTENT,
+#endif
+    ICON_ID_MAX
+} IconID_t;
+
+#define OPTION_ICON_COUNT      ICON_ID_MAX
 // 图标之间的距离
 #define OPTION_ICON_DISTANCE       78
-
+/* 行首与左缘间距，与 scrollicon 中 10+i*OPTION_ICON_DISTANCE 一致；松手吸附必须相对该值取模，勿用 0%78 否则会整排误吸附到下一格 */
+#define OPTION_ICON_LEFT_MARGIN    10
+/* 左右键整排平移 */
+#define OPTION_ICON_SCROLL_ANIM_MS       2
+/* 松手后吸附网格回弹：与上项独立，便于只调回弹、不改键控平移；1=动画对齐网格（默认开，渐停、不生硬） */
+#ifndef OPTION_ICON_RELEASE_SNAP_ENABLE
+#define OPTION_ICON_RELEASE_SNAP_ENABLE  1
+#endif
+#ifndef OPTION_ICON_RELEASE_SNAP_ANIM_MS
+#define OPTION_ICON_RELEASE_SNAP_ANIM_MS 500
+#endif
+/* ease_out 末段更柔和地「落」到格点；要对称加减速可改 lv_anim_path_ease_in_out */
+#define OPTION_ICON_RELEASE_SNAP_PATH    lv_anim_path_ease_out
+/* 松手惯性：在末帧滑动方向再滑行一段，再进网格吸附（可关） */
+#ifndef OPTION_MAIN_INERTIA_ENABLE
+#define OPTION_MAIN_INERTIA_ENABLE  1
+#endif
+#ifndef OPTION_MAIN_INERTIA_COEFF
+#define OPTION_MAIN_INERTIA_COEFF   3   /* 末帧位移 × 本系数 = 初算惯性，再与 lv_indev vect 混合 */
+#endif
+#ifndef OPTION_MAIN_INERTIA_VECT_W
+#define OPTION_MAIN_INERTIA_VECT_W  2   /* lv_indev_get_vect 水平分量权（/2 为与末帧等权混合） */
+#endif
+#ifndef OPTION_MAIN_INERTIA_MAX_PX
+#define OPTION_MAIN_INERTIA_MAX_PX  (OPTION_ICON_DISTANCE * 8)
+#endif
+#ifndef OPTION_MAIN_INERTIA_MIN_DX
+#define OPTION_MAIN_INERTIA_MIN_DX  1   /* 末帧|dx|低于此、且合速度过低时不加惯性，避免点按抖动 */
+#endif
+/* 松手后惯性不一次性走完：用 ease_out 动画 0→inert，再进网格；0=恢复瞬时惯性 */
+#ifndef OPTION_MAIN_INERTIA_COAST_ENABLE
+#define OPTION_MAIN_INERTIA_COAST_ENABLE 1
+#endif
+#ifndef OPTION_MAIN_INERTIA_COAST_TIME_MIN_MS
+#define OPTION_MAIN_INERTIA_COAST_TIME_MIN_MS  150
+#endif
+#ifndef OPTION_MAIN_INERTIA_COAST_TIME_PER_PX
+#define OPTION_MAIN_INERTIA_COAST_TIME_PER_PX 1
+#endif
+#ifndef OPTION_MAIN_INERTIA_COAST_TIME_MAX_MS
+#define OPTION_MAIN_INERTIA_COAST_TIME_MAX_MS  700
+#endif
+/* 余摆段插值：linear=匀速多滑一截、末段不减速；ease_out 为渐停 */
+#ifndef OPTION_MAIN_INERTIA_COAST_PATH
+#define OPTION_MAIN_INERTIA_COAST_PATH  lv_anim_path_ease_out
+#endif
 
 // 定义图标结构体，包含图标对象指针和x坐标
 typedef struct {
     lv_obj_t *obj;
+    lv_obj_t *border_obj;  /* 66x66 正方形边框 overlay */
     int32_t x;
     int32_t icon_idx; // 图标索引，用于标识不同的功能
 } option_icon_typedef;
@@ -28,10 +109,22 @@ static int32_t scr_w;
 
 // 触摸偏移量x
 static int32_t t_offset_x;
+/* 上一帧 PRESSING 的水平位移，用于松手时估算惯性 */
+static int32_t s_last_drag_dx;
 // 屏幕对象指针
 static lv_obj_t *screen;
 // 新增：当前最大的图标索引
 static int32_t current_max_icon_idx = 0;
+// 当前被点击选中的图标索引（-1 表示无选中，不显示白框）
+static int32_t selected_icon_idx = -1;
+// 异步更新白框时待应用的选中索引（-1 表示全部隐藏）
+static int32_t s_pending_border_idx = 0;
+// 触摸拖动图标条后白框已全部隐藏；首轮按键仅恢复「屏上最左可见」图标白框，不切换项、不平移
+static bool s_border_hidden_after_touch_drag = false;
+/* 松手惯性动画占位（在 main_move_white_border / pressing 中 lv_anim_del） */
+static int32_t s_coast_var_dummy;
+static int32_t s_coast_prev;
+static int32_t s_deferred_inert;
 
 // 按下事件回调函数声明
 static void  pressing_cb(lv_event_t * e);
@@ -39,6 +132,7 @@ static void  pressing_cb(lv_event_t * e);
 static void  released_cb(lv_event_t * e);
 // 设置x坐标回调函数声明
 static void set_x_cb(void * var, int32_t v);
+static void icon_set_x_cb(void * var, int32_t v);
 // 自定义动画创建函数声明
 static void lv_myanim_creat(void * var, lv_anim_exec_xcb_t exec_cb, uint32_t time, uint32_t delay, lv_anim_path_cb_t path_cb,
                             int32_t start, int32_t end, lv_anim_ready_cb_t completed_cb, lv_anim_deleted_cb_t deleted_cb);
@@ -47,16 +141,82 @@ static void icon_click_cb(lv_event_t * e);
 // 新增：打开对应屏幕函数声明
 static void open_icon_screen(int32_t icon_idx);
 void lv_screen_open_icon_screen_set(short x, short y);
-// 图标定义宏 - 修复：使用正确的图标资源名称
+// 根据选中索引更新图标白色边框（仅该索引对应图标显示 66x66 白框）
+static void update_selected_icon_border(int32_t selected_idx);
+// 统一更新白框：有选中则显示在选中图标，否则显示在最左侧图标
+static void update_icon_border_display(void);
+static void main_icon_release_apply_snap(int32_t inert_px);
+static void main_icon_coast_exec(void * var, int32_t v);
+static void main_icon_coast_ready(lv_anim_t *a);
+
+// 获取当前带白框的图标索引（供外部调用）
+int get_white_border_icon_index(void);
+// 白框左右移动：is_next为true表示下一个图标，false表示上一个图标，循环
+void main_move_white_border(bool is_next);
+// 进入当前带白框图标对应的页面
+void main_open_white_border_icon_screen(void);
+
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+#define ICON_OPT_WIFI        ICON_DEF(ICON_ID_WIFI, _op_wifi_alpha_66x85, "WiFi设置")
+#else
+#define ICON_OPT_WIFI
+#endif
+#if CONFIG_LVGL_SLEEP_MUSIC_ENABLE
+#define ICON_OPT_SLEEP_MUSIC ICON_DEF(ICON_ID_SLEEP_MUSIC, _op_sleep_music_alpha_66x85, "睡眠音乐")
+#else
+#define ICON_OPT_SLEEP_MUSIC
+#endif
+#if CONFIG_LVGL_AGENT_ENABLE
+#define ICON_OPT_AGENT       ICON_DEF(ICON_ID_AGENT, _op_agent_alpha_66x85, "智能体选择")
+#else
+#define ICON_OPT_AGENT
+#endif
+#if CONFIG_LVGL_CALCULATOR_ENABLE
+#define ICON_OPT_CALCULATOR  ICON_DEF(ICON_ID_CALCULATOR, _op_calculator_alpha_66x85, "计算器")
+#else
+#define ICON_OPT_CALCULATOR
+#endif
+#if defined(CONFIG_LVGL_GAMES_ENABLE) && CONFIG_LVGL_GAMES_ENABLE
+#if defined(CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE) && CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE
+#define ICON_OPT_DRAW_LOTS   ICON_DEF(ICON_ID_DRAW_LOTS, _op_draw_lots_game_66x85, "抽签")
+#else
+#define ICON_OPT_DRAW_LOTS
+#endif
+#if defined(CONFIG_LVGL_DICE_GAME_ENABLE) && CONFIG_LVGL_DICE_GAME_ENABLE
+#define ICON_OPT_DICE        ICON_DEF(ICON_ID_DICE, _op_dice_game_66x85, "摇骰子")
+#else
+#define ICON_OPT_DICE
+#endif
+#if defined(CONFIG_LVGL_MOUSE_GAME_ENABLE) && CONFIG_LVGL_MOUSE_GAME_ENABLE
+#define ICON_OPT_WHACK       ICON_DEF(ICON_ID_WHACK, _op_whack_game_66x85, "打地鼠")
+#else
+#define ICON_OPT_WHACK
+#endif
+#else
+#define ICON_OPT_DRAW_LOTS
+#define ICON_OPT_DICE
+#define ICON_OPT_WHACK
+#endif
+#if CONFIG_LVGL_CONTENT_LIST_ENABLE
+#define ICON_OPT_CONTENT     ICON_DEF(ICON_ID_CONTENT, _op_content_alpha_66x85, "内容")
+#else
+#define ICON_OPT_CONTENT
+#endif
+
 #define ICON_DEFINITIONS \
-    ICON_DEF(0, _op_timer_66x85, "倒计时") \
-    ICON_DEF(1, _op_alarm_66x85, "闹钟") \
-    ICON_DEF(2, _op_music_66x85, "音乐") \
-    ICON_DEF(3, _op_conversation_66x85, "AI对话") \
-    ICON_DEF(4, _op_draw_lots_game_66x85, "抽签") \
-    ICON_DEF(5, _op_whack_game_66x85, "打地鼠") \
-    ICON_DEF(6, _op_dice_game_66x85, "摇骰子") \
-    ICON_DEF(7, _op_podcast_66x85, "播客")
+    ICON_DEF(ICON_ID_COUNTDOWN, _op_timer_alpha_66x85, "倒计时") \
+    ICON_DEF(ICON_ID_ALARM, _op_alarm_alpha_66x85, "闹钟") \
+    ICON_DEF(ICON_ID_MUSIC, _op_music_alpha_66x85, "音乐") \
+    ICON_DEF(ICON_ID_AI_CONVERSATION, _op_conversation_alpha_66x85, "AI对话") \
+    ICON_OPT_WIFI \
+    ICON_OPT_SLEEP_MUSIC \
+    ICON_OPT_AGENT \
+    ICON_OPT_CALCULATOR \
+    ICON_OPT_DRAW_LOTS \
+    ICON_OPT_DICE \
+    ICON_OPT_WHACK \
+    ICON_OPT_CONTENT
+
 
 
 // 滚动图标功能函数
@@ -105,7 +265,7 @@ void main_scrollicon(void)
         lv_obj_set_size(icon[i].obj, 66, 85);
 
         // 计算并设置图标初始X坐标 - 左侧留出空间，右侧额外添加空间以便循环
-        icon[i].x = 10 + i * OPTION_ICON_DISTANCE;
+        icon[i].x = OPTION_ICON_LEFT_MARGIN + i * OPTION_ICON_DISTANCE;
         lv_obj_set_x(icon[i].obj, icon[i].x);
 
         // 设置图标Y坐标，使其垂直居中
@@ -119,26 +279,381 @@ void main_scrollicon(void)
         ICON_DEFINITIONS
 #undef ICON_DEF
 
+        /* 创建 66x66 正方形边框 overlay，默认隐藏，由 update_selected_icon_border 控制显示 */
+        icon[i].border_obj = lv_obj_create(icon[i].obj);
+        lv_obj_set_size(icon[i].border_obj, 66, 66);
+        lv_obj_set_pos(icon[i].border_obj, 0, 0);
+        lv_obj_set_style_bg_opa(icon[i].border_obj, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(icon[i].border_obj, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_color(icon[i].border_obj, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_opa(icon[i].border_obj, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_side(icon[i].border_obj, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_radius(icon[i].border_obj, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_clear_flag(icon[i].border_obj, LV_OBJ_FLAG_CLICKABLE);  /* 不拦截点击 */
+        lv_obj_add_flag(icon[i].border_obj, LV_OBJ_FLAG_HIDDEN);
     }
+    selected_icon_idx = -1;
+    s_border_hidden_after_touch_drag = false;
+    update_icon_border_display();   /* 未点击时最左侧显示白框 */
 }
 
 
+
+// 异步回调：在 LVGL 主循环中执行白框显示更新，避免在非 UI 线程改控件
+static void update_selected_icon_border_async_cb(void *data)
+{
+    LV_UNUSED(data);
+    int32_t selected_idx = s_pending_border_idx;
+    for (int32_t i = 0; i < OPTION_ICON_COUNT; i++) {
+        lv_obj_add_flag(icon[i].border_obj, LV_OBJ_FLAG_HIDDEN);
+    }
+    if (selected_idx >= 0 && selected_idx < OPTION_ICON_COUNT) {
+        lv_obj_clear_flag(icon[selected_idx].border_obj, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+// 根据选中索引更新白色边框（异步）：保证页面上只有一个图标有白框
+static void update_selected_icon_border(int32_t selected_idx)
+{
+    s_pending_border_idx = selected_idx;
+    lv_async_call(update_selected_icon_border_async_cb, NULL);
+}
+
+// 统一更新白框：有点击选中则显示在选中图标，否则默认显示在倒计时图标（索引0）
+static void update_icon_border_display(void)
+{
+    int32_t show_idx;
+    if (selected_icon_idx >= 0 && selected_icon_idx < OPTION_ICON_COUNT) {
+        show_idx = selected_icon_idx;
+    } else {
+        show_idx = 0;  // 默认倒计时图标
+    }
+    update_selected_icon_border(show_idx);
+}
+
+// 根据图标索引返回中文名称，用于打印（与 ICON_ID_* 一致）
+static const char *get_icon_name_cn(int32_t idx)
+{
+    if (idx == ICON_ID_COUNTDOWN) {
+        return "倒计时";
+    }
+    if (idx == ICON_ID_ALARM) {
+        return "闹钟";
+    }
+    if (idx == ICON_ID_MUSIC) {
+        return "音乐";
+    }
+    if (idx == ICON_ID_AI_CONVERSATION) {
+        return "AI对话";
+    }
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+    if (idx == ICON_ID_WIFI) {
+        return "WiFi设置";
+    }
+#endif
+#if CONFIG_LVGL_SLEEP_MUSIC_ENABLE
+    if (idx == ICON_ID_SLEEP_MUSIC) {
+        return "睡眠音乐";
+    }
+#endif
+#if CONFIG_LVGL_AGENT_ENABLE
+    if (idx == ICON_ID_AGENT) {
+        return "智能体选择";
+    }
+#endif
+#if CONFIG_LVGL_CALCULATOR_ENABLE
+    if (idx == ICON_ID_CALCULATOR) {
+        return "计算器";
+    }
+#endif
+#if defined(CONFIG_LVGL_GAMES_ENABLE) && CONFIG_LVGL_GAMES_ENABLE
+#if defined(CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE) && CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE
+    if (idx == ICON_ID_DRAW_LOTS) {
+        return "抽签";
+    }
+#endif
+#if defined(CONFIG_LVGL_DICE_GAME_ENABLE) && CONFIG_LVGL_DICE_GAME_ENABLE
+    if (idx == ICON_ID_DICE) {
+        return "摇骰子";
+    }
+#endif
+#if defined(CONFIG_LVGL_MOUSE_GAME_ENABLE) && CONFIG_LVGL_MOUSE_GAME_ENABLE
+    if (idx == ICON_ID_WHACK) {
+        return "打地鼠";
+    }
+#endif
+#endif
+#if CONFIG_LVGL_CONTENT_LIST_ENABLE
+    if (idx == ICON_ID_CONTENT) {
+        return "内容";
+    }
+#endif
+    return "未知";
+}
+
+/* 与屏幕水平 [0, scr_w] 相交的图标里，x 最小者（屏上最左可见） */
+static int32_t main_leftmost_on_screen_icon_index(void)
+{
+    int32_t best = -1;
+    int32_t best_x = 0;
+    int32_t i;
+    for (i = 0; i < OPTION_ICON_COUNT; i++) {
+        int32_t x = lv_obj_get_x(icon[i].obj);
+        int32_t w = lv_obj_get_width(icon[i].obj);
+        if (x + w <= 0 || x >= scr_w) {
+            continue;
+        }
+        if (best < 0 || x < best_x) {
+            best = i;
+            best_x = x;
+        }
+    }
+    return (best >= 0) ? best : 0;
+}
+
+// 获取当前带白框的图标索引：有选中返回选中索引，否则默认返回倒计时图标（索引0）
+int get_white_border_icon_index(void)
+{
+    if (s_border_hidden_after_touch_drag) {
+        int32_t lm = main_leftmost_on_screen_icon_index();
+        printf("[白框] 当前带白框图标: %s (索引%d, 触摸拖动后白框已隐藏，屏上最左可见)\n", get_icon_name_cn(lm), lm);
+        return lm;
+    }
+    if (selected_icon_idx >= 0) {
+        printf("[白框] 当前带白框图标: %s (索引%d, 来自选中)\n", get_icon_name_cn(selected_icon_idx), selected_icon_idx);
+        return selected_icon_idx;
+    }
+    printf("[白框] 当前带白框图标: %s (索引0, 默认)\n", get_icon_name_cn(0));
+    return 0;
+}
+
+// 用形参控制左右移动：move_left 为 true 整条向左平移一格（x 减小），false 向右（x 增大）
+void lv_icon_move_dir(bool move_left)
+{
+    int32_t offset_x = move_left ? -OPTION_ICON_DISTANCE : OPTION_ICON_DISTANCE;
+    for (int32_t i = 0; i < OPTION_ICON_COUNT; i++) {
+        // 计算新坐标（先算后更，避免动画参数错误）
+        int32_t new_x = icon[i].x + offset_x;
+
+        // 创建动画（使用补偿后的正确坐标）
+        lv_myanim_creat(icon[i].obj, icon_set_x_cb, OPTION_ICON_SCROLL_ANIM_MS, 0, lv_anim_path_ease_in_out,
+                        icon[i].x, new_x, NULL, NULL);
+
+        // 更新图标最终坐标
+        icon[i].x = new_x;
+    }
+
+
+    // （可选）如果需要更新最大图标状态，补充调用
+    // update_max_icon_status();
+}
+
+/* 首、尾图标均完全在水平显示区内时，白框切换不必整条平移 */
+static bool main_icons_first_and_last_both_on_screen(void)
+{
+    int32_t w0 = lv_obj_get_width(icon[0].obj);
+    int32_t x0 = icon[0].x;
+    int32_t li = OPTION_ICON_COUNT - 1;
+    int32_t wL = lv_obj_get_width(icon[li].obj);
+    int32_t xL = icon[li].x;
+    return (x0 >= 0 && (x0 + w0) <= scr_w && xL >= 0 && (xL + wL) <= scr_w);
+}
+
+// 白框左右移动：按屏幕上的实际白框位置，is_next 为 true 表示移到右侧下一个，false 表示左侧上一个，循环
+// 若白框所在图标在屏外，则整体平移使该图标进入可见区域
+void main_move_white_border(bool is_next)
+{
+    int32_t i;
+
+    /* 取消未完成的平移/对齐动画，并用控件实际 x 写回 icon[].x。
+     * 否则 lv_icon_move_dir 会把 icon[].x 先写成动画终点，环绕后又可能为负，
+     * 在“下一个”且实际应处理右侧裁切时仍命中 sel_x<0，误触发反向平移。 */
+    for (i = 0; i < OPTION_ICON_COUNT; i++) {
+        lv_anim_del(icon[i].obj, set_x_cb);
+        lv_anim_del(icon[i].obj, icon_set_x_cb);
+        icon[i].x = lv_obj_get_x(icon[i].obj);
+    }
+    (void)lv_anim_del((void *)&s_coast_var_dummy, main_icon_coast_exec);
+
+    /* 触摸拖动后白框已隐藏：首轮按键只恢复屏上最左可见图标白框，不切换上/下一项、不平移 */
+    if (s_border_hidden_after_touch_drag) {
+        s_border_hidden_after_touch_drag = false;
+        int32_t left = main_leftmost_on_screen_icon_index();
+        selected_icon_idx = left;
+        LV_UNUSED(is_next);
+        printf("[白框] 触摸拖动后首轮按键: 恢复 %s (索引%d，屏上最左)，未切换/未平移\n", get_icon_name_cn(left), left);
+        update_selected_icon_border(left);
+        return;
+    }
+
+    int32_t cur = get_white_border_icon_index();
+    int32_t next_idx;
+    if (is_next) {
+        next_idx = (cur + 1) % OPTION_ICON_COUNT;
+    } else {
+        next_idx = cur - 1;
+        if (next_idx < 0) {
+            next_idx = OPTION_ICON_COUNT - 1;
+        }
+    }
+    selected_icon_idx = next_idx;
+    printf("[白框] 移动后带白框图标: %s (索引%d, %s)\n", get_icon_name_cn(selected_icon_idx), selected_icon_idx, is_next ? "下一个" : "上一个");
+
+    /* 首尾循环：与 pressing_cb 一致，整条平移一格并依赖 x 回调做 total_width 环绕 */
+    bool wrap_from_last = (cur == OPTION_ICON_COUNT - 1 && is_next);
+    bool wrap_from_first = (cur == 0 && !is_next);
+
+    int32_t icon_width = lv_obj_get_width(icon[selected_icon_idx].obj);
+    int32_t sel_x = icon[selected_icon_idx].x;
+    bool off_left = sel_x < 0;
+    bool off_right = (sel_x + icon_width > scr_w);
+
+
+    if (wrap_from_last) {
+        if (!main_icons_first_and_last_both_on_screen()) {
+            lv_icon_move_dir(true);  /* 最后一个按“下一个”：x 增大，首项从左侧绕入 */
+        }
+
+    } else if (wrap_from_first) {
+        if (!main_icons_first_and_last_both_on_screen()) {
+            lv_icon_move_dir(false);   /* 第一个按“上一个”：x 减小，末项从右侧绕入 */
+        }
+    } else if (is_next) {
+        /* 下一个：优先右侧裁切；左侧外则 x 增大拉回，右侧外则 x 减小拉回 */
+        if (off_right) {
+            lv_icon_move_dir(true);
+        } else if (off_left) {
+            // printf("[白框] 平移：按下一个键，选中图标左侧超出屏幕，整条向右平移一格\n");
+            lv_icon_move_dir(true);
+        } else {
+        }
+    } else {
+        if (off_left) {
+            lv_icon_move_dir(false);
+        } else if (off_right) {
+            lv_icon_move_dir(false);
+        } else {
+        }
+    }
+
+    /* 更新白框显示：确保移动后白框仍在目标图标上 */
+    update_selected_icon_border(selected_icon_idx);
+}
+
+
+// 进入当前带白框图标对应的页面
+void main_open_white_border_icon_screen(void)
+{
+    int32_t idx = get_white_border_icon_index();
+    open_icon_screen(idx);
+}
+
+/* 主界面选项条整排平移 dx（px），含循环与 lv_obj 同步，与 pressing_cb 中逻辑一致 */
+static void main_icon_row_shift_dx(int32_t dx)
+{
+    for (int32_t i = 0; i < OPTION_ICON_COUNT; i++) {
+        icon[i].x += dx;
+        int32_t icon_width = lv_obj_get_width(icon[i].obj);
+        int32_t total_width = OPTION_ICON_COUNT * OPTION_ICON_DISTANCE;
+        while (icon[i].x < -icon_width) {
+            icon[i].x += total_width;
+        }
+        while (icon[i].x > (scr_w)) {
+            icon[i].x -= total_width;
+        }
+        lv_obj_set_x(icon[i].obj, icon[i].x);
+    }
+}
+
+/* 松手惯性分帧：lv_anim 插值 0→inert 用 ease_out，像「多滑一截再减速停」 */
+static void main_icon_coast_exec(void * var, int32_t v)
+{
+    (void)var;
+    {
+        int32_t d = v - s_coast_prev;
+        s_coast_prev = v;
+        if (d) {
+            main_icon_row_shift_dx(d);
+        }
+    }
+}
+
+/* 松手后网格吸附 + 白框（inert 用于拉长吸附时间） */
+static void main_icon_release_apply_snap(int32_t inert_px)
+{
+    int32_t offset_x = 0;
+    uint32_t snap_dur_ms;
+    {
+        uint32_t extra;
+        snap_dur_ms = (uint32_t)OPTION_ICON_RELEASE_SNAP_ANIM_MS;
+        if (inert_px != 0) {
+            extra = (uint32_t)LV_ABS(inert_px) / 2U;
+            if (extra > 450) {
+                extra = 450;
+            }
+            snap_dur_ms += extra;
+        }
+    }
+    {
+        int32_t x0 = icon[0].x;
+        int32_t r = (int32_t)((x0 - (int32_t)OPTION_ICON_LEFT_MARGIN) % (int32_t)OPTION_ICON_DISTANCE);
+        if (r < 0) {
+            r += (int32_t)OPTION_ICON_DISTANCE;
+        }
+        if (r > (int32_t)OPTION_ICON_DISTANCE / 2) {
+            offset_x = (int32_t)OPTION_ICON_DISTANCE - r;
+        } else {
+            offset_x = -r;
+        }
+    }
+    for (int32_t i = 0; i < OPTION_ICON_COUNT; i++) {
+        int32_t new_x = icon[i].x + offset_x;
+        int32_t icon_width = lv_obj_get_width(icon[i].obj);
+        int32_t total_width = OPTION_ICON_COUNT * OPTION_ICON_DISTANCE;
+        while (new_x < -icon_width * OPTION_ICON_COUNT) {
+            new_x += total_width;
+        }
+        while (new_x > icon_width * OPTION_ICON_COUNT * 2) {
+            new_x -= total_width;
+        }
+#if OPTION_ICON_RELEASE_SNAP_ENABLE
+        lv_myanim_creat(icon[i].obj, set_x_cb, snap_dur_ms, 0,
+                        OPTION_ICON_RELEASE_SNAP_PATH,
+                        icon[i].x, new_x, 0, 0);
+        icon[i].x = new_x;
+#else
+        set_x_cb(icon[i].obj, new_x);
+#endif
+    }
+    if (!s_border_hidden_after_touch_drag) {
+        update_icon_border_display();
+    }
+}
+
+static void main_icon_coast_ready(lv_anim_t *a)
+{
+    (void)a;
+    main_icon_release_apply_snap(s_deferred_inert);
+}
 
 // 按下事件回调函数
 static void  pressing_cb(lv_event_t * e)
 {
     static  lv_point_t click_point1, click_point2;
-    int32_t v, i;
+    int32_t i;
 
     // 如果当前未处于触摸状态
     if (touched == false) {
         for (i = 0; i < OPTION_ICON_COUNT; i++) {
-            // 删除图标对象上的动画（如果有）
+            /* 按键平移与松手对齐可能分别使用 icon_set_x_cb / set_x_cb，需一并取消 */
             lv_anim_del(icon[i].obj, set_x_cb);
+            lv_anim_del(icon[i].obj, icon_set_x_cb);
         }
+        (void)lv_anim_del((void *)&s_coast_var_dummy, main_icon_coast_exec);
 
         // 获取当前输入设备的点击点坐标
         lv_indev_get_point(lv_indev_get_act(), &click_point1);
+        s_last_drag_dx = 0;
         // 设置触摸状态为已触摸
         touched = true;
         return;
@@ -149,30 +664,19 @@ static void  pressing_cb(lv_event_t * e)
 
     // 计算触摸偏移量x
     t_offset_x = click_point2.x - click_point1.x;
+    s_last_drag_dx = t_offset_x;
+    /* 一旦发生明显水平拖动，隐藏全部白框，直到下次按键 main_move_white_border */
+    if (t_offset_x > 2 || t_offset_x < -2) {
+        if (!s_border_hidden_after_touch_drag) {
+            s_border_hidden_after_touch_drag = true;
+            selected_icon_idx = -1;
+            update_selected_icon_border(-1);
+        }
+    }
     // 更新上一次点击点坐标
     click_point1.x = click_point2.x;
 
-    for (int32_t i = 0; i < OPTION_ICON_COUNT; i++) {
-        // 更新图标x坐标
-        icon[i].x += t_offset_x;
-
-        // 获取图标宽度
-        int32_t icon_width = lv_obj_get_width(icon[i].obj);
-        int32_t total_width = OPTION_ICON_COUNT * OPTION_ICON_DISTANCE;
-
-        // 处理x坐标超出范围的情况（循环滚动）
-        // 左移逻辑：当图标开始移出屏幕左侧时，将其移到右侧
-        if (icon[i].x < -icon_width) {
-            icon[i].x += total_width;
-        }
-        // 右移逻辑：当图标完全移出屏幕右侧时，将其移到左侧
-        else if (icon[i].x > (scr_w)) { // 当图标完全移出屏幕右侧时才循环
-            icon[i].x -= total_width;
-        }
-
-        // 设置图标对象的x坐标
-        lv_obj_set_x(icon[i].obj, icon[i].x);
-    }
+    main_icon_row_shift_dx(t_offset_x);
 }
 
 
@@ -184,48 +688,61 @@ static void  released_cb(lv_event_t * e)
     // 获取释放时的坐标
     lv_indev_get_point(lv_indev_get_act(), &release_pos);
 
-    int32_t offset_x = 0;
-    // 设置触摸状态为未触摸
+    int32_t inert;
+    uint32_t coast_ms;
+    (void)release_pos;
+    (void)e;
+
     touched = false;
+    inert = 0;
 
-    // 计算偏移量，使图标对齐到网格
-    // 找到第一个可见图标来计算对齐偏移
-    for (int32_t i = 0; i < OPTION_ICON_COUNT; i++) {
-        // 计算当前图标的对齐偏移
-        int32_t current_offset = icon[i].x % OPTION_ICON_DISTANCE;
-        if (current_offset > OPTION_ICON_DISTANCE / 2) {
-            offset_x = OPTION_ICON_DISTANCE - current_offset;
+#if OPTION_MAIN_INERTIA_ENABLE
+    {
+        int32_t vx = 0;
+        lv_indev_t *d = lv_indev_get_act();
+        if (d) {
+            lv_point_t v;
+            lv_indev_get_vect(d, &v);
+            vx = (lv_coord_t)v.x;
+        }
+        inert = s_last_drag_dx * (int32_t)OPTION_MAIN_INERTIA_COEFF
+                + (vx * (int32_t)OPTION_MAIN_INERTIA_VECT_W) / 2;
+        inert /= 2;
+        if (LV_ABS(s_last_drag_dx) < (int32_t)OPTION_MAIN_INERTIA_MIN_DX
+            && LV_ABS(vx) < (int32_t)OPTION_MAIN_INERTIA_MIN_DX) {
+            inert = 0;
         } else {
-            offset_x = -current_offset;
+            if (inert > (int32_t)OPTION_MAIN_INERTIA_MAX_PX) {
+                inert = (int32_t)OPTION_MAIN_INERTIA_MAX_PX;
+            } else if (inert < -(int32_t)OPTION_MAIN_INERTIA_MAX_PX) {
+                inert = -(int32_t)OPTION_MAIN_INERTIA_MAX_PX;
+            }
         }
-        break;
     }
+#endif
+    s_last_drag_dx = 0;
 
-    for (int32_t i = 0; i < OPTION_ICON_COUNT; i++) {
-        // 更新图标x坐标
-        int32_t new_x = icon[i].x + offset_x;
-        int32_t icon_width = lv_obj_get_width(icon[i].obj);
-        int32_t total_width = OPTION_ICON_COUNT * OPTION_ICON_DISTANCE;
-
-        // 处理x坐标超出范围的情况（循环滚动）
-        // 左移逻辑：当图标开始移出屏幕左侧时，将其移到右侧
-        if (new_x < -icon_width * 5) {
-            new_x += total_width;
+#if OPTION_MAIN_INERTIA_ENABLE && OPTION_MAIN_INERTIA_COAST_ENABLE
+    if (inert != 0) {
+        s_deferred_inert = inert;
+        s_coast_prev = 0;
+        coast_ms = (uint32_t)OPTION_MAIN_INERTIA_COAST_TIME_MIN_MS
+                   + (uint32_t)LV_ABS(inert) * (uint32_t)OPTION_MAIN_INERTIA_COAST_TIME_PER_PX;
+        if (coast_ms < (uint32_t)OPTION_MAIN_INERTIA_COAST_TIME_MIN_MS) {
+            coast_ms = (uint32_t)OPTION_MAIN_INERTIA_COAST_TIME_MIN_MS;
         }
-        // 右移逻辑：当图标开始移出屏幕右侧时，将其移到左侧
-        else if (new_x > icon_width * OPTION_ICON_COUNT * 2) { // 320是屏幕宽度，当图标开始进入右侧边界时就循环
-            new_x -= total_width;
+        if (coast_ms > (uint32_t)OPTION_MAIN_INERTIA_COAST_TIME_MAX_MS) {
+            coast_ms = (uint32_t)OPTION_MAIN_INERTIA_COAST_TIME_MAX_MS;
         }
-
-        // 创建动画，使图标回到合适位置
-        lv_myanim_creat(icon[i].obj, set_x_cb, 300, 0, lv_anim_path_ease_out,
-                        icon[i].x, new_x + 10, 0, 0);
-
-        // 更新图标x坐标
-        icon[i].x = new_x;
+        lv_myanim_creat((void *)&s_coast_var_dummy, main_icon_coast_exec, coast_ms, 0,
+                        OPTION_MAIN_INERTIA_COAST_PATH, 0, inert, main_icon_coast_ready, NULL);
+        return;
     }
-
-
+#endif
+    if (inert != 0) {
+        main_icon_row_shift_dx(inert);
+    }
+    main_icon_release_apply_snap(inert);
 }
 void lv_screen_open_icon_screen_set(short x, short y)
 {
@@ -250,6 +767,9 @@ void lv_screen_open_icon_screen_set(short x, short y)
         // 判断点击是否在当前图标范围内
         if (x >= icon_left && x <= icon_right && y >= icon_top && y <= icon_bottom) {
             printf("--> 点击图标 %d\n", i);
+            s_border_hidden_after_touch_drag = false;
+            selected_icon_idx = i;
+            update_selected_icon_border(i);   /* 点击哪个图标就给哪个加白框 */
             open_icon_screen(i);
         }
     }
@@ -304,7 +824,27 @@ static void set_x_cb(void * var, int32_t v)
     else if (v > (scr_w)) { // 当图标完全移出屏幕右侧时才循环
         v -= total_width;
     }
+    // 设置对象的x坐标
+    lv_obj_set_x(obj, v);
 
+    // 获取图标结构体指针并更新x坐标
+    option_icon_typedef * icon_ptr = (option_icon_typedef *)obj->user_data;
+    if (icon_ptr) {
+        icon_ptr->x = v;
+    }
+}
+// 设置x坐标回调函数
+static void icon_set_x_cb(void * var, int32_t v)
+{
+    lv_obj_t *obj = (lv_obj_t *)var;
+    int32_t icon_width = lv_obj_get_width(obj);
+    int32_t total_width = OPTION_ICON_COUNT * OPTION_ICON_DISTANCE;
+    /* 与 set_x_cb / pressing_cb 相同：按键平移时图标条循环滚动 */
+    if (v < -icon_width) {
+        v += total_width;
+    } else if (v > (scr_w)) {
+        v -= total_width;
+    }
     // 设置对象的x坐标
     lv_obj_set_x(obj, v);
 
@@ -332,38 +872,74 @@ static void open_icon_screen(int32_t icon_idx)
 {
     //  根据不同的图标索引打开不同的屏幕
     switch (icon_idx) {
-    case 0: //
+    case ICON_ID_COUNTDOWN:
         printf("点击进入倒计时页面");
         switch_to_timer_page();
         break;
-    case 1: //
+    case ICON_ID_ALARM:
         printf("点击进入闹钟页面");
         switch_to_alarm_page();
         break;
-    case 2: //
+    case ICON_ID_MUSIC:
         printf("点击进入音乐播放页面");
         switch_to_music_page("net_music");
         break;
-    case 3: //
+    case ICON_ID_AI_CONVERSATION:
         printf("点击进入对话页面");
         switch_to_conversation_page();
+        lv_demo_ai_dialogue_speak_listen(1);
+        aisp_wake(0);
         break;
-    case 4: //
-        printf("点击进入抽签页面");
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+    case ICON_ID_WIFI:
+        printf("点击进入WiFi设置页面");
+        switch_to_wifi_show_page();
+        break;
+#endif
+#if CONFIG_LVGL_SLEEP_MUSIC_ENABLE
+    case ICON_ID_SLEEP_MUSIC:
+        printf("点击进入睡眠音乐页面");
+        switch_to_sleep_music_page();
+        break;
+#endif
+#if CONFIG_LVGL_AGENT_ENABLE
+    case ICON_ID_AGENT:
+        printf("点击进入智能体选择页面");
+        switch_to_agent_page();
+        break;
+#endif
+#if CONFIG_LVGL_CALCULATOR_ENABLE
+    case ICON_ID_CALCULATOR:
+        printf("点击进入计算机页面");
+        switch_to_calculator_page();
+        break;
+#endif
+#if defined(CONFIG_LVGL_GAMES_ENABLE) && CONFIG_LVGL_GAMES_ENABLE
+#if defined(CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE) && CONFIG_LVGL_DRAW_LOTS_GAME_ENABLE
+    case ICON_ID_DRAW_LOTS:
+        printf("选项条进入抽签\n");
         switch_to_draw_lots_game_page();
         break;
-    case 5: //
-        printf("点击进入打地鼠页面");
-        switch_to_whack_game_page();
-        break;
-    case 6: //
-        printf("点击进入摇骰子页面");
+#endif
+#if defined(CONFIG_LVGL_DICE_GAME_ENABLE) && CONFIG_LVGL_DICE_GAME_ENABLE
+    case ICON_ID_DICE:
+        printf("选项条进入摇骰子\n");
         switch_to_dice_game_page();
         break;
-    case 7: //
-        printf("点击进入播客页面");
-        switch_to_podcast_page();
+#endif
+#if defined(CONFIG_LVGL_MOUSE_GAME_ENABLE) && CONFIG_LVGL_MOUSE_GAME_ENABLE
+    case ICON_ID_WHACK:
+        printf("选项条进入打地鼠\n");
+        switch_to_whack_game_page();
         break;
+#endif
+#endif
+#if CONFIG_LVGL_CONTENT_LIST_ENABLE
+    case ICON_ID_CONTENT:
+        printf("点击进入内容列表页面");
+        switch_to_list_page();
+        break;
+#endif
     default:
         break;
     }
@@ -377,6 +953,7 @@ static void open_icon_screen(int32_t icon_idx)
 #include "system/includes.h"
 #include "lvgl.h"
 #include "sys_time.h"
+#include "lvgl_develop.h"
 #include "gui_guider.h"
 #include "cJSON_common\cJSON.h"
 
@@ -388,7 +965,7 @@ int audio_app_mode_check(void);
 // 时间更新配置参数
 #define TIME_UPDATE_INTERVAL_MS     1000    // 时间轮询间隔(毫秒)
 #define TIME_RETRY_INTERVAL_MS      1000    // 时间重试间隔(毫秒)
-#define TIME_MAX_RETRY_COUNT        (600000 * 60)      // 最大重试次数
+#define TIME_MAX_RETRY_COUNT        60      // 最大重试次数
 
 // 外部函数声明 - 来自alarm.c
 extern uint8_t sys_time_to_weekday(struct sys_time *t);
@@ -772,6 +1349,8 @@ int update_weather_ui_from_json(const char *json_data)
 
     lv_span_set_text(guider_ui.screen_main_span_direction_span, city);
     lv_style_set_text_color(&guider_ui.screen_main_span_direction_span->style, lv_color_hex(0xffffff));
+    lv_obj_set_pos(guider_ui.screen_main_img_location, LOCATION_ICON_X, LOCATION_ICON_Y);
+    lv_obj_set_pos(guider_ui.screen_main_span_direction, CITY_ADDRESS_SPAN_X, CITY_ADDRESS_SPAN_Y);
 
 //    // 动态更新location图标位置，使其始终显示在城市文字左侧
 //    lv_obj_add_flag(guider_ui.screen_main_img_location, LV_OBJ_FLAG_HIDDEN);
@@ -937,6 +1516,11 @@ int ai_speaker_check_network_status(void)
         } else {//wifi
             if (net_status) {
                 lv_img_set_src(guider_ui.screen_dropdown_img_no_wifi, &_set_wifi_alpha_18x16);
+                // 异步更新时间
+                lv_async_call(time_update_async_cb, NULL);
+                if (is_net_page()) {
+                    switch_to_main_page();
+                }
             } else {
                 lv_img_set_src(guider_ui.screen_dropdown_img_no_wifi, &_no_wifi_alpha_18x16);
             }
@@ -952,19 +1536,50 @@ int ai_speaker_check_network_status(void)
  */
 int BT_check_bluetooth_status(void)
 {
-    // 使用实际的蓝牙连接检查函数
-    extern char lv_demo_system_bt_connect(void);
-    int bt_status = lv_demo_system_bt_connect();
-    //printf("[蓝牙状态检查] 当前蓝牙连接状态：%s（状态码：%d）\n", bt_status ? "已连接" : "未连接", bt_status);
-    if (bt_status) {
-        // 蓝牙已连接
-        lv_img_set_src(guider_ui.screen_dropdown_img_no_BT, &_BT_alpha_14x16);
-        lv_obj_clear_flag(guider_ui.screen_dropdown_img_no_BT, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        // 蓝牙未连接
-        lv_img_set_src(guider_ui.screen_dropdown_img_no_BT, &_no_BT_alpha_14x16);
-        lv_obj_clear_flag(guider_ui.screen_dropdown_img_no_BT, LV_OBJ_FLAG_HIDDEN);
+    extern int lv_demo_system_bt_connect(void);
+    int bt_status = lv_demo_system_bt_connect() ? 1 : 0;
+
+    /* 主界面与下拉栏状态栏：已连接显示「点亮」图(img_set_BT)，未连接显示灰态(img_no_BT) */
+    if (guider_ui.screen_main_img_no_BT && guider_ui.screen_main_img_set_BT) {
+        lv_obj_set_pos(guider_ui.screen_main_img_set_BT, BLUETOOTH_ICON_X, BLUETOOTH_ICON_Y);
+        lv_obj_set_pos(guider_ui.screen_main_img_no_BT, BLUETOOTH_ICON_X, BLUETOOTH_ICON_Y);
     }
+    if (guider_ui.screen_dropdown_img_set_BT && guider_ui.screen_dropdown_img_no_BT) {
+        lv_obj_set_pos(guider_ui.screen_dropdown_img_set_BT, BLUETOOTH_ICON_X, BLUETOOTH_ICON_Y);
+        lv_obj_set_pos(guider_ui.screen_dropdown_img_no_BT, BLUETOOTH_ICON_X, BLUETOOTH_ICON_Y);
+    }
+
+    if (bt_status) {
+        if (guider_ui.screen_main_img_no_BT && guider_ui.screen_main_img_set_BT) {
+            lv_obj_add_flag(guider_ui.screen_main_img_no_BT, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(guider_ui.screen_main_img_set_BT, LV_OBJ_FLAG_HIDDEN);
+        }
+        if (guider_ui.screen_dropdown_img_no_BT && guider_ui.screen_dropdown_img_set_BT) {
+            lv_obj_add_flag(guider_ui.screen_dropdown_img_no_BT, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(guider_ui.screen_dropdown_img_set_BT, LV_OBJ_FLAG_HIDDEN);
+        }
+    } else {
+        if (guider_ui.screen_main_img_no_BT && guider_ui.screen_main_img_set_BT) {
+            lv_obj_add_flag(guider_ui.screen_main_img_set_BT, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(guider_ui.screen_main_img_no_BT, LV_OBJ_FLAG_HIDDEN);
+        }
+        if (guider_ui.screen_dropdown_img_no_BT && guider_ui.screen_dropdown_img_set_BT) {
+            lv_obj_add_flag(guider_ui.screen_dropdown_img_set_BT, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(guider_ui.screen_dropdown_img_no_BT, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+
+    /* 下拉控制区大蓝牙键：与连接态一致切换资源（原先两态均为灰图，连接后仍显灰） */
+    if (guider_ui.screen_dropdown_imgbtn_BT) {
+        if (bt_status) {
+            lv_imgbtn_set_src(guider_ui.screen_dropdown_imgbtn_BT, LV_IMGBTN_STATE_RELEASED, NULL, &_BT2_alpha_40x30, NULL);
+            lv_imgbtn_set_src(guider_ui.screen_dropdown_imgbtn_BT, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_BT2_alpha_40x30, NULL);
+        } else {
+            lv_imgbtn_set_src(guider_ui.screen_dropdown_imgbtn_BT, LV_IMGBTN_STATE_RELEASED, NULL, &_no_BT2_alpha_40x30, NULL);
+            lv_imgbtn_set_src(guider_ui.screen_dropdown_imgbtn_BT, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_no_BT2_alpha_40x30, NULL);
+        }
+    }
+
     return bt_status;
 }
 
@@ -984,6 +1599,9 @@ static void update_battery_display(int percent, int charging, int chargfull)
     if (guider_ui.screen_main_img_normol_battery) {
         lv_obj_add_flag(guider_ui.screen_main_img_normol_battery, LV_OBJ_FLAG_HIDDEN);
     }
+    if (guider_ui.screen_main_img_normal_fully_battery) {
+        lv_obj_add_flag(guider_ui.screen_main_img_normal_fully_battery, LV_OBJ_FLAG_HIDDEN);
+    }
     // 先隐藏所有图标
     if (guider_ui.screen_dropdown_img_fully_battery) {
         lv_obj_add_flag(guider_ui.screen_dropdown_img_fully_battery, LV_OBJ_FLAG_HIDDEN);
@@ -996,6 +1614,9 @@ static void update_battery_display(int percent, int charging, int chargfull)
     }
     if (guider_ui.screen_dropdown_img_normal_battery) {
         lv_obj_add_flag(guider_ui.screen_dropdown_img_normal_battery, LV_OBJ_FLAG_HIDDEN);
+    }
+    if (guider_ui.screen_dropdown_img_normal_fully_battery) {
+        lv_obj_add_flag(guider_ui.screen_dropdown_img_normal_fully_battery, LV_OBJ_FLAG_HIDDEN);
     }
 
 
@@ -1012,6 +1633,9 @@ static void update_battery_display(int percent, int charging, int chargfull)
     if (guider_ui.screen_main_img_normol_battery) {
         lv_obj_set_pos(guider_ui.screen_main_img_normol_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
     }
+    if (guider_ui.screen_main_img_normal_fully_battery) {
+        lv_obj_set_pos(guider_ui.screen_main_img_normal_fully_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
+    }
     // 统一设置图标位置
     if (guider_ui.screen_dropdown_img_fully_battery) {
         lv_obj_set_pos(guider_ui.screen_dropdown_img_fully_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
@@ -1024,6 +1648,9 @@ static void update_battery_display(int percent, int charging, int chargfull)
     }
     if (guider_ui.screen_dropdown_img_normal_battery) {
         lv_obj_set_pos(guider_ui.screen_dropdown_img_normal_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
+    }
+    if (guider_ui.screen_dropdown_img_normal_fully_battery) {
+        lv_obj_set_pos(guider_ui.screen_dropdown_img_normal_fully_battery, BATTERY_ICON_X, BATTERY_ICON_Y);
     }
 
 
@@ -1056,9 +1683,16 @@ static void update_battery_display(int percent, int charging, int chargfull)
             }
             if (guider_ui.screen_dropdown_img_low_battery) {
                 lv_obj_clear_flag(guider_ui.screen_dropdown_img_low_battery, LV_OBJ_FLAG_HIDDEN);
-                printf("电池电量显示: 低电量图标 (%d%%)\n", percent);
+                //printf("电池电量显示: 低电量图标 (%d%%)\n", percent);
             }
-        } else {  // 正常电量
+        } else if (percent >= 75) {  // 满电未插电
+            if (guider_ui.screen_main_img_normal_fully_battery) {
+                lv_obj_clear_flag(guider_ui.screen_main_img_normal_fully_battery, LV_OBJ_FLAG_HIDDEN);
+            }
+            if (guider_ui.screen_dropdown_img_normal_fully_battery) {
+                lv_obj_clear_flag(guider_ui.screen_dropdown_img_normal_fully_battery, LV_OBJ_FLAG_HIDDEN);
+            }
+        } else {  // 正常电量（未充满）
             if (guider_ui.screen_main_img_normol_battery) {
                 lv_obj_clear_flag(guider_ui.screen_main_img_normol_battery, LV_OBJ_FLAG_HIDDEN);
                 //printf("电池电量显示: 正常图标 (%d%%)\n", percent);
@@ -1163,6 +1797,19 @@ static void btn_timer_click_handler(lv_event_t *e)
     }
 }
 
+static void btn_content_click_handler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_ui *ui = lv_event_get_user_data(e);
+    if (!ui || !ui->screen_main_btn_content) {
+        return;
+    }
+    if (code == LV_EVENT_CLICKED) {
+        printf("内容按钮被点击，进入内容列表\n");
+        switch_to_list_page();
+    }
+}
+
 // 初始化主页面事件
 void screen_main_event_init(lv_ui *ui)
 {
@@ -1171,7 +1818,12 @@ void screen_main_event_init(lv_ui *ui)
     }
 
     lv_obj_set_scroll_dir(guider_ui.screen_main, LV_DIR_NONE);
+    lv_obj_add_flag(guider_ui.screen_main_label_1, LV_OBJ_FLAG_HIDDEN);
     main_scrollicon();
+    if (ui->screen_main_btn_content) {
+        lv_obj_remove_event_cb(ui->screen_main_btn_content, btn_content_click_handler);
+        lv_obj_add_event_cb(ui->screen_main_btn_content, btn_content_click_handler, LV_EVENT_CLICKED, ui);
+    }
 
 }
 void screen_main_event_setup(void)

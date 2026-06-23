@@ -53,10 +53,10 @@ const lv_obj_class_t lv_checkbox_class = {
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_obj_t * lv_checkbox_create(lv_obj_t * parent)
+lv_obj_t *lv_checkbox_create(lv_obj_t * parent)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }
@@ -67,15 +67,18 @@ lv_obj_t * lv_checkbox_create(lv_obj_t * parent)
 
 void lv_checkbox_set_text(lv_obj_t * obj, const char * txt)
 {
-    lv_checkbox_t * cb = (lv_checkbox_t *)obj;
+    lv_checkbox_t *cb = (lv_checkbox_t *)obj;
 #if LV_USE_ARABIC_PERSIAN_CHARS
     size_t len = _lv_txt_ap_calc_bytes_cnt(txt);
 #else
     size_t len = strlen(txt);
 #endif
 
-    if(!cb->static_txt) cb->txt = lv_mem_realloc(cb->txt, len + 1);
-    else  cb->txt = lv_mem_alloc(len + 1);
+    if (!cb->static_txt) {
+        cb->txt = lv_mem_realloc(cb->txt, len + 1);
+    } else {
+        cb->txt = lv_mem_alloc(len + 1);
+    }
 #if LV_USE_ARABIC_PERSIAN_CHARS
     _lv_txt_ap_proc(txt, cb->txt);
 #else
@@ -90,9 +93,11 @@ void lv_checkbox_set_text(lv_obj_t * obj, const char * txt)
 
 void lv_checkbox_set_text_static(lv_obj_t * obj, const char * txt)
 {
-    lv_checkbox_t * cb = (lv_checkbox_t *)obj;
+    lv_checkbox_t *cb = (lv_checkbox_t *)obj;
 
-    if(!cb->static_txt) lv_mem_free(cb->txt);
+    if (!cb->static_txt) {
+        lv_mem_free(cb->txt);
+    }
 
     cb->txt = (char *)txt;
     cb->static_txt = 1;
@@ -105,9 +110,9 @@ void lv_checkbox_set_text_static(lv_obj_t * obj, const char * txt)
  * Getter functions
  *====================*/
 
-const char * lv_checkbox_get_text(const lv_obj_t * obj)
+const char *lv_checkbox_get_text(const lv_obj_t * obj)
 {
-    lv_checkbox_t * cb = (lv_checkbox_t *)obj;
+    lv_checkbox_t *cb = (lv_checkbox_t *)obj;
     return cb->txt;
 }
 
@@ -120,7 +125,7 @@ static void lv_checkbox_constructor(const lv_obj_class_t * class_p, lv_obj_t * o
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_checkbox_t * cb = (lv_checkbox_t *)obj;
+    lv_checkbox_t *cb = (lv_checkbox_t *)obj;
 
     cb->txt = "Check box";
     cb->static_txt = 1;
@@ -136,8 +141,8 @@ static void lv_checkbox_destructor(const lv_obj_class_t * class_p, lv_obj_t * ob
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_checkbox_t * cb = (lv_checkbox_t *)obj;
-    if(!cb->static_txt) {
+    lv_checkbox_t *cb = (lv_checkbox_t *)obj;
+    if (!cb->static_txt) {
         lv_mem_free(cb->txt);
         cb->txt = NULL;
     }
@@ -151,16 +156,18 @@ static void lv_checkbox_event(const lv_obj_class_t * class_p, lv_event_t * e)
     lv_res_t res;
     /*Call the ancestor's event handler*/
     res = lv_obj_event_base(MY_CLASS, e);
-    if(res != LV_RES_OK) return;
+    if (res != LV_RES_OK) {
+        return;
+    }
 
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
-    if(code == LV_EVENT_GET_SELF_SIZE) {
-        lv_point_t * p = lv_event_get_param(e);
-        lv_checkbox_t * cb = (lv_checkbox_t *)obj;
+    if (code == LV_EVENT_GET_SELF_SIZE) {
+        lv_point_t *p = lv_event_get_param(e);
+        lv_checkbox_t *cb = (lv_checkbox_t *)obj;
 
-        const lv_font_t * font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
+        const lv_font_t *font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
         lv_coord_t font_h = lv_font_get_line_height(font);
         lv_coord_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
         lv_coord_t letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);
@@ -179,24 +186,22 @@ static void lv_checkbox_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
         p->x = marker_size.x + txt_size.x + bg_colp;
         p->y = LV_MAX(marker_size.y, txt_size.y);
-    }
-    else if(code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
-        lv_coord_t * s = lv_event_get_param(e);
+    } else if (code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+        lv_coord_t *s = lv_event_get_param(e);
         lv_coord_t m = lv_obj_calculate_ext_draw_size(obj, LV_PART_INDICATOR);
         *s = LV_MAX(*s, m);
-    }
-    else if(code == LV_EVENT_DRAW_MAIN) {
+    } else if (code == LV_EVENT_DRAW_MAIN) {
         lv_checkbox_draw(e);
     }
 }
 
 static void lv_checkbox_draw(lv_event_t * e)
 {
-    lv_obj_t * obj = lv_event_get_target(e);
-    lv_checkbox_t * cb = (lv_checkbox_t *)obj;
+    lv_obj_t *obj = lv_event_get_target(e);
+    lv_checkbox_t *cb = (lv_checkbox_t *)obj;
 
-    lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
-    const lv_font_t * font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
+    lv_draw_ctx_t *draw_ctx = lv_event_get_draw_ctx(e);
+    const lv_font_t *font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
     lv_coord_t font_h = lv_font_get_line_height(font);
 
     lv_coord_t bg_border = lv_obj_get_style_border_width(obj, LV_PART_MAIN);

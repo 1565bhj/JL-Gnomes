@@ -46,33 +46,33 @@ typedef struct {
 
 static lv_draw_line_key_t line_key_create(const lv_draw_line_dsc_t * dsc, lv_coord_t length);
 
-static SDL_Texture * line_texture_create(lv_draw_sdl_ctx_t * sdl_ctx, const lv_draw_line_dsc_t * dsc,
-                                         lv_coord_t length);
+static SDL_Texture *line_texture_create(lv_draw_sdl_ctx_t * sdl_ctx, const lv_draw_line_dsc_t * dsc,
+                                        lv_coord_t length);
 
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
 void lv_draw_sdl_draw_line(lv_draw_ctx_t * draw_ctx, const lv_draw_line_dsc_t * dsc, const lv_point_t * point1,
-                           const lv_point_t * point2, bool * in_cache)
+                           const lv_point_t *point2, bool * in_cache)
 {
-    lv_draw_sdl_ctx_t * sdl_ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
+    lv_draw_sdl_ctx_t *sdl_ctx = (lv_draw_sdl_ctx_t *) draw_ctx;
     SDL_Renderer * renderer = sdl_ctx->renderer;
     lv_coord_t x1 = point1->x, x2 = point2->x, y1 = point1->y, y2 = point2->y;
     double length = SDL_sqrt(SDL_pow(x2 - x1, 2) + SDL_pow(y2 - y1, 2));
-    if(length - (long) length > 0.5) {
+    if (length - (long) length > 0.5) {
         length = (long) length + 1;
     }
 
     double angle = SDL_atan2(y2 - y1, x2 - x1) * 180 / M_PI;
     lv_draw_line_key_t key = line_key_create(dsc, (lv_coord_t) length);
     SDL_Texture * texture = lv_draw_sdl_texture_cache_get(sdl_ctx, &key, sizeof(key), NULL);
-    if(!texture) {
+    if (!texture) {
         texture = line_texture_create(sdl_ctx, dsc, (lv_coord_t) length);
         *in_cache = lv_draw_sdl_texture_cache_put(sdl_ctx, &key, sizeof(key), texture);
     }
 
     lv_area_t coords = {x1, y1, x2, y2};
-    const lv_area_t * clip = draw_ctx->clip_area;
+    const lv_area_t *clip = draw_ctx->clip_area;
 
     SDL_Rect coords_r, clip_r;
     lv_area_to_sdl_rect(&coords, &coords_r);
@@ -94,7 +94,7 @@ void lv_draw_sdl_draw_line(lv_draw_ctx_t * draw_ctx, const lv_draw_line_dsc_t * 
 
     SDL_Rect clip_rect;
     lv_area_to_sdl_rect(&t_clip, &clip_rect);
-    if(!SDL_RectEquals(&clip_rect, &dstrect) || angle != 0) {
+    if (!SDL_RectEquals(&clip_rect, &dstrect) || angle != 0) {
         SDL_RenderSetClipRect(renderer, &clip_rect);
     }
     SDL_RenderCopyEx(renderer, texture, &srcrect, &dstrect, angle, &center, 0);
@@ -118,10 +118,10 @@ static lv_draw_line_key_t line_key_create(const lv_draw_line_dsc_t * dsc, lv_coo
     return key;
 }
 
-static SDL_Texture * line_texture_create(lv_draw_sdl_ctx_t * sdl_ctx, const lv_draw_line_dsc_t * dsc, lv_coord_t length)
+static SDL_Texture *line_texture_create(lv_draw_sdl_ctx_t * sdl_ctx, const lv_draw_line_dsc_t * dsc, lv_coord_t length)
 {
     SDL_Texture * texture = SDL_CreateTexture(sdl_ctx->renderer, LV_DRAW_SDL_TEXTURE_FORMAT, SDL_TEXTUREACCESS_TARGET,
-                                              length + dsc->width + 2, dsc->width + 2);
+                            length + dsc->width + 2, dsc->width + 2);
     SDL_Texture * target = SDL_GetRenderTarget(sdl_ctx->renderer);
     SDL_SetRenderTarget(sdl_ctx->renderer, texture);
     SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
@@ -133,7 +133,7 @@ static SDL_Texture * line_texture_create(lv_draw_sdl_ctx_t * sdl_ctx, const lv_d
     SDL_SetRenderDrawColor(sdl_ctx->renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     SDL_Rect line_rect = {1 + dsc->width / 2, 1, length, dsc->width};
     SDL_RenderFillRect(sdl_ctx->renderer, &line_rect);
-    if(dsc->round_start || dsc->round_end) {
+    if (dsc->round_start || dsc->round_end) {
         lv_draw_mask_radius_param_t param;
         lv_area_t round_area = {0, 0, dsc->width - 1, dsc->width - 1};
         lv_draw_mask_radius_init(&param, &round_area, LV_RADIUS_CIRCLE, false);

@@ -1069,3 +1069,19 @@ void alarm_event_setup(void)
     alarm_event_init(&guider_ui);
 }
 
+static void lv_demo_alarms_refresh_list_from_nv_cb(void *p)
+{
+    (void)p;
+    /* refresh_alarm_page 只按 g_alarms[] 重绘；语音/ntp 仅 alarm_add 写 flash 时内存未同步，须先 load */
+    load_alarms_on_initialization();
+}
+
+void lv_demo_alarms_refresh_list_from_nv(void)
+{
+    extern int is_module_production_test_enter(void);
+    if (is_module_production_test_enter()) {
+        return;
+    }
+    lv_async_call(lv_demo_alarms_refresh_list_from_nv_cb, NULL);
+}
+

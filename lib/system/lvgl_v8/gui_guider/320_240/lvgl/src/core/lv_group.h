@@ -58,7 +58,7 @@ typedef void (*lv_group_edge_cb_t)(struct _lv_group_t *, bool);
  */
 typedef struct _lv_group_t {
     lv_ll_t obj_ll;        /**< Linked list to store the objects in the group*/
-    struct _lv_obj_t ** obj_focus; /**< The object in focus*/
+    struct _lv_obj_t **obj_focus;  /**< The object in focus*/
 
     lv_group_focus_cb_t focus_cb;              /**< A function to call when a new object is focused (optional)*/
     lv_group_edge_cb_t  edge_cb;               /**< A function to call when an edge is reached, no more focus
@@ -66,7 +66,7 @@ typedef struct _lv_group_t {
                                                     like a sound or a scroll bounce) */
 
 #if LV_USE_USER_DATA
-    void * user_data;
+    void *user_data;
 #endif
 
     uint8_t frozen : 1;         /**< 1: can't focus to new object*/
@@ -97,7 +97,7 @@ void _lv_group_init(void);
  * Create a new object group
  * @return          pointer to the new object group
  */
-lv_group_t * lv_group_create(void);
+lv_group_t *lv_group_create(void);
 
 /**
  * Delete a group object
@@ -115,7 +115,7 @@ void lv_group_set_default(lv_group_t * group);
  * Get the default group
  * @return          pointer to the default group
  */
-lv_group_t * lv_group_get_default(void);
+lv_group_t *lv_group_get_default(void);
 
 /**
  * Add an object to a group
@@ -218,7 +218,7 @@ void lv_group_set_wrap(lv_group_t * group, bool en);
  * @param group         pointer to a group
  * @return              pointer to the focused object
  */
-struct _lv_obj_t * lv_group_get_focused(const lv_group_t * group);
+struct _lv_obj_t *lv_group_get_focused(const lv_group_t * group);
 
 /**
  * Get the focus callback function of a group

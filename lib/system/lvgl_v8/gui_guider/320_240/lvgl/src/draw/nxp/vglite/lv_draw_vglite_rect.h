@@ -67,7 +67,7 @@ extern "C" {
  *
  */
 lv_res_t lv_gpu_nxp_vglite_draw_bg(const lv_area_t * coords, const lv_area_t * clip_area,
-                                   const lv_draw_rect_dsc_t * dsc);
+                                   const lv_draw_rect_dsc_t *dsc);
 
 /**
  * Draw rectangle border/outline shape with effects (rounded corners, opacity)
@@ -82,7 +82,7 @@ lv_res_t lv_gpu_nxp_vglite_draw_bg(const lv_area_t * coords, const lv_area_t * c
  *
  */
 lv_res_t lv_gpu_nxp_vglite_draw_border_generic(const lv_area_t * coords, const lv_area_t * clip_area,
-                                               const lv_draw_rect_dsc_t * dsc, bool border);
+        const lv_draw_rect_dsc_t *dsc, bool border);
 
 /**********************
  *      MACROS

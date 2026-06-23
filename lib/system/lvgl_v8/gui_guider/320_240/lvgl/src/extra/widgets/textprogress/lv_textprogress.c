@@ -50,10 +50,10 @@ const lv_obj_class_t lv_textprogress_class = {
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_obj_t * lv_textprogress_create(lv_obj_t * parent)
+lv_obj_t *lv_textprogress_create(lv_obj_t * parent)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
 
     return obj;
@@ -65,29 +65,28 @@ lv_obj_t * lv_textprogress_create(lv_obj_t * parent)
 
 void lv_textprogress_set_range_value(lv_obj_t * obj, uint32_t min, uint32_t max, uint32_t steps, uint32_t steps_min)
 {
-    lv_textprogress_t * tp = (lv_textprogress_t *)obj;
+    lv_textprogress_t *tp = (lv_textprogress_t *)obj;
 
     tp->range_min = min;
     tp->range_max = max;
     tp->range_steps_min = steps_min;
-    if(steps == 0) {
+    if (steps == 0) {
         tp->range_steps = max - min;
-    }
-    else {
+    } else {
         tp->range_steps = steps;
     }
 }
 
 void lv_textprogress_set_decimal(lv_obj_t * obj, uint32_t decimal)
 {
-    lv_textprogress_t * tp = (lv_textprogress_t *)obj;
+    lv_textprogress_t *tp = (lv_textprogress_t *)obj;
 
     tp->decimals = (((2) < (decimal)) ? (2) : (decimal));
 }
 
 void lv_textprogress_set_value(lv_obj_t * obj, uint32_t value)
 {
-    lv_textprogress_t * tp = (lv_textprogress_t *)obj;
+    lv_textprogress_t *tp = (lv_textprogress_t *)obj;
 
     value = (((value) > (tp->range_min)) ? (value) : (tp->range_min));
     value = (((value) < (tp->range_max)) ? (value) : (tp->range_max));
@@ -96,11 +95,10 @@ void lv_textprogress_set_value(lv_obj_t * obj, uint32_t value)
     uint32_t progress;
     char textbuffer[8];
     progress = lv_textprogress_get_progress(obj, 100 * range[tp->decimals]);
-    if(tp->decimals > 0) {
+    if (tp->decimals > 0) {
         lv_snprintf(textbuffer, sizeof(textbuffer), "%d.%0*d%%", (progress / range[tp->decimals]), tp->decimals,
                     (progress % range[tp->decimals]));
-    }
-    else {
+    } else {
         lv_snprintf(textbuffer, sizeof(textbuffer), "%d%%", progress);
     }
     lv_label_set_text(obj, textbuffer);
@@ -111,7 +109,7 @@ void lv_textprogress_set_value(lv_obj_t * obj, uint32_t value)
 
 uint32_t lv_textprogress_get_progress(lv_obj_t * obj, uint32_t range)
 {
-    lv_textprogress_t * tp = (lv_textprogress_t *)obj;
+    lv_textprogress_t *tp = (lv_textprogress_t *)obj;
 
     int32_t step, prog;
     step = tp->range_steps_min + MULDIV(((tp->value) - (tp->range_min)), ((tp->range_steps) - (tp->range_steps_min)),
@@ -129,7 +127,7 @@ static void lv_textprogress_constructor(const lv_obj_class_t * class_p, lv_obj_t
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_textprogress_t * tp = (lv_textprogress_t *)obj;
+    lv_textprogress_t *tp = (lv_textprogress_t *)obj;
     tp->range_min = 0;
     tp->range_max = 100;
     tp->range_steps = 80;

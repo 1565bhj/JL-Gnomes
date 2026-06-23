@@ -63,30 +63,34 @@ void mousewheel_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
  */
 void mousewheel_handler(SDL_Event * event)
 {
-    switch(event->type) {
-        case SDL_MOUSEWHEEL:
-            // Scroll down (y = -1) means positive encoder turn,
-            // so invert it
+    switch (event->type) {
+    case SDL_MOUSEWHEEL:
+        // Scroll down (y = -1) means positive encoder turn,
+        // so invert it
 #ifdef __EMSCRIPTEN__
-            /*Escripten scales it wrong*/
-            if(event->wheel.y < 0) enc_diff++;
-            if(event->wheel.y > 0) enc_diff--;
+        /*Escripten scales it wrong*/
+        if (event->wheel.y < 0) {
+            enc_diff++;
+        }
+        if (event->wheel.y > 0) {
+            enc_diff--;
+        }
 #else
-            enc_diff = -event->wheel.y;
+        enc_diff = -event->wheel.y;
 #endif
-            break;
-        case SDL_MOUSEBUTTONDOWN:
-            if(event->button.button == SDL_BUTTON_MIDDLE) {
-                state = LV_INDEV_STATE_PRESSED;
-            }
-            break;
-        case SDL_MOUSEBUTTONUP:
-            if(event->button.button == SDL_BUTTON_MIDDLE) {
-                state = LV_INDEV_STATE_RELEASED;
-            }
-            break;
-        default:
-            break;
+        break;
+    case SDL_MOUSEBUTTONDOWN:
+        if (event->button.button == SDL_BUTTON_MIDDLE) {
+            state = LV_INDEV_STATE_PRESSED;
+        }
+        break;
+    case SDL_MOUSEBUTTONUP:
+        if (event->button.button == SDL_BUTTON_MIDDLE) {
+            state = LV_INDEV_STATE_RELEASED;
+        }
+        break;
+    default:
+        break;
     }
 }
 

@@ -89,7 +89,7 @@ typedef struct _cubic_cont_pt {
 
 static void rotate_point(int32_t angle, int32_t * x, int32_t * y);
 static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
-                         int32_t start_angle, int32_t end_angle, const lv_point_t * center, bool cw);
+                         int32_t start_angle, int32_t end_angle, const lv_point_t *center, bool cw);
 
 /**********************
  *  STATIC VARIABLES
@@ -104,14 +104,14 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
  **********************/
 
 lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, int32_t start_angle, int32_t end_angle,
-                                    const lv_area_t * clip_area, const lv_draw_arc_dsc_t * dsc)
+                                    const lv_area_t *clip_area, const lv_draw_arc_dsc_t *dsc)
 {
     vg_lite_error_t err = VG_LITE_SUCCESS;
     lv_color32_t col32 = {.full = lv_color_to32(dsc->color)}; /*Convert color to RGBA8888*/
     vg_lite_path_t path;
     vg_lite_color_t vgcol; /* vglite takes ABGR */
     bool donut = ((end_angle - start_angle) % 360 == 0) ? true : false;
-    vg_lite_buffer_t * vgbuf = lv_vglite_get_dest_buf();
+    vg_lite_buffer_t *vgbuf = lv_vglite_get_dest_buf();
 
     /* path: max size = 16 cubic bezier (7 words each) */
     int32_t arc_path[16 * 7];
@@ -119,8 +119,9 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
 
     /*** Init path ***/
     lv_coord_t width = dsc->width;  /* inner arc radius = outer arc radius - width */
-    if(width > (lv_coord_t)radius)
+    if (width > (lv_coord_t)radius) {
         width = radius;
+    }
 
     int pidx = 0;
     int32_t cp_x, cp_y; /* control point coords */
@@ -136,7 +137,7 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
     /* draw 1-5 outer quarters */
     add_arc_path(arc_path, &pidx, radius, start_angle, end_angle, center, true);
 
-    if(donut) {
+    if (donut) {
         /* close outer circle */
         cp_x = radius;
         cp_y = 0;
@@ -152,8 +153,7 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
         arc_path[pidx++] = center->x + cp_x;
         arc_path[pidx++] = center->y + cp_y;
 
-    }
-    else if(dsc->rounded != 0U) {    /* 1st rounded arc ending */
+    } else if (dsc->rounded != 0U) { /* 1st rounded arc ending */
         cp_x = radius - width / 2;
         cp_y = 0;
         rotate_point(end_angle, &cp_x, &cp_y);
@@ -161,8 +161,7 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
         add_arc_path(arc_path, &pidx, width / 2, end_angle, (end_angle + 180),
                      &round_center, true);
 
-    }
-    else {   /* 1st flat ending */
+    } else { /* 1st flat ending */
         cp_x = radius - width;
         cp_y = 0;
         rotate_point(end_angle, &cp_x, &cp_y);
@@ -175,7 +174,7 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
     add_arc_path(arc_path, &pidx, radius - width, start_angle, end_angle, center, false);
 
     /* last control point of curve */
-    if(donut) {     /* close the loop */
+    if (donut) {    /* close the loop */
         cp_x = radius - width;
         cp_y = 0;
         rotate_point(start_angle, &cp_x, &cp_y);
@@ -183,8 +182,7 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
         arc_path[pidx++] = center->x + cp_x;
         arc_path[pidx++] = center->y + cp_y;
 
-    }
-    else if(dsc->rounded != 0U) {    /* 2nd rounded arc ending */
+    } else if (dsc->rounded != 0U) { /* 2nd rounded arc ending */
         cp_x = radius - width / 2;
         cp_y = 0;
         rotate_point(start_angle, &cp_x, &cp_y);
@@ -192,8 +190,7 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
         add_arc_path(arc_path, &pidx, width / 2, (start_angle + 180), (start_angle + 360),
                      &round_center, true);
 
-    }
-    else {   /* 2nd flat ending */
+    } else { /* 2nd flat ending */
         cp_x = radius;
         cp_y = 0;
         rotate_point(start_angle, &cp_x, &cp_y);
@@ -210,8 +207,9 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
     VG_LITE_ERR_RETURN_INV(err, "Init path failed.");
 
     vg_lite_buffer_format_t color_format = LV_COLOR_DEPTH == 16 ? VG_LITE_BGRA8888 : VG_LITE_ABGR8888;
-    if(lv_vglite_premult_and_swizzle(&vgcol, col32, dsc->opa, color_format) != LV_RES_OK)
+    if (lv_vglite_premult_and_swizzle(&vgcol, col32, dsc->opa, color_format) != LV_RES_OK) {
         VG_LITE_RETURN_INV("Premultiplication and swizzle failed.");
+    }
 
     vg_lite_matrix_t matrix;
     vg_lite_identity(&matrix);
@@ -222,8 +220,9 @@ lv_res_t lv_gpu_nxp_vglite_draw_arc(const lv_point_t * center, int32_t radius, i
     err = vg_lite_draw(vgbuf, &path, VG_LITE_FILL_NON_ZERO, &matrix, VG_LITE_BLEND_SRC_OVER, vgcol);
     VG_LITE_ERR_RETURN_INV(err, "Draw arc failed.");
 
-    if(lv_vglite_run() != LV_RES_OK)
+    if (lv_vglite_run() != LV_RES_OK) {
         VG_LITE_RETURN_INV("Run failed.");
+    }
 
     lv_vglite_disable_scissor();
 
@@ -276,54 +275,54 @@ static void set_full_arc(vg_arc * fullarc)
 {
     /* the tangent lenght for the bezier circle approx */
     float tang = ((float)fullarc->rad) * BEZIER_OPTIM_CIRCLE;
-    switch(fullarc->quarter) {
-        case 0:
-            /* first quarter */
-            fullarc->p0x = fullarc->rad;
-            fullarc->p0y = 0;
-            fullarc->p1x = fullarc->rad;
-            fullarc->p1y = (int32_t)tang;
-            fullarc->p2x = (int32_t)tang;
-            fullarc->p2y = fullarc->rad;
-            fullarc->p3x = 0;
-            fullarc->p3y = fullarc->rad;
-            break;
-        case 1:
-            /* second quarter */
-            fullarc->p0x = 0;
-            fullarc->p0y = fullarc->rad;
-            fullarc->p1x = 0 - (int32_t)tang;
-            fullarc->p1y = fullarc->rad;
-            fullarc->p2x = 0 - fullarc->rad;
-            fullarc->p2y = (int32_t)tang;
-            fullarc->p3x = 0 - fullarc->rad;
-            fullarc->p3y = 0;
-            break;
-        case 2:
-            /* third quarter */
-            fullarc->p0x = 0 - fullarc->rad;
-            fullarc->p0y = 0;
-            fullarc->p1x = 0 - fullarc->rad;
-            fullarc->p1y = 0 - (int32_t)tang;
-            fullarc->p2x = 0 - (int32_t)tang;
-            fullarc->p2y = 0 - fullarc->rad;
-            fullarc->p3x = 0;
-            fullarc->p3y = 0 - fullarc->rad;
-            break;
-        case 3:
-            /* fourth quarter */
-            fullarc->p0x = 0;
-            fullarc->p0y = 0 - fullarc->rad;
-            fullarc->p1x = (int32_t)tang;
-            fullarc->p1y = 0 - fullarc->rad;
-            fullarc->p2x = fullarc->rad;
-            fullarc->p2y = 0 - (int32_t)tang;
-            fullarc->p3x = fullarc->rad;
-            fullarc->p3y = 0;
-            break;
-        default:
-            LV_LOG_ERROR("Invalid arc quarter value.");
-            break;
+    switch (fullarc->quarter) {
+    case 0:
+        /* first quarter */
+        fullarc->p0x = fullarc->rad;
+        fullarc->p0y = 0;
+        fullarc->p1x = fullarc->rad;
+        fullarc->p1y = (int32_t)tang;
+        fullarc->p2x = (int32_t)tang;
+        fullarc->p2y = fullarc->rad;
+        fullarc->p3x = 0;
+        fullarc->p3y = fullarc->rad;
+        break;
+    case 1:
+        /* second quarter */
+        fullarc->p0x = 0;
+        fullarc->p0y = fullarc->rad;
+        fullarc->p1x = 0 - (int32_t)tang;
+        fullarc->p1y = fullarc->rad;
+        fullarc->p2x = 0 - fullarc->rad;
+        fullarc->p2y = (int32_t)tang;
+        fullarc->p3x = 0 - fullarc->rad;
+        fullarc->p3y = 0;
+        break;
+    case 2:
+        /* third quarter */
+        fullarc->p0x = 0 - fullarc->rad;
+        fullarc->p0y = 0;
+        fullarc->p1x = 0 - fullarc->rad;
+        fullarc->p1y = 0 - (int32_t)tang;
+        fullarc->p2x = 0 - (int32_t)tang;
+        fullarc->p2y = 0 - fullarc->rad;
+        fullarc->p3x = 0;
+        fullarc->p3y = 0 - fullarc->rad;
+        break;
+    case 3:
+        /* fourth quarter */
+        fullarc->p0x = 0;
+        fullarc->p0y = 0 - fullarc->rad;
+        fullarc->p1x = (int32_t)tang;
+        fullarc->p1y = 0 - fullarc->rad;
+        fullarc->p2x = fullarc->rad;
+        fullarc->p2y = 0 - (int32_t)tang;
+        fullarc->p3x = fullarc->rad;
+        fullarc->p3y = 0;
+        break;
+    default:
+        LV_LOG_ERROR("Invalid arc quarter value.");
+        break;
     }
 }
 
@@ -364,13 +363,12 @@ static uint16_t get_bez_t_from_pos(float pt, cubic_cont_pt cp, bool dec)
     float t_hig = 1.0f;
     float a_pt;
     /* dichotomy loop */
-    for(int i = 0; i < DICHOTO_ITER; i++) {
+    for (int i = 0; i < DICHOTO_ITER; i++) {
         a_pt = comp_bezier_point(t_mid, cp);
         /* check mid-point position on bezier curve versus targeted point */
-        if((a_pt > pt) != dec) {
+        if ((a_pt > pt) != dec) {
             t_hig = t_mid;
-        }
-        else {
+        } else {
             t_low = t_mid;
         }
         /* define new 't' param for mid-point */
@@ -393,7 +391,7 @@ static void get_subarc_control_points(vg_arc * arc, int32_t span)
     set_full_arc(&fullarc);
 
     /* special case of full arc */
-    if(arc->angle == 90) {
+    if (arc->angle == 90) {
         copy_arc(arc, &fullarc);
         return;
     }
@@ -486,7 +484,7 @@ static void get_arc_control_points(vg_arc * arc, bool start)
     set_full_arc(&fullarc);
 
     /* special case of full arc */
-    if(arc->angle == 90) {
+    if (arc->angle == 90) {
         copy_arc(arc, &fullarc);
         return;
     }
@@ -511,7 +509,7 @@ static void get_arc_control_points(vg_arc * arc, bool start)
     float ey = lerp(by, cy, t);
 
     /* sub-arc's control points are tangents of DeCasteljau's algorithm */
-    if(start) {
+    if (start) {
         arc->p0x = (int32_t)floorf(0.5f + lerp(dx, ex, t));
         arc->p0y = (int32_t)floorf(0.5f + lerp(dy, ey, t));
         arc->p1x = (int32_t)floorf(0.5f + ex);
@@ -520,8 +518,7 @@ static void get_arc_control_points(vg_arc * arc, bool start)
         arc->p2y = (int32_t)floorf(0.5f + cy);
         arc->p3x = fullarc.p3x;
         arc->p3y = fullarc.p3y;
-    }
-    else {
+    } else {
         arc->p0x = fullarc.p0x;
         arc->p0y = fullarc.p0y;
         arc->p1x = (int32_t)floorf(0.5f + ax);
@@ -546,7 +543,7 @@ static void add_split_arc_path(int32_t * arc_path, int * pidx, vg_arc * q_arc, c
 {
     /* assumes first control point already in array arc_path[] */
     int idx = *pidx;
-    if(cw) {
+    if (cw) {
 #if BEZIER_DBG_CONTROL_POINTS
         arc_path[idx++] = VLC_OP_LINE;
         arc_path[idx++] = q_arc->p1x + center->x;
@@ -566,8 +563,7 @@ static void add_split_arc_path(int32_t * arc_path, int * pidx, vg_arc * q_arc, c
         arc_path[idx++] = q_arc->p3x + center->x;
         arc_path[idx++] = q_arc->p3y + center->y;
 #endif
-    }
-    else {      /* reverse points order when counter-clockwise */
+    } else {    /* reverse points order when counter-clockwise */
 #if BEZIER_DBG_CONTROL_POINTS
         arc_path[idx++] = VLC_OP_LINE;
         arc_path[idx++] = q_arc->p2x + center->x;
@@ -593,9 +589,11 @@ static void add_split_arc_path(int32_t * arc_path, int * pidx, vg_arc * q_arc, c
 }
 
 static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
-                         int32_t start_angle, int32_t end_angle, const lv_point_t * center, bool cw)
+                         int32_t start_angle, int32_t end_angle, const lv_point_t *center, bool cw)
 {
-    if(end_angle < start_angle) end_angle += 360;
+    if (end_angle < start_angle) {
+        end_angle += 360;
+    }
 
     /* set number of arcs to draw */
     vg_arc q_arc;
@@ -606,7 +604,7 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
     q_arc.rad = radius;
 
     /* handle special case of start & end point in the same quarter */
-    if(((start_angle / 90) == (end_angle / 90)) && (nbarc <= 0)) {
+    if (((start_angle / 90) == (end_angle / 90)) && (nbarc <= 0)) {
         q_arc.quarter = (start_angle / 90) % 4;
         q_arc.angle = start_arc_angle;
         get_subarc_control_points(&q_arc, end_arc_angle - start_arc_angle);
@@ -614,9 +612,9 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
         return;
     }
 
-    if(cw) {
+    if (cw) {
         /* partial starting arc */
-        if(start_arc_angle > 0) {
+        if (start_arc_angle > 0) {
             q_arc.quarter = (start_angle / 90) % 4;
             q_arc.angle = start_arc_angle;
             /* get cubic points relative to center */
@@ -625,7 +623,7 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
             add_split_arc_path(arc_path, pidx, &q_arc, center, cw);
         }
         /* full arcs */
-        for(int32_t q = 0; q < nbarc ; q++) {
+        for (int32_t q = 0; q < nbarc ; q++) {
             q_arc.quarter = (q + ((start_angle + 89) / 90)) % 4;
             q_arc.angle = 90;
             /* get cubic points relative to center */
@@ -634,7 +632,7 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
             add_split_arc_path(arc_path, pidx, &q_arc, center, cw);
         }
         /* partial ending arc */
-        if(end_arc_angle > 0) {
+        if (end_arc_angle > 0) {
             q_arc.quarter = (end_angle / 90) % 4;
             q_arc.angle = end_arc_angle;
             /* get cubic points relative to center */
@@ -643,11 +641,10 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
             add_split_arc_path(arc_path, pidx, &q_arc, center, cw);
         }
 
-    }
-    else {   /* counter clockwise */
+    } else { /* counter clockwise */
 
         /* partial ending arc */
-        if(end_arc_angle > 0) {
+        if (end_arc_angle > 0) {
             q_arc.quarter = (end_angle / 90) % 4;
             q_arc.angle = end_arc_angle;
             /* get cubic points relative to center */
@@ -656,7 +653,7 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
             add_split_arc_path(arc_path, pidx, &q_arc, center, cw);
         }
         /* full arcs */
-        for(int32_t q = nbarc - 1; q >= 0; q--) {
+        for (int32_t q = nbarc - 1; q >= 0; q--) {
             q_arc.quarter = (q + ((start_angle + 89) / 90)) % 4;
             q_arc.angle = 90;
             /* get cubic points relative to center */
@@ -665,7 +662,7 @@ static void add_arc_path(int32_t * arc_path, int * pidx, int32_t radius,
             add_split_arc_path(arc_path, pidx, &q_arc, center, cw);
         }
         /* partial starting arc */
-        if(start_arc_angle > 0) {
+        if (start_arc_angle > 0) {
             q_arc.quarter = (start_angle / 90) % 4;
             q_arc.angle = start_arc_angle;
             /* get cubic points relative to center */
