@@ -21,9 +21,9 @@
 #define MUSIC_PLAY_NUM  30000  //没有打断情况下：自动连续播放音乐数量
 #endif
 
-#if (__SDRAM_SIZE__ <= 0)
+//#if (__SDRAM_SIZE__ <= 0)
 #define NET_MUSIC_MEM_SMALL
-#endif
+//#endif
 
 #ifdef CONFIG_NET_MUSIC_MODE_ENABLE
 
