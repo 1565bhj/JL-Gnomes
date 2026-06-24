@@ -62,6 +62,7 @@ static void wifi_app_timer_func(void *p)
 {
     if (wifi_module_is_init()) {
         printf("WIFI U= %d KB/s, D= %d KB/s\r\n", ext_wifi_get_upload_rate() / 1024, ext_wifi_get_download_rate() / 1024);
+        malloc_stats();
 #if 0
         if (ext_get_cur_wifi_info()->mode == STA_MODE) {
             get_rx_signal();

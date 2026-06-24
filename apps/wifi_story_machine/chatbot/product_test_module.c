@@ -1137,6 +1137,12 @@ static int product_function_test_task(void *priv)
             ai_at_test_finish();
 #endif
         }
+        while (1) {
+            if (read_power_key_press(1)) { //厂测模式下有按键按下则关机
+                sys_power_poweroff();
+            }
+            os_time_dly(1);
+        }
     }
 #endif
 
@@ -1352,13 +1358,6 @@ __err:
         memset(PD_TEST.app_name, 0, sizeof(PD_TEST.app_name));
     }
 #endif
-
-    while (1) {
-        if (read_power_key_press(1)) { //厂测模式下有按键按下则关机
-            sys_power_poweroff();
-        }
-        os_time_dly(1);
-    }
     return 0;
 }
 
