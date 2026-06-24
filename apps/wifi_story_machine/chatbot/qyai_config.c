@@ -72,8 +72,8 @@ int qyai_net_socket_err_callback(char *msg, int err_code)
     return 0;
 }
 
-//开启UI则降低音频缓存
-#ifdef CONFIG_UI_ENABLE
+//开启UI和开外挂WiFi，则降低音频缓存
+#if (defined CONFIG_UI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
 int ai_audio_play_buf_size_set(void)
 {
     return 640 * 1024;

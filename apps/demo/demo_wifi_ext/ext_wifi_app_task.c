@@ -279,7 +279,8 @@ static void ext_wifi_app_task(void *priv)
     unsigned int timehdl = 0;
     struct cfg_info info = {0};
 
-//wifi app start
+    os_time_dly(100);//等待电源稳定
+    //wifi app start
     wifi_dev = dev_open("wifi", NULL);
 
     info.cb = network_user_callback;

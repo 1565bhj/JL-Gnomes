@@ -35,7 +35,7 @@ UART2_PLATFORM_DATA_BEGIN(uart2_data)
 	.baudrate = 1000000,
 	.port = PORT_REMAP,
 	.output_channel = OUTPUT_CHANNEL0,
-	.tx_pin = IO_PORTC_01,
+	.tx_pin = IO_PORTC_10,
 	.rx_pin = -1,
 	.max_continue_recv_cnt = 1024,
 	.idle_sys_clk_cnt = 500000,
@@ -169,7 +169,9 @@ void board_early_init()
 
 static void board_power_init(void)
 {
-//#define TCFG_VCC33_CTRL_PORT IO_PORTH_06
+#define TCFG_VCC33_CTRL_PORT                IO_PORTB_03 //3.3V电原控制IO
+#define TCFG_IOVDD_CTRL_PORT                IO_PORTB_00 //VDDIO电原控制IO
+
 #ifdef TCFG_VCC33_CTRL_PORT
     gpio_latch_en(TCFG_VCC33_CTRL_PORT, 0);
 	gpio_direction_output(TCFG_VCC33_CTRL_PORT, 1);
@@ -179,6 +181,14 @@ static void board_power_init(void)
 
 
     power_init(&power_param);
+
+#ifdef TCFG_IOVDD_CTRL_PORT
+    gpio_latch_en(TCFG_IOVDD_CTRL_PORT, 0);
+	gpio_direction_output(TCFG_IOVDD_CTRL_PORT, 1);
+    gpio_set_pull_up(TCFG_IOVDD_CTRL_PORT, 1);
+	gpio_set_pull_down(TCFG_IOVDD_CTRL_PORT,0);
+#endif
+
 }
 
 void board_init()

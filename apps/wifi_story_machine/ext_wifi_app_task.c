@@ -14,6 +14,7 @@
 #include "wifi/wifi_connect.h"
 #include "event/net_event.h"
 #include "syscfg/syscfg_id.h"
+#include "wifi_dev.h"
 
 #define AP_TEST_MODE    (0)
 #define STA_TEST_MODE   (1)
@@ -372,19 +373,25 @@ static void wifi_set_lan_setting_info(void)
 
 void ext_wifi_on(void)
 {
+    if (!wifi_dev) {
+        return;
+    }
     dev_ioctl(wifi_dev, DEV_NETWORK_START, 0);
 }
 
 
 void ext_wifi_off(void)
 {
+    if (!wifi_dev) {
+        return;
+    }
     dev_ioctl(wifi_dev, DEV_NETWORK_STOP, 0);
 }
 
 void ext_wifi_sta_connect(char *ssid, char *pwd, char save)
 {
     struct cfg_info info = {0};
-    if (!ssid) {
+    if (!ssid || wifi_dev) {
         return;
     }
     if (ext_wifi_ssid != ssid && ext_wifi_pwd != pwd) {
@@ -404,6 +411,9 @@ void ext_wifi_sta_connect(char *ssid, char *pwd, char save)
 
 void ext_wifi_sta_reconnect(void)
 {
+    if (!wifi_dev) {
+        return;
+    }
     struct cfg_info info = {0};
     info.mode = STA_MODE;
     dev_ioctl(wifi_dev, DEV_GET_CUR_WIFI_INFO, (u32)&info);
@@ -414,7 +424,7 @@ void ext_wifi_sta_reconnect(void)
 #define NONE_SSID "*#_~`^"
 void ext_wifi_sta_info_save(char *ssid, char *pwd)
 {
-    if (!ssid) {
+    if (!ssid || !wifi_dev) {
         return;
     }
     struct wifi_store_info default_store_info = {0};
@@ -520,6 +530,152 @@ void ext_wifi_sta_info_clear(char *ssid)
     }
 }
 
+#if CONFIG_LVGL_OPTION_WIFI_ENABLE
+// 存储WiFi名称的数组
+static u8 actual_wifi_names[20][64] = {0};  // 初始化避免脏数据
+static u8 actual_wifi_num = 0;  // 初始化避免脏数据
+// 扫描状态标志
+static bool is_scanning = false;
+/* UI 触发的扫描：在 wifi_app_task 里发起 wifi_scan_req + 周期取结果（与 demo_wifi_scan_req_start 一致，避免在 LVGL 线程里阻塞/调用栈不对） */
+static u16 s_ui_scan_kickoff_timeout_id = 0;
+static u8 s_ui_scan_poll_count = 0;
+
+int get_wifi_scan_ssid_num(void)
+{
+    return actual_wifi_num;
+}
+
+char *get_wifi_scan_ssid_name(int index)
+{
+    if (index < 0 || index >= actual_wifi_num) {
+        return NULL; // 索引越界，返回 NULL
+    }
+    return &actual_wifi_names[index][0];
+}
+
+static int get_wifi_scan_ssid_info(void)
+{
+    struct wifi_scan_ssid_info *sta_ssid_info;
+    u32 sta_ssid_num = 0;
+//    sta_ssid_info = wifi_get_scan_result(&sta_ssid_num);
+
+    // 存储WiFi名称到数组
+    memset(actual_wifi_names, 0, sizeof(actual_wifi_names)); // 清空数组，避免残留数据
+    for (u32 i = 0; i < sta_ssid_num; i++) {
+        strncpy(actual_wifi_names[i], sta_ssid_info[i].ssid, sizeof(actual_wifi_names[i]) - 1);
+        actual_wifi_names[i][sizeof(actual_wifi_names[i]) - 1] = '\0';
+    }
+
+    printf("\n=============================================================\n");
+    printf("扫描到 %d 个WiFi网络:\n", sta_ssid_num);
+    actual_wifi_num = sta_ssid_num;
+    printf("=============================================================\n");
+
+    // 打印 actual_wifi_names 数组中的所有WiFi名称
+    printf("actual_wifi_names 数组内容:\n");
+    for (u32 i = 0; i < sta_ssid_num; i++) {
+        printf("actual_wifi_names[%d]: %s\n", i, actual_wifi_names[i]);
+    }
+    printf("=============================================================\n");
+
+    for (u32 i = 0; i < sta_ssid_num; i++) {
+        printf("WiFi %d:\n", i + 1);
+        printf("  SSID: %s\n", sta_ssid_info[i].ssid);
+        printf("  MAC地址: %02X:%02X:%02X:%02X:%02X:%02X\n",
+               sta_ssid_info[i].mac_addr[0], sta_ssid_info[i].mac_addr[1],
+               sta_ssid_info[i].mac_addr[2], sta_ssid_info[i].mac_addr[3],
+               sta_ssid_info[i].mac_addr[4], sta_ssid_info[i].mac_addr[5]);
+        printf("  信号强度: %d dBm\n", sta_ssid_info[i].rssi_db);
+        printf("  信道: %d\n", sta_ssid_info[i].channel_number);
+        if (sta_ssid_info[i].auth_mode == WIFI_AUTH_MODE_OPEN) {
+            printf("  加密方式: 无加密\n");
+        } else {
+            printf("  加密方式: 加密\n");
+        }
+        printf("-------------------------------------------------------------\n");
+    }
+
+    /* 仅在有结果时清空缓存；过早清空会导致未联网时当次扫描永远拿不到列表（与 demo_wifi_ext 说明一致） */
+    if (sta_ssid_num > 0) {
+        wifi_clear_scan_result();
+    }
+    return sta_ssid_num;
+}
+/* 在 wifi_app_task 中周期执行，与 demo_wifi_get_scan_result 一致 */
+static void wifi_scan_poll(void *priv)
+{
+    u32 sta_ssid_num = 0;
+
+    (void)priv;
+    s_ui_scan_poll_count++;
+
+//    wifi_get_scan_result(&sta_ssid_num);
+    printf("---> ui_wifi_scan_poll ssid_cnt : %u (tick %u)\n", sta_ssid_num, s_ui_scan_poll_count);
+
+    if (sta_ssid_num > 0) {
+        get_wifi_scan_ssid_info();
+//        wifi_show_request_refresh_after_scan();
+        is_scanning = false;
+
+    } else if (s_ui_scan_poll_count >= 60) {
+        get_wifi_scan_ssid_info();
+        wifi_show_request_refresh_after_scan();
+        is_scanning = false;
+    }
+    if (!is_scanning && s_ui_scan_kickoff_timeout_id) {
+        sys_timer_del(s_ui_scan_kickoff_timeout_id);
+        s_ui_scan_kickoff_timeout_id = 0;
+    }
+}
+
+bool scan_and_print_wifi_networks(void)
+{
+    if (is_scanning || !wifi_dev) {
+        return false;
+    }
+    is_scanning = true;
+    s_ui_scan_poll_count = 0;
+    /* 取消上一轮未结束的定时器 */
+    if (s_ui_scan_kickoff_timeout_id) {
+        sys_timer_del(s_ui_scan_kickoff_timeout_id);
+        s_ui_scan_kickoff_timeout_id = 0;
+    }
+
+
+    dev_ioctl(wifi_dev, DEV_NET_SCANF, NULL);
+
+    /*
+     * 与 demo_wifi_scan_req_start 相同思路：在 wifi_app_task 上下文里 wifi_scan_req，
+     * 再用 sys_timer 每 1s 取结果（见 system/timer.h：回调在发起 add 的同一线程执行，
+     * LVGL 里阻塞 os_time_dly 会卡住界面且易导致扫描/协议栈时序异常）。
+     */
+    s_ui_scan_kickoff_timeout_id = sys_timer_add_to_task("sys_timer", NULL, wifi_scan_poll, 3000);
+    if (s_ui_scan_kickoff_timeout_id == 0) {
+        printf("scan: sys_timeout_add_to_task(wifi_app_task) 失败\n");
+        is_scanning = false;
+        return false;
+    }
+
+    return true;
+}
+
+void wifi_sta_connect(char *ssid, char *pwd, char save)
+{
+    ext_wifi_sta_connect(ssid, pwd, save);
+}
+
+void wifi_sta_info_clear_ssid(char *ssid)
+{
+    ext_wifi_sta_info_clear(ssid);
+}
+
+int wifi_enter_sta_mode(char *ssid, char *pwd)
+{
+    ext_wifi_sta_connect(ssid, pwd, 0);
+}
+#endif
+
+
 static void ext_wifi_app_task(void *priv)
 {
     int msg[32];
@@ -531,7 +687,9 @@ static void ext_wifi_app_task(void *priv)
     os_time_dly(100);//等待电源问题
     //wifi app start
     wifi_dev = dev_open("wifi", NULL);
-
+    if (!wifi_dev) {
+        return;
+    }
     info.cb = network_user_callback;
     info.net_priv = NULL;
     dev_ioctl(wifi_dev, DEV_SET_CB_FUNC, (u32)&info);

@@ -578,6 +578,7 @@
 		<Unit filename="../../../../include_lib/net/streaming_media_server/fenice_config.h" />
 		<Unit filename="../../../../include_lib/net/version.z.S" />
 		<Unit filename="../../../../include_lib/net/wifi/wifi_connect.h" />
+		<Unit filename="../../../../include_lib/net/wireless_ext/wifi_dev.h" />
 		<Unit filename="../../../../include_lib/newlib/include/assert.h" />
 		<Unit filename="../../../../include_lib/newlib/include/machine/time.h" />
 		<Unit filename="../../../../include_lib/newlib/include/machine/types.h" />
