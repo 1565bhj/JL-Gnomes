@@ -41,11 +41,11 @@ struct net_music_list {
 struct net_music_hdl {
     char volume;
     char play_status;
-    char request_status;
     char play_loop;
     char play_one;
     u16 wait_download;
     u16 timeout_id;
+    int request_status;
     int download_ready;
     int play_time;
     int total_time;
@@ -136,7 +136,7 @@ static int net_music_dec_play_pause(u8 notify)
     union audio_req r = {0};
     union ai_req req  = {0};
     int err = 0;
-    __this->request_status = false;
+    __this->request_status = 0;
     if (!__this->net_file || !__this->dec_server) {
         __this->play_status = 0;
         return -1;
@@ -249,7 +249,7 @@ int net_music_play_pause(u8 stop)
 {
     union audio_req req = {0};
     int err = 0;
-    __this->request_status = false;
+    __this->request_status = 0;
 
 #ifdef NET_MUSIC_MEM_SMALL
     if (http_music_play_get_stop() > 0) {
@@ -305,7 +305,7 @@ int net_music_dec_stop(void)
 {
     union audio_req r = {0};
     union ai_req req = {0};
-    __this->request_status = false;
+    __this->request_status = 0;
     if (__this->timeout_id) {
         sys_timeout_del(__this->timeout_id);
         __this->timeout_id = 0;
@@ -383,7 +383,7 @@ int net_music_dec_stop(void)
 }
 static void net_music_request_status_clear(void)
 {
-    __this->request_status = false;
+    __this->request_status = 0;
 }
 int net_music_play_next(char *priv)
 {
@@ -391,7 +391,7 @@ int net_music_play_next(char *priv)
         sys_timeout_del(__this->timeout_id);
         __this->timeout_id = 0;
     }
-    if (websockets_nobind_check() || !sys_connect_net_success() || __this->request_status) {
+    if (websockets_nobind_check() || !sys_connect_net_success() || (__this->request_status && (timer_get_ms() - __this->request_status) < 3000)) {
         return -1;
     }
 #ifndef CONFIG_UI_ENABLE
@@ -414,7 +414,7 @@ int net_music_play_next(char *priv)
     if (priv && priv != __this->play_next_mode) {
         __this->play_next_mode = priv;
     }
-    __this->request_status = true;
+    __this->request_status = timer_get_ms();
     sys_timeout_add_to_task("sys_timer", NULL, net_music_request_status_clear, 5000);
     sys_timeout_add_to_task("sys_timer", __this->play_next_mode, websocket_client_next_music_play, 1000);//1秒后再创建，否则会在发断开消息到下次音乐请求
     music_buf_play_accept(1);
@@ -454,7 +454,7 @@ int net_music_num_clear(void)
 static int net_music_dec_end(int is_force_stop)
 {
     union ai_req req = {0};
-    __this->request_status = false;
+    __this->request_status = 0;
     int timeout = (__this->total_time - __this->play_time) * 1000;
     timeout = timeout > 0 ? timeout : 0;
     __this->total_num++;
@@ -496,7 +496,7 @@ _stop:
 static int net_music_dec_end(int is_force_stop)
 {
     union ai_req req = {0};
-    __this->request_status = false;
+    __this->request_status = 0;
     int timeout = (__this->total_time - __this->play_time) * 1000;
     timeout = timeout > 0 ? timeout : 0;
 
@@ -556,7 +556,7 @@ static int __net_music_dec_file(void *file)
     if (!sys_connect_net_success()) {
         return -1;
     }
-    __this->request_status = false;
+    __this->request_status = 0;
     __this->wait_download = 0;
 
     if (__this->download_ready < 0) {
@@ -708,7 +708,7 @@ int net_music_dec_file(const char *url)
     }
     strncpy(music_url, url, sizeof(music_url));
     __this->total_time = __this->play_time = 0;
-    __this->request_status = true;
+    __this->request_status = timer_get_ms();
     sys_timeout_add_to_task("sys_timer", NULL, net_music_request_status_clear, 5000);
 
 #ifndef NET_MUSIC_MEM_SMALL
@@ -820,7 +820,7 @@ int net_music_play_last(void)
     if (__this->request_status) {
         return 0;
     }
-    __this->request_status = true;
+    __this->request_status = timer_get_ms();
     sys_timeout_add_to_task("sys_timer", NULL, net_music_request_status_clear, 5000);
     if (!__this->new_list) {
         ret = net_music_play_next(net_music_play_type_get());
@@ -852,7 +852,7 @@ int net_music_play_last(void)
     }
 exit:
     if (ret) {
-        __this->request_status = false;
+        __this->request_status = 0;
     }
     return 0;
 }
