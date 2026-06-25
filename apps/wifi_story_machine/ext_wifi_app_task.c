@@ -711,6 +711,14 @@ static void ext_wifi_app_task(void *priv)
     wifi_set_lan_setting_info();
 
 #if !IP_NAPT_EXT || !defined CONFIG_LTE_PHY_ENABLE
+    net.arg = "net";
+    if (!ext_wifi_sta_info_default_get()) {
+        net.event = NET_NTP_GET_TIME_SUCC + 32;
+    } else {
+        net.event = NET_EVENT_SMP_CFG_FIRST;
+        printf("---> NET_EVENT_SMP_CFG_FIRST\n");
+    }
+    net_event_notify(NET_EVENT_FROM_USER, &net);
     ext_wifi_on();
 #endif
 
@@ -720,7 +728,6 @@ static void ext_wifi_app_task(void *priv)
     iperf_test();
 #endif
 
-    sys_timer_add_to_task("sys_timer", NULL, wifi_app_timer_func, 5000);
 #if IP_NAPT
     u8 mac_addr[6];
     char ssid[48];
@@ -732,18 +739,11 @@ static void ext_wifi_app_task(void *priv)
     info.pwd  = AP_PWD;
     info.force_default_mode = 1;
     dev_ioctl(wifi_dev, DEV_AP_MODE, (u32)&info);
-#else
-    if (ext_wifi_sta_info_default_get() == 0) {
-        ext_wifi_sta_connect(ext_wifi_ssid, ext_wifi_pwd, 0);
-        net.arg = "net";
-        net.event = NET_NTP_GET_TIME_SUCC + 32;
-    } else {
-        net.arg = "net";
-        net.event = NET_EVENT_SMP_CFG_FIRST;
-        printf("---> NET_EVENT_SMP_CFG_FIRST\n");
-    }
-    net_event_notify(NET_EVENT_FROM_USER, &net);
 #endif
+    if (!ext_wifi_sta_info_default_get()) {
+        ext_wifi_sta_connect(ext_wifi_ssid, ext_wifi_pwd, 0);
+    }
+    sys_timer_add_to_task("sys_timer", NULL, wifi_app_timer_func, 5000);
 }
 
 
