@@ -391,7 +391,7 @@ void ext_wifi_off(void)
 void ext_wifi_sta_connect(char *ssid, char *pwd, char save)
 {
     struct cfg_info info = {0};
-    if (!ssid || wifi_dev) {
+    if (!ssid || !wifi_dev) {
         return;
     }
     if (ext_wifi_ssid != ssid && ext_wifi_pwd != pwd) {
