@@ -981,7 +981,7 @@ void sys_vad_event_handler(void *priv)
         if (keyworld_start) {
 #else   //播放完当前对话才能继续
         if (keyworld_start && (ifly_send_pcm == SEND_PCM_STOP || ifly_send_pcm == SEND_PCM_INI)
-            && music_buf_play_stop_staus() && music_play_stop_status() && !websockets_wait_recv_end_msg()) {
+            && music_buf_play_stop_status() && music_play_stop_status() && !websockets_wait_recv_end_msg()) {
 #endif // ASR_CONTINIU_EN
 #ifdef CONFIG_UI_PLAY_EMOJI
             play_face_emoji(AI_UART_CMD_REC_START);
@@ -1002,7 +1002,7 @@ void sys_vad_event_handler(void *priv)
         } else {
             printf("->keyworld_start %d %d %d %d %d\n", keyworld_start,
                    ifly_send_pcm,
-                   music_buf_play_stop_staus(),
+                   music_buf_play_stop_status(),
                    music_play_stop_status(),
                    !websockets_wait_recv_end_msg());
         }
@@ -1395,7 +1395,7 @@ void aisp_all_pause(char stop)
     websockets_close_request(1);
     music_buf_play_stop_waite();//等待关闭完成再播放提示音
     net_music_num_clear();
-    while (!music_buf_play_stop_staus() && --to) {
+    while (!music_buf_play_stop_status() && --to) {
         os_time_dly(1);
     }
 }

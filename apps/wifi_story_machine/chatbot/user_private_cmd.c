@@ -23,10 +23,10 @@ static bool lte_pai_code = false;
 static char pai_code[32] = {0};
 
 /*
-    music_buf_play_stop_staus();//返回true则是没有播放对话和音乐
+    music_buf_play_stop_status();//返回true则是没有播放对话和音乐
     music_play_stop_status();//返回true则是没有播放提示音
     net_music_play_start_status();//返回true则是正在播放音乐
-    if(music_buf_play_stop_staus() && music_play_stop_status() && !net_music_play_start_status()){//完全没有播放判断条件
+    if(music_buf_play_stop_status() && music_play_stop_status() && !net_music_play_start_status()){//完全没有播放判断条件
 
     }
 */

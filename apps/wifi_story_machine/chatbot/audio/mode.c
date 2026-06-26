@@ -367,7 +367,7 @@ int audio_app_all_play_stop_status(char mode)
         }
         return stop_status;
     }
-    if (stop_status && music_buf_play_stop_staus() && music_play_stop_status() && net_music_play_stop_status()) {
+    if (stop_status && music_buf_play_stop_status() && music_play_stop_status() && net_music_play_stop_status()) {
         return true;
     }
     return false;

@@ -210,7 +210,7 @@ extern void websockets_free_lbuf_buf(void);
 extern void music_buf_play_free_lbuf(void);
 extern void music_buf_play_accept(int accept);
 extern void music_buf_play_stop_waite(void);
-extern int music_buf_play_stop_staus(void);
+extern int music_buf_play_stop_status(void);
 extern void music_buf_play_stop_all(void);
 
 static OS_SEM s_tts_sem;
@@ -344,7 +344,7 @@ static void do_tts_stop_internal(void)
     aisp_clear(1);
     music_buf_play_stop_waite();
     int to = 100;
-    while (!music_buf_play_stop_staus() && --to) {
+    while (!music_buf_play_stop_status() && --to) {
         os_time_dly(1);
     }
 }
@@ -653,7 +653,7 @@ static void page_switch_content_tts_task(void *priv)
             aisp_clear(1);
             music_buf_play_stop_waite();
             int to = 100;
-            while (!music_buf_play_stop_staus() && --to) {
+            while (!music_buf_play_stop_status() && --to) {
                 os_time_dly(10);
             }
         }

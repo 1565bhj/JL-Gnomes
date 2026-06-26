@@ -66,7 +66,7 @@ static void tm_touch_key_scan1(void)
         }
 #else
         if (touch_key_enter && !touch_done) {
-            if (!music_buf_play_stop_staus()) {
+            if (!music_buf_play_stop_status()) {
                 net_music_play_puase();
             } else {
                 if (touch_light_open == 0) {

@@ -53,7 +53,7 @@ extern int net_music_set_dec_volume_step(int step);
 extern int net_music_set_dec_volume(int volume);
 extern void wifi_sta_reconnect(void);
 extern void pcm_send_set_status(char start);
-extern int music_buf_play_stop_staus(void);
+extern int music_buf_play_stop_status(void);
 extern int music_play_stop_status(void);
 extern int music_play_hello(char index);
 extern int music_play_res_file(const char *name);
@@ -216,14 +216,14 @@ static int auto_sleep_check(void)
 #endif
 
 #if (defined TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH && TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH != 0)
-    if (stop_status && music_buf_play_stop_staus() && music_play_stop_status() && net_music_play_stop_status() && !keyworld_start) {
+    if (stop_status && music_buf_play_stop_status() && music_play_stop_status() && net_music_play_stop_status() && !keyworld_start) {
         __this->auto_sleep_cnt++;
     } else {
         __this->auto_sleep_cnt = 0;
     }
 #else //不播放音乐&不对话：空闲
     RETURN_CHECK(stop_status);
-    if (stop_status && music_buf_play_stop_staus() && music_play_stop_status() && net_music_play_stop_status() && !keyworld_start) {
+    if (stop_status && music_buf_play_stop_status() && music_play_stop_status() && net_music_play_stop_status() && !keyworld_start) {
         __this->auto_sleep_cnt++;
     } else {
         __this->auto_sleep_cnt = 0;
@@ -416,7 +416,7 @@ static int ai_speaker_key_click(struct key_event *key)
         break;
     case KEY_SUPSPEND:
         if (!music_buf_play_supspend()) {
-            if (!(music_buf_play_stop_staus() && music_play_stop_status())) {
+            if (!(music_buf_play_stop_status() && music_play_stop_status())) {
                 net_music_play_puase();
             }
         }
@@ -745,7 +745,7 @@ static int ai_speaker_key_event_handler(struct key_event *key)
                 aisp_all_pause(1);
                 int wait = 100;
                 while (--wait) {
-                    if (music_buf_play_stop_staus() && music_play_stop_status() && !net_music_play_start_status()) {
+                    if (music_buf_play_stop_status() && music_play_stop_status() && !net_music_play_start_status()) {
                         break;
                     }
                     os_time_dly(1);

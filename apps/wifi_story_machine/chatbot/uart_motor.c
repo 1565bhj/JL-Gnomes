@@ -239,7 +239,7 @@ static void uart_motor_task_main(void *priv)
         put_buf(recv_buf, len);
         if (recv_buf[0] == 0xFE && recv_buf[2] == 0x0D && motor_dir_start) {
             // MOTOR_DIR_CNT
-            if (music_buf_play_stop_staus() && music_play_stop_status() && !net_music_play_start_status()) { //播放音乐不转动
+            if (music_buf_play_stop_status() && music_play_stop_status() && !net_music_play_start_status()) { //播放音乐不转动
                 motor_check_dir_set((int)recv_buf[1]);
             }
         }
