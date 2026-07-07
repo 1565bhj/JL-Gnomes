@@ -300,7 +300,6 @@
 					<Add option="../../../../cpu/wl82/liba/lib_sbc_eng.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_sig_mesh.a" />
 					<Add option="../../../../cpu/wl82/liba/crypto_toolbox_Osize.a" />
-					<Add option="../../../../cpu/wl82/liba/lib_mqtt.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_lvgl_v8.a" />
 					<Add option="../../../../cpu/wl82/liba/libasrengine.a" />
 					<Add option="../../../../cpu/wl82/liba/libunisound.a" />

@@ -248,7 +248,7 @@ static void enc_server_event_handler(void *priv, int argc, int *argv)
             break;
         }
         if ((ifly_send_pcm == SEND_PCM_STOP || ifly_send_pcm == SEND_PCM_INI)
-            && music_buf_play_stop_staus() && music_play_stop_status() && !websockets_wait_recv_end_msg()) {
+            && music_buf_play_stop_status() && music_play_stop_status() && !websockets_wait_recv_end_msg()) {
             music_buf_play_set_stop();
             aisp_record_callbak(1);
             websockets_send_pcm_buf_init();
@@ -283,7 +283,7 @@ static void vad_event_handler(void *priv)
             break;
         }
         if ((ifly_send_pcm == SEND_PCM_STOP || ifly_send_pcm == SEND_PCM_INI)
-            && music_buf_play_stop_staus() && music_play_stop_status() && !websockets_wait_recv_end_msg()) {
+            && music_buf_play_stop_status() && music_play_stop_status() && !websockets_wait_recv_end_msg()) {
             music_buf_play_set_stop();
             aisp_record_callbak(1);
             websockets_send_pcm_buf_init();
@@ -479,7 +479,7 @@ void aisp_all_pause(char stop)
     music_buf_play_stop_waite();//等待关闭完成再播放提示音
     net_music_num_clear();
     pcm_buf_clear();
-    while (!music_buf_play_stop_staus() && --to) {
+    while (!music_buf_play_stop_status() && --to) {
         os_time_dly(1);
     }
 }

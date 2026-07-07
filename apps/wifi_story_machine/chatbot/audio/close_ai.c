@@ -72,7 +72,7 @@ static int CloseAIMode_key_click(struct key_event *key)
         break;
     case KEY_SUPSPEND:
         if (!music_buf_play_supspend()) {
-            if (!(music_buf_play_stop_staus() && music_play_stop_status())) {
+            if (!(music_buf_play_stop_status() && music_play_stop_status())) {
                 net_music_play_puase();
             }
         }

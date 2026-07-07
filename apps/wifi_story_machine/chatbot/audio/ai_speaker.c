@@ -122,6 +122,11 @@ static struct ap_sp {
 
 #define __this (&AI_SP)
 
+u8 usb_id_get(void)
+{
+    return usb_id;
+}
+
 int system_keyworld_start(void)
 {
     return keyworld_start;
