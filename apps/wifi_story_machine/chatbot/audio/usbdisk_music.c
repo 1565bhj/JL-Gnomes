@@ -48,6 +48,7 @@ struct local_music_hdl {
     char puase;
     char force_set;
     char event_out;
+    u8 usb_id;
     u8 reverb_enable;
     u8 play_loop;
     u16 wait_sd;
@@ -691,8 +692,8 @@ static int local_music_scan_dir(char *path, int next_dir)
     char name[MAX_FILENAME_LEN];
     int len = 0, i = 0;
 
-    if (storage_device_ready() == 0) {
-        printf("storage_device_ready err\n");
+    if (udisk_storage_device_ready(__this->usb_id) == 0) {
+        printf("udisk_storage_device_ready err\n");
         return -1;
     }
     __this->local_dir_path = path;
@@ -802,8 +803,8 @@ static int local_music_scan_file(char *path, int next_file)
     char name[MAX_FILENAME_LEN];
     int i = 0;
 
-    if (storage_device_ready() == 0) {
-        printf("storage_device_ready err\n");
+    if (udisk_storage_device_ready(__this->usb_id) == 0) {
+        printf("udisk_storage_device_ready err\n");
         __this->last_rand = 1;
         __this->dir_fnum_start = 1;
         return -1;
@@ -938,8 +939,8 @@ static int local_music_dir_file_scan_play(int dir_fnum_start, int next_dir, int 
 {
     int len_offset = 0;
     char buf[MAX_FILENAME_LEN];
-    if (storage_device_ready() == 0) {
-        printf("storage_device_ready err\n");
+    if (udisk_storage_device_ready(__this->usb_id) == 0) {
+        printf("udisk_storage_device_ready err\n");
         __this->last_rand = 0;
         __this->dir_fnum_start = 0;
         return -1;
@@ -953,7 +954,7 @@ static int local_music_dir_file_scan_play(int dir_fnum_start, int next_dir, int 
         fscan_release(__this->fscan);
         __this->fscan = NULL;
     }
-    int ret = local_music_scan_dir(CONFIG_MUSIC_PATH_SD, next_dir);
+    int ret = local_music_scan_dir(CONFIG_UDISK_ROOT_PATH, next_dir);
     if (ret == -1) {
         printf("local_music_scan_dir err\n");
         return -1;
@@ -962,8 +963,8 @@ static int local_music_dir_file_scan_play(int dir_fnum_start, int next_dir, int 
         __this->dir_fnum_start = dir_fnum_start;
     }
     memset(buf, 0, sizeof(buf));
-    memcpy(buf + len_offset, CONFIG_MUSIC_PATH_SD, strlen(CONFIG_MUSIC_PATH_SD));
-    len_offset += strlen(CONFIG_MUSIC_PATH_SD);
+    memcpy(buf + len_offset, CONFIG_UDISK_ROOT_PATH, strlen(CONFIG_UDISK_ROOT_PATH));
+    len_offset += strlen(CONFIG_UDISK_ROOT_PATH);
     if (ret == 0) {
         memcpy(buf + len_offset, __this->dir_path, __this->dir_path_len);
         len_offset += __this->dir_path_len;
@@ -1134,7 +1135,7 @@ static int local_music_mode_init(void)
         return -1;
     }
     server_register_event_handler_to_task(__this->dec_server, NULL, dec_server_event_handler, "sys_timer");
-    if (udisk_storage_device_ready(0)) {
+    if (udisk_storage_device_ready(__this->usb_id)) {
         return local_music_switch_local_device(CONFIG_MUSIC_PATH_UDISK);
     }
     return 0;
@@ -1225,8 +1226,8 @@ static int local_music_key_click(struct key_event *key)
 //            __this->reverb_enable = 1;
 //        }
 //#else
-//        if (udisk_storage_device_ready(0)) {
-//            //local_music_switch_local_device(CONFIG_MUSIC_PATH_SD);
+//        if (udisk_storage_device_ready(__this->usb_id)) {
+//            //local_music_switch_local_device(CONFIG_UDISK_ROOT_PATH);
 //            local_music_switch_local_device(NULL);
 //        }
 //#endif
@@ -1482,6 +1483,7 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
         switch (device_eve->event) {
         case DEVICE_EVENT_IN:
             __this->event_out = false;
+			__this->usb_id = ((const char *)device_eve->value)[5] - '0';
             if (!__this->wait_udisk) {
                 __this->wait_udisk = wait_completion(udisk_storage_device_ready,
                                                      (int (*)(void *))local_music_switch_local_device,
@@ -1490,6 +1492,7 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
             break;
         case DEVICE_EVENT_OUT://U盘拔出，释放资源
             __this->event_out = true;
+			__this->usb_id = 0;
             udisk_music_dir_file_num_write_to_flash();
             local_music_switch_local_device(NULL);
 #if (defined CONFIG_USB_DISK_MUSIC_MODE_ENABLE && defined CONFIG_USB_DISK_AUTO_ENABLE)
@@ -1539,6 +1542,7 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
         }
     } else if (sys_eve->from == DEVICE_EVENT_FROM_USB_HOST && !strncmp((const char *)device_eve->value, "wireless", 8)) {
 #ifdef CONFIG_LTE_PHY_ENABLE
+		__this->usb_id = ((const char *)device_eve->value)[8] - '0';
         usb_id = ((const char *)device_eve->value)[8] - '0';
         int net_ch = sys_net_channel_read();
         //走4G网络
