@@ -791,6 +791,7 @@ int sys_instruction_word_callback(char *word, char *asr)
     return close_type;
 exit:
     if (music_status) {
+        printf("music_status = %d\n", music_status);
         switch (music_status) {
         case MUSIC_STOP:
 #ifdef AI_UART_CMD_CTROL_ENABLE
