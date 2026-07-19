@@ -372,7 +372,7 @@ void aisp_resume(void)
 {
     union audio_req req = {0};
 
-    if (__this->run_flag) {
+    if (__this->run_flag || !__this->mic_enc) {
         return;
     }
     __this->run_flag = 1;
@@ -410,7 +410,7 @@ void aisp_resume(void)
     aec_param.EnableBit = AEC_MODE_ADVANCE;
     aec_param.output_way = 0;    //1:使用硬件回采 0:使用软件回采
     req.enc.aec_attr = &aec_param;
-    req.enc.aec_enable = 1; //默认不开
+    req.enc.aec_enable = 0; //默认不开
 #endif
 
 #if 0//(defined CONFIG_SXY_QYAI_ENABLE)
@@ -473,6 +473,7 @@ void aisp_all_pause(char stop)
         }
     }
     music_buf_play_set_stop();
+    http_tts_play_stop_force();
     websockets_free_lbuf_buf();
     music_buf_play_free_lbuf();
     websockets_close_request(1);
@@ -488,6 +489,7 @@ void aisp_clear(char stop_net_music)
     __this->vad_enbable = 0;
     ifly_send_pcm = SEND_PCM_STOP;
     music_buf_play_set_stop();
+    http_tts_play_stop_force();
     if (stop_net_music) {
         net_music_play_set_stop();
     }
@@ -545,6 +547,7 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         music_play_stop_all();
         music_buf_play_stop_all();
         music_buf_play_set_stop();
+        http_tts_play_stop_force();
         music_buf_play_free_lbuf();
         music_buf_play_stop_waite();//等待关闭完成再播放提示音
         net_music_num_clear();
@@ -630,6 +633,7 @@ void aisp_wake(char index)//0:小飞小飞，8：配网模式
 
         music_buf_play_stop_all();
         music_buf_play_set_stop();
+        http_tts_play_stop_force();
         net_music_play_set_stop();
         websockets_free_lbuf_buf();
         music_buf_play_free_lbuf();
