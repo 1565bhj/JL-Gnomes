@@ -112,7 +112,7 @@ typedef struct content_details {
     int page;
     void *buf;
     int buf_size;
-    void (*set_callbak)(void *http, char *buf, int len, int payloadlen, char fin);
+    void (*set_callback)(void *http, char *buf, int len, int payloadlen, char fin);
     void *keyword;
 } QYAI_CONTENT_DATA;
 
@@ -127,18 +127,18 @@ typedef struct user_info {
     int works_id;
     int timbre_id;
     void *works_name;
-    void *callbak_priv;
-    void (*set_callbak)(void *http, char *buf, int len, int payloadlen, char fin);
+    void *callback_priv;
+    void (*set_callback)(void *http, char *buf, int len, int payloadlen, char fin);
 } QYAI_USER_INFO;
 
 
 extern int http_chunck_stream_client_socket_post_body_thread(HTTP_CHUNCK_STREAM_INFO *HTTP,
         char *url,  char *body_dat,
-        int (*buf_callbak)(void *http, char *buf, int len, int payloadlen, char fin),
+        int (*buf_callback)(void *http, char *buf, int len, int payloadlen, char fin),
         char *static_buf, int static_buf_size);
 extern int http_chunck_stream_client_socket_request_thread(HTTP_CHUNCK_STREAM_INFO *HTTP,
         char *url,
-        int (*buf_callbak)(void *http, char *buf, int len, int payloadlen, char fin),
+        int (*buf_callback)(void *http, char *buf, int len, int payloadlen, char fin),
         char *static_buf, int static_buf_size);
 #endif
 

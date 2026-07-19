@@ -59,7 +59,7 @@ const char wifi_temperature_drift_trim_on = 1; //WiFi温度漂移校准开关,0�
 const char wifi_ap_scan_support = 0; //ap扫描开关，0为关闭，1为开启
 
 #if defined CONFIG_NO_SDRAM_ENABLE
-const u16 MAX_PACKETS_IN_QUEUE = 16; //配置WiFi驱动最大发送数据包队列
+const u16 MAX_PACKETS_IN_QUEUE = 12; //配置WiFi驱动最大发送数据包队列
 const u16 MAX_PACKETS_IN_MCAST_PS_QUEUE = 4;    //配置WiFi驱动最大发送数据包队列 //8   16 modify by lyx 32
 const u16 MAX_PACKETS_IN_PS_QUEUE   =   2;  //配置WiFi驱动最大发送数据包队列  //128    /*16 */
 #else

@@ -507,7 +507,7 @@
  * This option is independent of \c MBEDTLS_AES_FEWER_TABLES.
  *
  */
-//#define MBEDTLS_AES_ROM_TABLES
+#define MBEDTLS_AES_ROM_TABLES
 
 /**
  * \def MBEDTLS_AES_FEWER_TABLES
@@ -3079,7 +3079,7 @@
  *
  * This module adds support for SHA-224.
  */
-#define MBEDTLS_SHA224_C
+//#define MBEDTLS_SHA224_C
 
 /**
  * \def MBEDTLS_SHA256_C
@@ -3750,7 +3750,11 @@
  *
  * Uncomment to set the maximum plaintext size of the incoming I/O buffer.
  */
+#ifdef MBEDTLS_SSL_MEM_SMALL
+#define MBEDTLS_SSL_IN_CONTENT_LEN              4096
+#else
 #define MBEDTLS_SSL_IN_CONTENT_LEN              16384
+#endif
 
 /** \def MBEDTLS_SSL_CID_IN_LEN_MAX
  *
@@ -3800,7 +3804,11 @@
  *
  * Uncomment to set the maximum plaintext size of the outgoing I/O buffer.
  */
+#ifdef MBEDTLS_SSL_MEM_SMALL
+#define MBEDTLS_SSL_OUT_CONTENT_LEN             4096
+#else
 #define MBEDTLS_SSL_OUT_CONTENT_LEN             16384
+#endif
 
 /** \def MBEDTLS_SSL_DTLS_MAX_BUFFERING
  *

@@ -79,7 +79,7 @@ static SEC_IN_SRAM u8 systimer_tcb_stk_q[sizeof(StaticTask_t) + SYSTIMER_STK_SIZ
 static SEC_IN_SRAM u8 sys_event_tcb_stk_q[sizeof(StaticTask_t) + SYS_EVENT_STK_SIZE * 4] ALIGNE(4);
 
 #ifdef CONFIG_NO_SDRAM_ENABLE
-#define APP_CORE_STK_SIZE 800
+#define APP_CORE_STK_SIZE 1000
 #else
 #define APP_CORE_STK_SIZE 2600
 #endif
@@ -180,7 +180,11 @@ const struct task_info task_info_table[] = {
 #endif
 #if CPU_CORE_NUM > 1
     {"#C0btctrler",         19,      512,   384   },
+#ifdef CONFIG_NO_SDRAM_ENABLE
+    {"#C0btstack",          18,      800,  384   },
+#else
     {"#C0btstack",          18,      1024,  384   },
+#endif
 #else
     {"btctrler",            19,      512,   384   },
     {"btstack",             18,      768,   384   },

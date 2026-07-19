@@ -71,7 +71,7 @@ extern void wifi_and_network_off(void);
 
 #ifdef CONFIG_LTE_PHY_ENABLE
 extern int lte_power_control(void *on);
-extern int app_usb_at_cmd_init(u8 usb_id_num);
+extern int app_usb_at_cmd_init(u8 usb_id_num, void (*lte_online_callback)(void));
 extern int app_usb_at_cmd_deinit(void);
 extern int app_usb_at_cmd_send(u8 trig_type, u8 opt_code, u8 param);
 extern int app_usb_at_cmd_send_reset(void);
@@ -140,11 +140,15 @@ void system_restore_factory_settings(void)
     int sys_volume_clear(void);
     int sys_net_channel_info_clear(void);
     void alarm_time_clear(void);
+    //debug
+    void token_flag_erase(void);
 
 #ifdef CONFIG_LTE_PHY_ENABLE
     int ch = sys_net_channel_read();
     user_sys_clear_lte_pai_code();
     http_device_unbind_app();//设备解绑
+    token_flag_erase();
+
     //4G网络模式下
     if (ch == 1) {
         app_usb_at_cmd_send_reset();//复位模块
@@ -846,7 +850,7 @@ static void ai_speaker_poll_task(void *priv)
                 IPV4_ADDR_CONFLICT_DETECT = 0;
                 lte_net_init();
                 lte_net_restart();
-                app_usb_at_cmd_init(usb_id);
+                app_usb_at_cmd_init(usb_id, NULL);
                 sys_net_channel_write(NET_CH_SELECT_LTE);
             }
 done:
@@ -863,7 +867,57 @@ done:
         }
     }
 }
+
+int lte_event_handler(struct device_event *device_eve)
+{
+    int msg[4] = {0};
+    int net_ch = sys_net_channel_read();
+    int net_mode = sys_net_mode_read();
+    usb_id = ((const char *)device_eve->value)[8] - '0';
+    switch (device_eve->event) {
+    case DEVICE_EVENT_IN:
+        printf("usb wireless%d device IN,net_mode:%d", usb_id, net_mode);
+        if (net_mode == NET_MODE_AUTO) {
+            msg[0] = 0;
+            os_taskq_post_type(AI_SPEAKER_POLL_TASK, Q_USER, 1, msg);
+        } else {
+            //4G关闭静态ip冲突检测
+            IPV4_ADDR_CONFLICT_DETECT = 0;
+            app_usb_at_cmd_init(usb_id, lte_net_init);
+        }
+done:
+        break;
+    case DEVICE_EVENT_OUT:
+        printf("usb wireless%d device OUT", usb_id);
+        if (net_mode == NET_MODE_AUTO) {
+            //sys_net_channel_write(NET_CH_SELECT_WIFI);
+            qyai_net_interface_set(0);
+            app_usb_at_cmd_deinit();
+        } else {
+            net_dhcp_status_set(NET_DISCONNECT);
+            app_usb_at_cmd_deinit();
+            sys_timeout_add(1, lte_power_control, 1000);//断电1秒后重供电
+        }
+        break;
+    }
+    return 0;
+}
 #endif // CONFIG_LTE_PHY_ENABLE
+
+//设备sim卡绑定
+extern int http_ai_sim_card_bind_request(char *_iccid, void (*set_callbak)(int code, char *msg, char *data));
+extern char *app_usb_module_get_iccid(void);
+static void ai_speaker_card_bind_callbak(int code, char *msg, char *data)
+{
+
+}
+
+//获取mqtt连接信息
+int http_ai_mqtt_get_conn_info(void (*set_callbak)(char *data));
+static void mqtt_get_conn_info(char *res_dat)
+{
+    printf("app recv:%s ", res_dat);
+}
 
 int ai_net_event_handler(struct net_event *event)
 {
@@ -994,7 +1048,7 @@ int ai_net_event_handler(struct net_event *event)
         case NET_EVENT_CONNECTED:
             __this->associat_timeout_cnt = 0;
             printf("NET_EVENT_CONNECTED : %d \n", keyworld_wifi_enter_congfig);
-            if (keyworld_wifi_enter_congfig >= 2 && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0)) {
+            if (keyworld_wifi_enter_congfig >= 2 && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0) && __this->net_dicon_cnt == 0) {
                 if (net_ch == 0) {
                     music_play_res_file("WifiConSucc.mp3");
 #ifdef CONFIG_UI_PLAY_EMOJI
@@ -1056,9 +1110,15 @@ int ai_net_event_handler(struct net_event *event)
             msg[0] = 1;
             os_taskq_post_type(AI_SPEAKER_POLL_TASK, Q_USER, 1, msg);
 #endif
+            http_ai_mqtt_get_conn_info_task(mqtt_get_conn_info);
+            if (net_ch == 1) {
+                char *iccid_ptr = app_usb_module_get_iccid();
+                http_ai_sim_card_bind_request_task(iccid_ptr, ai_speaker_card_bind_callbak);
+            }
             break;
         case NET_EVENT_DISCONNECTED:
             canceladdrinfo();
+            __this->net_dicon_cnt = keyworld_wifi_enter_congfig == 1 ? 0 : (__this->net_dicon_cnt + 1);//配网清空连接失败次数
 #ifdef CONFIG_LTE_PHY_ENABLE
             if (net_work_on == NET_WORK_ON_LTE) {
                 printf("=====key switch to lte mode=====");
@@ -1077,7 +1137,7 @@ int ai_net_event_handler(struct net_event *event)
                                 IPV4_ADDR_CONFLICT_DETECT = 0;
                                 lte_net_init();
                                 lte_net_restart();
-                                app_usb_at_cmd_init(usb_id);
+                                app_usb_at_cmd_init(usb_id, NULL);
                                 sys_net_channel_write(NET_CH_SELECT_LTE);
                             } else { //WiFi断开[pc主动]，plug out等价于掉电
                                 if (wifi_is_online()) {
@@ -1215,7 +1275,7 @@ int ai_net_event_handler(struct net_event *event)
                         IPV4_ADDR_CONFLICT_DETECT = 0;
                         lte_net_init();
                         lte_net_restart();
-                        app_usb_at_cmd_init(usb_id);
+                        app_usb_at_cmd_init(usb_id, NULL);
                         sys_net_channel_write(NET_CH_SELECT_LTE);
                     }
                 }
@@ -1226,14 +1286,16 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_NTP_GET_TIME_SUCC + 32://初始化连接网络
             if (!keyworld_wifi_enter_congfig && system_reset_reason_get() != SYS_RST_ALM_WKUP  && !is_production_test_enter(0)) {
-                if (net_ch == 0) {
+                if (!__this->net_dicon_cnt) {
+                    if (net_ch == 0) {
 #ifdef CONFIG_UI_PLAY_EMOJI
-                    extern int play_face_emoji(int avi_index);
-                    play_face_emoji(AI_UART_CMD_WIFI_CONNECTING);
+                        extern int play_face_emoji(int avi_index);
+                        play_face_emoji(AI_UART_CMD_WIFI_CONNECTING);
 #endif
-                    music_play_res_file("WifiConting.mp3");
-                } else {
-                    music_play_res_file("NetConting.mp3");
+                        music_play_res_file("WifiConting.mp3");
+                    } else {
+                        music_play_res_file("NetConting.mp3");
+                    }
                 }
                 keyworld_wifi_enter_congfig = 3;
             }
@@ -1325,42 +1387,8 @@ int ai_speaker_device_event_handler(struct sys_event *sys_eve)
         }
     } else if (sys_eve->from == DEVICE_EVENT_FROM_USB_HOST && !strncmp((const char *)device_eve->value, "wireless", 8)) {
 #ifdef CONFIG_LTE_PHY_ENABLE
-        int msg[4] = {0};
-        int net_ch = sys_net_channel_read();
-        int net_mode = sys_net_mode_read();
-        usb_id = ((const char *)device_eve->value)[8] - '0';
-        usb_hp_state = device_eve->event;
-        switch (device_eve->event) {
-        case DEVICE_EVENT_IN:
-            printf("usb wireless%d device IN,net_mode:%d", usb_id, net_mode);
-            if (net_mode == NET_MODE_AUTO) {
-                msg[0] = 0;
-                os_taskq_post_type(AI_SPEAKER_POLL_TASK, Q_USER, 1, msg);
-            } else {
-                //4G关闭静态ip冲突检测
-                IPV4_ADDR_CONFLICT_DETECT = 0;
-                app_usb_at_cmd_init(usb_id);
-                lte_net_init();
-            }
-done:
-            break;
-        case DEVICE_EVENT_OUT:
-            printf("usb wireless%d device OUT", usb_id);
-            if (net_mode == NET_MODE_AUTO) {
-                //sys_net_channel_write(NET_CH_SELECT_WIFI);
-                qyai_net_interface_set(0);
-                app_usb_at_cmd_deinit();
-                lte_net_close();
-                lte_power_control(0);
-            } else {
-                net_dhcp_status_set(NET_DISCONNECT);
-                app_usb_at_cmd_deinit();
-                lte_net_close();
-                lte_power_control(0);
-                sys_timeout_add(1, lte_power_control, 1000);
-            }
-            break;
-        }
+        extern int lte_event_handler(struct device_event * device_eve);
+        return lte_event_handler(device_eve);
 #endif
     }
 

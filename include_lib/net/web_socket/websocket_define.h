@@ -49,7 +49,7 @@ typedef unsigned long long  u64;
 
 #ifdef WEBSOCKET_STATIC_MEM_SMALL
 #define ALL_FRAME_MAX                (FRAME_LEN_MAX*8)
-#define WEB_SOCKETS_TYPE_USE_SEQ_MAX (8*1024) //wss一次最多收发8K
+#define WEB_SOCKETS_TYPE_USE_SEQ_MAX (4096 - 512) //wss一次最多收发：MBEDTLS_SSL_MAX_FRAG_LEN_4096 - 512，即 4092 - 512
 #else
 #define ALL_FRAME_MAX                (FRAME_LEN_MAX*16)
 #define WEB_SOCKETS_TYPE_USE_SEQ_MAX (15*1024+32) //wss一次最多收发15K（多模态加上头部32），优化：MBEDTLS_SSL_MAX_CONTENT_LEN - 32

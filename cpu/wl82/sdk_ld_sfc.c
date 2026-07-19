@@ -154,6 +154,7 @@ SECTIONS
         *(.deepsleep_target)
         *(.os_data)
         *(.os_port_data)
+		*(.sms_data)
 
 #if defined CONFIG_DNS_ENC_ENABLE
         . = ALIGN(4);
@@ -190,6 +191,7 @@ SECTIONS
 #endif
         *(COMMON)
         *(.mem_heap)
+        *(.sms_bss)
 
         . = ALIGN(4);
         *(.os_port_bss)

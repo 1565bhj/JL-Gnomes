@@ -68,11 +68,15 @@ u8 sim_status = SIM_CARD_OK;
 #endif
 
 static ml_state_machine ml_state_code = ML_STATE_CHECK_IDEL;
+#define LTE_MODULE_ERROR 0x01
+#define SIM_ERROR 0x02
+static u8 check_res = 0;
 
 void *qyai_usb_h_device_serial_at_cmd_str_get(void);
 int qyai_usb_h_device_serial_at_id_prive_vendor_get(void);
 extern int usb_host_reset_ep(u8 usb_id);
 extern int lte_net_auto_rndis_up(u8 opt, u8 * auto_rndis);
+extern int lte_iccid_dev_info_opt(u8 opt_code, char *iccid, int iccid_len);
 
 int app_usb_get_controller_id(void)
 {
@@ -508,7 +512,6 @@ static int app_usb_module_sim_card_det(void)
         return -1;
     }
 
-    int lte_iccid_dev_info_opt(u8 opt_code, char *iccid, int iccid_len);
     lte_iccid_dev_info_opt(1, iccid, sizeof(iccid));
     if (!iccid[0]) {
         os_sem_set(&at_cmd_sem, 0);
@@ -530,6 +533,11 @@ static int app_usb_module_sim_card_det(void)
         printf("get flash CCID : %s \n", iccid);
     }
     return 0;
+}
+
+char *app_usb_module_get_iccid(void)
+{
+    return (char *)iccid;
 }
 
 //NOTE: 联网失败的原因->(1)流量卡未激活 (2)板载天线有问题
@@ -574,10 +582,26 @@ static int app_usb_module_sim_card_net_check(void)
     return 0;
 }
 
-//一直等到连接服务器  超时(60s)
-static void app_usb_card_check_thread(void)
+static void app_usb_check_process_thread(void (*lte_online_callback)(void))
 {
     int ret = 1;
+
+    //检测AT指令
+    os_sem_set(&at_cmd_sem, 0);
+    ret = usbnet_host_at_data_send(usb_id, "AT\r\n", strlen("AT\r\n"));
+    if (ret < 0) {
+        printf("=====AT CMD send fail=====");
+        check_res = check_res | LTE_MODULE_ERROR;
+        ml_state_code = ML_STATE_CHECK_IDEL;
+        return;
+    }
+    if (OS_TIMEOUT == os_sem_pend(&at_cmd_sem, SEM_WAIT_TIME_OUT)) {
+        printf("=====AT CMD wait timeout=====");
+        check_res = check_res | LTE_MODULE_ERROR;
+        ml_state_code = ML_STATE_CHECK_IDEL;
+        return;
+    }
+
     //设置自动拨号上网
     app_usb_net_auto_dialup(1);
 
@@ -597,14 +621,19 @@ static void app_usb_card_check_thread(void)
     }
 
     ml_state_code = ML_STATE_CHECK_IDEL;
-    printf("===========card check is ok!===============\r\n");
+
+    if (lte_online_callback) {
+        lte_online_callback();
+    }
+    printf("===========check process is ok!===============\r\n");
 }
 
-int app_usb_at_cmd_init(u8 usb_id_num)
+int app_usb_at_cmd_init(u8 usb_id_num, void (*lte_online_callback)(void))
 {
     int ret;
     //注册at数据回调
     usbnet_at_port_rx_handler_register(app_usb_at_port_rx_cb);
+
     //允许4G-LTE发送数据
     usb_net_set_module_reset_status(0);
 
@@ -619,8 +648,24 @@ int app_usb_at_cmd_init(u8 usb_id_num)
     pthread_mutex_init(&mutex_start, NULL);
     pthread_mutex_init(&mutex_end, NULL);
 
-    thread_fork("card_check", 10, 1024, 0, NULL, app_usb_card_check_thread, NULL);
+    ml_state_code = ML_STATE_CHECK_WAIT_OK;
+    thread_fork("check_proccess", 10, 1024, 0, NULL, app_usb_check_process_thread, lte_online_callback);
     return 0;
+    /* //app_core任务调用app_usb_at_cmd_init，在这个卡主会无法关机，所以要在创建任务丽执行lte_net_init
+    while (ml_state_code != ML_STATE_CHECK_IDEL) {
+        os_time_dly(200);
+        printf("=====wait check=====");
+    }
+
+    if (check_res & LTE_MODULE_ERROR) {
+        printf("===lte module check fail!===");
+    } else if (check_res & SIM_ERROR) {
+        printf("===sim card check fail!===");
+    } else {
+        printf("===lte module and sim card check success!===");
+    }
+    return check_res;
+    */
 }
 
 //检测usb的plug in事件
@@ -677,6 +722,9 @@ int app_usb_at_cmd_deinit(void)
         os_sem_post(&key_event_sem);
     }
 
+    //在这里统一执行lte关闭
+    lte_net_close();
+    lte_power_control(0);
     return 0;
 }
 

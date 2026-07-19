@@ -251,7 +251,7 @@ void aisp_all_pause(char stop)
     websockets_close_request(1);
     music_buf_play_stop_waite();//等待关闭完成再播放提示音
     net_music_num_clear();
-    while (!music_buf_play_stop_staus() && --to) {
+    while (!music_buf_play_stop_status() && --to) {
         os_time_dly(1);
     }
 }
@@ -559,7 +559,7 @@ static void enc_server_event_handler(void *priv, int argc, int *argv)
         if (keyworld_start) {
 #else   //播放完当前对话才能继续
         if (keyworld_start && (__this->send_pcm == SEND_PCM_STOP || __this->send_pcm == SEND_PCM_INI)
-            && music_buf_play_stop_staus() && music_play_stop_status()) {
+            && music_buf_play_stop_status() && music_play_stop_status()) {
 #endif // ASR_CONTINIU_EN
             websockets_client_next_dialogue_init();
             __this->send_pcm = SEND_PCM_START;
@@ -588,7 +588,7 @@ void sys_vad_event_handler(void *priv)
         if (keyworld_start) {
 #else   //播放完当前对话才能继续
         if (keyworld_start && (__this->send_pcm == SEND_PCM_STOP || __this->send_pcm == SEND_PCM_INI)
-            && music_buf_play_stop_staus() && music_play_stop_status()) {
+            && music_buf_play_stop_status() && music_play_stop_status()) {
 #endif // ASR_CONTINIU_EN
             __this->send_pcm = SEND_PCM_START;
             music_buf_play_set_stop();

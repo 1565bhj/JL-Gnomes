@@ -298,7 +298,7 @@ ip4_route2(src, dest)
  * when opening a connection. For the transmit size, this MSS sets
  * an upper limit on the MSS advertised by the remote host.
  */
-#define TCP_MSS                 (NETIF_MTU - 40)	/* TCP_MSS = (Ethernet MTU - IP header size - TCP header size) */
+#define TCP_MSS                 (NETIF_MTU - 40)    /* TCP_MSS = (Ethernet MTU - IP header size - TCP header size) */
 
 /**
  * TCP_WND: The size of a TCP window.  This must be at least
@@ -307,7 +307,7 @@ ip4_route2(src, dest)
  * with scaling applied. Maximum window value in the TCP header
  * will be TCP_WND >> TCP_RCV_SCALE
  */
-#define TCP_WND                 (65535) 		//最大可以设置为65535
+#define TCP_WND                 (65535)         //最大可以设置为65535
 
 /**
  * TCP_SND_BUF: TCP sender buffer space (bytes).
@@ -319,7 +319,7 @@ ip4_route2(src, dest)
  * TCP_RTO_TIME: TCP retransmission timeout (ms). (default is 3000, for faster recovery,
  * this value can be lowered to 1 second.(RFC 6298))
  */
-#define TCP_RTO_TIME      		3000
+#define TCP_RTO_TIME            3000
 
 /**
  * TCP_SND_QUEUELEN: TCP sender buffer space (pbufs). This must be at least
@@ -654,7 +654,7 @@ extern unsigned char __attribute__((aligned(4)))  __attribute__((section(".memp_
  * The first server can be initialized automatically by defining
  * DNS_SERVER_ADDRESS(ipaddr), where 'ipaddr' is an 'ip_addr_t*'
  */
-#define DNS_MAX_SERVERS          5
+#define DNS_MAX_SERVERS          10
 
 
 /** DNS_LOCAL_HOSTLIST: Implements a local host-to-address list. If enabled, you have to define an initializer:
@@ -858,7 +858,7 @@ extern void dns_set_server(unsigned int *dnsserver);
 
 #define SMTP_DEBUG                     LWIP_DBG_OFF
 #define HTTPD_DEBUG                    LWIP_DBG_OFF
-#define HTTPD_DEBUG_TIMING		       LWIP_DBG_OFF
+#define HTTPD_DEBUG_TIMING             LWIP_DBG_OFF
 #define SNTP_DEBUG                     LWIP_DBG_OFF
 #define RTP_DEBUG                      LWIP_DBG_OFF
 #define PING_DEBUG                     LWIP_DBG_OFF

@@ -2585,25 +2585,8 @@ static int main_dev_event_handler(struct sys_event *sys_eve)
         }
     } else if (sys_eve->from == DEVICE_EVENT_FROM_USB_HOST && !strncmp((const char *)device_eve->value, "wireless", 8)) {
 #ifdef CONFIG_LTE_PHY_ENABLE
-        usb_id = ((const char *)device_eve->value)[8] - '0';
-        int net_ch = sys_net_channel_read();
-        //走4G网络
-        if (net_ch == 1) {
-            switch (device_eve->event) {
-            case DEVICE_EVENT_IN:
-                printf("usb wireless%d device IN", usb_id);
-                //4G关闭静态ip冲突检测
-                IPV4_ADDR_CONFLICT_DETECT = 0;
-                lte_net_init();
-                app_usb_at_cmd_init(usb_id);
-                break;
-            case DEVICE_EVENT_OUT:
-                printf("usb wireless%d device OUT", usb_id);
-                app_usb_at_cmd_deinit();
-                lte_net_close();
-                break;
-            }
-        }
+        extern int lte_event_handler(struct device_event * device_eve);
+        return lte_event_handler(device_eve);
 #endif
     }
     return false;
@@ -2638,7 +2621,6 @@ static int bt_music_state_machine(struct application *app, enum app_state state,
         case ACTION_HOME_MAIN:
             if (app_usb_is_plugin_state() && (!app_usb_at_if_sim_card_is_ok())) {
                 app_usb_at_cmd_deinit();
-                lte_power_control(0);
 #if IP_NAPT
                 if (wl_wifi_cur_mode_get() == WIFI_MODE_AP) {
                     wifi_ap_mode_deinit();

@@ -1652,7 +1652,7 @@ static void time_rtc_alarm_task(void *p)
 static int time_rtc_main(void)
 {
 #ifdef CONFIG_NO_SDRAM_ENABLE
-    os_task_create(time_rtc_alarm_task, NULL, 10, 700, 128, ALARM_TASK_NAME);
+    os_task_create(time_rtc_alarm_task, NULL, 10, 900, 64, ALARM_TASK_NAME);
 #else
     os_task_create(time_rtc_alarm_task, NULL, 10, 1800, 128, ALARM_TASK_NAME);
 #endif // CONFIG_NO_SDRAM_ENABLE

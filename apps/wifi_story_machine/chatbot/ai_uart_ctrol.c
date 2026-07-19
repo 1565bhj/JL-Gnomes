@@ -179,21 +179,25 @@ static int ai_uart_data_recv(char *buf, int len)
 #if defined CONFIG_BT_ENABLE && defined CONFIG_BT_MUSIC_MODE_ENABLE
                     if (app && !strcmp(app->name, "bt_music")) {
                         bt_music_set_volume(volume);
+                        break;
                     }
 #endif
 #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
                     if (app && !strcmp(app->name, "sd_music")) {
                         sd_music_set_dec_volume(volume);
+                        break;
                     }
 #endif
 #ifdef CONFIG_USB_DISK_MUSIC_MODE_ENABLE
                     if (app && !strcmp(app->name, "usbdisk_music")) {
                         usbdisk_music_set_dec_volume(volume);
+                        break;
                     }
 #endif
 #ifdef CONFIG_ASR_ALGORITHM_ENABLE
                     if (app && !strcmp(app->name, "ai_speaker")) {
                         ai_speaker_volume_set(volume, 0);
+                        break;
                     }
 #endif
                 } else {

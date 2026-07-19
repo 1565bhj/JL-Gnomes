@@ -1483,7 +1483,7 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
         switch (device_eve->event) {
         case DEVICE_EVENT_IN:
             __this->event_out = false;
-			__this->usb_id = ((const char *)device_eve->value)[5] - '0';
+            __this->usb_id = ((const char *)device_eve->value)[5] - '0';
             if (!__this->wait_udisk) {
                 __this->wait_udisk = wait_completion(udisk_storage_device_ready,
                                                      (int (*)(void *))local_music_switch_local_device,
@@ -1492,7 +1492,7 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
             break;
         case DEVICE_EVENT_OUT://U盘拔出，释放资源
             __this->event_out = true;
-			__this->usb_id = 0;
+            __this->usb_id = 0;
             udisk_music_dir_file_num_write_to_flash();
             local_music_switch_local_device(NULL);
 #if (defined CONFIG_USB_DISK_MUSIC_MODE_ENABLE && defined CONFIG_USB_DISK_AUTO_ENABLE)
@@ -1542,26 +1542,8 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
         }
     } else if (sys_eve->from == DEVICE_EVENT_FROM_USB_HOST && !strncmp((const char *)device_eve->value, "wireless", 8)) {
 #ifdef CONFIG_LTE_PHY_ENABLE
-		__this->usb_id = ((const char *)device_eve->value)[8] - '0';
-        usb_id = ((const char *)device_eve->value)[8] - '0';
-        int net_ch = sys_net_channel_read();
-        //走4G网络
-        if (net_ch == 1) {
-            switch (device_eve->event) {
-            case DEVICE_EVENT_IN:
-                printf("usb wireless%d device IN", usb_id);
-                //4G关闭静态ip冲突检测
-                IPV4_ADDR_CONFLICT_DETECT = 0;
-                lte_net_init();
-                app_usb_at_cmd_init(usb_id);
-                break;
-            case DEVICE_EVENT_OUT:
-                printf("usb wireless%d device OUT", usb_id);
-                app_usb_at_cmd_deinit();
-                lte_net_close();
-                break;
-            }
-        }
+        extern int lte_event_handler(struct device_event * device_eve);
+        return lte_event_handler(device_eve);
 #endif
     }
 
