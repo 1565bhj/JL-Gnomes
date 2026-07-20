@@ -250,7 +250,8 @@ typedef struct chatgtp_info {
     unsigned char no_play_audio;
     unsigned char fast_ip_index;
     unsigned char process_status;
-    unsigned char audio_format;//0 pcm , 1 opus
+    unsigned char text_dialogue;//text文本对话模式
+    unsigned char audio_format;//0 pcm , 1 opus，2 text文本对话
 
     unsigned char wbsk_dialogue_play_recv_music;
     unsigned char wbsk_dialogue_close;//1立马退出，2超时退出

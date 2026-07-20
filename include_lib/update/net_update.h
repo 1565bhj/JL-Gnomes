@@ -14,5 +14,8 @@ int net_flen(void *file);
 int net_fclose(void *file, char is_socket_err);
 int net_update_request(void);
 
+/** 下拉页等 UI 展示用 OTA/固件版本字符串（与 OTA_VERSON 一致） */
+const char *net_update_get_ota_version(void);
+
 #endif
 

@@ -312,6 +312,23 @@ void ai_speaker_mode_exit(void)
     aisp_close();
 }
 
+void ai_speaker_text_dialogue(char *text)//text为UTF8格式
+{
+    music_buf_play_accept(0);
+    websockets_client_dialogue_exit();
+    websockets_close_request(1);
+    websockets_dialogue_timeout_del();
+
+    music_buf_play_stop_all();
+    music_buf_play_set_stop();
+    net_music_play_set_stop();
+    websockets_free_lbuf_buf();
+    music_buf_play_free_lbuf();
+
+    music_buf_play_accept(1);
+    websocket_client_text_dialogue_create(text);
+}
+
 static void ai_speaker_mode_stop(void)
 {
     aisp_clear(1);

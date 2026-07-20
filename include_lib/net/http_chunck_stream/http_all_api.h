@@ -5,7 +5,7 @@
 #include "http_chunck_stream_api.h"
 
 // 获取内容列表相关的函数声明
-int http_ai_get_content_list(int page, char *buf, int buf_size, void (*set_callback)(void *http, char *buf, int len, int payloadlen, char fin));
+int http_ai_get_content_list(int page, char *buf, int buf_size, void (*set_callbak)(void *http, char *buf, int len, int payloadlen, char fin));
 int http_ai_get_content_list_task(int page, char *buf, int buf_size, void (*set_callbak)(void *http, char *buf, int len, int payloadlen, char fin));//任务方式则在回调函数处理：len <= 0则失败
 
 // 获取内容信息相关的函数声明
@@ -76,6 +76,17 @@ int http_weather_now_get(char *utf8, int utf8_size, int (*cb)(void *http, char *
 
 // 用户信息获取相关函数，返回值为当前智能体ID
 int http_qyai_user_info_get(void (*callback)(void *http, char *buf, int len, int payloadlen, char fin));
+
+
+// 获取内容信息相关函数
+/*
+第1个参数是回调函数：void (*set_callback)(void *http, char *buf, int len, int payloadlen, char fin);
+后面参数如："id=124"
+例子：http_ai_get_content_v2_details_data_task_parms(3, set_callback, "id=124", "page=10");
+*/
+int http_ai_get_content_v2_details_data_task_parms(int argc, ...);
+int http_ai_get_content_v2_details_data_task(int id, int page, char *buf, int buf_size, void (*set_callback)(void *http, char *buf, int len, int payloadlen, char fin));
+
 
 #endif
 
