@@ -1033,6 +1033,7 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_SMP_CFG_FINISH:
             keyworld_wifi_enter_congfig = 2;
+            __this->net_dicon_cnt = 0;//配网清空连接失败次数
             if (is_in_config_network_state()) {
                 if (net_ch == 0) {
                     music_play_res_file("WifiCfgRecv.mp3");
@@ -1047,7 +1048,7 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_CONNECTED:
             __this->associat_timeout_cnt = 0;
-            printf("NET_EVENT_CONNECTED : %d \n", keyworld_wifi_enter_congfig);
+            printf("NET_EVENT_CONNECTED : %d, %d \n", keyworld_wifi_enter_congfig, __this->net_dicon_cnt);
             if (keyworld_wifi_enter_congfig >= 2 && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0) && __this->net_dicon_cnt == 0) {
                 if (net_ch == 0) {
                     music_play_res_file("WifiConSucc.mp3");
@@ -1118,7 +1119,8 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_DISCONNECTED:
             canceladdrinfo();
-            __this->net_dicon_cnt = keyworld_wifi_enter_congfig == 1 ? 0 : (__this->net_dicon_cnt + 1);//配网清空连接失败次数
+            __this->net_dicon_cnt = (keyworld_wifi_enter_congfig == 1 || keyworld_wifi_enter_congfig == 2) ? 0 : (__this->net_dicon_cnt + 1);//配网清空连接失败次数
+            printf("NET_EVENT_DISCONNECTED : %d, %d \n", keyworld_wifi_enter_congfig, __this->net_dicon_cnt);
 #ifdef CONFIG_LTE_PHY_ENABLE
             if (net_work_on == NET_WORK_ON_LTE) {
                 printf("=====key switch to lte mode=====");
