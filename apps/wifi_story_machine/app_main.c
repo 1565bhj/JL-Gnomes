@@ -397,9 +397,8 @@ void app_main()
         int lv_demo_switch_to_ring_page(void);
         sys_timeout_add(NULL, lv_demo_switch_to_ring_page, 1000);//需要延时执行，否则闹钟唤醒无法切换页面
 #endif
-        if (music_play_alarm(user_read_alarm_index())) {
-            sys_timeout_add(user_read_alarm_index(), music_play_alarm, 1000);
-        }
+        extern int music_play_alarm(int index);
+        sys_timeout_add(user_read_alarm_index(), music_play_alarm, 500);
     }
 
 #ifdef  USED_TM1629_SHOWN

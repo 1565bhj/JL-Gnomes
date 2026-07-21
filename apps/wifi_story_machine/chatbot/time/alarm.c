@@ -569,7 +569,7 @@ static void alarm_add(struct alarm_info *alarm, void *alarm_content)
                    alarm_tmp->cyc);
             syscfg_write(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab));
             if (alarm_content && strlen(alarm_content) < sizeof(alarm_content_buf)) {
-                printf("-> alarm_time_write index = %d : %s \n", index, alarm_content_buf);
+                printf("-> alarm_time_write index = %d : %s \n", i, alarm_content_buf);
                 syscfg_write(CFG_USER_ALARM_CONTENT0 + i, alarm_content, strlen(alarm_content) + 1);
             } else {
                 memset(alarm_content_buf, 0xFF, sizeof(alarm_content_buf));
