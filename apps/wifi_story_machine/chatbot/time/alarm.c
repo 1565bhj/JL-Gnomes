@@ -75,7 +75,7 @@ struct alarm_info { //12字节
 #define ALARM_MP3_URL_SIZE  1024
 static struct sys_time alarm_wakeup_time = {0};
 static char now_weekday = 0;
-static char mp3_url[ALARM_MP3_URL_SIZE];
+static char mp3_url[ALARM_MP3_URL_SIZE] ALIGNED(4) = {0};
 static char alarm_content_buf[240];
 static struct alarm_info alarm_tab[ALARM_NUM] ALIGNED(4) = {0};
 static OS_MUTEX mutex;
@@ -83,6 +83,7 @@ static OS_MUTEX mutex;
 static int alarm_msg(int message, char notice);
 extern int ntp_client_get_time_all(struct tm *s_tm, int recv_to);
 static void alarm_rings(void *priv);
+static int alarm_save_url(char alarm_index, char *url);
 void ntptime_update(void);
 void ntptime_update_rtc(void);
 int64_t http_ntp_utc_time_get(void);
@@ -567,6 +568,9 @@ static void alarm_add(struct alarm_info *alarm, void *alarm_content)
                    alarm_tmp->time.min,
                    alarm_tmp->time.sec,
                    alarm_tmp->cyc);
+            if (alarm->music) {
+                alarm_save_url(i, mp3_url);
+            }
             syscfg_write(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab));
             if (alarm_content && strlen(alarm_content) < sizeof(alarm_content_buf)) {
                 printf("-> alarm_time_write index = %d : %s \n", i, alarm_content_buf);
@@ -672,6 +676,16 @@ void alarm_clean(void)
     set_alarm_ctrl(0);/* 关闭闹钟开关 */
     memset(&alarm_tab, 0, sizeof(alarm_tab));
     syscfg_write(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab));
+
+    memset(mp3_url, 0xFF, sizeof(mp3_url));
+    alarm_save_data(mp3_url, sizeof(mp3_url));
+
+    for (int i = CFG_USER_ALARM_CONTENT0; i <= CFG_USER_ALARM_CONTENT9; i++) {
+        memset(alarm_content_buf, 0xFF, sizeof(alarm_content_buf));
+        alarm_content_buf[0] = 0;
+        syscfg_write(i, alarm_content_buf, sizeof(alarm_content_buf));
+    }
+
 #ifdef AI_UART_CMD_CTROL_ENABLE
     ai_uart_cmd_data_push(AI_UART_CMD_ALARM_DEL_ALL, NULL, 0);
 #endif
@@ -1078,99 +1092,202 @@ static void alarm_rings(void *priv)
     alarm_msg(ALARM_ADD, 0);//重新设置闹钟
 }
 struct alarm_url_head {
-    unsigned char size;
-    unsigned char is_end;
+    unsigned int index;    // URL编号，0或0xFFFFFFFF表示空闲
+    unsigned char size;   // URL长度（包含'\0'）
 };
+
 #define VM_PAGE_SIZE        240
 #define ALARM_HEAD_SIZE     sizeof(struct alarm_url_head)
-static int alarm_save_url(char *url)
+#define TOTAL_PAGES         (CFG_USER_ALARM_URL3 - CFG_USER_ALARM_URL0 + 1)
+#define PAGE_TOTAL_SIZE     (VM_PAGE_SIZE + ALARM_HEAD_SIZE)
+#define TOTAL_STORAGE_SIZE  (PAGE_TOTAL_SIZE * TOTAL_PAGES)
+
+static int alarm_save_data(char *buf, int len)
 {
-    if (!url) {
+    int index = CFG_USER_ALARM_URL0;
+    int size;
+    int offset = 0;
+    struct alarm_url_head *head;
+    int rem = len;
+    while (len > 0) {
+        size = MIN(rem, PAGE_TOTAL_SIZE);
+        syscfg_write(index++, buf + offset, size);
+        offset += size;
+        rem -= size;
+        if (index > CFG_USER_ALARM_URL3) {
+            break;
+        }
+    }
+    return len;
+}
+
+static int alarm_save_url(char alarm_index, char *url)
+{
+    if (!url || alarm_index < 0 || alarm_index >= ALARM_NUM) {
         return -1;
     }
-    int buf_size = VM_PAGE_SIZE + ALARM_HEAD_SIZE;//flash的1个页-256,还以信息头，定一个页最多存储240字节
-    char *buf = malloc(buf_size);
-    if (!buf) {
-        return -1;
-    }
-    int *url_size;
-    int len = strlen(url) + 1;
-    if (len >= (ALARM_MP3_URL_SIZE - ALARM_HEAD_SIZE * 4)) {
-        printf("err url is tool long\n");
+    unsigned char *buf = malloc(TOTAL_STORAGE_SIZE + 128);
+    int len = strlen(url) + 1;  // +1 for '\0'
+    if (len > VM_PAGE_SIZE || !buf) {
+        printf("Error: URL too long (max %d bytes)\n", VM_PAGE_SIZE);
         if (buf) {
             free(buf);
         }
         return -1;
     }
+    memset(buf, 0, TOTAL_STORAGE_SIZE);
+
     os_mutex_pend(&mutex, 1000);
-    int index = CFG_USER_ALARM_URL0;
-    int size;
+    char writeen = 0;
+    char url_cnt = 0;
+    int ret = -1;
+    int cfg_index = CFG_USER_ALARM_URL0;
+    int last_offset = 0;
+    int llast_offset = 0;
     int offset = 0;
-    struct alarm_url_head *head;
-    while (len > 0) {
-        size = MIN(len, VM_PAGE_SIZE);
-        memset(buf, 0, buf_size);
-        head = (struct alarm_url_head *)buf;
-        head->size = size;
-        head->is_end = (len > VM_PAGE_SIZE ? 0 : 1);
-        memcpy(buf + ALARM_HEAD_SIZE, url + offset, size);
-//        printf("-> write size %d , %d, %d\n",head->size,head->is_end,offset);
-        syscfg_write(index++, buf, size + ALARM_HEAD_SIZE);
-        offset += size;
-        len -= size;
-        if (index > CFG_USER_ALARM_URL3) {
+    while (cfg_index <= CFG_USER_ALARM_URL3) {
+        ret = syscfg_read(cfg_index, buf + offset, PAGE_TOTAL_SIZE);
+        if (ret < 0) {
             break;
         }
+        offset += PAGE_TOTAL_SIZE;
+        cfg_index++;
     }
+
+    struct alarm_url_head head = {0};
+    head.index  = (unsigned char)buf[0] & 0xF;
+    head.size   = (unsigned char)buf[sizeof(head.index)];
+    if (!offset || head.index == 0 || head.index == 0xF) {
+        offset = 0;
+        buf[offset] = alarm_index + 1;
+        buf[offset + sizeof(head.index)] = len;
+        memcpy(buf + ALARM_HEAD_SIZE, url, len);
+        printf("Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
+        alarm_save_data(buf, TOTAL_STORAGE_SIZE);
+        writeen = true;
+    } else {
+        offset = 0;
+        last_offset = 0;
+        while (offset < TOTAL_STORAGE_SIZE) {
+            if (head.index == 0 || head.index == 0xF) {
+                if ((offset + len + ALARM_HEAD_SIZE) <= TOTAL_STORAGE_SIZE) {
+                    printf("Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
+                    buf[offset] = alarm_index + 1;
+                    buf[offset + sizeof(head.index)] = len;
+                    memcpy(buf + offset + ALARM_HEAD_SIZE, url, len);
+                    alarm_save_data(buf, TOTAL_STORAGE_SIZE);
+                    writeen = true;
+                }
+                break;
+            } else {
+                url_cnt++;
+                printf("read flash URL index %d, url_cnt = %d, offset = %d : %s\n", (head.index & 0xF) - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
+                if (!strcmp(&buf[offset + ALARM_HEAD_SIZE], url)) {
+                    for (char i = 1; i < 8; i++) {
+                        if (((buf[offset] >> (i * 4)) & 0xF) == 0 || ((buf[offset] >> (i * 4)) & 0xF) == 0xF) {
+                            buf[offset] |= (alarm_index + 1) << (i * 4);
+                            alarm_save_data(buf, TOTAL_STORAGE_SIZE);
+                            goto exit;
+                        }
+                    }
+                }
+                llast_offset = last_offset;
+                last_offset = offset;
+                offset += ALARM_HEAD_SIZE + head.size;
+                head.index  = (unsigned char)buf[offset] & 0xF;
+                head.size   = (unsigned char)buf[offset + sizeof(head.index)];
+            }
+        }
+        if (!writeen && last_offset < TOTAL_STORAGE_SIZE) {
+            if ((last_offset + len + ALARM_HEAD_SIZE) > TOTAL_STORAGE_SIZE) {
+                offset = 0;
+                if ((llast_offset + len + ALARM_HEAD_SIZE) < TOTAL_STORAGE_SIZE) {
+                    offset = llast_offset;
+                } else {
+                    memset(buf, 0, TOTAL_STORAGE_SIZE);
+                }
+                buf[offset] = alarm_index + 1;
+                buf[offset + sizeof(head.index)] = len;
+                memcpy(buf + ALARM_HEAD_SIZE, url, len);
+                printf("clean url, Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
+            } else {
+                buf[last_offset] = alarm_index + 1;
+                buf[last_offset + sizeof(head.index)] = len;
+                memcpy(buf + last_offset + ALARM_HEAD_SIZE, url, len);
+            }
+            last_offset = offset;
+            printf("no found , Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
+            alarm_save_data(buf, TOTAL_STORAGE_SIZE);
+        }
+    }
+exit:
+    os_mutex_post(&mutex);
     if (buf) {
         free(buf);
     }
-    os_mutex_post(&mutex);
     return 0;
 }
-static int alarm_read_url(char *url, int url_buf_size)
+
+static int alarm_read_url(char alarm_index, char *url, int url_buf_size)
 {
-    int ret = 0;
-    if (!url || url_buf_size < 1024) {
+    unsigned char *buf = malloc(TOTAL_STORAGE_SIZE + 128);
+    if (!url || url_buf_size < 1024 || alarm_index < 0 || !buf) {
+        if (buf) {
+            free(buf);
+        }
         return -1;
     }
-    int buf_size = VM_PAGE_SIZE + ALARM_HEAD_SIZE;//flash的1个页-256,还以信息头，定一个页最多存储240字节
-    char *buf = malloc(buf_size);
-    if (!buf) {
-        return -1;
-    }
+    memset(buf, 0, TOTAL_STORAGE_SIZE);
+    memset(url, 0, url_buf_size);
     os_mutex_pend(&mutex, 1000);
-    int index = CFG_USER_ALARM_URL0;
-    int size;
+
+    struct alarm_url_head head = {0};
+    char readed = 0;
+    char url_cnt = 0;
+    int ret = -1;
+    int cfg_index = CFG_USER_ALARM_URL0;
     int offset = 0;
-    struct alarm_url_head *head;
-    while (1) {
-        memset(buf, 0, buf_size);
-        head = (unsigned char *)buf;
-        if (syscfg_read(index++, buf, buf_size) < 0) {
-            ret = -1;
-            printf("read alarm url err\n");
+    while (cfg_index <= CFG_USER_ALARM_URL3) {
+        ret = syscfg_read(cfg_index, buf + offset, PAGE_TOTAL_SIZE);
+        if (ret < 0) {
             break;
         }
-//        printf("-> read size %d , %d, %d\n",head->size,head->is_end,offset);
-        if (head->is_end) { //结束包
-            memcpy(url + offset, buf + ALARM_HEAD_SIZE, head->size);
-            break;
-        } else { //连续包
-            memcpy(url + offset, buf + ALARM_HEAD_SIZE, head->size);
-        }
-        offset += head->size;
-        if (index > CFG_USER_ALARM_URL3) {
-            break;
-        }
+        offset += PAGE_TOTAL_SIZE;
+        cfg_index++;
     }
+
+    offset = 0;
+    while (offset < TOTAL_STORAGE_SIZE) {
+        head.index  = (unsigned char)buf[offset] & 0xF;
+        head.size   = (unsigned char)buf[offset + sizeof(head.index)];
+        if (head.index == 0 || head.index == 0xF) {
+            break;
+        } else {
+            url_cnt++;
+            for (char i = 0; i < 8; i++) {
+                head.index = (unsigned char)((buf[offset] >> (i * 4)) & 0xF);
+                if (head.index == (alarm_index + 1)) {
+                    readed = true;
+                    strncpy(url, &buf[offset + ALARM_HEAD_SIZE], url_buf_size);
+                    goto exit;
+                }
+            }
+            head.index  = (unsigned char)buf[offset] & 0xF;
+        }
+        printf("read URL index %d, url_cnt = %d, offset = %d : %s\n", head.index - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
+        offset += ALARM_HEAD_SIZE + head.size;
+    }
+    if (!readed && url_cnt) {
+        strncpy(url, &buf[ALARM_HEAD_SIZE], url_buf_size);
+    }
+exit:
+    os_mutex_post(&mutex);
     if (buf) {
         free(buf);
     }
-    os_mutex_post(&mutex);
-    printf("-> read alarm url ok\n");
     return ret;
 }
+
 int ntp2utc_add_alarm(int64_t sec, char cyc, char *music_url, void *alarm_content)
 {
     if (sec <= 0) {
@@ -1191,7 +1308,6 @@ int ntp2utc_add_alarm(int64_t sec, char cyc, char *music_url, void *alarm_conten
         memset(mp3_url, 0, sizeof(mp3_url));
         memcpy(mp3_url, music_url, strlen(music_url) + 1);
         printf("alarm mp3_url : %s\n", mp3_url);
-        alarm_save_url(mp3_url);
     }
     alarm.time.year = timeinfo.tm_year;
     alarm.time.month = timeinfo.tm_mon;
@@ -1328,16 +1444,7 @@ struct alarm_info { //12字节
 
 void alarm_time_clear(void)
 {
-    os_mutex_pend(&mutex, 1000);
-    if (syscfg_read(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab)) >= 0) {
-        memset(&alarm_tab, 0, sizeof(alarm_tab));
-        syscfg_write(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab));
-    }
-    os_mutex_post(&mutex);
-    alarm_msg(ALARM_UPDATE2SERVER, 0);
-#ifdef CONFIG_LVGL_UI_ENABLE
-    lv_demo_all_alarms_del_flush_from_server();
-#endif
+    alarm_clean();
 }
 
 void alarm_time_read(void *buf, int size)
@@ -1443,7 +1550,7 @@ void ntptime_update_rtc(void)
 }
 char *alarm_get_url(char index)
 {
-    alarm_read_url(mp3_url, sizeof(mp3_url));
+    alarm_read_url(index, mp3_url, sizeof(mp3_url));
     if (mp3_url[0] != 0) {
         return mp3_url;
     }
