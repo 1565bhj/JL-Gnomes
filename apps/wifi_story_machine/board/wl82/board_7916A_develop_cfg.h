@@ -17,7 +17,7 @@
 #define NET_MUSIC_CONFIG_DEC_ANALOG_VOLUME_ENABLE //网络音乐解码的淡入淡出
 #define CONFIG_MORE_NOTIC_REPLY_ENABLE      //使能多次提示回复语
 #define CONFIG_KWS_XIAOYUXIAOYU             //唤醒词：小语小语
-//#define CONFIG_KWS_ENGLISH                  //英语版唤醒词：hello you you，海外版本
+//#define CONFIG_KWS_ENGLISH                  //英语版唤醒词：hello you you，海外版本（在本文件最后的海外语言配置项进行语言选择）
 
 #define SYS_COMMAND_ANSER_PLAY_ENABLE         //系统命令采用本地“好的”提示，注释则使用服务器下发
 //#define BT_DISCON_MUSIC_NOTICE_ENABLE       //播报蓝牙断开开关
@@ -590,7 +590,51 @@
 
 #endif  //CONFIG_BOARD_DEVELOP
 
-
+//*********************************************************************************//
+//               海外离线语言配置（暂只支持打开一种语言配置）                          //
+//*********************************************************************************//
+#ifdef CONFIG_KWS_ENGLISH
+////东亚语言
+//#define CONFIG_INSTRUCTION_YUE                //粤语指令
+//#define CONFIG_INSTRUCTION_JA                 //日语指令
+//#define CONFIG_INSTRUCTION_KO                 //韩语指令
+////东南亚语言
+//#define CONFIG_INSTRUCTION_TH                 //泰语指令
+//#define CONFIG_INSTRUCTION_VI                 //越南语指令
+//#define CONFIG_INSTRUCTION_ID                 //印尼语指令
+//#define CONFIG_INSTRUCTION_MS                 //马来语指令
+//#define CONFIG_INSTRUCTION_MY                 //缅甸语指令
+//#define CONFIG_INSTRUCTION_KM                 //高棉语指令
+//#define CONFIG_INSTRUCTION_LO                 //老挝语指令
+////南亚语言
+//#define CONFIG_INSTRUCTION_HI                 //印地语指令
+//#define CONFIG_INSTRUCTION_BN                 //孟加拉语指令
+//#define CONFIG_INSTRUCTION_TA                 //泰米尔语指令
+//#define CONFIG_INSTRUCTION_TE                 //泰卢固语指令
+//#define CONFIG_INSTRUCTION_GU                 //古吉拉特语指令
+//#define CONFIG_INSTRUCTION_KN                 //卡纳达语指令
+//#define CONFIG_INSTRUCTION_ML                 //马拉雅拉姆语指令
+//#define CONFIG_INSTRUCTION_UR                 //乌尔都语指令
+//#define CONFIG_INSTRUCTION_PA                 //旁遮普语指令
+////欧洲语言
+#define CONFIG_INSTRUCTION_EN                 //英语指令
+//#define CONFIG_INSTRUCTION_DE                 //德语指令
+//#define CONFIG_INSTRUCTION_FR                 //法语指令
+//#define CONFIG_INSTRUCTION_ES                 //西班牙语指令
+//#define CONFIG_INSTRUCTION_RU                 //俄语指令
+//#define CONFIG_INSTRUCTION_PT                 //葡萄牙语指令
+//#define CONFIG_INSTRUCTION_NL                 //荷兰语指令
+//#define CONFIG_INSTRUCTION_PL                 //波兰语指令
+//#define CONFIG_INSTRUCTION_UK                 //乌克兰语指令
+//#define CONFIG_INSTRUCTION_LT                 //立陶宛语指令
+////中东语言
+//#define CONFIG_INSTRUCTION_AR                 //阿拉伯语指令
+//#define CONFIG_INSTRUCTION_HE                 //希伯来语指令
+//#define CONFIG_INSTRUCTION_FA                 //波斯语指令
+//#define CONFIG_INSTRUCTION_TR                 //土耳其语指令
+#else
+#define CONFIG_INSTRUCTION_CN                 //中文指令（非海外版默认）
+#endif
 
 //*********************************************************************************//
 //                        SD 配置（暂只支持打开一个SD外设）                        //

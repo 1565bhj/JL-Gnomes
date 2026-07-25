@@ -39,10 +39,76 @@ char *qyai_chat_audio_dec_format(void)
 
 char *qyai_chat_language(void)
 {
-#ifdef CONFIG_KWS_ENGLISH
-    return "en";
+#ifdef CONFIG_INSTRUCTION_CN
+    return "zh";    // 中文
+#elif defined(CONFIG_INSTRUCTION_YUE)
+    return "yue";   // 粤语
+#elif defined(CONFIG_INSTRUCTION_JA)
+    return "ja";    // 日语
+#elif defined(CONFIG_INSTRUCTION_KO)
+    return "ko";    // 韩语
+#elif defined(CONFIG_INSTRUCTION_TH)
+    return "th";    // 泰语
+#elif defined(CONFIG_INSTRUCTION_VI)
+    return "vi";    // 越南语
+#elif defined(CONFIG_INSTRUCTION_ID)
+    return "id";    // 印尼语
+#elif defined(CONFIG_INSTRUCTION_MS)
+    return "ms";    // 马来语
+#elif defined(CONFIG_INSTRUCTION_MY)
+    return "my";    // 缅甸语
+#elif defined(CONFIG_INSTRUCTION_KM)
+    return "km";    // 高棉语（柬埔寨）
+#elif defined(CONFIG_INSTRUCTION_LO)
+    return "lo";    // 老挝语
+#elif defined(CONFIG_INSTRUCTION_HI)
+    return "hi";    // 印地语
+#elif defined(CONFIG_INSTRUCTION_BN)
+    return "bn";    // 孟加拉语
+#elif defined(CONFIG_INSTRUCTION_TA)
+    return "ta";    // 泰米尔语
+#elif defined(CONFIG_INSTRUCTION_TE)
+    return "te";    // 泰卢固语
+#elif defined(CONFIG_INSTRUCTION_GU)
+    return "gu";    // 古吉拉特语
+#elif defined(CONFIG_INSTRUCTION_KN)
+    return "kn";    // 卡纳达语
+#elif defined(CONFIG_INSTRUCTION_ML)
+    return "ml";    // 马拉雅拉姆语
+#elif defined(CONFIG_INSTRUCTION_UR)
+    return "ur";    // 乌尔都语
+#elif defined(CONFIG_INSTRUCTION_PA)
+    return "pa";    // 旁遮普语
+#elif defined(CONFIG_INSTRUCTION_EN)
+    return "en";    // 英语
+#elif defined(CONFIG_INSTRUCTION_DE)
+    return "de";    // 德语
+#elif defined(CONFIG_INSTRUCTION_FR)
+    return "fr";    // 法语
+#elif defined(CONFIG_INSTRUCTION_ES)
+    return "es";    // 西班牙语
+#elif defined(CONFIG_INSTRUCTION_RU)
+    return "ru";    // 俄语
+#elif defined(CONFIG_INSTRUCTION_PT)
+    return "pt";    // 葡萄牙语
+#elif defined(CONFIG_INSTRUCTION_NL)
+    return "nl";    // 荷兰语
+#elif defined(CONFIG_INSTRUCTION_PL)
+    return "pl";    // 波兰语
+#elif defined(CONFIG_INSTRUCTION_UK)
+    return "uk";    // 乌克兰语
+#elif defined(CONFIG_INSTRUCTION_LT)
+    return "lt";    // 意大利语
+#elif defined(CONFIG_INSTRUCTION_AR)
+    return "ar";    // 阿拉伯语
+#elif defined(CONFIG_INSTRUCTION_HE)
+    return "he";    // 希伯来语
+#elif defined(CONFIG_INSTRUCTION_FA)
+    return "fa";    // 波斯语
+#elif defined(CONFIG_INSTRUCTION_TR)
+    return "tr";    // 土耳其语
 #else
-    return "zh";
+    return "zh";    // 默认返回中文
 #endif
 }
 

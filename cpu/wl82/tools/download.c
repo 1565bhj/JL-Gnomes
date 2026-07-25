@@ -149,12 +149,44 @@ cd /d %~dp0
 echo %*
 
 
+
+
 #ifdef CONFIG_KWS_ENGLISH
 del /q audlogo\*
-copy /y audlogo_en\* audlogo
+#ifdef CONFIG_INSTRUCTION_AR
+copy /y audio_file_res_all\audlogo_ar\* audlogo
+#elif defined CONFIG_INSTRUCTION_CN
+copy /y audio_file_res_all\audlogo_cn\* audlogo
+#elif defined CONFIG_INSTRUCTION_DE
+copy /y audio_file_res_all\audlogo_de\* audlogo
+#elif defined CONFIG_INSTRUCTION_EN
+copy /y audio_file_res_all\audlogo_en\* audlogo
+#elif defined CONFIG_INSTRUCTION_ES
+copy /y audio_file_res_all\audlogo_es\* audlogo
+#elif defined CONFIG_INSTRUCTION_FR
+copy /y audio_file_res_all\audlogo_fr\* audlogo
+#elif defined CONFIG_INSTRUCTION_ID
+copy /y audio_file_res_all\audlogo_id\* audlogo
+#elif defined CONFIG_INSTRUCTION_JA
+copy /y audio_file_res_all\audlogo_ja\* audlogo
+#elif defined CONFIG_INSTRUCTION_KO
+copy /y audio_file_res_all\audlogo_ko\* audlogo
+#elif defined CONFIG_INSTRUCTION_MS
+copy /y audio_file_res_all\audlogo_ms\* audlogo
+#elif defined CONFIG_INSTRUCTION_PT
+copy /y audio_file_res_all\audlogo_pt\* audlogo
+#elif defined CONFIG_INSTRUCTION_RU
+copy /y audio_file_res_all\audlogo_ru\* audlogo
+#elif defined CONFIG_INSTRUCTION_TH
+copy /y audio_file_res_all\audlogo_th\* audlogo
+#elif defined CONFIG_INSTRUCTION_VI
+copy /y audio_file_res_all\audlogo_vi\* audlogo
+#elif defined CONFIG_INSTRUCTION_YUE
+copy /y audio_file_res_all\audlogo_yue\* audlogo
+#endif
 #else
 del /q audlogo\*
-copy /y audio_file_res_all\*.mp3 audlogo
+copy /y audio_file_res_all\audlogo_cn\* audlogo
 #endif
 
 #ifdef CONFIG_LTE_PHY_ENABLE

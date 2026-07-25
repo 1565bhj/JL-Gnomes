@@ -1434,6 +1434,43 @@
 		<Unit filename="../../chatbot/key/wakeup_port_touch.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../chatbot/language_instruct/ar_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/bn_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/cn_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/de_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/en_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/es_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/fa_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/fr_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/gu_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/he_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/hi_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/id_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/instruct_word.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../chatbot/language_instruct/ja_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/km_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/kn_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/ko_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/lo_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/lt_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/ml_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/ms_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/my_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/nl_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/pa_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/pl_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/pt_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/ru_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/ta_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/te_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/th_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/tr_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/uk_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/ur_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/vi_instruct_word.h" />
+		<Unit filename="../../chatbot/language_instruct/yue_instruct_word.h" />
 		<Unit filename="../../chatbot/led/led.c">
 			<Option compilerVar="CC" />
 		</Unit>
