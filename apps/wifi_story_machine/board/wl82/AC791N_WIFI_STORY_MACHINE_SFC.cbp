@@ -264,7 +264,7 @@
 					<Add option="../../../../cpu/wl82/liba/zliblite.a" />
 					<Add option="../../../../cpu/wl82/liba/profile.a" />
 					<Add option="../../../../cpu/wl82/liba/stream_media_server.a" />
-					<Add option="../../../../cpu/wl82/liba/libmbedtls_3_4_0.a" />
+					<Add option="../../../../cpu/wl82/liba/libmbedtls_3_4_0_sfc.a" />
 					<Add option="../../../../cpu/wl82/liba/wpasupplicant.a" />
 					<Add option="../../../../cpu/wl82/liba/hsm.a" />
 					<Add option="../../../../cpu/wl82/liba/http_cli.a" />
@@ -274,7 +274,6 @@
 					<Add option="../../../../cpu/wl82/liba/json.a" />
 					<Add option="../../../../cpu/wl82/liba/libduer-device.a" />
 					<Add option="../../../../cpu/wl82/liba/network_download.a" />
-					<Add option="../../../../cpu/wl82/liba/lib_mqtt.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_sound_wave.a" />
 					<Add option="../../../../cpu/wl82/liba/libturing.a" />
 					<Add option="../../../../cpu/wl82/liba/libdui.a" />
