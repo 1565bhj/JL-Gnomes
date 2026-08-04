@@ -8,6 +8,7 @@
 #include "app_config.h"
 #include "app_core.h"
 #include <time.h>
+#include "asm/ladc.h"
 #include "system/timer.h"
 #include "ifly_aiui.h"
 #include "ifly_aiui_api.h"
@@ -17,6 +18,10 @@
 #include "ai_uart_ctrol.h"
 
 #if (defined CONFIG_ASR_ALGORITHM) && (CONFIG_ASR_ALGORITHM == IFLYTEK_ALGORITHM)
+
+#ifndef CONFIG_AISP_AEC_USE_LINEIN
+#define CONFIG_AISP_AEC_USE_LINEIN 0
+#endif
 
 char aisp_mic_channel_set = 0;
 static char aisp_mic_suspend = 0;
@@ -30,6 +35,7 @@ static char aisp_mic_suspend = 0;
 
 #define IFLY_AUDIO_RECORD_ONCE_SR_POINTS 128
 #define IFLY_AUDIO_RECORD_BUF_POINTS (32 * IFLY_AUDIO_RECORD_ONCE_SR_POINTS)
+#define IFLY_LINEIN_RECORD_BUF_POINTS (48 * IFLY_AUDIO_RECORD_ONCE_SR_POINTS)
 #define IFLY_AUIDIO_RECORD_MIC_CH_NUM_MAX 2
 
 #define  AEC_FRAME_SIZE    (128)
@@ -46,6 +52,7 @@ static char aisp_mic_suspend = 0;
 #else
 #define IFLY_AUDIO_RECORD_ONCE_SR_POINTS 128
 #define IFLY_AUDIO_RECORD_BUF_POINTS (256 * IFLY_AUDIO_RECORD_ONCE_SR_POINTS)
+#define IFLY_LINEIN_RECORD_BUF_POINTS (48 * IFLY_AUDIO_RECORD_ONCE_SR_POINTS)
 #define IFLY_AUIDIO_RECORD_MIC_CH_NUM_MAX 2
 
 #define  AEC_FRAME_SIZE    (128)
@@ -95,6 +102,9 @@ extern int aisp_mic1_gain;
 
 static uint8_t run_flag = 0;
 static struct server *server_handle = NULL;
+#if CONFIG_AISP_AEC_USE_LINEIN
+static struct server *linein_server_handle = NULL;
+#endif
 static int ifly_sample_rate;
 static TAECParam g_tAECParam;
 static volatile char ifly_send_pcm;
@@ -124,6 +134,12 @@ SEC_USED(.sram) ALIGNE(4) static char ga_cae_aec_buf[CAE_AEC_BUF_SIZE_MAX] = {0}
 
 SEC_USED(.sram) ALIGNE(4) static short ifly_audio_record_buf_read[IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 3];
 SEC_USED(.sram) ALIGNE(4) static short ifly_asr_buf_feed_to_engine[IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 3];
+
+#if CONFIG_AISP_AEC_USE_LINEIN
+SEC_USED(.sram) ALIGNE(4) static short ifly_linein_record_buf_read[IFLY_AUDIO_RECORD_ONCE_SR_POINTS];
+static cbuffer_t gs_linein_cbuf;
+static s16 linein_buf[IFLY_LINEIN_RECORD_BUF_POINTS];
+#endif
 
 SEC_USED(.sram) ALIGNE(4) static short g_aecOutput[AEC_FRAME_SIZE] = {0};
 SEC_USED(.sram) ALIGNE(4) static s16 s_aduo_buf[IVW_FRAME_SIZE * IVW_FRAME_CNT] = {0};
@@ -271,7 +287,10 @@ static int ifly_audio_record_vfs_fwrite(void *file, void *data, u32 vp_len)
     //printf("jsyan vp_len:%d\r\n",vp_len);
     if (vl_writed_len != vp_len) {
         printf("ifly_audio_record_vfs_fwrite, busy, wlen=%d, len=%d\r\n", vl_writed_len, vp_len);
-        cbuf_clear(pl_cbuf);
+        cbuf_clear(&gs_mic_cbuf);
+#if CONFIG_AISP_AEC_USE_LINEIN
+        cbuf_clear(&gs_linein_cbuf);
+#endif
         return vp_len;
     }
 //    os_sem_set(&read_available_sem, 0);
@@ -375,8 +394,6 @@ int initIvw80(const char* mlp_file, const char* filler_file)
 
 void record_server_init()
 {
-    union audio_req req_mic = {0};
-
     if (!server_handle) {
         server_handle = server_open("audio_server", "enc");
         if (!server_handle) {
@@ -384,14 +401,29 @@ void record_server_init()
         }
         server_register_event_handler(server_handle, NULL, ifly_audio_record_enc_server_event_handler);
     }
+#if CONFIG_AISP_AEC_USE_LINEIN
+    if (!linein_server_handle) {
+        linein_server_handle = server_open("audio_server", "enc");
+        if (!linein_server_handle) {
+            printf("linein server open failed\n");
+            return;
+        }
+        server_register_event_handler(linein_server_handle, NULL,
+                                      ifly_audio_record_enc_server_event_handler);
+    }
+#endif
+
     aisp_resume();
 }
 
 void record_config()
 {
     printf("jsyan record_config.\r\n");
-    cbuf_init(&gs_mic_cbuf, mic_buf, sizeof(mic_buf));//原始音频buf
-    cbuf_init(&s_audio_cbuf, s_aduo_buf, sizeof(s_aduo_buf));//前端处理后的音频buf
+    cbuf_init(&gs_mic_cbuf, mic_buf, sizeof(mic_buf)); //原始音频麦克风buf
+#if CONFIG_AISP_AEC_USE_LINEIN
+    cbuf_init(&gs_linein_cbuf, linein_buf, sizeof(linein_buf)); //linein通道buf
+#endif
+    cbuf_init(&s_audio_cbuf, s_aduo_buf, sizeof(s_aduo_buf)); //前端处理后的音频buf
     os_sem_create(&read_available_sem, 0);
 }
 
@@ -1026,7 +1058,12 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
     int ret = MIDDLE_OK;
     int rlen = 0, vl_write_len;
     char buf[IVW_FRAME_SIZE] = {0};
-    unsigned int vl_frame_len = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 2 * (IFLY_AUDIO_RECORD_MIC_COUNT + 1);
+#if CONFIG_AISP_AEC_USE_LINEIN
+    unsigned int vl_mic_frame_len = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * sizeof(short) * IFLY_AUDIO_RECORD_MIC_COUNT;
+    unsigned int vl_linein_frame_len = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * sizeof(short);
+#else
+    unsigned int vl_frame_len = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * sizeof(short) * (IFLY_AUDIO_RECORD_MIC_COUNT + 1);
+#endif
     volatile int vad_active = 0;
     volatile unsigned int t1 = 0;
     volatile short pd_mic2_test = 0xFFFF;
@@ -1058,7 +1095,6 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
         printf("->vad_cbuf init err\n");
     }
 #endif
-    run_flag = 1;
     while (1) {
         //if(thread_kill_req()){
         if (!asr_open_init) {
@@ -1072,7 +1108,11 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
         // }
 
         //get audio
+#if CONFIG_AISP_AEC_USE_LINEIN
+        if ((cbuf_get_data_size(&gs_mic_cbuf) < vl_mic_frame_len) || (cbuf_get_data_size(&gs_linein_cbuf) < vl_linein_frame_len)) {
+#else
         if (cbuf_get_data_size(&gs_mic_cbuf) < vl_frame_len) {
+#endif
             os_sem_pend(&read_available_sem, 3);
             continue;
         }
@@ -1088,51 +1128,85 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
             //pd_aec_ref_test = is_production_test_aec_enter();
         }
 
-        int vl_read_len = cbuf_read(&gs_mic_cbuf, ifly_audio_record_buf_read, vl_frame_len);
-        if (vl_read_len != vl_frame_len) {
-            printf("ifly_audio_record_read_pcm_frame, error, vl_read_len=%d, vl_mic_channel_frame_len=%d\r\n",
-                   vl_read_len,
-                   vl_frame_len);
+        int vl_read_len;
+#if CONFIG_AISP_AEC_USE_LINEIN
+        vl_read_len = cbuf_read(&gs_mic_cbuf, ifly_audio_record_buf_read, vl_mic_frame_len);
+        int linein_read_len = cbuf_read(&gs_linein_cbuf, ifly_linein_record_buf_read, vl_linein_frame_len);
+        if ((vl_read_len != vl_mic_frame_len) || (linein_read_len != vl_linein_frame_len)) {
+            printf("audio frame read error, mic=%d/%d, linein=%d/%d\r\n", vl_read_len, vl_mic_frame_len,
+                   linein_read_len, vl_linein_frame_len);
             continue;
         }
+#else
+        vl_read_len = cbuf_read(&gs_mic_cbuf, ifly_audio_record_buf_read, vl_frame_len);
+        if (vl_read_len != vl_frame_len) {
+            printf("audio frame read error, len=%d/%d\r\n", vl_read_len, vl_frame_len);
+            continue;
+        }
+#endif
+
 #if MIC2_AEC != 0 //清楚如何改之后请删除下面4行代码
 #error "回采不是MIC0通道，需要改下面的重组数据顺序，否则无法唤醒和打断，注意-MIC数据输出格式：低通道在前，高通道在后。算法数据存储格式：MIC1 MIC2 AEC"
 #error "默认单麦使用MIC1通道，双麦使用MIC1通道和MIC2通道，回采统一使用MIC0通道。清楚如何改之后请删除下面4行代码"
 #endif
         //重组数据
         short *pl_pcm_out = (short *)ifly_asr_buf_feed_to_engine;
-        int vl_idx = 0;
+#if CONFIG_AISP_AEC_USE_LINEIN
         if (pd_test == 0) { //厂测模式
             for (volatile int i = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
 #if IFLY_AUDIO_RECORD_MIC_COUNT == 1
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
-                *pl_pcm_out++ = pd_test & ifly_audio_record_buf_read[vl_idx];//ref
-                vl_idx += 2;
-                //aec_ref_buf[i] = ifly_audio_record_buf_read[vl_idx];//ref
+                *pl_pcm_out++ = pd_mic2_test & ifly_audio_record_buf_read[i];
+                *pl_pcm_out++ = pd_test & ifly_linein_record_buf_read[i];
 #else
                 //2 mics
-                *pl_pcm_out++ = pd_mic2_test & ifly_audio_record_buf_read[vl_idx + 1];//mic1
-                *pl_pcm_out++ = pd_mic1_test & ifly_audio_record_buf_read[vl_idx + 2];//mic2
-                *pl_pcm_out++ = pd_test & ifly_audio_record_buf_read[vl_idx];//ref
-                //aec_ref_buf[i] = ifly_audio_record_buf_read[vl_idx];//ref
-                vl_idx += 3;
+                *pl_pcm_out++ = pd_mic2_test & ifly_audio_record_buf_read[i * 2];//mic1
+                *pl_pcm_out++ = pd_mic1_test & ifly_audio_record_buf_read[i * 2 + 1];//mic2
+                *pl_pcm_out++ = pd_test & ifly_linein_record_buf_read[i];//ref
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
             }
         } else { //正常模式
             for (volatile int i = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
 #if IFLY_AUDIO_RECORD_MIC_COUNT == 1
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx];//ref
-                vl_idx += 2;
+                *pl_pcm_out++ = ifly_audio_record_buf_read[i];
+                *pl_pcm_out++ = ifly_linein_record_buf_read[i];//ref
 #else
                 //2 mics
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];//mic1
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 2];//mic2
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx];//ref
-                vl_idx += 3;
+                *pl_pcm_out++ = ifly_audio_record_buf_read[i * 2];//mic1
+                *pl_pcm_out++ = ifly_audio_record_buf_read[i * 2 + 1];//mic2
+                *pl_pcm_out++ = ifly_linein_record_buf_read[i];//ref
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
             }
         }
+#else
+        int vl_idx = 0;
+        if (pd_test == 0) { //厂测模式
+            for (volatile int i = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
+#if IFLY_AUDIO_RECORD_MIC_COUNT == 1
+                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
+                *pl_pcm_out++ = pd_test & ifly_audio_record_buf_read[vl_idx];
+                vl_idx += 2;
+#else
+                *pl_pcm_out++ = pd_mic2_test & ifly_audio_record_buf_read[vl_idx + 1];
+                *pl_pcm_out++ = pd_mic1_test & ifly_audio_record_buf_read[vl_idx + 2];
+                *pl_pcm_out++ = pd_test & ifly_audio_record_buf_read[vl_idx];
+                vl_idx += 3;
+#endif
+            }
+        } else { //正常模式
+            for (volatile int i = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
+#if IFLY_AUDIO_RECORD_MIC_COUNT == 1
+                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
+                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx];
+                vl_idx += 2;
+#else
+                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
+                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 2];
+                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx];
+                vl_idx += 3;
+#endif
+            }
+        }
+#endif
 
 #ifdef WIFI_PCM_STREAN_SOCKET_ENABLE
         if (!wifi_pcm_stream_socket_valid()) {
@@ -1385,10 +1459,20 @@ void aisp_all_pause(char stop)
         if (status == AUDIO_ENC_START && stop) {
             req.enc.cmd = AUDIO_ENC_PAUSE;
             server_request(server_handle, AUDIO_REQ_ENC, &req);
+#if CONFIG_AISP_AEC_USE_LINEIN
+            if (linein_server_handle) {
+                server_request(linein_server_handle, AUDIO_REQ_ENC, &req);
+            }
+#endif
             printf("-> AUDIO_ENC_PAUSE \n");
         } else if (status == AUDIO_ENC_PAUSE && stop == 0) {
             req.enc.cmd = AUDIO_ENC_START;
             server_request(server_handle, AUDIO_REQ_ENC, &req);
+#if CONFIG_AISP_AEC_USE_LINEIN
+            if (linein_server_handle) {
+                server_request(linein_server_handle, AUDIO_REQ_ENC, &req);
+            }
+#endif
             printf("-> AUDIO_ENC_START \n");
         }
     }
@@ -1841,17 +1925,40 @@ void aisp_suspend(void)
     req.enc.cmd = AUDIO_ENC_CLOSE;
     server_request(server_handle, AUDIO_REQ_ENC, &req);
 
+#if CONFIG_AISP_AEC_USE_LINEIN
+    if (linein_server_handle) {
+        memset(&req, 0, sizeof(req));
+        req.enc.cmd = AUDIO_ENC_STOP;
+        server_request(linein_server_handle, AUDIO_REQ_ENC, &req);
+
+        memset(&req, 0, sizeof(req));
+        req.enc.cmd = AUDIO_ENC_CLOSE;
+        server_request(linein_server_handle, AUDIO_REQ_ENC, &req);
+    }
+#endif
+
     cbuf_clear(&gs_mic_cbuf);
+#if CONFIG_AISP_AEC_USE_LINEIN
+    cbuf_clear(&gs_linein_cbuf);
+#endif
     cbuf_clear(&s_audio_cbuf);
 }
 
 void aisp_resume(void)
 {
     union audio_req req_mic = {0};
+#if CONFIG_AISP_AEC_USE_LINEIN
+    union audio_req req_linein = {0};
+#endif
 
     if (run_flag || !server_handle) {
         return;
     }
+#if CONFIG_AISP_AEC_USE_LINEIN
+    if (!linein_server_handle) {
+        return;
+    }
+#endif
 
     run_flag = 1;
     // os_sem_set(&read_available_sem, 0);
@@ -1859,54 +1966,81 @@ void aisp_resume(void)
 
     req_mic.enc.cmd = AUDIO_ENC_OPEN;
     req_mic.enc.sample_rate = ifly_sample_rate;
+#if CONFIG_AISP_AEC_USE_LINEIN
+    req_mic.enc.format = "pcm";
+#else
     req_mic.enc.format = qyai_mic_audio_enc_format();//"pcm";
-
     if (!strcmp(req_mic.enc.format, "opus")) {
         req_mic.enc.no_header = 1;//1表示没有头部的意思
     }
+#endif
 
 #if IFLY_AUDIO_RECORD_MIC_COUNT == 1
+#if CONFIG_AISP_AEC_USE_LINEIN
+    req_mic.enc.channel = 1;
+    if (aisp_mic_channel_set) {
+        req_mic.enc.channel_bit_map = BIT(aisp_mic_channel_set);
+    } else {
+        req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
+    }
+#else
     req_mic.enc.channel = 2;
     if (aisp_mic_channel_set) {
         req_mic.enc.channel_bit_map = BIT(aisp_mic_channel_set) | BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
     } else {
         req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL) | BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
     }
-//    req_mic.enc.frame_size = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 2 * 2;
+#endif
+#else
+#if CONFIG_AISP_AEC_USE_LINEIN
+    req_mic.enc.channel = 2;
+    req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL) | BIT(CONFIG_AISP_MIC1_ADC_CHANNEL);
 #else
     req_mic.enc.channel = 3;
     req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL) | BIT(CONFIG_AISP_MIC1_ADC_CHANNEL) | BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
-//    req_mic.enc.frame_size = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 2 * 3;
+#endif
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
 
     req_mic.enc.frame_size = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 2 * req_mic.enc.channel;
     req_mic.enc.sample_source = "mic";
     req_mic.enc.volume = CONFIG_AISP_MIC_ADC_GAIN;
-    //
     req_mic.enc.vfs_ops = &ifly_audio_record_vfs_ops;
     req_mic.enc.output_buf_len = req_mic.enc.frame_size * 3;
     req_mic.enc.file = (FILE *)&gs_mic_cbuf;
+    int err = server_request(server_handle, AUDIO_REQ_ENC, &req_mic);
+    if (err) {
+        printf("mic encoder open failed: %d\n", err);
+        run_flag = 0;
+        return;
+    }
 
-
-//    struct aec_s_attr aec_param = {0};
-//    aec_param.EnableBit = AEC_MODE_ADVANCE;
-//    aec_param.agc_en = 1;
-//    /*aec_param.output_way = 1;*/
-//    extern void get_cfg_file_aec_config(struct aec_s_attr * aec_param);
-//    get_cfg_file_aec_config(&aec_param);
-//    req_mic.enc.aec_attr = &aec_param;
-//    req_mic.enc.aec_enable = 1;
-
-    server_request(server_handle, AUDIO_REQ_ENC, &req_mic);
-
-
-//    extern void adc_multiplex_set_gain(const char *source, u8 channel_bit_map, u8 gain);
-//    adc_multiplex_set_gain("mic", BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL), CONFIG_AISP_LINEIN_ADC_GAIN);
+#if CONFIG_AISP_AEC_USE_LINEIN
+    req_linein.enc.cmd = AUDIO_ENC_OPEN;
+    req_linein.enc.channel = 1;
+    req_linein.enc.channel_bit_map = TCFG_LINEIN_CHANNEL_MAP;
+    req_linein.enc.frame_size = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * sizeof(short);
+    req_linein.enc.output_buf_len = req_linein.enc.frame_size * 3;
+    req_linein.enc.volume = CONFIG_AISP_LINEIN_ADC_GAIN;
+    req_linein.enc.sample_rate = ifly_sample_rate;
+    req_linein.enc.format = "pcm";
+    req_linein.enc.sample_source = "linein";
+    req_linein.enc.vfs_ops = &ifly_audio_record_vfs_ops;
+    req_linein.enc.file = (FILE *)&gs_linein_cbuf;
+    err = server_request(linein_server_handle, AUDIO_REQ_ENC, &req_linein);
+    if (err) {
+        union audio_req close_req = {0};
+        printf("linein encoder open failed: %d\n", err);
+        close_req.enc.cmd = AUDIO_ENC_CLOSE;
+        server_request(server_handle, AUDIO_REQ_ENC, &close_req);
+        run_flag = 0;
+        return;
+    }
+#endif
 
     union audio_req req_vol = {0};
-    //麦克风和参考信号增益分开设置
+    //麦克风增益分开设置
     if (aisp_mic_channel_set) {
-        req_mic.enc.channel_bit_map = BIT(aisp_mic_channel_set);
+        req_vol.enc.channel_bit_map = BIT(aisp_mic_channel_set);
     } else {
         req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
     }
@@ -1922,10 +2056,15 @@ void aisp_resume(void)
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
 
     memset(&req_vol, 0, sizeof(req_vol));
-    req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
     req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
     req_vol.enc.volume = CONFIG_AISP_AEC_ADC_GAIN;
+#if CONFIG_AISP_AEC_USE_LINEIN
+    req_vol.enc.channel_bit_map = TCFG_LINEIN_CHANNEL_MAP;
+    server_request(linein_server_handle, AUDIO_REQ_ENC, &req_vol);
+#else
+    req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
     server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
+#endif
 
     //SFR(JL_ANA->DAA_CON0, 2,  2, 0x3);//设置DACVDD-3V
 }
@@ -1969,10 +2108,19 @@ int aisp_mic_gain_resum(void)
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
 #endif
 
+        memset(&req_vol, 0, sizeof(req_vol));
+#if CONFIG_AISP_AEC_USE_LINEIN
+        req_vol.enc.channel_bit_map = TCFG_LINEIN_CHANNEL_MAP;
+#else
         req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
+#endif
         req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
         req_vol.enc.volume = CONFIG_AISP_AEC_ADC_GAIN;//恢复增益到默认
+#if CONFIG_AISP_AEC_USE_LINEIN
+        server_request(linein_server_handle, AUDIO_REQ_ENC, &req_vol);
+#else
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
+#endif
     }
     return 0;
 }
@@ -2007,10 +2155,19 @@ int aisp_mic_gain_set(unsigned char volume)
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
 
+        memset(&req_vol, 0, sizeof(req_vol));
+#if CONFIG_AISP_AEC_USE_LINEIN
+        req_vol.enc.channel_bit_map = TCFG_LINEIN_CHANNEL_MAP;
+#else
         req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
+#endif
         req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
         req_vol.enc.volume = aisp_aec_gain;
+#if CONFIG_AISP_AEC_USE_LINEIN
+        server_request(linein_server_handle, AUDIO_REQ_ENC, &req_vol);
+#else
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
+#endif
     }
     return 0;
 }
@@ -2041,10 +2198,19 @@ int aisp_all_mic_gain_set(int volume, int aec_gian, int mic0_gian, int mic1_gian
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
 
+        memset(&req_vol, 0, sizeof(req_vol));
+#if CONFIG_AISP_AEC_USE_LINEIN
+        req_vol.enc.channel_bit_map = TCFG_LINEIN_CHANNEL_MAP;
+#else
         req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
+#endif
         req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
         req_vol.enc.volume = aec_gian;
+#if CONFIG_AISP_AEC_USE_LINEIN
+        server_request(linein_server_handle, AUDIO_REQ_ENC, &req_vol);
+#else
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
+#endif
     }
     return 0;
 }
@@ -2060,6 +2226,12 @@ void aisp_close(void)
     aisp_suspend();
     server_close(server_handle);
     server_handle = NULL;
+#if CONFIG_AISP_AEC_USE_LINEIN
+    if (linein_server_handle) {
+        server_close(linein_server_handle);
+        linein_server_handle = NULL;
+    }
+#endif
 
 //    asr_open_init = 0;
 //    os_sem_post(&read_available_sem);

@@ -48,6 +48,7 @@ struct local_music_hdl {
     char puase;
     char force_set;
     char event_out;
+    char is_scanf_file;
     u8 usb_id;
     u8 reverb_enable;
     u8 play_loop;
@@ -67,8 +68,9 @@ struct local_music_hdl {
     void *spectrum_fft_hdl;
     int last_dir_num;
     int last_file_num;
-    unsigned char dir_path[MAX_FILENAME_LEN];
-    unsigned char fname[MAX_FILENAME_LEN];
+    unsigned char dir_path[MAX_FILENAME_LEN];//用于文件扫描
+    unsigned char shown_dir_path[MAX_FILENAME_LEN];//用于UTF8中文显示
+    unsigned char fname[MAX_FILENAME_LEN];//用于UTF8中文显示
 
 #if UDISK_MUSIC_FILE_PLAY_EN
     const char *local_dir_path;
@@ -184,6 +186,12 @@ int usbdisk_music_play_next(void)// 下一曲播放
 #else
     return local_music_dec_switch_file(FSEL_NEXT_FILE);
 #endif
+}
+
+int usbdisk_music_set_volume(int volume)// 直接设置音量值
+{
+    // 调用已有的usbdisk_music_set_dec_volume函数来设置音量
+    return usbdisk_music_set_dec_volume(volume);
 }
 
 static int local_music_get_dec_status(void)//获取解码器状态
@@ -350,14 +358,13 @@ static int local_music_dec_file(FILE *file)
     int err;
     union audio_req req = {0};
 
-    log_i("local_music_dec_local_file\n");
+    printf("local_music_dec_local_file\n");
 
     if (!file) {
         return -1;
     }
-
-    local_music_dec_stop();
     os_mutex_pend(&__this->mutex, 6000);
+    local_music_dec_stop();
     sys_volume_read(&__this->volume);
 
     req.dec.cmd             = AUDIO_DEC_OPEN;
@@ -440,7 +447,7 @@ static int local_music_dec_file(FILE *file)
 #endif
     __this->file = file;
     os_mutex_post(&__this->mutex);
-    log_i("play_music_file: suss\n");
+    printf("play_music_file: suss\n");
 
     return 0;
 }
@@ -452,6 +459,7 @@ static int local_music_dec_switch_file(int fsel_mode)
     FILE *file = NULL;
     int len = 0;
     char name[MAX_FILENAME_LEN] = {0};
+    char is_scan = __this->is_scanf_file;
 
     log_i("local_music_dec_switch_file\n");
 #ifndef CONFIG_UI_ENABLE
@@ -460,6 +468,7 @@ static int local_music_dec_switch_file(int fsel_mode)
     if (!__this->fscan || !__this->fscan->file_number) {
         return -1;
     }
+    __this->is_scanf_file = true;
 
 __retry:
     do {
@@ -510,6 +519,7 @@ __retry:
     } while (i++ < __this->fscan->file_number);
 
     if (!file) {
+        __this->is_scanf_file = is_scan ? true : false;
         return -1;
     }
 
@@ -523,7 +533,7 @@ __retry:
             goto __retry;
         }
     }
-
+    __this->is_scanf_file = is_scan ? true : false;
     return 0;
 }
 
@@ -763,11 +773,18 @@ _fselet:
         if (file) {
             memset(name, 0, sizeof(name));
             int fname_len = fget_name(file, (u8 *)name, sizeof(name) - 1);
+            memset(__this->dir_path, 0, sizeof(__this->dir_path));
             memcpy(__this->dir_path, name, fname_len);
+            __this->dir_path_len = fname_len;
+            //put_buf(name, fname_len);
 #ifdef CONFIG_JLFAT_ENABLE
             if (fname_len > 2 && name[0] == '\\' && name[1] == 'U') {
-                fname_len = unicode2utf8(&name[2], strlen(&name[2]), __this->dir_path, sizeof(__this->dir_path));
+                memset(__this->shown_dir_path, 0, sizeof(__this->shown_dir_path));
+                unicode2utf8(&name[2], strlen(&name[2]), __this->shown_dir_path, sizeof(__this->shown_dir_path));
+
+                fname_len = unicode_2_utf8((u8 *)name, sizeof(name), __this->dir_path, sizeof(__this->dir_path));
                 __this->dir_path[fname_len] = 0;
+
                 //fname_len = unicode_2_utf8((u8 *)name, sizeof(name), (u8 *)&name[2], fname_len - 2);
                 //name[fname_len] = 0;
             }
@@ -777,7 +794,7 @@ _fselet:
             fclose(file);
             if (__this->dir_fnum_start == i) {
                 __this->last_dir_num = __this->dir_fnum_start;
-                printf("-> scan dir_%d name : %s\n", i, __this->dir_path);
+                printf("-> scan dir_%d name : %s\n", i, __this->shown_dir_path);
                 goto exit;
             }
         }
@@ -817,7 +834,7 @@ static int local_music_scan_file(char *path, int next_file)
     __this->fscan = fscan(__this->local_path, "-r -tMP3WMAWAVM4AAMRAPEFLAAACSPXOPUDTSADPOGG -sn", 2);
 #endif
     if (!__this->fscan) {
-        printf("file fscan err\n");
+        printf("file fscan err : %s\n", __this->local_path);
         return -1;
     }
     __this->fnum = __this->fscan->file_number;
@@ -944,7 +961,11 @@ static int local_music_dir_file_scan_play(int dir_fnum_start, int next_dir, int 
         __this->last_rand = 0;
         __this->dir_fnum_start = 0;
         return -1;
+    } else if (__this->is_scanf_file) {
+        printf("warning is_scanf_file\n");
+        return -1;
     }
+    __this->is_scanf_file = true;
     local_music_dec_stop();
     if (__this->dir_list) {
         fscan_release(__this->dir_list);
@@ -956,6 +977,7 @@ static int local_music_dir_file_scan_play(int dir_fnum_start, int next_dir, int 
     }
     int ret = local_music_scan_dir(CONFIG_UDISK_ROOT_PATH, next_dir);
     if (ret == -1) {
+        __this->is_scanf_file = false;
         printf("local_music_scan_dir err\n");
         return -1;
     }
@@ -969,8 +991,10 @@ static int local_music_dir_file_scan_play(int dir_fnum_start, int next_dir, int 
         memcpy(buf + len_offset, __this->dir_path, __this->dir_path_len);
         len_offset += __this->dir_path_len;
     }
-    put_buf(buf, len_offset);
-    return local_music_scan_file(buf, next_file);
+    //put_buf(buf, len_offset);
+    ret = local_music_scan_file(buf, next_file);
+    __this->is_scanf_file = false;
+    return ret;
 }
 static int local_music_play_dir_add(int next_dir)
 {
@@ -1089,16 +1113,16 @@ static void dec_server_event_handler(void *priv, int argc, int *argv)
 {
     switch (argv[0]) {
     case AUDIO_SERVER_EVENT_ERR:
-        log_i("local_music: AUDIO_SERVER_EVENT_ERR\n");
+        printf("local_music: AUDIO_SERVER_EVENT_ERR\n");
     case AUDIO_SERVER_EVENT_END:
-        log_i("local_music: AUDIO_SERVER_EVENT_END\n");
+        printf("local_music: AUDIO_SERVER_EVENT_END\n");
         local_music_dec_stop();
         if (__this->event_out) {
             break;
         }
         if (__this->play_loop && __this->play_time >= (__this->total_time - 2) && __this->file) {
             sys_timeout_add(__this->file, local_music_dec_file, 100);
-        } else {
+        } else if (!__this->is_scanf_file) {
 #if UDISK_MUSIC_FILE_PLAY_EN
             local_music_play_file_add(1);
 #else
@@ -1107,7 +1131,7 @@ static void dec_server_event_handler(void *priv, int argc, int *argv)
         }
         break;
     case AUDIO_SERVER_EVENT_CURR_TIME:
-        log_d("play_time: %d\n", argv[1]);
+        printf("play_time: %d\n", argv[1]);
         __this->play_time = argv[1];
 #if (defined CONFIG_UI_ENABLE && defined CONFIG_LVGL_UI_ENABLE)
         // 更新当前播放时间到UI界面
@@ -1232,6 +1256,9 @@ static int local_music_key_click(struct key_event *key)
 //        }
 //#endif
 #if (defined SXY_LL_YHH_BOARD)
+        if (system_keyworld_start()) {
+            aisp_clear(1);
+        }
         local_music_dec_play_pause();
 #else
         local_music_mode_exit();
@@ -1470,7 +1497,9 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
         switch (device_eve->event) {
         case DEVICE_EVENT_IN:
 #if (defined CONFIG_SD_MUSIC_MODE_ENABLE && defined CONFIG_SD_AUTO_ENABLE)
-            audio_app_mode_switch("sd_music");
+            if (system_reset_reason_get() != SYS_RST_ALM_WKUP) {
+                audio_app_mode_switch("sd_music");
+            }
             ret = true;
 #endif
             break;
@@ -1517,7 +1546,9 @@ static int local_music_device_event_handler(struct sys_event *sys_eve)
         case DEVICE_EVENT_IN:
             puts("->AUX IN\n");
 #if (defined CONFIG_AUX_AUTO_ENABLE)
-            audio_app_mode_switch_set("aux_music", 1);
+            if (system_reset_reason_get() != SYS_RST_ALM_WKUP) {
+                audio_app_mode_switch_set("aux_music", 1);
+            }
 #endif
             break;
         case DEVICE_EVENT_OUT:

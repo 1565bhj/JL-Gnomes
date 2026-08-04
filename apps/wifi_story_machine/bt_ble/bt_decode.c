@@ -6,6 +6,7 @@
 #include "asm/sbc.h"
 #include "asm/eq.h"
 #include "asm/clock.h"
+#include "asm/ladc.h"
 #include "asm/power_interface.h"
 #include "btstack/a2dp_media_codec.h"
 

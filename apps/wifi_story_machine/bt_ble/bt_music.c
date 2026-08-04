@@ -2536,7 +2536,9 @@ static int main_dev_event_handler(struct sys_event *sys_eve)
             //等待SD卡挂载完成才开始搜索文件
             //printf("->device_eve->arg : %s\n",device_eve->arg);
 #if (defined CONFIG_SD_MUSIC_MODE_ENABLE && defined CONFIG_SD_AUTO_ENABLE)
-            audio_app_mode_switch("sd_music");
+            if (system_reset_reason_get() != SYS_RST_ALM_WKUP) {
+                audio_app_mode_switch("sd_music");
+            }
 #endif
             break;
         case DEVICE_EVENT_OUT:
@@ -2549,7 +2551,9 @@ static int main_dev_event_handler(struct sys_event *sys_eve)
         case DEVICE_EVENT_IN:
             //printf("->device_eve->arg : %s\n",device_eve->arg);
 #if (defined CONFIG_USB_DISK_MUSIC_MODE_ENABLE && defined CONFIG_USB_DISK_AUTO_ENABLE)
-            audio_app_mode_switch("usbdisk_music");
+            if (system_reset_reason_get() != SYS_RST_ALM_WKUP) {
+                audio_app_mode_switch("usbdisk_music");
+            }
 #endif
             break;
         case DEVICE_EVENT_OUT:
@@ -2564,7 +2568,9 @@ static int main_dev_event_handler(struct sys_event *sys_eve)
         case DEVICE_EVENT_IN:
             //printf("->device_eve->arg : %s\n",device_eve->arg);
 #if (defined CONFIG_AUX_AUTO_ENABLE)
-            audio_app_mode_switch("aux_music");
+            if (system_reset_reason_get() != SYS_RST_ALM_WKUP) {
+                audio_app_mode_switch("aux_music");
+            }
 #endif
             break;
         case DEVICE_EVENT_OUT:

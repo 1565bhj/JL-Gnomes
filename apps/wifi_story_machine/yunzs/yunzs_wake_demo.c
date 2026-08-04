@@ -2,6 +2,7 @@
 #include "app_config.h"
 #include "app_core.h"
 #include <time.h>
+#include "asm/ladc.h"
 #include "system/timer.h"
 #include "event/key_event.h"
 #include "uni_ssp.h"

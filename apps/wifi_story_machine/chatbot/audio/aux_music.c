@@ -977,7 +977,9 @@ static int aux_device_event_handler(struct sys_event *sys_eve)
         switch (device_eve->event) {
         case DEVICE_EVENT_IN:
 #if (defined CONFIG_SD_MUSIC_MODE_ENABLE && defined CONFIG_SD_AUTO_ENABLE)
-            audio_app_mode_switch_set("sd_music", 1);
+            if (system_reset_reason_get() != SYS_RST_ALM_WKUP) {
+                audio_app_mode_switch_set("sd_music", 1);
+            }
 #endif
             break;
         case DEVICE_EVENT_OUT:
@@ -994,7 +996,9 @@ static int aux_device_event_handler(struct sys_event *sys_eve)
         case DEVICE_EVENT_IN:
             //printf("->device_eve->arg : %s\n",device_eve->arg);
 #if (defined CONFIG_USB_DISK_MUSIC_MODE_ENABLE && defined CONFIG_USB_DISK_AUTO_ENABLE)
-            audio_app_mode_switch_set("usbdisk_music", 1);
+            if (system_reset_reason_get() != SYS_RST_ALM_WKUP) {
+                audio_app_mode_switch_set("usbdisk_music", 1);
+            }
 #endif
             break;
         case DEVICE_EVENT_OUT:

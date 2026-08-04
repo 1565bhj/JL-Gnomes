@@ -234,27 +234,45 @@
 //*********************************************************************************//
 //                            AUDIO_ADC应用的通道配置                              //
 //*********************************************************************************//
+//PA回采方式：使用PA0/AUX0 PH4/AUX3 linein单端回采
+#define CONFIG_AISP_AEC_USE_LINEIN          0       //1:使用linein回采，0不使用
+
+#define AEC_MIC_P_N         (CONFIG_AISP_AEC_USE_LINEIN ? 0 : LADC_CH_MIC0_P_N)
+
 #define CONFIG_AUDIO_ENC_SAMPLE_SOURCE      AUDIO_ENC_SAMPLE_SOURCE_MIC
-#ifdef CONFIG_NO_SDRAM_ENABLE
-#define TCFG_MIC_CHANNEL_MAP                LADC_CH_MIC1_P_N | LADC_CH_MIC2_P_N | LADC_CH_MIC0_P_N
+#define TCFG_MIC_CHANNEL_MAP                (LADC_CH_MIC1_P_N | LADC_CH_MIC2_P_N | AEC_MIC_P_N)
 
-#define MIC0                               1   //mic0通道
-#define MIC1                               1   //mic1通道
-#define MIC2_AEC                           0   //回采AEC回声消除通道
-
-#define TCFG_MIC_CHANNEL_NUM                1
-#define TCFG_LINEIN_CHANNEL_MAP             -1//LADC_CH_AUX0 | LADC_CH_AUX2
-#define TCFG_LINEIN_CHANNEL_NUM             0
-
+/**********************************
+//   LADC_CH_AUX0  AUX通道0 PA0
+//   LADC_CH_AUX1  AUX通道1 PH7
+//   LADC_CH_AUX2  AUX通道2 PA5
+//   LADC_CH_AUX3  AUX通道3 PH4
+**********************************/
+#ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
+#define TCFG_LINEIN_CHANNEL_MAP             LADC_CH_AUX0// | LADC_CH_AUX3
+#define TCFG_LINEIN_CHANNEL_NUM             1
 #else
-#define TCFG_MIC_CHANNEL_MAP                LADC_CH_MIC1_P_N | LADC_CH_MIC2_P_N | LADC_CH_MIC0_P_N
-#define MIC0                               1   //mic0通道
-#define MIC1                               2   //mic1通道
-#define MIC2_AEC                           0   //回采AEC回声消除通道
-
-#define TCFG_MIC_CHANNEL_NUM                2
-#define TCFG_LINEIN_CHANNEL_MAP             -1//LADC_CH_AUX0 | LADC_CH_AUX2
+#if CONFIG_AISP_AEC_USE_LINEIN
+#define TCFG_LINEIN_CHANNEL_MAP             LADC_CH_AUX3//LADC_CH_AUX0
+#define TCFG_LINEIN_CHANNEL_NUM             1
+#else
+#define TCFG_LINEIN_CHANNEL_MAP             -1//LADC_CH_AUX0 | LADC_CH_AUX3
 #define TCFG_LINEIN_CHANNEL_NUM             0
+#endif
+#endif
+
+#ifdef CONFIG_NO_SDRAM_ENABLE
+#define MIC0                                1   //mic0通道：对应LADC_CH_MIC1_P_N
+#define MIC1                                2   //mic1通道：对应LADC_CH_MIC2_P_N
+#define MIC2_AEC                            0   //回采AEC回声消除通道：对应LADC_CH_MIC0_P_N
+
+#define TCFG_MIC_CHANNEL_NUM                (2 | (AEC_MIC_P_N ? 1 : 0))   //MIC通道数量
+#else
+#define MIC0                                1   //mic0通道：对应LADC_CH_MIC1_P_N
+#define MIC1                                1   //mic1通道：对应LADC_CH_MIC2_P_N
+#define MIC2_AEC                            0   //回采AEC回声消除通道：对应LADC_CH_MIC0_P_N
+
+#define TCFG_MIC_CHANNEL_NUM                (2)   //MIC通道数量
 #endif
 
 #define CONFIG_ASR_CLOUD_ADC_CHANNEL        MIC0        //云端识别mic通道
@@ -265,7 +283,7 @@
 #define CONFIG_PHONE_CALL_ADC_CHANNEL       MIC0        //通话mic通道
 #define CONFIG_UAC_MIC_ADC_CHANNEL          MIC0        //UAC mic通道
 
-#define AUDIO_RECORD_MIC_COUNT         1      //1单麦,2双麦
+#define AUDIO_RECORD_MIC_COUNT              1 //1单麦,2双麦
 
 #ifndef CONFIG_AISP_MIC_ADC_GAIN
 #define CONFIG_AISP_MIC_ADC_GAIN            90      //本地唤醒mic增益
@@ -275,8 +293,8 @@
 #define CONFIG_AISP_MIC2_AEC_ADC_CHANNEL    MIC2_AEC        //本地使用硬件回采的回声消除mic通道
 
 #define CONFIG_AISP_LINEIN_ADC_GAIN         CONFIG_AISP_AEC_ADC_GAIN
-#define CONFIG_AISP_LINEIN_ADC_CHANNEL      MIC2_AEC        //本地唤醒LINEIN回采DAC通道
-#define CONFIG_AUDIO_LINEIN_CHANNEL         0       //LIENIN通道数，使用LINEIN回采DAC通道需要使能通道数>0
+#define CONFIG_AISP_LINEIN_ADC_CHANNEL      (AEC_MIC_P_N ? 3 : 0)           //本地唤醒LINEIN回采DAC通道，值为:0/1/2/3，不能和MIC冲突使用，和TCFG_LINEIN_CHANNEL_MAP有关
+#define CONFIG_AUDIO_LINEIN_CHANNEL         TCFG_LINEIN_CHANNEL_NUM         //LIENIN通道数，使用LINEIN回采DAC通道需要使能通道数>0
 #define CONFIG_AUDIO_LINEIN_CHANNEL_MAP     TCFG_LINEIN_CHANNEL_MAP
 
 #ifdef CONFIG_USB_DISK_MUSIC_MODE_ENABLE
