@@ -1504,6 +1504,7 @@ void aisp_clear(char stop_net_music)
     sys_vad_active = 0;
     sys_vad_clear(0);
     sys_vad_lock(1);
+    music_buf_play_accept(0);
     ifly_send_pcm = SEND_PCM_STOP;
     music_buf_play_set_stop();
     http_tts_play_stop_force();
@@ -1517,6 +1518,7 @@ void aisp_clear(char stop_net_music)
     websockets_dialogue_timeout_del();
     music_buf_play_stop_waite();//等待关闭完成再播放提示音
     net_music_num_clear();
+    music_buf_play_accept(1);
     sys_vad_lock(0);
     sys_vad_clear(1);
 }

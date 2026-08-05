@@ -25,7 +25,12 @@
 #else
 #define ALL_FRAME_MAX           (150*1024)
 #endif
+
+#ifdef MBEDTLS_SSL_MEM_SMALL
+#define HTTPS_MBTLE_FRAME_MAX   (MBEDTLS_SSL_MAX_FRAG_LEN_4096)
+#else
 #define HTTPS_MBTLE_FRAME_MAX   (16*1024)
+#endif
 
 //#define HTTP_POST_BODY_URLENCODE //POST的body采用x-www-form-urlencoded类型，格式：id=124&name=%23%ED%EA
 
