@@ -10,12 +10,12 @@
 #ifdef CONFG_NO_KW_ENABLE
 
 char aisp_mic_channel_set = 0;
-extern int keyworld_start;
+extern int keyword_start;
 extern const int speech_energy_min;
 
 const int CONFIG_KWS_RAM_USE_ENABLE = 1;
 extern int websockets_wait_recv_end_msg(void);
-extern char keyworld_wifi_enter_congfig;
+extern char keyword_wifi_enter_congfig;
 extern void aisp_resume(void);
 extern int websockets_send_500ms_pcm_buf_push(char *buf, int len, int clear);
 extern int websockets_send_pcm_buf_init(void);
@@ -504,7 +504,7 @@ void aisp_clear(char stop_net_music)
 }
 void aisp_timeout_exit(void)
 {
-    keyworld_start = 0;
+    keyword_start = 0;
     __this->vad_enbable = 0;
     __this->key_strat = 0;
     printf("->aisp_timeout_exit\n");
@@ -574,7 +574,7 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
             __this->vad_enbable = 0;
         }
         __this->key_strat = 1;
-        keyworld_start = 1;
+        keyword_start = 1;
         if (vad_end_enable) {//使能开启VAD结束，则使用vad自动检测对话
             websocket_client_thread_create_new(1, 0);
         } else {//不使能vad自动结束，则开启按键长按对话
@@ -588,7 +588,7 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         }
         __this->vad_enbable = 0;
         __this->key_strat = 0;
-        keyworld_start = 0;
+        keyword_start = 0;
         puts("--->KAY VAD STOP\n");
     }
 }
@@ -604,13 +604,13 @@ void aisp_wake(char index)//0:小飞小飞，8：配网模式
 {
     if (index == 0) {
         auto_sleep_check_clear();
-        if (sys_connect_net_success() && !keyworld_wifi_enter_congfig) {
+        if (sys_connect_net_success() && !keyword_wifi_enter_congfig) {
             if (ifly_send_pcm != SEND_PCM_PAUSE) {
                 key_vad_start_vad_end_auto(1, 1);
             }
-        } else if (keyworld_wifi_enter_congfig) {
+        } else if (keyword_wifi_enter_congfig) {
             if (!aisp_wake_callback(-1)) {
-                if (keyworld_wifi_enter_congfig == 3) { //正在连接WiFi
+                if (keyword_wifi_enter_congfig == 3) { //正在连接WiFi
                     music_play_res_file("WifiConting.mp3");
                 } else { //进入配网
                     music_play_res_file("WifiNote.mp3");
@@ -623,7 +623,7 @@ void aisp_wake(char index)//0:小飞小飞，8：配网模式
         }
     } else if (index == 8) {
         auto_sleep_check_clear();
-        keyworld_wifi_enter_congfig = 1;
+        keyword_wifi_enter_congfig = 1;
         __this->vad_enbable = 0;
         ifly_send_pcm = SEND_PCM_STOP;
 

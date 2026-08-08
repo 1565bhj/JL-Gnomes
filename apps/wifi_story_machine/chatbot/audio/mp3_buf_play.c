@@ -177,10 +177,10 @@ int mp3_buf_play_stop(void *priv)
     req.dec.cmd = AUDIO_DEC_STOP;
     server_request(dec_server, AUDIO_REQ_DEC, &req);
 
-    int argv[2];
-    argv[0] = AUDIO_SERVER_EVENT_END;
-    argv[1] = 0;
-    server_event_handler_del(dec_server, 2, argv);
+//    int argv[2];
+//    argv[0] = AUDIO_SERVER_EVENT_END;
+//    argv[1] = 0;
+//    server_event_handler_del(dec_server, 2, argv);
 
     if (vt_file->buf) {
         vt_file->buf = NULL;

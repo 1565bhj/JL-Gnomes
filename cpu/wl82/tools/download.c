@@ -148,7 +148,7 @@ cd /d %~dp0
 
 echo %*
 
-
+if not exist audlogo\ mkdir audlogo
 
 
 #ifdef CONFIG_KWS_ENGLISH

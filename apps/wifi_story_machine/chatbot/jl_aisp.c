@@ -128,7 +128,7 @@ static struct {
     cbuffer_t mic_cbuf;
 } aisp_server;
 
-extern int keyworld_start;
+extern int keyword_start;
 int pcm_save_start = 0;
 
 #define __this (&aisp_server)
@@ -244,7 +244,7 @@ void aisp_all_pause(char stop)
         __this->send_pcm = SEND_PCM_INI;
         sys_vad_clear(1);
     }
-    keyworld_start = 0;
+    keyword_start = 0;
     music_buf_play_set_stop();
     websockets_free_lbuf_buf();
     music_buf_play_free_lbuf();
@@ -274,7 +274,7 @@ static void aisp_task(void *priv)
     int ret;
     void *kws;
 
-    keyworld_start = 0;
+    keyword_start = 0;
 
 #if (ASR_USED_AVD == ASR_WEBRTC_AVD)
     void *vad_cbuf = sys_vad_init(__this->sample_rate, AISP_BUF_SIZE * (1 + AISP_DUAL_MIC_ALGORITHM));
@@ -421,7 +421,7 @@ static void aisp_task(void *priv)
                         music_play_hello();
                         music_buf_play_stop_waite();//等待关闭完成再播放提示音
                         websocket_client_thread_create(1);
-                        keyworld_start = ASR_WAKEUP_EVENT;
+                        keyword_start = ASR_WAKEUP_EVENT;
                     } else {
                         sys_timeout_add_to_task("sys_timer", NULL, music_play_hello, 10);//music_play_hello();
                     }
@@ -540,7 +540,7 @@ int pcm_send_set_status(char start)
 {
     if (start) {
         if (__this->send_pcm != SEND_PCM_START && __this->send_pcm != SEND_PCM_DOING) {
-            keyworld_start = 1;
+            keyword_start = 1;
             __this->send_pcm = SEND_PCM_START;
         }
     } else if (__this->send_pcm == SEND_PCM_DOING || __this->send_pcm == SEND_PCM_START) {
@@ -556,9 +556,9 @@ static void enc_server_event_handler(void *priv, int argc, int *argv)
         break;
     case AUDIO_SERVER_EVENT_SPEAK_START:
 #if ASR_CONTINIU_EN
-        if (keyworld_start) {
+        if (keyword_start) {
 #else   //播放完当前对话才能继续
-        if (keyworld_start && (__this->send_pcm == SEND_PCM_STOP || __this->send_pcm == SEND_PCM_INI)
+        if (keyword_start && (__this->send_pcm == SEND_PCM_STOP || __this->send_pcm == SEND_PCM_INI)
             && music_buf_play_stop_status() && music_play_stop_status()) {
 #endif // ASR_CONTINIU_EN
             websockets_client_next_dialogue_init();
@@ -585,9 +585,9 @@ void sys_vad_event_handler(void *priv)
 {
     if (priv) {
 #if ASR_CONTINIU_EN
-        if (keyworld_start) {
+        if (keyword_start) {
 #else   //播放完当前对话才能继续
-        if (keyworld_start && (__this->send_pcm == SEND_PCM_STOP || __this->send_pcm == SEND_PCM_INI)
+        if (keyword_start && (__this->send_pcm == SEND_PCM_STOP || __this->send_pcm == SEND_PCM_INI)
             && music_buf_play_stop_status() && music_play_stop_status()) {
 #endif // ASR_CONTINIU_EN
             __this->send_pcm = SEND_PCM_START;

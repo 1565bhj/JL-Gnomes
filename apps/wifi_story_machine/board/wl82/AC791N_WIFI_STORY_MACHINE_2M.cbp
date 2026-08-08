@@ -268,7 +268,7 @@
 					<Add option="../../../../cpu/wl82/liba/http_cli.a" />
 					<Add option="../../../../cpu/wl82/liba/https_cli.a" />
 					<Add option="../../../../cpu/wl82/liba/http_server.a" />
-					<Add option="../../../../cpu/wl82/liba/http_chunck_stream_sfc.a" />
+					<Add option="../../../../cpu/wl82/liba/http_chunck_stream.a" />
 					<Add option="../../../../cpu/wl82/liba/json.a" />
 					<Add option="../../../../cpu/wl82/liba/libduer-device.a" />
 					<Add option="../../../../cpu/wl82/liba/network_download.a" />
@@ -285,7 +285,7 @@
 					<Add option="../../../../cpu/wl82/liba/libwt.a" />
 					<Add option="../../../../cpu/wl82/liba/libvtbk.a" />
 					<Add option="../../../../cpu/wl82/liba/libtencent.a" />
-					<Add option="../../../../cpu/wl82/liba/websocket_sfc.a" />
+					<Add option="../../../../cpu/wl82/liba/websocket.a" />
 					<Add option="../../../../cpu/wl82/liba/iperf.a" />
 					<Add option="../../../../cpu/wl82/liba/tmallgenie.a" />
 					<Add option="../../../../cpu/wl82/liba/tmallgenie_todo.a" />
@@ -305,6 +305,7 @@
 					<Add option="../../../../cpu/wl82/liba/libunisound.a" />
 					<Add option="../../../../cpu/wl82/liba/libmodel.a" />
 					<Add option="../../../../cpu/wl82/liba/libwsaec.a" />
+					<Add option="../../../../cpu/wl82/liba/qyai_mqtt.a" />
 					<Add option="--end-group" />
 					<Add option="../../../../cpu/wl82/liba/video_dec_server.a" />
 					<Add option="../../../../cpu/wl82/liba/ui.a" />
@@ -314,7 +315,7 @@
 					<Add option="../../../../cpu/wl82/liba/libVolcEngineRTCLite.a" />
 					<Add option="../../../../cpu/wl82/liba/libcurl.a" />
 					<Add option="../../../../cpu/wl82/liba/libwebsockets.a" />
-					<Add option="../../../../cpu/wl82/liba/sxy_qyai_sfc.a" />
+					<Add option="../../../../cpu/wl82/liba/sxy_qyai_2m.a" />
 					<Add option="../../../../cpu/wl82/liba/libe2e.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_twetalk.a" />
 					<Add option="-T../../../../cpu/wl82/sdk.ld" />
@@ -1484,6 +1485,12 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/lte/lte_wifi_config.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../chatbot/mqtt/mqtt_client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../chatbot/mqtt/mqtt_dev_info.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/product_test_module.c">

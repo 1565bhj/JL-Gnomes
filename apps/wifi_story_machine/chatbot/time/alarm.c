@@ -83,7 +83,7 @@ static OS_MUTEX mutex;
 static int alarm_msg(int message, char notice);
 extern int ntp_client_get_time_all(struct tm *s_tm, int recv_to);
 static void alarm_rings(void *priv);
-static int alarm_save_url(char alarm_index, char *url);
+int alarm_save_url(char alarm_index, char *url);
 void ntptime_update(void);
 void ntptime_update_rtc(void);
 int64_t http_ntp_utc_time_get(void);
@@ -1121,7 +1121,7 @@ static int alarm_save_data(char *buf, int len)
     return len;
 }
 
-static int alarm_save_url(char alarm_index, char *url)
+int alarm_save_url(char alarm_index, char *url)
 {
     if (!url || alarm_index < 0 || alarm_index >= ALARM_NUM) {
         return -1;
@@ -1457,6 +1457,21 @@ void alarm_time_read(void *buf, int size)
         os_mutex_post(&mutex);
     }
 }
+
+int alarm_enabled_count_get(void)
+{
+    int cnt = 0;
+    os_mutex_pend(&mutex, 1000);
+    syscfg_read(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab));
+    for (int i = 0; i < ALARM_NUM; i++) {
+        if (alarm_tab[i].enable) {
+            cnt++;
+        }
+    }
+    os_mutex_post(&mutex);
+    return cnt;
+}
+
 int alarm_time_write(struct sys_time *time, char cyc)//time：时间，cyc：每天闹钟使能
 {
     struct alarm_info alarm_tmp = {0};

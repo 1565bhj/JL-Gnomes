@@ -304,6 +304,7 @@
 					<Add option="../../../../cpu/wl82/liba/libunisound.a" />
 					<Add option="../../../../cpu/wl82/liba/libmodel.a" />
 					<Add option="../../../../cpu/wl82/liba/libwsaec.a" />
+					<Add option="../../../../cpu/wl82/liba/qyai_mqtt.a" />
 					<Add option="--end-group" />
 					<Add option="../../../../cpu/wl82/liba/video_dec_server.a" />
 					<Add option="../../../../cpu/wl82/liba/ui.a" />

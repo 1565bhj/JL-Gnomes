@@ -246,6 +246,109 @@ const char *bt_get_pin_code(void)
     return pincode;
 }
 
+//会话ID生成，格式：5c00d488-ee60-46e4-8932-b03a3a7c49e2
+extern int get_sys_time(struct sys_time *t);
+void qyai_trace_id_get(char *trace_id_buf)
+{
+    int i;
+    u8 flash_uid[16] = {0};
+    u8 random_buf[16] = {0};
+    u8 random8[8] = {0};
+    char random_str[17] = {0};
+    char time_str[17] = {0};
+    char trace_id_raw[33] = {0};
+#if 0
+    memcpy(flash_uid, get_norflash_uuid(), sizeof(flash_uid));
+#else
+    norflash_open(NULL, NULL, NULL);
+    //读flash id
+    //notes: 不同厂家的flash工艺不一样，如果读到全是0xFF，就是硬件有bug，要换另一款flash
+    norflash_ioctl(NULL, IOCTL_GET_ID, (u32)&flash_uid);
+    norflash_ioctl(NULL, IOCTL_GET_UNIQUE_ID, (u32)&flash_uid);
+#endif
+
+//    printf("======flash_uid=====");
+//    for (i = 0; i < 16; i++) {
+//        printf("%02x", flash_uid[i]);
+//    }
+//    printf("\n");
+
+    u32 crc32 = rand32() ^ CRC32(flash_uid, sizeof(flash_uid));
+    u16 crc16 = (u16)(rand32() ^ CRC16(flash_uid, sizeof(flash_uid)));
+
+    //前面10字节是flash id
+    memcpy(random_buf, flash_uid, 10);
+    //后面6字节是随机数 + CRC
+    memcpy(random_buf + 10, &crc32, sizeof(crc32));
+    memcpy(random_buf + 14, &crc16, sizeof(crc16));
+
+//    printf("======random_buf=====");
+//    for (i = 0; i < 16; i++) {
+//        printf("%02x", random_buf[i]);
+//    }
+//    printf("\n");
+
+    //每两个字节混合[信息不丢失，直接截取前后的话会丢]成一个字节得到一个新的8byte(减半，32字符->16个字符)
+    //相当于前10byte：取一半变成5byte
+    //后6byte取一半变3byte
+    for (i = 0; i < 8; i++) {
+        random8[i] = random_buf[i * 2] ^ random_buf[i * 2 + 1];
+    }
+
+    //8字节再转成16个Hex字符
+    for (i = 0; i < 8; i++) {
+        sprintf(random_str + i * 2, "%02X", random8[i]);
+    }
+//    random_str[16] = '\0';
+//    printf("random_str: %s\n", random_str);
+
+    //获取系统时间
+    struct sys_time stime = {0};
+    get_sys_time(&stime);
+    //只取毫秒后两位
+    u8 ms = timer_get_ms() % 100;
+    snprintf(time_str,
+             sizeof(time_str),
+             "%04d%02d%02d%02d%02d%02d%02d",
+             stime.year,
+             stime.month,
+             stime.day,
+             stime.hour,
+             stime.min,
+             stime.sec,
+             ms);
+//    printf("time_str: %s\n", time_str);
+
+    //总共32字符
+    snprintf(trace_id_raw, sizeof(trace_id_raw), "%s%s", random_str, time_str);
+//    printf("trace_id_raw: %s\n", trace_id_raw);
+
+    //转成会话id格式
+    //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    //   8      4    4    4       12
+    //8字符
+    memcpy(trace_id_buf, trace_id_raw, 8);
+    //-
+    trace_id_buf[8] = '-';
+    //4字符
+    memcpy(trace_id_buf + 9, trace_id_raw + 8, 4);
+    //-
+    trace_id_buf[13] = '-';
+    //4字符
+    memcpy(trace_id_buf + 14, trace_id_raw + 12, 4);
+    //-
+    trace_id_buf[18] = '-';
+    //4字符
+    memcpy(trace_id_buf + 19, trace_id_raw + 16, 4);
+    //-
+    trace_id_buf[23] = '-';
+    //第5段：12字符
+    memcpy(trace_id_buf + 24, trace_id_raw + 20, 12);
+    //结束符
+    trace_id_buf[36] = '\0';
+//    printf("trace_id_buf: %s\n", trace_id_buf);
+}
+
 #if TCFG_BT_SNIFF_ENABLE
 
 typedef struct __LRC_CONFIG {

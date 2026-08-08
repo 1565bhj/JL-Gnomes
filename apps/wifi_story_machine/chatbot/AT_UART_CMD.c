@@ -700,8 +700,8 @@ static void uart_recv_task_main(void *priv)
 
                                             // 验证SSID和密码是否有效
                                             if (strlen(ssid) > 0) {
-                                                extern volatile int keyworld_wifi_enter_congfig;
-                                                keyworld_wifi_enter_congfig = 2;
+                                                extern volatile int keyword_wifi_enter_congfig;
+                                                keyword_wifi_enter_congfig = 2;
                                                 // wifi_sta_connect是无返回值函数
                                                 wifi_sta_connect(ssid, pwd, 1);
                                                 parse_success = 1;
@@ -710,8 +710,8 @@ static void uart_recv_task_main(void *priv)
                                             }
                                         } else {
                                             printf("warning : no pwd\n");
-                                            extern volatile int keyworld_wifi_enter_congfig;
-                                            keyworld_wifi_enter_congfig = 2;
+                                            extern volatile int keyword_wifi_enter_congfig;
+                                            keyword_wifi_enter_congfig = 2;
                                             // wifi_sta_connect是无返回值函数
                                             wifi_sta_connect(ssid, NULL, 1);
                                             parse_success = 1;

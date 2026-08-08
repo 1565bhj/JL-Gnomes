@@ -20,6 +20,7 @@
 #include "media/spectrum/SpectrumShow_api.h"
 #include "volume.h"
 #include "ai_uart_ctrol.h"
+#include "asm/system_reset_reason.h"
 
 #ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
 extern void key_vad_pcm_send_set_status(char start, char noice_not);

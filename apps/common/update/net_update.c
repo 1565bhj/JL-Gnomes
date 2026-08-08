@@ -96,6 +96,11 @@ static void net_update_percent_callback(void *priv)
     if (percent != tmp) {
         printf("update[%s] >> %d%% \n", info->FileName, tmp);
         percent = tmp;
+
+#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
+        qyai_mqtt_ota_progress_percent_post(percent);
+#endif
+
 #ifdef  USED_TM1629_SHOWN
         extern void tm_1629_shown_update_percent(int percent);
         tm_1629_shown_update_percent(percent);
@@ -349,6 +354,10 @@ int net_fclose(void *fd, char is_socket_err)
 
         net_update->update_doing = 0;
         if (net_update->update_state == NET_UPDATE_STATE_OK) {//升级成功，2s后重启系统
+#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
+            extern void qyai_mqtt_ota_notify(int code, const char *msg);
+            qyai_mqtt_ota_notify(2003, "OTA complete, rebooting");
+#endif
             if (net_update->update_res) {
                 music_play_res_file("UpdateSucc.mp3");
                 music_play_waite();
@@ -378,6 +387,10 @@ int net_fclose(void *fd, char is_socket_err)
 #endif
         } else {
             err = -1;
+#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
+            extern void qyai_mqtt_ota_notify(int code, const char *msg);
+            qyai_mqtt_ota_notify(5102, "OTA update failed");
+#endif
             printf(">>>>>>>>>>>net_update err\n\n\n\n");
             music_play_res_file("UpdateErr.mp3");
             music_play_waite();

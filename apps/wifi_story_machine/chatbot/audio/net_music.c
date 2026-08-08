@@ -360,10 +360,10 @@ int net_music_dec_stop(void)
         r.dec.cmd = AUDIO_DEC_STOP;
         server_request(__this->dec_server, AUDIO_REQ_DEC, &r);
 
-        int argv[2];
-        argv[0] = AUDIO_SERVER_EVENT_END;
-        argv[1] = (int)__this->net_file;
-        server_event_handler_del(__this->dec_server, 2, argv);
+//        int argv[2];
+//        argv[0] = AUDIO_SERVER_EVENT_END;
+//        argv[1] = (int)__this->net_file;
+//        server_event_handler_del(__this->dec_server, 2, argv);
     }
 
     extern int lwip_canceladdrinfo(void);

@@ -185,6 +185,10 @@ typedef enum JL_CONFIG_ERR_TABLE {
 #define    CFG_USER_ALARM_CONTENT9      32
 #define    CFG_TOKEN_VERIFY_DATA        33
 
+#define CFG_USER_TTS_CONFIG_DATA        40
+#define CFG_USER_WEBSOCKET_CONFIG_DATA  41
+#define CFG_USER_MQTT_CONFIG_DATA       42
+
 #define    CFG_USER_DEFINE_END          59
 
 //=================================================================================//

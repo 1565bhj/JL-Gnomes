@@ -227,6 +227,10 @@ static void net_connected_check_thread(void)
             void mqtt_example(void);
             mqtt_example();
 #endif
+#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
+            void qyai_mqtt_example(void);
+            qyai_mqtt_example();
+#endif
             printf("net_connected_check ok, __this->net_connect_succ:%d\n", __this->net_connect_succ);
             break;
         } else if (__this->net_connect_succ == NET_DISCONNECT) {//断开则退出检测
@@ -438,6 +442,16 @@ static int lte_create_usb_bus_check_thread(void)
 }
 #endif
 
+void lte_turn_on(void)
+{
+    if (!dev) {
+        printf("=====lte_turn_on:%d=====", __LINE__);
+        dev = dev_open("lte", NULL);
+        dev_ioctl(dev, LTE_DEV_SET_CB, (u32)lte_state_cb);
+        qyai_net_interface_set(1);
+    }
+}
+
 int lte_net_init(void)
 {
     printf("****************lte_net_init************");
@@ -454,10 +468,15 @@ int lte_net_init(void)
 #endif
 
     //2.Enable LTE module
-    dev = dev_open("lte", NULL);
-    dev_ioctl(dev, LTE_DEV_SET_CB, (u32)lte_state_cb);
+    //dev = dev_open("lte", NULL);
+    //dev_ioctl(dev, LTE_DEV_SET_CB, (u32)lte_state_cb);
+    if (!dev) {
+        dev = dev_open("lte", NULL);
+        dev_ioctl(dev, LTE_DEV_SET_CB, (u32)lte_state_cb);
+        qyai_net_interface_set(1);
+    }
 
-    qyai_net_interface_set(1);
+    //qyai_net_interface_set(1);
 #if 0
     if (thread_fork("net_check", 10, 2048, 0, NULL, net_connected_check_thread, NULL) != OS_NO_ERR) {
         puts("net_connected_check_thread create err\n");

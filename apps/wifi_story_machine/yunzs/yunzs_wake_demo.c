@@ -67,8 +67,8 @@ int g_ivwThreadID;
 
 int bt_music_play_get_pause(void);
 
-extern int keyworld_start;
-extern int keyworld_wifi_enter_congfig;
+extern int keyword_start;
+extern int keyword_wifi_enter_congfig;
 
 static volatile char sys_vad_active = 0;//有效检测语音
 void led_eya_wake(char start);
@@ -350,7 +350,7 @@ void aisp_wake(char index)//0:小飞小飞，8：配网模式
 {
     int msg[4] = {0};
     if (index == 8) {
-        keyworld_start = 1;
+        keyword_start = 1;
     }
     msg[0] = index;
     os_taskq_post_type("esr_queue_task", Q_USER, 1, msg);
@@ -378,7 +378,7 @@ int pcm_send_set_status(char start)
 {
     if (start) {
         if (ifly_send_pcm != SEND_PCM_START && ifly_send_pcm != SEND_PCM_DOING) {
-            keyworld_start = 1;
+            keyword_start = 1;
             ifly_send_pcm = SEND_PCM_START;
         }
     } else if (ifly_send_pcm == SEND_PCM_DOING || ifly_send_pcm == SEND_PCM_START) {
@@ -402,7 +402,7 @@ void pcm_buf_clear(void)
 }
 void aisp_wake_set_noice(char noice_note)
 {
-    if (sys_connect_net_success() && !keyworld_wifi_enter_congfig) {
+    if (sys_connect_net_success() && !keyword_wifi_enter_congfig) {
         if (ifly_send_pcm != SEND_PCM_PAUSE) {
             //通知app挂起
             struct key_event key = {0};
@@ -419,7 +419,7 @@ void aisp_wake_set_noice(char noice_note)
             }
             auto_sleep_check_clear();
             //通知app挂起
-            keyworld_start = 0;
+            keyword_start = 0;
             sys_vad_clear(0);
             sys_vad_lock(1);
             ifly_send_pcm = SEND_PCM_STOP;
@@ -455,7 +455,7 @@ void aisp_wake_set_noice(char noice_note)
             websockets_send_500ms_audio_buf_push(NULL, 0, 1);
 
             ifly_send_pcm = SEND_PCM_START;
-            keyworld_start = 1;
+            keyword_start = 1;
             pcm_buf_clear();
             sys_vad_lock(0);
             sys_vad_clear(1);
@@ -540,9 +540,9 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         websocket_client_thread_create_new(1, 1);
         music_buf_play_accept(1);
         if (vad_end_enable) {
-            keyworld_start = 1;
+            keyword_start = 1;
         } else {
-            keyworld_start = 2;
+            keyword_start = 2;
         }
         ifly_send_pcm = SEND_PCM_START;
     } else if (qyai_chat_addr_version() <= 1) {
@@ -553,7 +553,7 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
 #endif
         }
         printf("--->KAY VAD SPEAK_STOP\n");
-        keyworld_start = 0;
+        keyword_start = 0;
         sys_vad_active = 0;
     }
 }
@@ -569,16 +569,16 @@ void key_vad_start_vad_end_auto(char start, char noice_note)
 void sys_vad_event_handler(void *priv)
 {
     aisp_vad_callback((int)priv);
-    if (keyworld_start == 2) {
+    if (keyword_start == 2) {
         sys_vad_active = 1;
         return;
     }
     if (priv) {
         sys_vad_active = 1;
 #if ASR_CONTINIU_EN
-        if (keyworld_start) {
+        if (keyword_start) {
 #else   //播放完当前对话才能继续
-        if (keyworld_start && (ifly_send_pcm == SEND_PCM_STOP || ifly_send_pcm == SEND_PCM_INI)
+        if (keyword_start && (ifly_send_pcm == SEND_PCM_STOP || ifly_send_pcm == SEND_PCM_INI)
             && music_buf_play_stop_status() && music_play_stop_status() && !websockets_wait_recv_end_msg()) {
 #endif // ASR_CONTINIU_EN
 #ifdef CONFIG_UI_PLAY_EMOJI
@@ -598,7 +598,7 @@ void sys_vad_event_handler(void *priv)
             printf("--->SPEAK_START\n");
             ifly_send_pcm = SEND_PCM_START;
         } else {
-            printf("->keyworld_start %d %d %d %d %d\n", keyworld_start,
+            printf("->keyword_start %d %d %d %d %d\n", keyword_start,
                    ifly_send_pcm,
                    music_buf_play_stop_status(),
                    music_play_stop_status(),
@@ -705,7 +705,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
     printf("-->asr_task start====================\r\n");
     start_t = timer_get_ms();
 
-    keyworld_start = 0;
+    keyword_start = 0;
 
 #if (ASR_USED_AVD == ASR_WEBRTC_AVD) || (ASR_USED_AVD == ASR_MY_AVD) || (ASR_USED_AVD == ASR_JL_AVD)
     void *vad_cbuf = sys_vad_init(ifly_sample_rate, AUDIO_RECORD_ONCE_SR_POINTS * 2 * 64);
@@ -919,7 +919,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
         if (1) {
             rlen = AEC_FRAME_SIZE;
 //                printf("rlen = %d\n",rlen);
-            if (!aisp_asr_disable() && keyworld_start != 2) {
+            if (!aisp_asr_disable() && keyword_start != 2) {
 //===================在这里做算法写入音频===============================
                 ret = uni_asr_process(aec_buf, rlen);
 //=======================================================================
@@ -957,7 +957,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                 }
             }
 
-            //if(keyworld_start)
+            //if(keyword_start)
             {
                 if (ifly_send_pcm == SEND_PCM_START) {
                     if (!sys_connect_net_success()) {
@@ -1029,7 +1029,7 @@ void aisp_all_pause(char stop)
         ifly_send_pcm = SEND_PCM_INI;
         sys_vad_clear(1);
     }
-    keyworld_start = 0;
+    keyword_start = 0;
     sys_vad_active = 0;
 
     union audio_req req = {0};
@@ -1073,7 +1073,7 @@ void create_awake_task()
 void aisp_clear(char stop_net_music)
 {
 //    aisp_wake(21);//
-    keyworld_start = 0;
+    keyword_start = 0;
     sys_vad_active = 0;
     sys_vad_clear(0);
     sys_vad_lock(1);
@@ -1162,7 +1162,7 @@ __wakeup:
                 break;
             }
             auto_sleep_check_clear();
-            if (sys_connect_net_success() && !keyworld_wifi_enter_congfig) {
+            if (sys_connect_net_success() && !keyword_wifi_enter_congfig) {
 #ifdef AI_UART_CMD_CTROL_ENABLE
                 ai_uart_cmd_data_push(AI_UART_CMD_DIALUOGE_START, NULL, 0);
 #endif
@@ -1190,7 +1190,7 @@ __wakeup:
                     if (app && (!strcmp(app->name, "bt_music"))) { //蓝牙播放模式下延时
                         os_time_dly(50);
                     }
-                    keyworld_start = 0;
+                    keyword_start = 0;
                     sys_vad_clear(0);
                     sys_vad_lock(1);
                     ifly_send_pcm = SEND_PCM_STOP;
@@ -1223,12 +1223,12 @@ __wakeup:
                         aisp_mic_gain_resum();
                         music_buf_play_set_stop();//停止TTS使用PIPE BUF
                     }
-                    keyworld_start = 1;
+                    keyword_start = 1;
                     pcm_buf_clear();
                     sys_vad_lock(0);
                     sys_vad_clear(1);
                     if (aisp_wake_callback(msg[1])) {
-                        keyworld_start = 0;
+                        keyword_start = 0;
                     } else {
                         websockets_send_audio_buf_init();
                         websockets_send_500ms_audio_buf_push(NULL, 0, 1);
@@ -1236,12 +1236,12 @@ __wakeup:
                     }
                     music_buf_play_accept(1);
                 }
-            } else if (keyworld_wifi_enter_congfig) {
+            } else if (keyword_wifi_enter_congfig) {
                 alow_enter_wifi_cfg = 0;
                 if (aisp_wake_callback(-1)) {
                     break;
                 }
-                if (keyworld_wifi_enter_congfig == 3) { //正在连接WiFi
+                if (keyword_wifi_enter_congfig == 3) { //正在连接WiFi
                     if (net_ch == 0) {
                         music_play_res_file("WifiConting.mp3");
                     } else {
@@ -1297,7 +1297,7 @@ __wifi_cfg:
             if (is_production_test_enter(1)) {
                 break;
             }
-            if (keyworld_start || alow_enter_wifi_cfg || websockets_nobind_check() || (keyworld_wifi_enter_congfig == 3 && !sys_connect_net_success)) {
+            if (keyword_start || alow_enter_wifi_cfg || websockets_nobind_check() || (keyword_wifi_enter_congfig == 3 && !sys_connect_net_success)) {
 #ifdef AI_UART_CMD_CTROL_ENABLE
                 ai_uart_cmd_data_push(AI_UART_CMD_WIFI_CONFIG, NULL, 0);
 #endif
@@ -1311,8 +1311,8 @@ __wifi_cfg:
                     extern int audio_app_mode_switch_set(char *name, char note);
                     audio_app_mode_switch_set("ai_speaker", 0);
                 }
-                keyworld_start = 0;
-                keyworld_wifi_enter_congfig = 1;
+                keyword_start = 0;
+                keyword_wifi_enter_congfig = 1;
                 sys_vad_clear(0);
                 sys_vad_lock(1);
                 ifly_send_pcm = SEND_PCM_STOP;
@@ -1355,7 +1355,7 @@ __wifi_cfg:
         case 10://调高音量
             aisp_wake_callback(msg[1]);
             /*
-            if(keyworld_start){
+            if(keyword_start){
                 aisp_clear(0);
                 key.action = KEY_EVENT_CLICK;
                 key.value = KEY_VOLUME_INC;
@@ -1367,7 +1367,7 @@ __wifi_cfg:
         case 11://调低音量
             aisp_wake_callback(msg[1]);
             /*
-            if(keyworld_start){
+            if(keyword_start){
                 aisp_clear(0);
                 key.action = KEY_EVENT_CLICK;
                 key.value = KEY_VOLUME_DEC;
@@ -1402,7 +1402,7 @@ __wifi_cfg:
             }
             break;
         case 22:
-//                keyworld_start = 0;
+//                keyword_start = 0;
 //                sys_vad_clear(0);
 //                sys_vad_lock(1);
 //                ifly_send_pcm = SEND_PCM_STOP;

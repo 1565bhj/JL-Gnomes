@@ -21,6 +21,9 @@ static struct user_data_info {
     unsigned char account_bound;   /* 是否已绑定账号：0=未绑定，1=已绑定 */
 #endif
 #endif
+    unsigned char app_addiction_config;//APP用户防沉迷开关
+    unsigned char local_addiction_config;//本地防沉迷开关
+    unsigned short addiction_minutes; //防沉迷时间：分钟
     unsigned char resv;
     unsigned short last_power_off; //上次关机计数
     unsigned short power_off; //本次关机计数
@@ -53,6 +56,51 @@ int user_connect_server_cnt_write(void)
     syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
     return 0;
 }
+
+int user_app_addiction_config(char opt, char enabled, int addiction_minutes)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        memset(&USER_DATA, 0, sizeof(USER_DATA));
+    }
+    switch (opt) {
+    case 0:
+        USER_DATA.app_addiction_config = enabled;
+        USER_DATA.addiction_minutes = (unsigned short)addiction_minutes;
+        syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+        break;
+    case 1:
+        if (USER_DATA.app_addiction_config == 0xFF) {
+            USER_DATA.app_addiction_config = 0;
+        }
+        return USER_DATA.app_addiction_config ? USER_DATA.addiction_minutes : 0;
+    default:
+        return USER_DATA.app_addiction_config ? USER_DATA.addiction_minutes : 0;
+    }
+    return USER_DATA.app_addiction_config ? USER_DATA.addiction_minutes : 0;
+}
+
+int user_local_addiction_config(char opt, char enabled, int addiction_minutes)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        memset(&USER_DATA, 0, sizeof(USER_DATA));
+    }
+    switch (opt) {
+    case 0:
+        USER_DATA.local_addiction_config = enabled;
+        USER_DATA.addiction_minutes = (unsigned short)addiction_minutes;
+        syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+        break;
+    case 1:
+        if (USER_DATA.local_addiction_config == 0xFF) {
+            USER_DATA.local_addiction_config = 0;
+        }
+        return USER_DATA.local_addiction_config ? USER_DATA.addiction_minutes : 0;
+    default:
+        return USER_DATA.local_addiction_config ? USER_DATA.addiction_minutes : 0;
+    }
+    return USER_DATA.local_addiction_config ? USER_DATA.addiction_minutes : 0;
+}
+
 
 #ifdef CONFIG_UI_ENABLE
 int user_lcd_light_read(void)

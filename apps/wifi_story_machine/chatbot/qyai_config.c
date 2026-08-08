@@ -119,10 +119,14 @@ int qyai_url_debug(void)
 
 
 //网络异常信息回调
-extern int http_ai_dev_err_info_report_task(char *reason);
-int qyai_net_socket_err_callback(char *msg, int err_code)
+int http_ai_dev_err_info_report_task(const char *reason, const char *cur_trace_id);
+int qyai_net_socket_err_callback(char *msg, int err_code, const char *trace_id)
 {
-    printf("\n%s, err_code %d\n", msg, err_code);
+    //printf("msg:%s, err:%d, trace_id:%s\n", msg ? msg : "(null)", err_code, trace_id ? trace_id : "(null)");
+    if (trace_id == NULL) {
+        return -1;
+    }
+
     if (strstr(msg, "exception")) { //没有收到音频数据数据异常断开
         music_play_stop_all();
         music_play_res_file("ServErrExce.mp3");
@@ -130,10 +134,20 @@ int qyai_net_socket_err_callback(char *msg, int err_code)
         music_play_stop_all();
         music_play_res_file("ServErrSend.mp3");
     } else if (strstr(msg, "err no recv complete index")) { //没收到结束包
+        ;
     } else {//连接阶段异常
+        ;
     }
 #ifndef CONFIG_NO_SDRAM_ENABLE
-    http_ai_dev_err_info_report_task(msg);
+    size_t len = strlen(trace_id);
+    //局部兜住，全局变，局部不变
+    char *trace_id_bak = malloc(len + 1);
+    if (trace_id_bak == NULL) {
+        return -1;
+    }
+    memcpy(trace_id_bak, trace_id, len + 1);
+    http_ai_dev_err_info_report_task(msg, trace_id_bak);
+    free(trace_id_bak);
 #endif
     return 0;
 }

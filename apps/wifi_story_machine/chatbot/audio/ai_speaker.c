@@ -101,8 +101,8 @@ char speech_digital_vol_agc = DIGITAL_VOL_AGC;
 volatile int aisp_aec_gain = 0;
 volatile int aisp_mic0_gain = 0;
 volatile int aisp_mic1_gain = 0;
-volatile int keyworld_start = 0;
-volatile int keyworld_wifi_enter_congfig = 0;
+volatile int keyword_start = 0;
+volatile int keyword_wifi_enter_congfig = 0;
 
 //usb hotplug state
 int usb_hp_state = DEVICE_EVENT_OFFLINE;
@@ -127,9 +127,40 @@ u8 usb_id_get(void)
     return usb_id;
 }
 
-int system_keyworld_start(void)
+/**
+ * @brief 读取系统唤醒词状态
+ * @return value 状态值：0-未唤醒，1-唤醒状态
+ */
+int system_keyword_start(void)
 {
-    return keyworld_start;
+    return keyword_start;
+}
+
+/**
+ * @brief 设置配网模式状态
+ * @param enable 状态值：0-未唤醒，1-唤醒状态
+ */
+void system_keyword_set(char enable)
+{
+    keyword_start = enable;
+}
+
+/**
+ * @brief 设置配网模式状态
+ * @param value 状态值：0-退出配网模式，1-进入配网模式，2-正在连接wifi，3-wifi连接成功状态
+ */
+void system_set_keyword_wifi_enter_config(int value)
+{
+    keyword_wifi_enter_congfig = value;
+}
+
+/**
+ * @brief 获取配网模式状态
+ * @return value 状态值：0-退出配网模式，1-进入配网模式，2-正在连接wifi，3-wifi连接成功状态
+ */
+int system_get_keyword_wifi_enter_config(void)
+{
+    return keyword_wifi_enter_congfig;
 }
 
 //恢复出厂设置
@@ -225,14 +256,14 @@ static int auto_sleep_check(void)
 #endif
 
 #if (defined TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH && TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH != 0)
-    if (stop_status && music_buf_play_stop_status() && music_play_stop_status() && net_music_play_stop_status() && !keyworld_start) {
+    if (stop_status && music_buf_play_stop_status() && music_play_stop_status() && net_music_play_stop_status() && !keyword_start) {
         __this->auto_sleep_cnt++;
     } else {
         __this->auto_sleep_cnt = 0;
     }
 #else //不播放音乐&不对话：空闲
     RETURN_CHECK(stop_status);
-    if (stop_status && music_buf_play_stop_status() && music_play_stop_status() && net_music_play_stop_status() && !keyworld_start) {
+    if (stop_status && music_buf_play_stop_status() && music_play_stop_status() && net_music_play_stop_status() && !keyword_start) {
         __this->auto_sleep_cnt++;
     } else {
         __this->auto_sleep_cnt = 0;
@@ -312,6 +343,7 @@ void ai_speaker_mode_exit(void)
     aisp_close();
 }
 
+//支持文本对话
 void ai_speaker_text_dialogue(char *text)//text为UTF8格式
 {
     music_buf_play_accept(0);
@@ -598,6 +630,10 @@ static int ai_speaker_key_event_handler(struct key_event *key)
     if (!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) {
         return true;//闹钟在响，按键失效
     }
+
+    int cur_net_mode = sys_net_mode_read();
+    int ch = sys_net_channel_read();
+
     printf("->key->action = %d ,key->value = %d \n", key->action, key->value);
     switch (key->action) {
     case KEY_EVENT_UP:
@@ -651,11 +687,11 @@ static int ai_speaker_key_event_handler(struct key_event *key)
 #endif
         //是否开启自动切换：0->NOT AUTO MODE、1->AUTO MODE
         else if (key->value == KEY_UP) {
-            int net_mode = sys_net_mode_read();
-            net_mode = (net_mode + 1) % 2;
-            printf("write net_mode:%d", net_mode);
-            sys_net_mode_write(net_mode);
-            system_reset();
+//            int net_mode = sys_net_mode_read();
+//            net_mode = (net_mode + 1) % 2;
+//            printf("write net_mode:%d", net_mode);
+//            sys_net_mode_write(net_mode);
+//            system_reset();
         } else if (key->value == KEY_DOWN) {
             ;
         }
@@ -674,7 +710,6 @@ static int ai_speaker_key_event_handler(struct key_event *key)
         //配网按键
         if (key->value == KEY_OK) {
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
-            int ch = sys_net_channel_read();
             if (ch == 1) {
                 break;
             }
@@ -690,76 +725,73 @@ static int ai_speaker_key_event_handler(struct key_event *key)
         printf("=====invalid action=====");
         break;
 #endif
-        //手动模式: 4G和WiFi切换
         if (key->value == KEY_OK) {
-//abandon this way(reboot system)
-#if 0
-            int net_ch = sys_net_channel_read();
-            if (net_ch < 0) {
-                sys_net_channel_write(NET_CH_SELECT_WIFI);
-                net_ch = sys_net_channel_read();
+            if (cur_net_mode == NET_MODE_MANUAL_SET) { //手动模式: 4G和WiFi切换
+                int net_ch = sys_net_channel_read();
+                if (net_ch < 0) {
+                    sys_net_channel_write(NET_CH_SELECT_WIFI);
+                    net_ch = sys_net_channel_read();
+                } else {
+                    net_ch = net_ch ? 0 : 1;
+                    sys_net_channel_write(net_ch);
+                    if (sys_net_channel_read() == net_ch) {
+                        aisp_all_pause(1);
+                        usb_net_set_module_reset_status(1);
+                        music_play_res_file("SysReset.mp3");
+                        music_play_waite();
+                        //4G模式下切走，先发复位指令再断电
+                        if (sys_net_channel_read() == 0 && app_usb_get_driver_status()) {
+                            app_usb_at_cmd_send_reset();
+                            lte_power_control(0);
+                        }
+                        system_reset();
+                    }
+                }
             } else {
-                net_ch = net_ch ? 0 : 1;
-                sys_net_channel_write(net_ch);
-                if (sys_net_channel_read() == net_ch) {
-                    aisp_all_pause(1);
-                    usb_net_set_module_reset_status(1);
-                    music_play_res_file("SysReset.mp3");
-                    music_play_waite();
-                    //4G模式下切走，先发复位指令再断电
-                    if (sys_net_channel_read() == 0 && app_usb_get_driver_status()) {
-                        app_usb_at_cmd_send_reset();
-                        lte_power_control(0);
-                    }
-                    system_reset();
+                //UI界面/按键触发选择网络模式
+                if (cur_net_mode == NET_MODE_AUTO) {
+                    goto done;
                 }
-            }
-#else
-            //模拟UI界面,按键触发选择网络模式
-            int cur_net_mode = sys_net_mode_read();
-            if (cur_net_mode == NET_MODE_AUTO) {
-                goto done;
-            }
 
-            u8 key_down_cnt = sys_net_channel_read();
-            if (key_down_cnt == 0) {
-                //切到4G模式[wifi->lte]
-                printf("=====switch to lte mode=====");
-                if (wifi_connect_net_success()) {
-                    printf("=====wifi state: connect!!!=====");
-                    wifi_and_network_off();
-                } else {
-                    printf("=====wifi state: not connect!!!=====");
-                    if (wifi_is_online()) { //处于扫描的状态
-                        music_play_res_file("NetConting.mp3");
+                u8 key_down_cnt = sys_net_channel_read();
+                if (key_down_cnt == 0) {
+                    //切到4G模式[wifi->lte]
+                    printf("=====switch to lte mode=====");
+                    if (wifi_connect_net_success()) {
+                        printf("=====wifi state: connect!!!=====");
                         wifi_and_network_off();
+                    } else {
+                        printf("=====wifi state: not connect!!!=====");
+                        if (wifi_is_online()) { //处于扫描的状态
+                            music_play_res_file("NetConting.mp3");
+                            wifi_and_network_off();
+                        }
                     }
+                    //music_play_res_file("NetConting.mp3");
+                    net_work_on = NET_WORK_ON_LTE;
+                    sys_net_channel_write(NET_CH_SELECT_LTE);
+                    //设置lte为网卡
+                    qyai_net_interface_set(1);
+                    lte_power_control(1);
+                } else if (key_down_cnt == 1) {
+                    lte_power_control(0);
+                    //切到WIFI模式[lte->wifi]
+                    printf("=====switch to wifi mode=====");
+                    if (lte_connect_net_success()) {
+                        printf("=====lte state: connect!!!=====");
+                    } else {
+                        printf("=====lte state: not connect!!!=====");
+                    }
+                    net_work_on = NET_WORK_ON_WIFI;
+                    sys_net_channel_write(NET_CH_SELECT_WIFI);
+                    //设置wifi为网卡
+                    qyai_net_interface_set(0);
                 }
-                //music_play_res_file("NetConting.mp3");
-                net_work_on = NET_WORK_ON_LTE;
-                sys_net_channel_write(NET_CH_SELECT_LTE);
-                //设置lte为网卡
-                qyai_net_interface_set(1);
-                lte_power_control(1);
-            } else if (key_down_cnt == 1) {
-                lte_power_control(0);
-                //切到WIFI模式[lte->wifi]
-                printf("=====switch to wifi mode=====");
-                if (lte_connect_net_success()) {
-                    printf("=====lte state: connect!!!=====");
-                } else {
-                    printf("=====lte state: not connect!!!=====");
-                }
-                net_work_on = NET_WORK_ON_WIFI;
-                sys_net_channel_write(NET_CH_SELECT_WIFI);
-                //设置wifi为网卡
-                qyai_net_interface_set(0);
-            }
 
-            if (++key_down_cnt >= 2) {
-                key_down_cnt = 0;
+                if (++key_down_cnt >= 2) {
+                    key_down_cnt = 0;
+                }
             }
-#endif // CONFIG_LTE_PHY_ENABLE
         } else
 #endif
             //四连按进产测模式
@@ -812,9 +844,6 @@ done:
     return true;
 }
 
-#ifdef CONFIG_LTE_PHY_ENABLE
-#define AI_SPEAKER_POLL_TASK "poll_task"
-
 #if IP_NAPT
 static void net_http_server_thread(void)
 {
@@ -827,6 +856,8 @@ static void net_http_server_thread(void)
 }
 #endif
 
+#ifdef CONFIG_LTE_PHY_ENABLE
+#define AI_SPEAKER_POLL_TASK "poll_task"
 static void ai_speaker_poll_task(void *priv)
 {
     //接收消息队列buf
@@ -891,6 +922,11 @@ int lte_event_handler(struct device_event *device_eve)
     int net_ch = sys_net_channel_read();
     int net_mode = sys_net_mode_read();
     usb_id = ((const char *)device_eve->value)[8] - '0';
+    usb_hp_state = device_eve->event;
+    //兼容没有IO控制电源的USB LTE模块设计,否则wifi联网过程中，USB直接就枚举，走后面的流程
+    if ((net_ch == NET_CH_SELECT_WIFI) && (net_mode == NET_MODE_MANUAL_SET)) {
+        return 0;
+    }
     switch (device_eve->event) {
     case DEVICE_EVENT_IN:
         printf("usb wireless%d device IN,net_mode:%d", usb_id, net_mode);
@@ -995,7 +1031,7 @@ int ai_net_event_handler(struct net_event *event)
                 if (!is_in_config_network_state()) {
                     config_network_start();
                 }
-                keyworld_wifi_enter_congfig = 2;
+                keyword_wifi_enter_congfig = 2;
             }
             break;
         case NET_EVENT_SMP_CFG_FIRST:
@@ -1049,7 +1085,7 @@ int ai_net_event_handler(struct net_event *event)
 #endif
             break;
         case NET_EVENT_SMP_CFG_FINISH:
-            keyworld_wifi_enter_congfig = 2;
+            keyword_wifi_enter_congfig = 2;
             __this->net_dicon_cnt = 0;//配网清空连接失败次数
             if (is_in_config_network_state()) {
                 if (net_ch == 0) {
@@ -1065,8 +1101,8 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_CONNECTED:
             __this->associat_timeout_cnt = 0;
-            printf("NET_EVENT_CONNECTED : %d, %d \n", keyworld_wifi_enter_congfig, __this->net_dicon_cnt);
-            if (keyworld_wifi_enter_congfig >= 2 && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0) && __this->net_dicon_cnt == 0) {
+            printf("NET_EVENT_CONNECTED : %d, %d \n", keyword_wifi_enter_congfig, __this->net_dicon_cnt);
+            if (keyword_wifi_enter_congfig >= 2 && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0) && __this->net_dicon_cnt == 0) {
                 if (net_ch == 0) {
                     music_play_res_file("WifiConSucc.mp3");
 #ifdef CONFIG_UI_PLAY_EMOJI
@@ -1078,14 +1114,14 @@ int ai_net_event_handler(struct net_event *event)
                 }
             }
 
-            keyworld_wifi_enter_congfig = 0;
+            keyword_wifi_enter_congfig = 0;
 
 #ifdef CONFIG_UI_PLAY_EMOJI
             extern int play_face_emoji(int index);
             play_face_emoji(AI_UART_CMD_WIFI_CONNECTED);
 #endif
 
-            if (keyworld_wifi_enter_congfig != 1) {
+            if (keyword_wifi_enter_congfig != 1) {
                 config_network_stop();
             }
 #if BT_NET_CFG_EN
@@ -1138,15 +1174,15 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_DISCONNECTED:
             canceladdrinfo();
-            __this->net_dicon_cnt = (keyworld_wifi_enter_congfig == 1 || keyworld_wifi_enter_congfig == 2) ? 0 : (__this->net_dicon_cnt + 1);//配网清空连接失败次数
-            printf("NET_EVENT_DISCONNECTED : %d, %d \n", keyworld_wifi_enter_congfig, __this->net_dicon_cnt);
+            __this->net_dicon_cnt = (keyword_wifi_enter_congfig == 1 || keyword_wifi_enter_congfig == 2) ? 0 : (__this->net_dicon_cnt + 1);//配网清空连接失败次数
+            printf("NET_EVENT_DISCONNECTED : %d, %d \n", keyword_wifi_enter_congfig, __this->net_dicon_cnt);
 #ifdef CONFIG_LTE_PHY_ENABLE
             if (net_work_on == NET_WORK_ON_LTE) {
                 printf("=====key switch to lte mode=====");
                 break;
             }
 #endif
-            if (!keyworld_wifi_enter_congfig && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0)) {
+            if (!keyword_wifi_enter_congfig && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0)) {
                 if (net_ch == 0) {
                     if (!is_in_config_network_state()) {
 #ifdef CONFIG_LTE_PHY_ENABLE
@@ -1251,7 +1287,7 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_DISCONNECTED_AND_REQ_CONNECT:
             puts("\n NET_EVENT_DISCONNECTED_AND_REQ_CONNECT \n");
-            if (net_ch != 0 || keyworld_wifi_enter_congfig) {
+            if (net_ch != 0 || keyword_wifi_enter_congfig) {
                 break;
             }
             if (app_usb_is_plugin_state()  && net_mode == NET_MODE_AUTO) {
@@ -1306,7 +1342,7 @@ int ai_net_event_handler(struct net_event *event)
         case NET_NTP_GET_TIME_SUCC: //NTP获取成功事件返回
             break;
         case NET_NTP_GET_TIME_SUCC + 32://初始化连接网络
-            if (!keyworld_wifi_enter_congfig && system_reset_reason_get() != SYS_RST_ALM_WKUP  && !is_production_test_enter(0)) {
+            if (!keyword_wifi_enter_congfig && system_reset_reason_get() != SYS_RST_ALM_WKUP  && !is_production_test_enter(0)) {
                 if (!__this->net_dicon_cnt) {
                     if (net_ch == 0) {
 #ifdef CONFIG_UI_PLAY_EMOJI
@@ -1318,17 +1354,17 @@ int ai_net_event_handler(struct net_event *event)
                         music_play_res_file("NetConting.mp3");
                     }
                 }
-                keyworld_wifi_enter_congfig = 3;
+                keyword_wifi_enter_congfig = 3;
             }
             break;
         case NET_NTP_GET_TIME_SUCC + 33://网络连接异常
-            if (!keyworld_wifi_enter_congfig) {
+            if (!keyword_wifi_enter_congfig) {
                 music_play_res_file("ServErrCon.mp3");
             }
             break;
         case NET_NTP_GET_TIME_SUCC + 34://账号绑定成功
             music_play_res_file("BindSucc.mp3");
-            keyworld_wifi_enter_congfig = 0;
+            keyword_wifi_enter_congfig = 0;
             break;
         default:
             break;
@@ -1408,7 +1444,6 @@ int ai_speaker_device_event_handler(struct sys_event *sys_eve)
         }
     } else if (sys_eve->from == DEVICE_EVENT_FROM_USB_HOST && !strncmp((const char *)device_eve->value, "wireless", 8)) {
 #ifdef CONFIG_LTE_PHY_ENABLE
-        extern int lte_event_handler(struct device_event * device_eve);
         return lte_event_handler(device_eve);
 #endif
     }
@@ -1464,8 +1499,10 @@ static int ai_speaker_state_machine(struct application *app, enum app_state stat
             ai_speaker_mode_init();
 #ifdef CONFIG_LTE_PHY_ENABLE
             //创建一个检测线程
-            if (thread_fork(AI_SPEAKER_POLL_TASK, 27,   1024, 256, NULL, ai_speaker_poll_task, NULL) != OS_NO_ERR) {
-                printf("net_poll_check thread fork fail\n");
+            if (net_mode == NET_MODE_AUTO) {
+                if (thread_fork(AI_SPEAKER_POLL_TASK, 27,   1024, 256, NULL, ai_speaker_poll_task, NULL) != OS_NO_ERR) {
+                    printf("net_poll_check thread fork fail\n");
+                }
             }
 #endif
             break;
@@ -1499,14 +1536,6 @@ static int ai_speaker_state_machine(struct application *app, enum app_state stat
     }
 
     return 0;
-}
-/**
- * @brief 设置配网模式状态
- * @param value 状态值：0-退出配网模式，1-进入配网模式，2-wifi连接成功状态
- */
-void set_keyworld_wifi_enter_config(int value)
-{
-    keyworld_wifi_enter_congfig = value;
 }
 
 static const struct application_operation ai_speaker_ops = {

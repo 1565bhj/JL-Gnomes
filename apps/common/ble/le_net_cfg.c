@@ -37,6 +37,10 @@
 #include "event/key_event.h"
 #include "net_update.h"
 
+#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
+#include "wifi/wifi_def.h"
+#endif
+
 #if (TCFG_BLE_DEMO_SELECT == DEF_BLE_DEMO_NET_CFG)
 
 #define TEST_SEND_HANDLE_VAL         ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE
@@ -61,7 +65,7 @@ extern void printf_buf(u8 *buf, u32 len);
 
 //------
 #define ATT_LOCAL_PAYLOAD_SIZE    (128)                   //note: need >= 20
-#define ATT_SEND_CBUF_SIZE        (512)                   //note: need >= 20,缓存大小，可修改
+#define ATT_SEND_CBUF_SIZE        (1024)                   //note: need >= 20,缓存大小，可修改
 #define ATT_RAM_BUFSIZE           (ATT_CTRL_BLOCK_SIZE + ATT_LOCAL_PAYLOAD_SIZE + ATT_SEND_CBUF_SIZE)                   //note:
 static u8 att_ram_buffer[ATT_RAM_BUFSIZE] __attribute__((aligned(4)));
 //---------------
@@ -709,6 +713,66 @@ static int payment_msg_send(void *priv)
     return 0;
 }
 
+#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
+#define BLE_WIFI_SCAN_MAX_AP  15
+
+int ble_send_wifi_scan_result(struct wifi_scan_ssid_info *info, u32 num)
+{
+    u8 frame[512];
+    u32 i;
+    u32 count = (num > BLE_WIFI_SCAN_MAX_AP) ? BLE_WIFI_SCAN_MAX_AP : num;
+    char json_buf[800];
+    u32 json_offset = 0;
+    u16 Length, crc, total_len;
+
+    memset(frame, 0, sizeof(frame));
+    memset(json_buf, 0, sizeof(json_buf));
+
+    // 构建JSON数据
+    json_offset += snprintf(json_buf + json_offset, sizeof(json_buf) - json_offset, "{\"wifi_list\":[");
+    for (i = 0; i < count; i++) {
+        if (i > 0) {
+            json_offset += snprintf(json_buf + json_offset, sizeof(json_buf) - json_offset, ",");
+        }
+        json_offset += snprintf(json_buf + json_offset, sizeof(json_buf) - json_offset,
+                                "{\"ssid\":\"%s\",\"rssi\":%d}", info[i].ssid, info[i].rssi_db);
+    }
+    json_offset += snprintf(json_buf + json_offset, sizeof(json_buf) - json_offset, "]}");
+
+    printf("ble_send_wifi_scan_result: %s (len=%u)\n", json_buf, json_offset);
+
+    // 帧头: 'J' 'L'
+    frame[0] = 'J';
+    frame[1] = 'L';
+
+    // 命令码: 0x10(一级) + 0x06(二级: WiFi扫描结果)
+    frame[4] = 0x10;
+    frame[5] = 0x06;
+
+    // 复制JSON数据到帧中
+    memcpy(&frame[6], json_buf, json_offset);
+
+    // 计算长度字段: JSON数据长度 + 命令码2字节
+    Length = json_offset + 2;
+    frame[2] = (Length >> 8) & 0xFF;
+    frame[3] = Length & 0xFF;
+
+    // 计算CRC16 (从长度字段开始，包含长度+命令码+JSON数据)
+    crc = CRC16(&frame[2], Length + 2);
+    total_len = 6 + json_offset;    // 帧头6 + JSON数据
+    frame[total_len++] = (crc >> 8) & 0xFF;
+    frame[total_len++] = crc & 0xFF;
+    frame[total_len++] = 0xFF;      // 结束符
+
+    // 通过ae82 NOTIFY特征值发送给小程序
+    printf("BLE send wifi scan result frame (%u bytes):\n", total_len);
+    put_buf(frame, total_len);
+    app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, frame, total_len, ATT_OP_AUTO_READ_CCC);
+
+    return 0;
+}
+#endif
+
 /* LISTING_END */
 /*
  * @section ATT Write
@@ -756,6 +820,33 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
                     break;
                 }
             }
+#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
+            // 小程序发送帧: JL + 0x00,0x02 + 0x10,0x05 + CRC16(2B) + 0xFF
+            if (buffer[0] == 'J' && buffer[1] == 'L' && buffer[4] == 0x10 && buffer[5] == 0x05) {
+                printf("\n>>> BLE recv scan WiFi request (0x10, 0x05)\n");
+
+                // 临时拷贝完整帧用于CRC校验
+                u8 tmp_frame[32];
+                u16 tmp_data_size = (buffer[2] << 8) + buffer[3];
+                memset(tmp_frame, 0, sizeof(tmp_frame));
+                if (buffer_size <= sizeof(tmp_frame)) {
+                    memcpy(tmp_frame, buffer, buffer_size);
+                }
+
+                // CRC16校验：从长度字段开始，长度 = data_size + 2
+                u16 recv_crc = (tmp_frame[buffer_size - 3] << 8) | tmp_frame[buffer_size - 2];
+                u16 calc_crc = CRC16(&tmp_frame[2], tmp_data_size + 2);
+
+                if (recv_crc == calc_crc) {
+                    printf(">>> Scan request CRC OK, triggering WiFi scan...\n");
+                    extern int ble_wifi_scan_request(void (*done_cb)(void));
+                    ble_wifi_scan_request(NULL);
+                } else {
+                    printf(">>> Scan request CRC FAIL! recv=0x%04X calc=0x%04X\n", recv_crc, calc_crc);
+                }
+                break;  // 不进入后续的配网/支付处理
+            }
+#endif
             //////////
 #if (defined PAYMENT_AUDIO_SDK_ENABLE)
             if (buffer[0] == 'J' && buffer[1] == 'L' && buffer[4] == 0x10 && buffer[5] == 0x03) {
@@ -1210,8 +1301,13 @@ void bt_ble_init(void)
     sprintf(bl_name, "%s%02X%02X%02X", BLE_DEV_NAME, mac[3], mac[4], mac[5]);
 #endif
 
+#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
 #if defined CONFIG_EXT_WIFI_ENABLE
-    strcat(bl_name, "-5G");//支持5Gwifi
+    //strcat(bl_name, "-SCAN");//支持ble wifi扫描
+    strcat(bl_name, "-5G");//支持5Gwifi SCAN
+#else
+    strcat(bl_name, "-SCAN");//支持ble wifi扫描
+#endif
 #endif
 
     if (is_production_test_enter(0)) {

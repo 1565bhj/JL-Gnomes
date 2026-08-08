@@ -1198,6 +1198,172 @@ bool scan_and_print_wifi_networks(void)
 #endif
 
 
+#ifdef CONFIG_BT_ENABLE
+/*===========================================================================
+ * BLE触发的WiFi扫描（不依赖LVGL宏，由BLE层调用）
+ * 流程：收到小程序扫描请求 → 发起wifi_scan_req → 轮询结果 → 通过BLE回传
+ *===========================================================================*/
+
+// BLE层回调：扫描结果发送（定义在 le_net_cfg.c）
+__attribute__((weak)) int ble_send_wifi_scan_result(struct wifi_scan_ssid_info *info, u32 num)
+{
+    return -1;  // BLE未启用时，空实现
+}
+
+// BLE扫描状态
+static bool ble_scan_in_progress = false;
+static u16 ble_scan_poll_timer_id = 0;
+static u8 ble_scan_poll_count = 0;
+static void (*ble_scan_done_cb)(void) = NULL;  // 扫描完成后的回调
+
+#define BLE_SCAN_MAX_AP 20                     // 最大缓存AP数量
+static struct wifi_scan_ssid_info ble_scan_cached_info[BLE_SCAN_MAX_AP];  // 缓存结构体数组
+static u8 ble_scan_cached_num = 0;            // 当前缓存AP数量
+static u8 ble_scan_wait_count = 5;            // 等待轮数
+
+static void ble_wifi_scan_poll(void *priv)
+{
+    u32 sta_ssid_num = 0;
+    (void)priv;
+    ble_scan_poll_count++;
+
+    if (ble_scan_poll_count <= 5) {
+        wifi_scan_req();  // 忽略返回值，失败也无所谓
+    }
+
+    // 不管scan_req是否成功，都尝试读取结果（驱动内部扫描可能有结果）
+    struct wifi_scan_ssid_info *sta_ssid_info = wifi_get_scan_result(&sta_ssid_num);
+    printf("---> ble_wifi_scan_poll ssid_cnt: %u (poll %u, wait_count=%d)\n",
+           sta_ssid_num, ble_scan_poll_count, ble_scan_wait_count);
+
+    if (sta_ssid_num > 0 && sta_ssid_info) {
+        // 有结果，累积合并到缓存（按SSID去重）
+        u32 new_count = ble_scan_cached_num;
+        for (u32 i = 0; i < sta_ssid_num && new_count < BLE_SCAN_MAX_AP; i++) {
+            bool dup = false;
+            for (u32 j = 0; j < new_count; j++) {
+                if (strcmp((char *)ble_scan_cached_info[j].ssid,
+                           (char *)sta_ssid_info[i].ssid) == 0) {
+                    dup = true;
+                    if (sta_ssid_info[i].rssi_db > ble_scan_cached_info[j].rssi_db) {
+                        ble_scan_cached_info[j].rssi_db = sta_ssid_info[i].rssi_db;
+                        ble_scan_cached_info[j].SignalStrength = sta_ssid_info[i].SignalStrength;
+                    }
+                    break;
+                }
+            }
+            if (!dup && strlen((char *)sta_ssid_info[i].ssid) > 0) {
+                memcpy(&ble_scan_cached_info[new_count], &sta_ssid_info[i],
+                       sizeof(struct wifi_scan_ssid_info));
+                new_count++;
+            }
+        }
+        ble_scan_cached_num = new_count;
+        printf("BLE scan: accumulated %d WiFi (driver returned %d)\n",
+               ble_scan_cached_num, sta_ssid_num);
+
+        if (ble_scan_wait_count == 0) {
+            printf("BLE scan: sending %d WiFi networks\n", ble_scan_cached_num);
+            ble_send_wifi_scan_result((struct wifi_scan_ssid_info *)ble_scan_cached_info, ble_scan_cached_num);
+            ble_scan_in_progress = false;
+            ble_scan_cached_num = 0;
+            if (ble_scan_done_cb) {
+                ble_scan_done_cb();
+                ble_scan_done_cb = NULL;
+            }
+            if (ble_scan_poll_timer_id) {
+                sys_timer_del(ble_scan_poll_timer_id);
+                ble_scan_poll_timer_id = 0;
+            }
+            return;
+        }
+
+        ble_scan_wait_count--;
+        printf("BLE scan: wait_count = %d\n", ble_scan_wait_count);
+    } else if (ble_scan_wait_count > 0) {
+        ble_scan_wait_count--;
+        printf("BLE scan: no result, wait_count = %d\n", ble_scan_wait_count);
+        wifi_scan_req();  // 重试
+    } else if (ble_scan_poll_count >= 30) {
+        printf("BLE scan: timeout, cached=%d\n", ble_scan_cached_num);
+        if (ble_scan_cached_num > 0) {
+            ble_send_wifi_scan_result((struct wifi_scan_ssid_info *)ble_scan_cached_info, ble_scan_cached_num);
+        } else {
+            ble_send_wifi_scan_result(NULL, 0);
+        }
+        ble_scan_in_progress = false;
+        ble_scan_cached_num = 0;
+        wifi_clear_scan_result();
+        if (ble_scan_done_cb) {
+            ble_scan_done_cb();
+            ble_scan_done_cb = NULL;
+        }
+    }
+
+    if (!ble_scan_in_progress && ble_scan_poll_timer_id) {
+        sys_timer_del(ble_scan_poll_timer_id);
+        ble_scan_poll_timer_id = 0;
+    }
+}
+
+static void ble_wifi_scan_kickoff(void *priv)
+{
+    (void)priv;
+
+    printf("ble_wifi_scan_kickoff: using driver's internal scan results\n");
+
+    ble_scan_in_progress = true;
+    ble_scan_poll_count = 0;
+    ble_scan_wait_count = 5;
+
+    int ret = wifi_scan_req();
+    if (ret == 0) {
+        printf("ble_wifi_scan_kickoff: wifi_scan_req OK\n");
+    } else {
+        printf("ble_wifi_scan_kickoff: wifi_scan_req rejected, will read driver's scan cache\n");
+    }
+
+    ble_scan_poll_timer_id = sys_timer_add(NULL, ble_wifi_scan_poll, 1000);
+    if (ble_scan_poll_timer_id == 0) {
+        printf("ble_wifi_scan_kickoff: sys_timer_add failed\n");
+        ble_scan_in_progress = false;
+        if (ble_scan_done_cb) {
+            ble_scan_done_cb();
+            ble_scan_done_cb = NULL;
+        }
+    }
+}
+
+/**
+ * @brief BLE层调用此函数触发WiFi扫描
+ * @param done_cb 扫描完成后的回调（可为NULL）
+ * @return 0=成功启动扫描, -1=正在扫描中
+ */
+int ble_wifi_scan_request(void (*done_cb)(void))
+{
+    if (ble_scan_in_progress) {
+        printf("ble_wifi_scan_request: already scanning\n");
+        return -1;
+    }
+
+    ble_scan_in_progress = true;
+    ble_scan_poll_count = 0;
+    ble_scan_wait_count = 5;
+    ble_scan_done_cb = done_cb;
+
+    // 取消上一次未结束的轮询定时器
+    if (ble_scan_poll_timer_id) {
+        sys_timer_del(ble_scan_poll_timer_id);
+        ble_scan_poll_timer_id = 0;
+    }
+
+    // 延迟500ms触发扫描（让BLE协议栈先回复ack）
+    sys_timeout_add(NULL, ble_wifi_scan_kickoff, 500);
+
+    return 0;
+}
+#endif
+
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
 void sys_net_channel_get_wifi_info(void)
 {

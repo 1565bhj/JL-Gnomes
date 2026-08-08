@@ -410,6 +410,10 @@ void app_main()
     ws_shown_init();
 #endif
 
+    //todo
+    sys_net_mode_write(NET_MODE_MANUAL_SET);
+    //sys_net_channel_write(NET_CH_SELECT_LTE);
+
     int net_ch = sys_net_channel_read();
     int net_mode = sys_net_mode_read();
     if (net_mode < 0) {

@@ -326,6 +326,14 @@ int net_ai_asr_txt_recv_callback(char *buf, int len)
     return 0;
 }
 
+//朗读内容url回调
+int net_ai_content_url_recv_callback(char *url_addr)
+{
+    char *url = url_addr;
+    printf("app_layer->content_url: %s", url);
+    return 0;
+}
+
 int ai_audio_play_start_callback(void)
 {
 #ifdef AI_UART_CMD_CTROL_ENABLE

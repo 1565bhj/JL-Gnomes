@@ -43,7 +43,11 @@ const u8 RxReorderEnable = 0; //底层包乱序整理，0为关闭(关闭时UDP�
 const u32 MAX_REORDERING_MPDU_NUM = 1; //当RxReorderEnable开启时需要内存较大，该值也需要根据实际设置大一点(128)
 #else
 const u8 RxReorderEnable = 1; //底层包乱序整理，0为关闭(关闭时UDP重发包也会上传到上层, 但关闭可以减少内存消耗)，1为开启
+#if __SDRAM_SIZE__ > (2 * 1024 * 1024)
 const u32 MAX_REORDERING_MPDU_NUM = 128; //当RxReorderEnable开启时需要内存较大，该值也需要根据实际设置大一点(128)
+#else
+const u32 MAX_REORDERING_MPDU_NUM = 32; //当RxReorderEnable开启时需要内存较大，该值也需要根据实际设置大一点(128)
+#endif // __SDRAM_SIZE__
 #endif
 
 const u16 MAX_CHANNEL_TIME_BSS_INFRA = 200;//扫描每个信道停留时间,单位ms,最小20ms, 200-400ms最佳
@@ -63,9 +67,15 @@ const u16 MAX_PACKETS_IN_QUEUE = 12; //配置WiFi驱动最大发送数据包队�
 const u16 MAX_PACKETS_IN_MCAST_PS_QUEUE = 4;    //配置WiFi驱动最大发送数据包队列 //8   16 modify by lyx 32
 const u16 MAX_PACKETS_IN_PS_QUEUE   =   2;  //配置WiFi驱动最大发送数据包队列  //128    /*16 */
 #else
+#if __SDRAM_SIZE__ > (2 * 1024 * 1024)
 const u16 MAX_PACKETS_IN_QUEUE = 64; //配置WiFi驱动最大发送数据包队列
 const u16 MAX_PACKETS_IN_MCAST_PS_QUEUE = 16;  //配置WiFi驱动最大发送MCAST-power-save包队列 //modify by lyx 32
 const u16 MAX_PACKETS_IN_PS_QUEUE   = 32; //配置WiFi驱动最大发送power-save队列    //128   /*16 */
+#else
+const u16 MAX_PACKETS_IN_QUEUE = 32; //配置WiFi驱动最大发送数据包队列
+const u16 MAX_PACKETS_IN_MCAST_PS_QUEUE = 8;  //配置WiFi驱动最大发送MCAST-power-save包队列 //modify by lyx 32
+const u16 MAX_PACKETS_IN_PS_QUEUE   = 16; //配置WiFi驱动最大发送power-save队列    //128   /*16 */
+#endif // __SDRAM_SIZE__
 #endif
 
 #ifdef CONFIG_RF_TEST_ENABLE

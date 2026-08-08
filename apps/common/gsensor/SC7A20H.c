@@ -383,8 +383,8 @@ void sc7a20h_get_acceleration(unsigned int cnt)
     extern bool is_any_music_playing(void);
 
     // 只有不在对话页面时才更新摇晃标志
-    extern volatile int keyworld_start;
-    if (net_update_request() || keyworld_start) {
+    extern volatile int keyword_start;
+    if (net_update_request() || keyword_start) {
 //       printf("检查在对话页面\n");printf("关闭陀螺仪\n");
         //putchar('R');
         return;
@@ -467,7 +467,7 @@ noshake:
         } else
 #endif
             // 如果在骰子游戏页面，不播放表情29
-            if (!keyworld_start) {
+            if (!keyword_start) {
 #ifdef CONFIG_UI_PLAY_EMOJI
                 play_face_emoji(AI_UART_CMD_EMOJI_DIZZY);
                 os_time_dly(100);

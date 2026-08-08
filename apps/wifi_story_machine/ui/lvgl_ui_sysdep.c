@@ -1178,8 +1178,8 @@ int lv_demo_active_audio_app_music_paused(void)
         break;
     case 4:
 #ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
-        extern int aux_music_pause_status(void);
-        paused = aux_music_pause_status();
+        extern int aux_music_stop_status(void);
+        paused = aux_music_stop_status();
 #else
         paused = 0;
 #endif

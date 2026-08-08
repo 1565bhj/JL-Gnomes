@@ -22,6 +22,7 @@ extern char *qyai_ota_res_req_url_get(void);
 
 static char http_res_ota = 0;
 static char http_update_status = 0;
+static char http_update_task_init = 0;
 static uint64_t http_download_percent = 0;
 static void *update_fd = NULL;
 
@@ -113,10 +114,11 @@ exit:
     return HTTP_ERR;
 }
 
-static int http_ota_task(void *http_res_ota)
+static int http_ota_task(void *priv)
 {
     unsigned char mac[6];
     char *url = malloc(1024);
+    http_update_task_init = true;
     if (url) {
         extern int sys_connect_net_success(void);
         int to = 60 * 60;
@@ -130,11 +132,13 @@ static int http_ota_task(void *http_res_ota)
             os_time_dly(10);
             vbat_perc = vbat_check_percent();
             if (vbat_perc < 40) { //电压过低不升级
-                return 0;
+                goto exit;
             }
         }
 #endif
-        os_time_dly(500);//5秒钟后升级
+        if (priv == NULL) {
+            os_time_dly(500);//非MQTT触发，5秒钟后升级
+        }
         if (to) {
             bt_ble_get_mac(&mac);//使用蓝牙mac
             sprintf(url, "%s%02X%02X%02X%02X%02X%02X", qyai_ota_req_url_get(), mac[5], mac[4], mac[3], mac[2], mac[1], mac[0]);
@@ -167,15 +171,23 @@ static int http_ota_task(void *http_res_ota)
         }
         free(url);
     }
+exit:
+    http_update_task_init = 0;
     return 0;
 }
 
-int http_ota_init(void)
+int http_ota_init(void *priv)
 {
-    if (production_io_is_enter() || is_production_test_enter(0) || system_is_alarm_wakeup()) {
-        return 0;
+    priv = priv == 1 ? 1 : NULL;
+    if (production_io_is_enter() || is_production_test_enter(0) || system_is_alarm_wakeup() || http_update_task_init) {
+        return -1;
     }
-    return thread_fork("http_ota", 10, 2400, 0, 0, http_ota_task, NULL);
+    http_update_task_init = true;
+    if (thread_fork("http_ota", 10, 2400, 0, 0, http_ota_task, priv)) {
+        http_update_task_init = false;
+        return -2;
+    }
+    return 0;
 }
 
 late_initcall(http_ota_init);

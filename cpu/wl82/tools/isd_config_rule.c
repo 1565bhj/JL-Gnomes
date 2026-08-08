@@ -355,7 +355,7 @@ PRCT_OPT=2;
 #if defined CONFIG_MQTT_IOT_ENABLE
 [RESERVED_EXPAND_CONFIG]
 mqtt.bin_FILE=mqtt_res/mqtt.bin; 
-mqtt.bin_ADR=0x76f000; 
+mqtt.bin_ADR=CONFIG_AUDIO_PACKRES_ADR - 0x1000; 
 mqtt.bin_LEN=0x1000; 
 mqtt.bin_OPT=1; 
 #else

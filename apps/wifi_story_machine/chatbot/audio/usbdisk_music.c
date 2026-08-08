@@ -12,6 +12,7 @@
 #include "action.h"
 #include "volume.h"
 #include "ai_uart_ctrol.h"
+#include "asm/system_reset_reason.h"
 
 #define MAX_FILENAME_LEN                128
 
@@ -280,10 +281,10 @@ static int local_music_dec_stop(void)
     req.dec.cmd = AUDIO_DEC_STOP;
     server_request(__this->dec_server, AUDIO_REQ_DEC, &req);
 
-    int argv[2];
-    argv[0] = AUDIO_SERVER_EVENT_END;
-    argv[1] = (int)__this->file;
-    server_event_handler_del(__this->dec_server, 2, argv);
+//    int argv[2];
+//    argv[0] = AUDIO_SERVER_EVENT_END;
+//    argv[1] = (int)__this->file;
+//    server_event_handler_del(__this->dec_server, 2, argv);
 
     if (__this->play_loop) {
         if (__this->event_out) {
@@ -1186,7 +1187,7 @@ static int local_music_key_click(struct key_event *key)
     u8 volume = 0;
     switch (key->value) {
     case KEY_OK:
-        if (system_keyworld_start()) {
+        if (system_keyword_start()) {
             aisp_clear(1);
         }
 #if (defined SXY_LL_YHH_BOARD)
@@ -1256,7 +1257,7 @@ static int local_music_key_click(struct key_event *key)
 //        }
 //#endif
 #if (defined SXY_LL_YHH_BOARD)
-        if (system_keyworld_start()) {
+        if (system_keyword_start()) {
             aisp_clear(1);
         }
         local_music_dec_play_pause();

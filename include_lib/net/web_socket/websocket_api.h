@@ -278,6 +278,8 @@ typedef struct chatgtp_info {
     unsigned char music_info_type[4];
     unsigned char host_ip[16];//"255.255.255.255"
     unsigned char host_ip2[16 * 5];//"255.255.255.255"
+    //本轮对话id
+    unsigned char trace_id[32 + 4 + 1]; //加1个结束符
 
     unsigned int time_connect;
     unsigned int time_recoder;

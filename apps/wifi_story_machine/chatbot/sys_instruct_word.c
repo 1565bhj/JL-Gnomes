@@ -187,10 +187,10 @@ exit:
     return 1;//1立马关闭对话
 }
 
-extern int keyworld_start;
+extern int keyword_start;
 static void sys_close_timeout_check(void)
 {
-    if (keyworld_start) {
+    if (keyword_start) {
         websockets_free_lbuf_buf();
         websockets_close_request(1);
     }

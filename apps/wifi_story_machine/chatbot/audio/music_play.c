@@ -278,10 +278,10 @@ int music_play_stop(void *priv)
     req.dec.cmd = AUDIO_DEC_STOP;
     server_request(__this->dec_server, AUDIO_REQ_DEC, &req);
 
-    int argv[2];
-    argv[0] = AUDIO_SERVER_EVENT_END;
-    argv[1] = (int)__this->file;
-    server_event_handler_del(__this->dec_server, 2, argv);
+//    int argv[2];
+//    argv[0] = AUDIO_SERVER_EVENT_END;
+//    argv[1] = (int)__this->file;
+//    server_event_handler_del(__this->dec_server, 2, argv);
 
     if (__this->file) {
         fclose(__this->file);

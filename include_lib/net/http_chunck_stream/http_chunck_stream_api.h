@@ -91,11 +91,13 @@ typedef struct http_chunck_stream_struct {
     u32 content_length;
     u32 range_start;
     u32 range_end;
+    u32 start_offset;
     int sk_fd;
     u8 http_mode;
     u8 use_socket_api;
     u8 close_doing;
     u8 request_close;
+    u8 range_surrport;
     u16 port;
     struct sockaddr_in clientaddr;
     const char *origin_str;

@@ -649,6 +649,7 @@ int app_usb_at_cmd_init(u8 usb_id_num, void (*lte_online_callback)(void))
     pthread_mutex_init(&mutex_end, NULL);
 
     ml_state_code = ML_STATE_CHECK_WAIT_OK;
+    lte_turn_on();
     thread_fork("check_proccess", 10, 1024, 0, NULL, app_usb_check_process_thread, lte_online_callback);
     return 0;
     /* //app_core任务调用app_usb_at_cmd_init，在这个卡主会无法关机，所以要在创建任务丽执行lte_net_init

@@ -303,6 +303,7 @@
 					<Add option="../../../../cpu/wl82/liba/lib_sig_mesh.a" />
 					<Add option="../../../../cpu/wl82/liba/crypto_toolbox_Osize.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_lvgl_v8.a" />
+					<Add option="../../../../cpu/wl82/liba/qyai_mqtt.a" />
 					<Add option="--end-group" />
 					<Add option="../../../../cpu/wl82/liba/video_dec_server.a" />
 					<Add option="../../../../cpu/wl82/liba/ui.a" />
