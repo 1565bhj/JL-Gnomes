@@ -816,6 +816,18 @@ static void sdio_wait_busy_isr(void *priv)
     os_sem_post(&busy_sem);
 }
 
+char wifi_get_rssi(void)
+{
+    printf("err %s\n", __func__);
+    return 0;
+}
+
+int ble_wifi_scan_request(void (*done_cb)(void))
+{
+    printf("err %s\n", __func__);
+    return 0;
+}
+
 //软件判忙操作
 void  sdio_wait_busy(int gpio)
 {
