@@ -1166,7 +1166,9 @@ int ai_net_event_handler(struct net_event *event)
             msg[0] = 1;
             os_taskq_post_type(AI_SPEAKER_POLL_TASK, Q_USER, 1, msg);
 #endif
+#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
             http_ai_mqtt_get_conn_info_task(mqtt_get_conn_info);
+#endif
             if (net_ch == 1) {
                 char *iccid_ptr = app_usb_module_get_iccid();
                 http_ai_sim_card_bind_request_task(iccid_ptr, ai_speaker_card_bind_callbak);

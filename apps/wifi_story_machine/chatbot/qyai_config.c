@@ -126,18 +126,20 @@ int qyai_net_socket_err_callback(char *msg, int err_code, const char *trace_id)
     if (trace_id == NULL) {
         return -1;
     }
+    /*
+        if (strstr(msg, "exception")) { //没有收到音频数据数据异常断开
+            music_play_stop_all();
+            music_play_res_file("ServErrExce.mp3");
+        } else if (strstr(msg, "send")) { //发送数据阶段断开
+            music_play_stop_all();
+            music_play_res_file("ServErrSend.mp3");
+        } else if (strstr(msg, "err no recv complete index")) { //没收到结束包
+            ;
+        } else {//连接阶段异常
+            ;
+        }
+    */
 
-    if (strstr(msg, "exception")) { //没有收到音频数据数据异常断开
-        music_play_stop_all();
-        music_play_res_file("ServErrExce.mp3");
-    } else if (strstr(msg, "send")) { //发送数据阶段断开
-        music_play_stop_all();
-        music_play_res_file("ServErrSend.mp3");
-    } else if (strstr(msg, "err no recv complete index")) { //没收到结束包
-        ;
-    } else {//连接阶段异常
-        ;
-    }
 #ifndef CONFIG_NO_SDRAM_ENABLE
     size_t len = strlen(trace_id);
     //局部兜住，全局变，局部不变

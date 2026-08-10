@@ -62,13 +62,13 @@ static int http_data_callback(void *http, char *buf, int len, int payloadlen, ch
     }
     if (http_res_ota && !update_fd) {
 #ifdef SD_FILE_OTA_ENABLE
-        update_fd = fopen(CONFIG_UPGRADE_OTA_FILE_NAME_RES, "w+");
+        update_fd = fopen(CONFIG_ROOT_PATH CONFIG_UPGRADE_OTA_FILE_NAME_RES, "w+");
 #else
         update_fd = net_fopen(CONFIG_UPGRADE_OTA_FILE_NAME_RES, "w+");
 #endif
     } else if (!http_res_ota && !update_fd) {
 #ifdef SD_FILE_OTA_ENABLE
-        update_fd = fopen(CONFIG_UPGRADE_OTA_FILE_NAME, "w+");
+        update_fd = fopen(CONFIG_ROOT_PATH CONFIG_UPGRADE_OTA_FILE_NAME, "w+");
 #else
         update_fd = net_fopen(CONFIG_UPGRADE_OTA_FILE_NAME, "w+");
 #endif
@@ -81,14 +81,14 @@ static int http_data_callback(void *http, char *buf, int len, int payloadlen, ch
 #ifdef SD_FILE_OTA_ENABLE
     ret = fwrite(buf, 1, len, update_fd);
 #else
-    ret = net_fwrite(update_fd, buf, len, fin);
+    ret = net_fwrite(update_fd, buf, len, 0);
 #endif
     if (ret != len) {
         printf("OTA write error : 0x%x\n", ret);
         goto exit;
     }
     http_download_percent += len;
-    printf("OTA len:%d, total:%d (%ld%%)\n", len, payloadlen, http_download_percent * 100 / payloadlen);
+    printf("OTA len:%d, upload : %llu, total:%d (%ld%%)\n", len, http_download_percent, payloadlen, http_download_percent * 100 / payloadlen);
     if (fin) {
 #ifdef SD_FILE_OTA_ENABLE
         fclose(update_fd);
