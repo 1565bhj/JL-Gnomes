@@ -31,6 +31,7 @@
 #define VENDOR_GT108        2 //全网通
 #define VENDOR_ML120H       3 //骐俊
 #define VENDOR_AIR780E      4 //合宙780E
+#define VENDOR_NT26K        5 //利尔达NT26K
 
 //根据不同的芯片去分配不同的USB口
 //USB口使能：0x1-->USB0； 0x2-->USB1； 0x3--->USB0和USB1
