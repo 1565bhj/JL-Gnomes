@@ -1127,16 +1127,17 @@ int ai_net_event_handler(struct net_event *event)
                 }
             }
 
-            keyword_wifi_enter_congfig = 0;
+            if (keyword_wifi_enter_congfig != 1) {
+                config_network_stop();
+                keyword_wifi_enter_congfig = 0;
+            }
 
 #ifdef CONFIG_UI_PLAY_EMOJI
             extern int play_face_emoji(int index);
             play_face_emoji(AI_UART_CMD_WIFI_CONNECTED);
 #endif
 
-            if (keyword_wifi_enter_congfig != 1) {
-                config_network_stop();
-            }
+
 #if BT_NET_CFG_EN
             ble_cfg_net_result_notify(event->event);
 #endif

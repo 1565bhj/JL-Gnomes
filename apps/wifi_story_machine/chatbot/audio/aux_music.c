@@ -498,7 +498,7 @@ static void aux_play_pause(void)
         memset(&req, 0, sizeof(union audio_req));
         req.dec.cmd     = AUDIO_DEC_GET_STATUS;
         server_request(__this->dec_server, AUDIO_REQ_DEC, &req);
-        if (req.dec.status == AUDIO_ENC_PAUSE) {
+        if (req.dec.status == AUDIO_DEC_PAUSE) {
             __this->pause = true;
         } else {
             __this->pause = 0;

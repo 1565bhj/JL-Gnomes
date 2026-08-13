@@ -922,10 +922,6 @@ static int local_music_scan_file(char *path, int next_file)
             }
 #endif
             printf("-> scan file name  %d %d : %s\n", __this->last_rand, i, __this->fname);
-#if (defined CONFIG_UI_ENABLE && defined CONFIG_LVGL_UI_ENABLE)
-            lv_demo_music_update_lyric(__this->fname);
-            lv_demo_music_update_artist("");
-#endif
             ++i;
             if (__this->last_rand == i) {
                 printf("-> scan file_%d name : %s\n", i, __this->fname);
@@ -942,6 +938,10 @@ static int local_music_scan_file(char *path, int next_file)
 exit:
     //printf("-> num %d : %s \n",__this->last_rand, __this->fname);
     if (file) {
+#if (defined CONFIG_UI_ENABLE && defined CONFIG_LVGL_UI_ENABLE)
+        lv_demo_music_update_lyric(__this->fname);
+        lv_demo_music_update_artist("");
+#endif
         __this->last_file_num = __this->last_rand;
         return local_music_dec_file(file);
     } else {
