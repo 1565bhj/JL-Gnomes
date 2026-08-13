@@ -397,6 +397,9 @@ late_initcall(mp3_play_init);
 
 int mp3_buf_play_res_file(char *name)
 {
+    if (!name || !name[0]) {
+        return -1;
+    }
     char path[48] = {0};
     sprintf(path, "%s%s", CONFIG_VOICE_PROMPT_FILE_PATH, name);
     return mp3_buf_play_file(path, 0);

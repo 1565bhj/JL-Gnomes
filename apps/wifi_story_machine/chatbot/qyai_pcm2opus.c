@@ -169,8 +169,14 @@ static int qyai_opus_enc_open(void)
     if (s_opus_enc) {
         return 0;
     }
-
+    printf("qyai_opus_enc_open\n");
     audio_sem_init();
+
+    cbuf_init(&s_pcm_cbuf, s_pcm_cbuf_buf, sizeof(s_pcm_cbuf_buf));
+    cbuf_clear(&s_pcm_cbuf);
+    os_sem_set(&s_pcm_sem, 0);
+    s_read_input_cnt = 0;
+    s_pcm_eof = 0;
 
     s_opus_enc = server_open("audio_server", "enc");
     if (!s_opus_enc) {
@@ -181,12 +187,7 @@ static int qyai_opus_enc_open(void)
     server_register_event_handler_to_task(s_opus_enc, NULL,
                                           qyai_opus_enc_event_handler, "app_core");
 
-    cbuf_init(&s_pcm_cbuf, s_pcm_cbuf_buf, sizeof(s_pcm_cbuf_buf));
-    cbuf_clear(&s_pcm_cbuf);
-    os_sem_set(&s_pcm_sem, 0);
-    s_read_input_cnt = 0;
-    s_pcm_eof = 0;
-
+    req.enc.volume = 100;
     req.enc.cmd = AUDIO_ENC_OPEN;
     req.enc.channel = 1;
     req.enc.sample_rate = QYAI_OPUS_SAMPLE_RATE;

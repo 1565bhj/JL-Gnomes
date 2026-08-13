@@ -799,7 +799,7 @@
 #define CONFIG_BT_RX_BUFF_SIZE  (17 * 1024 + 400)
 #define CONFIG_BT_TX_BUFF_SIZE  (10 * 1024 + 512)
 #else
-#if __SDRAM_SIZE__ > 0
+#if __SDRAM_SIZE__ <= 0
 #define CONFIG_BT_RX_BUFF_SIZE  (4 * 1024)
 #define CONFIG_BT_TX_BUFF_SIZE  (2 * 1024)
 #else

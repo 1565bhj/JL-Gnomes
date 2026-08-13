@@ -216,7 +216,7 @@ static void net_ai_dialogue_resum_page(void *p)
 //网络对话文本回调函数
 int net_ai_dialogue_txt_recv_callback(char *buf, int len)
 {
-    //printf("===resp_txt : %s \n", buf);
+    printf("===resp_txt : %s \n", buf);
     //4G配对码提取
     if (lte_pai_code) {
         memcpy(pai_code, buf, len);
@@ -330,7 +330,7 @@ int net_ai_asr_txt_recv_callback(char *buf, int len)
 int net_ai_content_url_recv_callback(char *url_addr)
 {
     char *url = url_addr;
-    printf("app_layer->content_url: %s", url);
+    //printf("app_layer->content_url: %s", url);
     return 0;
 }
 

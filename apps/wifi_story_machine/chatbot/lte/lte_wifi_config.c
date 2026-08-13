@@ -279,19 +279,19 @@ int sys_net_mode_read(void)
 
 int sys_net_mode_write(u8 value)
 {
-
     char write_data = 0;
     if (syscfg_read(CFG_USER_LET_WIFI_SELECT, &LTE_WIFI_INFO, sizeof(LTE_WIFI_INFO)) < 0) {
         memset(&LTE_WIFI_INFO, 0, sizeof(LTE_WIFI_INFO));
+        write_data = 1;
     }
-
-    LTE_WIFI_INFO.net_mode = value;
-    //printf("-> write LTE_WIFI_INFO.channel = %d \n",LTE_WIFI_INFO.channel);
-    if (syscfg_write(CFG_USER_LET_WIFI_SELECT, &LTE_WIFI_INFO, sizeof(LTE_WIFI_INFO)) < 0) {
-        printf("=====sys_net_mode_write error!=====");
-        return -1;
+    if (LTE_WIFI_INFO.net_mode != value || write_data) {
+        LTE_WIFI_INFO.net_mode = value;
+        //printf("-> write LTE_WIFI_INFO.channel = %d \n",LTE_WIFI_INFO.channel);
+        if (syscfg_write(CFG_USER_LET_WIFI_SELECT, &LTE_WIFI_INFO, sizeof(LTE_WIFI_INFO)) < 0) {
+            printf("=====sys_net_mode_write error!=====");
+            return -1;
+        }
     }
-
     return 0;
 }
 

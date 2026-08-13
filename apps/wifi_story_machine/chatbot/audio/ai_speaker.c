@@ -289,8 +289,16 @@ static int auto_sleep_check(void)
     }
 #endif
 #ifdef AUTO_SLEEP_TIME_MIN
-    if (__this->auto_sleep_cnt > AUTO_SLEEP_TIME_MIN * 6) { //5分钟后低功耗
+    if (__this->auto_sleep_cnt >= AUTO_SLEEP_TIME_MIN * 6) { //5分钟后低功耗
+#if 1
         sys_power_poweroff();
+#else
+        if (__this->auto_sleep_cnt == AUTO_SLEEP_TIME_MIN * 6) {
+            music_play_res_file("autoPwrOff.mp3");
+            sys_timer_add_to_task("sys_timer", NULL, power_off_check, 9000);//9秒后启动,autoPwrOff.mp3=4s
+        }
+    }
+#endif
     }
 #endif
 }
@@ -821,12 +829,15 @@ done:
             //切卡操作
             app_usb_at_change_sim_card(key);
 #endif
+            //qyai_net_socket_err_callback("err no recv complete index", 0, websockets_client_trace_id_get());
         }
         break;
 
     //六连击以上，恢复出厂设置
     case KEY_EVENT_MORE_CLICK:
         if (key->value == KEY_OK || key->value == KEY_MODE) {
+            extern int http_wifi_device_unbind_app_task(void);
+            http_wifi_device_unbind_app_task();
             aisp_all_pause(1);
             music_play_res_file("SysRstFaSet.mp3");
             music_play_waite();
@@ -1030,6 +1041,7 @@ int ai_net_event_handler(struct net_event *event)
                 }
                 if (!is_in_config_network_state()) {
                     config_network_start();
+                    system_set_keyword_wifi_enter_config(1);
                 }
                 keyword_wifi_enter_congfig = 2;
             }
@@ -1076,6 +1088,7 @@ int ai_net_event_handler(struct net_event *event)
                 if (net_ch == 0) {
                     music_play_res_file("WifiNote.mp3");
                     config_network_start();
+                    system_set_keyword_wifi_enter_config(1);
                 }
             }
 #if (defined TCFG_LED_STATUES_VBAT_NET_EN && TCFG_LED_STATUES_VBAT_NET_EN == 1)
@@ -1169,10 +1182,12 @@ int ai_net_event_handler(struct net_event *event)
 #ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
             http_ai_mqtt_get_conn_info_task(mqtt_get_conn_info);
 #endif
+#ifdef CONFIG_LTE_PHY_ENABLE
             if (net_ch == 1) {
                 char *iccid_ptr = app_usb_module_get_iccid();
                 http_ai_sim_card_bind_request_task(iccid_ptr, ai_speaker_card_bind_callbak);
             }
+#endif
             break;
         case NET_EVENT_DISCONNECTED:
             canceladdrinfo();
@@ -1245,7 +1260,7 @@ int ai_net_event_handler(struct net_event *event)
                     }
                 } else {
                     //fixme: 修改提示音为“4G网络已断开”
-                    music_play_res_file("NetDiscon.mp3");
+                    //music_play_res_file("NetDiscon.mp3");
                     if (net_mode == NET_MODE_AUTO) {
                         sys_net_channel_write(NET_CH_SELECT_WIFI);
                         //music_play_res_file("WifiConting.mp3");
@@ -1315,6 +1330,7 @@ int ai_net_event_handler(struct net_event *event)
 //            if(!is_in_config_network_state()){
 //                config_network_start();
 //                music_play_res_file("WifiReCfg.mp3");
+//                system_set_keyword_wifi_enter_config(1);
 //            }
             break;
 

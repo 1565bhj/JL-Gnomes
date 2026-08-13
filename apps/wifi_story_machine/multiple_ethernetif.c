@@ -446,6 +446,7 @@ void lte_turn_on(void)
 {
     if (!dev) {
         printf("=====lte_turn_on:%d=====", __LINE__);
+        lte_net_params_clear();
         dev = dev_open("lte", NULL);
         dev_ioctl(dev, LTE_DEV_SET_CB, (u32)lte_state_cb);
         qyai_net_interface_set(1);
@@ -461,29 +462,19 @@ int lte_net_init(void)
     }
     __this->lte_init_flag = 1;
 
-#ifdef LTE_POWER_ONOFF_PORT
-    //1.turn on power
-    //lte_power_control(1);
-    //sys_timeout_add_to_task("sys_timer", 1, lte_power_control, 1200);
-#endif
-
     //2.Enable LTE module
-    //dev = dev_open("lte", NULL);
-    //dev_ioctl(dev, LTE_DEV_SET_CB, (u32)lte_state_cb);
+    //todo: 把这个步骤提前
+#if 0
     if (!dev) {
+        printf("=====lte_turn_on:%d=====", __LINE__);
         dev = dev_open("lte", NULL);
         dev_ioctl(dev, LTE_DEV_SET_CB, (u32)lte_state_cb);
         qyai_net_interface_set(1);
     }
-
-    //qyai_net_interface_set(1);
-#if 0
-    if (thread_fork("net_check", 10, 2048, 0, NULL, net_connected_check_thread, NULL) != OS_NO_ERR) {
-        puts("net_connected_check_thread create err\n");
-    }
+    qyai_net_interface_set(1);
+    //todo: 把这个步骤提前, 放lte_turn_on里面
+    //lte_net_params_clear();
 #endif
-
-    lte_net_params_clear();
 
     //3.send msg to front app
     struct net_event net = {0};
@@ -515,13 +506,11 @@ int lte_net_close(void)
     }
 
     printf("lte_net_close: %d", __this->net_connect_succ);
-//    if (__this->net_connect_succ == NET_CONNECT_SERVER_OK) {
-    //send msg: 网络已断开
+
     struct net_event net = {0};
     net.arg = "net";
     net.event = NET_EVENT_DISCONNECTED;
     net_event_notify(NET_EVENT_FROM_USER, &net);
-//    }
 
     lte_net_params_clear();
     //fix me
