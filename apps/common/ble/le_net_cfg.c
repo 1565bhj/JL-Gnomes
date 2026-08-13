@@ -713,7 +713,7 @@ static int payment_msg_send(void *priv)
     return 0;
 }
 
-#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
+#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE) && !IP_NAPT
 #define BLE_WIFI_SCAN_MAX_AP  15
 
 int ble_send_wifi_scan_result(struct wifi_scan_ssid_info *info, u32 num)
@@ -820,7 +820,7 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
                     break;
                 }
             }
-#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
+#if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE) && !IP_NAPT
             // 小程序发送帧: JL + 0x00,0x02 + 0x10,0x05 + CRC16(2B) + 0xFF
             if (buffer[0] == 'J' && buffer[1] == 'L' && buffer[4] == 0x10 && buffer[5] == 0x05) {
                 printf("\n>>> BLE recv scan WiFi request (0x10, 0x05)\n");
