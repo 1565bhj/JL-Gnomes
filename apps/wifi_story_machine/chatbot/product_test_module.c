@@ -1068,12 +1068,12 @@ static int product_function_test_task(void *priv)
         music_play_res_file("TestProdEnt.mp3");
         music_play_waite();
 
-#ifdef CONFIG_BT_ENABLE
-        if (PD_TEST.step & PD_TEST_BT) {
-            bt_music_volume_init();
-            bt_connection_enable();
-        }
-#endif
+//#ifdef CONFIG_BT_ENABLE
+//        if (PD_TEST.step & PD_TEST_BT) {
+//            bt_music_volume_init();
+//            bt_connection_enable();
+//        }
+//#endif
         /******************************** IO TEST **********************************/
 #ifdef PRODUCTION_YIERD_UART_CMD_ENABLE
         if (tcode & 0x0001)
@@ -1137,6 +1137,12 @@ static int product_function_test_task(void *priv)
             ai_at_test_finish();
 #endif
         }
+#ifdef CONFIG_BT_ENABLE
+        if (PD_TEST.step & PD_TEST_BT) {
+            bt_music_volume_init();
+            bt_connection_enable();
+        }
+#endif
         while (1) {
             if (read_power_key_press(1)) { //厂测模式下有按键按下则关机
                 sys_power_poweroff();

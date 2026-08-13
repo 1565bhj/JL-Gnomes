@@ -74,7 +74,7 @@
 					<Add option="-D_XOPEN_SOURCE=700" />
 					<Add option="-D_GNU_SOURCE" />
 					<Add option="-D__ELF__" />
-					<Add option="-DIP_NAPT" />
+					<Add option="-DIP_NAPT=1" />
 					<Add directory="../../../../include_lib/c++" />
 					<Add directory="../../../../include_lib/c++/include" />
 					<Add directory="../../../../include_lib/newlib/include" />
@@ -257,7 +257,7 @@
 					<Add option="../../../../cpu/wl82/liba/libauth.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_m4a_dec.a" />
 					<Add option="../../../../cpu/wl82/liba/lwip_2_2_0_lte_napt.a" />
-					<Add option="../../../../cpu/wl82/liba/wl_wifi_sta.a" />
+					<Add option="../../../../cpu/wl82/liba/wl_wifi.a" />
 					<Add option="../../../../cpu/wl82/liba/lte_module.a" />
 					<Add option="../../../../cpu/wl82/liba/ai_server.a" />
 					<Add option="../../../../cpu/wl82/liba/zliblite.a" />

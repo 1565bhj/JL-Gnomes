@@ -564,7 +564,7 @@ static int app_usb_module_sim_card_net_check(void)
         return ret;
     }
 
-    if (OS_TIMEOUT == os_sem_pend(&at_cmd_sem, SEM_WAIT_TIME_OUT)) {
+    if (OS_TIMEOUT == os_sem_pend(&at_cmd_sem, SEM_WAIT_TIME_OUT * 3)) {
         printf("err SIM CARD Check Net Time OUT, line:%d!!!", __LINE__);
         sim_status = SIM_CARD_NOT_ACTIVATE;
         lte_sim_card_status_opt(1, &sim_status);
@@ -672,7 +672,7 @@ int app_usb_at_cmd_init(u8 usb_id_num, void (*lte_online_callback)(void))
 //检测usb的plug in事件
 static void app_usb_hardware_check_thread(void)
 {
-#define MAX_CNT (15)
+#define MAX_CNT (60)
     extern u8 IPV4_ADDR_CONFLICT_DETECT;
     u8 cnt = 0;
     int net_mode = sys_net_mode_read();

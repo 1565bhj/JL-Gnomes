@@ -494,6 +494,10 @@ static int wifi_event_callback(void *network_ctx, enum WIFI_EVENT event)
                hwaddr->addr[0], hwaddr->addr[1], hwaddr->addr[2], hwaddr->addr[3], hwaddr->addr[4], hwaddr->addr[5],
                ip4_addr1(&ipaddr), ip4_addr2(&ipaddr), ip4_addr3(&ipaddr), ip4_addr4(&ipaddr));
         break;
+
+    case WIFI_EVENT_STA_IP_GOT_IPV6_SUCC:
+        printf("network_user_callback->WIFI_EVENT_STA_IP_GOT_IPV6_SUCC");
+        break;
     default:
         break;
     }
@@ -584,6 +588,30 @@ static void wifi_status(void *p)
         } else if (info.mode == STA_MODE) {
             printf("Router_RSSI=%d,Quality=%d \r\n", wifi_get_rssi(), wifi_get_cqi()); //侦测路由器端信号质量
         }
+    }
+}
+
+char *get_wifi_auth_mode(WIFI_802_11_AUTH_MODE mode)
+{
+    switch (mode) {
+    case WIFI_AUTH_MODE_OPEN:
+        return "AUTH_MODE_OPEN";
+    case WIFI_AUTH_MODE_WEP:
+        return "AUTH_MODE_WEP";
+    case WIFI_AUTH_MODE_WPA:
+        return "AUTH_MODE_WPA";
+    case WIFI_AUTH_MODE_WPA2PSK:
+        return "AUTH_MODE_WPA2PSK";
+    case WIFI_AUTH_MODE_WPAWPA2PSK:
+        return "AUTH_MODE_WPAWPA2PSK";
+    case WIFI_AUTH_MODE_WPA3SAE:
+        return "AUTH_MODE_WPA3SAE";
+    case WIFI_AUTH_MODE_WPA2PSKWPA3SAE:
+        return "AUTH_MODE_WPA2PSKWPA3SAE";
+    case WIFI_AUTH_MODE_WPA3H2E:
+        return "AUTH_MODE_WPA3H2E";
+    default:
+        return "***Unknown Auth Mode***";
     }
 }
 
