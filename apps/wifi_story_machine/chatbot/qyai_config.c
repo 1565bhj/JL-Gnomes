@@ -120,6 +120,7 @@ int qyai_url_debug(void)
 
 //网络异常信息回调
 int http_ai_dev_err_info_report_task(const char *reason, const char *cur_trace_id);
+int http_ai_dev_err_info_report_one_task(const char *reason, const char *cur_trace_id);
 int qyai_net_socket_err_callback(char *msg, int err_code, const char *trace_id)
 {
     //printf("msg:%s, err:%d, trace_id:%s\n", msg ? msg : "(null)", err_code, trace_id ? trace_id : "(null)");
@@ -148,7 +149,11 @@ int qyai_net_socket_err_callback(char *msg, int err_code, const char *trace_id)
         return -1;
     }
     memcpy(trace_id_bak, trace_id, len + 1);
+#if __SDRAM_SIZE__ >= (8 * 1024 * 1024)
     http_ai_dev_err_info_report_task(msg, trace_id_bak);
+#else
+    http_ai_dev_err_info_report_one_task(msg, trace_id_bak);
+#endif
     free(trace_id_bak);
 #endif
     return 0;

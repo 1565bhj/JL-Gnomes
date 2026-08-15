@@ -868,6 +868,10 @@ static void net_http_server_thread(void)
 #endif
 
 #ifdef CONFIG_LTE_PHY_ENABLE
+//设备sim卡绑定
+extern int http_ai_sim_card_bind_request_task(char *iccid, void (*set_callback)(int code, char *msg, char *data));
+extern int http_ai_sim_card_bind_request(char *_iccid, void (*set_callbak)(int code, char *msg, char *data));
+extern char *app_usb_module_get_iccid(void);
 #define AI_SPEAKER_POLL_TASK "poll_task"
 static void ai_speaker_poll_task(void *priv)
 {
@@ -966,22 +970,29 @@ done:
     }
     return 0;
 }
-#endif // CONFIG_LTE_PHY_ENABLE
 
-//设备sim卡绑定
-extern int http_ai_sim_card_bind_request(char *_iccid, void (*set_callbak)(int code, char *msg, char *data));
-extern char *app_usb_module_get_iccid(void);
 static void ai_speaker_card_bind_callbak(int code, char *msg, char *data)
 {
-
+    if (msg) {
+        printf("sim card recv msg : %s \n");
+    }
 }
 
+static void http_sim_card_bind_request(void)
+{
+    char *iccid_ptr = app_usb_module_get_iccid();
+    http_ai_sim_card_bind_request_task(iccid_ptr, ai_speaker_card_bind_callbak);
+}
+#endif // CONFIG_LTE_PHY_ENABLE
+
+#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
 //获取mqtt连接信息
-int http_ai_mqtt_get_conn_info(void (*set_callbak)(char *data));
+extern int http_ai_mqtt_get_conn_info(void (*set_callbak)(char *data));
 static void mqtt_get_conn_info(char *res_dat)
 {
-    printf("app recv:%s ", res_dat);
+    printf("mqtt recv:%s ", res_dat);
 }
+#endif
 
 int ai_net_event_handler(struct net_event *event)
 {
@@ -1173,7 +1184,7 @@ int ai_net_event_handler(struct net_event *event)
 #ifndef CONFIG_NO_SDRAM_ENABLE
             extern void net_dns_ip_check_first_fast(char *task);
             sys_timeout_add_to_task("app_core", "app_core", net_dns_ip_check_first_fast, 1 * 60 * 1000);//1分钟检测一次IP
-            sys_timer_add_to_task("app_core", "app_core", net_dns_ip_check_first_fast, 5 * 60 * 1000);//3分钟检测一次IP
+            sys_timer_add_to_task("app_core", "app_core", net_dns_ip_check_first_fast, 20 * 60 * 1000);//20分钟检测一次IP
 #endif
 #if IP_NAPT
             int msg[4] = {0};
@@ -1181,12 +1192,12 @@ int ai_net_event_handler(struct net_event *event)
             os_taskq_post_type(AI_SPEAKER_POLL_TASK, Q_USER, 1, msg);
 #endif
 #ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
-            http_ai_mqtt_get_conn_info_task(mqtt_get_conn_info);
+            extern int http_ai_mqtt_get_conn_info(void (*set_callback)(char *data));
+            sys_timeout_add_to_task("app_core", mqtt_get_conn_info, http_ai_mqtt_get_conn_info, 2000);//注意：低内存版本，联网同时开启多个http引起内存不足死机问题
 #endif
 #ifdef CONFIG_LTE_PHY_ENABLE
             if (net_ch == 1) {
-                char *iccid_ptr = app_usb_module_get_iccid();
-                http_ai_sim_card_bind_request_task(iccid_ptr, ai_speaker_card_bind_callbak);
+                sys_timeout_add_to_task("app_core", NULL, http_sim_card_bind_request, 3000);//注意：低内存版本，联网同时开启多个http引起内存不足死机问题
             }
 #endif
             break;
