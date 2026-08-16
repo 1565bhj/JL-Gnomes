@@ -292,7 +292,7 @@ void qyai_trace_id_get(char *trace_id_buf)
     //相当于前10byte：取一半变成5byte
     //后6byte取一半变3byte
     for (i = 0; i < 8; i++) {
-        random8[i] = random_buf[i * 2] ^ random_buf[i * 2 + 1];
+        random8[i] = random_buf[i * 2] ^ rand32();
     }
 
     //8字节再转成16个Hex字符
