@@ -1143,6 +1143,7 @@ static int product_function_test_task(void *priv)
             bt_connection_enable();
         }
 #endif
+        product_all_io_set_init(1, 0);//检测IO前，把所有的IO开上拉
         while (1) {
             if (read_power_key_press(1)) { //厂测模式下有按键按下则关机
                 sys_power_poweroff();
