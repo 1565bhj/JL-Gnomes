@@ -1150,7 +1150,7 @@ static void board_set_soft_poweroff(void)
         }
         gpio_latch_en(IO_PORT, 0);
         gpio_set_pull_up(IO_PORT, 0);
-        gpio_set_pull_down(IO_PORT, 1);
+        gpio_set_pull_down(IO_PORT, 0);//1:当PR口有外接IO到外设，可能需要开启下拉以降低功耗
         gpio_set_direction(IO_PORT, 1);
         gpio_set_die(IO_PORT, 0);
         gpio_set_dieh(IO_PORT, 0);

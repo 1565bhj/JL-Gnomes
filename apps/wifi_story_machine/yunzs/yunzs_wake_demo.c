@@ -974,7 +974,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                         }
                     }
 
-                    if (first_500ms_copy) {
+                    if (first_500ms_buf && first_500ms_copy) {
                         if (!qyai_audio_send_push((u8 *)first_500ms_buf, first_500ms_len)) {
 //                                sdfile_onefile_save_test(first_500ms_buf, first_500ms_len, 0);//sd卡存储PCM
                             first_500ms_copy = 0;

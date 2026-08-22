@@ -5,6 +5,7 @@
 typedef enum {
     Source_Kugou_E = 0, /* 酷狗的信源 */
     Source_Kuwo_E,  /* 酷我的信源 */
+    Source_WangYiYun_E,  /* 网易云的信源 */
     Source_Max_Value_E,
 } Media_Source_Type_e;
 /*
@@ -13,7 +14,7 @@ typedef enum {
     serial_num ：设备唯一ID
     itemID ：用来转换URL 的音乐ID，存放在item_info_t itemID字段中
 */
-int aiui_active(const char *appid, const char *key, const char *serial_num);
+int aiui_active(const char *appid, const char *key, const char* secret, const char *serial_num);
 /*
     信源音乐的存储方式itemID，需要将itemID通过酷我的API接口来获取url
     itemID ：用来转换URL 的音乐ID，存放在item_info_t itemID字段中

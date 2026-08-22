@@ -126,6 +126,7 @@ enum {
     BLE_WIFI_CONNECT_FAILED,//配网失败回复命令
     BLE_WIFI_CONNECT_NO_FOUND_SSID, //未找到ssid回复命令
     BLE_WIFI_CONNECT_ASSOCIAT_FAIL, //密码错误回复命令
+    BLE_WIFI_CONNECT_SERVER_FAIL, //网络问题连不上服务器
 };
 
 static const u8 rsp_cmd_head[6] = {0x4A, 0x4C, 0x00, 0x0e, 0x10, 0x02};
@@ -162,6 +163,13 @@ static const u8 rsp_cmd3[] = {
 static const u8 rsp_cmd4[] = {
     0x4A, 0x4C, 0x00, 0x0e, 0x10, 0x02,
     '{', '"', 's', 't', 'a', 't', 'u', 's', '"', ':', '4', '}',
+    0xB0, 0x07, 0xFF,
+};
+
+//连不上网回复命令
+static const u8 rsp_cmd5[] = {//此命令数组不能使用，没有修改校验值
+    0x4A, 0x4C, 0x00, 0x0e, 0x10, 0x02,
+    '{', '"', 's', 't', 'a', 't', 'u', 's', '"', ':', '5', '}',
     0xB0, 0x07, 0xFF,
 };
 
@@ -224,6 +232,10 @@ void user_app_send_user_data(void *ATT_VALUE, void *rsp_cmd, void *ATT_OP_type)
     app_send_user_data(ATT_VALUE, rsp_mac_cmd, len, ATT_OP_type);
 }
 
+void user_app_send_user_data_connet_server_err(void)
+{
+    user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECT_SERVER_FAIL, ATT_OP_AUTO_READ_CCC);
+}
 
 //------------------------------------------------------
 static void send_request_connect_parameter(u8 table_index)

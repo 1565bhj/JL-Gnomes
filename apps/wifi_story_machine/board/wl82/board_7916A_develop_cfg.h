@@ -3,6 +3,8 @@
 
 #ifdef CONFIG_BOARD_DEVELOP
 
+//#define CONFIG_FLASH_FOUR_WIDTH_ENABLE                 //FLASH四线模式
+
 #define CONFIG_STORE_VOLUME     1           //保存音量大小
 #define VOLUME_STEP             10          //音量设置梯度
 #define GAIN_STEP               10          //录音增益梯度
@@ -32,10 +34,11 @@
 #define VENDOR_ML120H       3 //骐俊
 #define VENDOR_AIR780E      4 //合宙780E
 #define VENDOR_NT26K        5 //利尔达NT26K
+#define VENDOR_CE105        6 //雁飞CE105
 
 //根据不同的芯片去分配不同的USB口
 //USB口使能：0x1-->USB0； 0x2-->USB1； 0x3--->USB0和USB1
-#define CONFIG_USB_OTG_EN_VAL   0x02 //High-Speed端口，7916两组端口都有
+#define CONFIG_USB_OTG_EN_VAL   0x03 //High-Speed端口，7916两组端口都有
 //#define CONFIG_USB_OTG_EN_VAL 0x01 //Full-Speed端口，7911只有FUSB
 #define DEFAULT_NET_CHANNEL     0 //默认出厂设置的网络模式：0-wifi模式，1-4G模式
 /*****************************************************************************/

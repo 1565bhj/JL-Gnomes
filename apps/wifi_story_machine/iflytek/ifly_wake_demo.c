@@ -86,7 +86,7 @@ SEC_USED(.sram) ALIGNE(4) static cbuffer_t gs_mic_cbuf;
 SET_MIC_BUF_SEC s16 mic_buf[IFLY_AUDIO_RECORD_BUF_POINTS * (IFLY_AUIDIO_RECORD_MIC_CH_NUM_MAX + 1)];
 OS_SEM read_available_sem;
 
-static St_tagAlgParm g_AlgEngineObj;
+static ivHandle g_AlgEngineObj;
 static ivPointer g_maeHandle = NULL;
 static WIVW_INST g_ivwInstance;
 static int g_ivwThreadID;
@@ -435,7 +435,7 @@ int initAec()
 {
     int ret = MIDDLE_OK;
     short nWritemode = 0;
-    int iWorkModel = 0;
+    int iWorkModel = 1;
     memset(&g_tAECParam, 0, sizeof(TAECParam));
 #ifdef CAE_USE_SRAM_MORE_FTR
     g_tAECParam.nSize = CAE_AEC_BUF_SIZE_MAX;
@@ -491,17 +491,28 @@ int unInitAec()
 int initAlg()
 {
     int ret = 0;
-    memset(&g_AlgEngineObj, 0, sizeof(g_AlgEngineObj));
+    unsigned int inst_size = NCGetInstSize();
+    g_AlgEngineObj = ram_malloc(inst_size);
 
-    g_AlgEngineObj.g_tAECParam = 0;
-    ret = NCInit(&g_AlgEngineObj, 2, AEC_FRAME_SIZE);
+    ret = NCInit(g_AlgEngineObj, 2, AEC_FRAME_SIZE);
     if (ret) {
         printf("Ifly_NCInit failed, ret=%d\n", ret);
         return ret;
     }
+    int workmode = WORKMODE_TELEPHONE;
+    ret = NCSetParam(g_AlgEngineObj, PARAM_WORK_MODE, &workmode);
+    if (ret) {
+        printf("PARAM_WORK_MODE failed, ret=%d\n", ret);
+        return ret;
+    }
+    /*float fixgain = 5.0f;
+    ret = NCSetParam(g_AlgEngineObj, PARAM_FIX_GAIN, &fixgain);
+    if (ret) {
+        printf("PARAM_FIX_GAIN failed, ret=%d\n", ret);
+        return ret;
+    }*/
     return ret;
 }
-
 int parseJson(const char* json, const char* key, char* value, int len)
 {
     const char *p1, *p2, *p;
@@ -687,9 +698,13 @@ int ifly_engine_init()
 #else
     initAlg();
     // 输出引擎版本
-    char ver[64] = {0};
-    NCGetVersion(ver);
-    printf("jsyan AlgEngine version:%s\n", ver);
+    char *ver = NULL;
+    ver = NCGetVersion();
+    if (ver != NULL) {
+        printf("AlgEngine version:%s\n", ver);
+    } else {
+        printf("AlgEngine version is NULL");
+    }
 #endif
 
     vtn_net_auth_init(ifly_aiui_sdk_common_get_appid(), ifly_aiui_sdk_common_get_deviceid());//参数输入用户appid
@@ -716,7 +731,7 @@ void ifly_engine_uninit(void)
 #if IFLY_AUDIO_RECORD_MIC_COUNT == 1
     unInitAec();
 #else
-    NCUnit(&g_AlgEngineObj);
+    NCUnit(g_AlgEngineObj);
 #endif
     if (g_ivwInstance) {
         wIvwStop(g_ivwInstance);
@@ -755,7 +770,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void aecProcess2(const void* pdata, void 
         return;
     }
 #else
-    ret = Ifly_AlgProcess(&g_AlgEngineObj, pdata, g_aecOutput, nAECOut);
+    ret = Ifly_AlgProcess(g_AlgEngineObj, pdata, g_aecOutput, nAECOut);
     if (ret != AEC_FRAME_SIZE) {
         printf("aecProcess2 Ifly_AlgProcess error...\n");
         return;
@@ -1347,7 +1362,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                                 continue;
                             }
                         }
-                        if (first_500ms_copy) {
+                        if (first_500ms_buf && first_500ms_copy) {
                             if (!qyai_audio_send_push((u8 *)first_500ms_buf, first_500ms_len)) {
 //                                sdfile_onefile_save_test(first_500ms_buf, first_500ms_len, 0);//sd卡存储PCM
                                 first_500ms_copy = 0;
@@ -1567,13 +1582,16 @@ void esr_queue_task(void *priv)
         struct key_event key = {0};
         key.type = KEY_EVENT_USER;
         int net_ch = 0;
+
+#define BEST_PACKET_SIZE    1024
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
         net_ch = sys_net_channel_read();
         if (net_ch < 0) {
             net_ch = 0;
         }
         if (net_ch == 1) {
-            websockets_client_best_one_packge_set(1024);
+            websockets_client_best_one_packge_set(BEST_PACKET_SIZE);
+            websockets_send_pcmdata_oddnumber_add_zero(BEST_PACKET_SIZE == 1);
         }
 #endif
         index = aisp_wake_world_callback(msg[1]);
@@ -2247,5 +2265,20 @@ void aisp_close(void)
     aisp_clear(0);
     printf("---------aisp_close ok---------\n");
 }
+
+
+void  __attribute__((weak)) ifly_aiui_process_uninit(void)
+{
+}
+
+int  __attribute__((weak)) ifly_aiui_process_init(t_p_fun_ws_rcv_cb *p_cb)
+{
+}
+
+char  __attribute__((weak)) *ifly_aiui_sdk_version(void)
+{
+    return "err no aiui version";
+}
+
 #endif
 

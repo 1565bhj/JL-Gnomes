@@ -66,6 +66,24 @@ enum IFLY_AIUI_SDK_EVENT {
     IFLY_AIUI_QUIT = 0xff,
 };
 
+enum IFLY_AIUI_WAKEUP_TYPE {
+    IFLY_AIUI_OFFLINE_WAKEUP = 0,
+    IFLY_AIUI_KEY_WAKEUP,
+    IFLY_AIUI_INTERRUPT_WAKEUP,
+};
+
+enum {
+    REBOOT_TYPE_NORMAL = 0,
+    REBOOT_TYPE_MUTE = 1,
+    REBOOT_TYPE_OTA_AIUI = 2,
+    REBOOT_TYPE_USER = 3,
+};
+
+enum {
+    IFLY_DISCONNECT_REASON_NORMAl = 0,
+    IFLY_DISCONNECT_REASON_NET_BUSY,
+    IFLY_DISCONNECT_REASON_NET_ERROR,
+};
 
 typedef enum {
     ORDERPLAY_MODE,  //orderPlay
@@ -107,6 +125,8 @@ extern const int ifly_aiui_media_get_playing_status(void);
 extern void ifly_aiui_ai_media_audio_play(const char *url);
 extern int ifly_aiui_net_music_play_next(void);
 extern void ifly_aiui_media_set_playing_status(int value);
+int ifly_aiui_write_reboot_type(unsigned char vp_reboot_type);
+int ifly_aiui_read_reboot_type(unsigned char *pp_reboot_type);
 
 
 #endif

@@ -85,7 +85,7 @@ typedef unsigned IV_TYPE_INT24  ivUInt24;   /* 24-bit */
 typedef signed IV_TYPE_INT32    ivInt32;    /* 32-bit */
 typedef unsigned IV_TYPE_INT32  ivUInt32;   /* 32-bit */
 
-typedef ivInt32     ivStatus;
+//typedef ivInt32       ivStatus;
 
 #ifdef IV_TYPE_INT48
 typedef signed IV_TYPE_INT48    ivInt48;    /* 48-bit */

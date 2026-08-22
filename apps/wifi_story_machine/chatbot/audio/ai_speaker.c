@@ -122,11 +122,6 @@ static struct ap_sp {
 
 #define __this (&AI_SP)
 
-u8 usb_id_get(void)
-{
-    return usb_id;
-}
-
 /**
  * @brief 读取系统唤醒词状态
  * @return value 状态值：0-未唤醒，1-唤醒状态
@@ -985,15 +980,6 @@ static void http_sim_card_bind_request(void)
 }
 #endif // CONFIG_LTE_PHY_ENABLE
 
-#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
-//获取mqtt连接信息
-extern int http_ai_mqtt_get_conn_info(void (*set_callbak)(char *data));
-static void mqtt_get_conn_info(char *res_dat)
-{
-    printf("mqtt recv:%s ", res_dat);
-}
-#endif
-
 int ai_net_event_handler(struct net_event *event)
 {
     int net_ch = 0;
@@ -1191,14 +1177,20 @@ int ai_net_event_handler(struct net_event *event)
             msg[0] = 1;
             os_taskq_post_type(AI_SPEAKER_POLL_TASK, Q_USER, 1, msg);
 #endif
-#ifdef CONFIG_QYAI_MQTT_IOT_ENABLE
-            extern int http_ai_mqtt_get_conn_info(void (*set_callback)(char *data));
-            sys_timeout_add_to_task("app_core", mqtt_get_conn_info, http_ai_mqtt_get_conn_info, 2000);//注意：低内存版本，联网同时开启多个http引起内存不足死机问题
-#endif
+
 #ifdef CONFIG_LTE_PHY_ENABLE
             if (net_ch == 1) {
                 sys_timeout_add_to_task("app_core", NULL, http_sim_card_bind_request, 3000);//注意：低内存版本，联网同时开启多个http引起内存不足死机问题
             }
+#endif
+#if 0
+            http_ai_get_photo_grap(http_get_photo_grap_cb);
+
+            //参数：返回请求结果的回调函数+多模态拍照类型，上报消耗一次拍照次数
+            char photo_type[32];
+            snprintf(photo_type, sizeof(photo_type), "\"photo_type\":%d", OPT_MODE_TEXT_IMG2_IMG);
+            http_ai_consume_photo_grap(2, http_consume_photo_grap_cb, photo_type);
+
 #endif
             break;
         case NET_EVENT_DISCONNECTED:

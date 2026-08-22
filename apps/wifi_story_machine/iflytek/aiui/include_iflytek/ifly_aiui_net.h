@@ -34,6 +34,7 @@ enum IFLY_AIUI_NET_MSG {
     IFLY_AIUI_CITY_WEATHER_MSG = 0x12,
     IFLY_AIUI_UPGRADE_FIRMWARE_CHECK = 0x13,
     IFLY_AIUI_MULTI_SESSION_MSG = 0x14,
+    IFLY_AIUI_XIOT_CONNECT_MSG = 0x15,
     IFLY_AIUI_QUIT_MSG = 0xFF,
 };
 
@@ -128,20 +129,20 @@ int ifly_aiui_start_voice_req(void);
  * @param void。
  * @return void。
  */
-OAL_RESULT ifly_aiui_send_voice_start();
+OAL_RESULT ifly_aiui_send_voice_start(char* data, int data_len);
 /**
  * @brief 发送识别音频数据。
  * @param *pp_voice_buf 音频数据的内存指针
  * @param vp_len 音频数据的长度
  * @return OAL_RESULT。
  */
-OAL_RESULT ifly_aiui_send_voice_data(const char *pp_voice_buf, int vp_len);
+OAL_RESULT ifly_aiui_send_voice_data(char* data, int data_len);
 /**
  * @brief 发送识别结束/取消指令。
  * @param vp_end_type 预留
  * @return OAL_RESULT。
  */
-OAL_RESULT ifly_aiui_send_voice_stop(unsigned char vp_end_type);
+OAL_RESULT ifly_aiui_send_voice_stop(char* data, int data_len);
 /**
  * @brief 关闭aiui websocket连接。
  * @param void。

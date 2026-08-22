@@ -281,7 +281,7 @@ ip4_route2(src, dest)
 #if IP_NAPT
 #define NETIF_MTU 1500
 #else
-#define NETIF_MTU 1500 //1240 虽然以太网标准是1500 ,但是会导致某些网关丢弃数据包,当发现数据包发不出去网关就降低该值测试
+#define NETIF_MTU 1240 //1240 虽然以太网标准是1500 ,但是会导致某些网关丢弃数据包,当发现数据包发不出去网关就降低该值测试
 #endif
 
 /*---------- TCP options ----------*/

@@ -163,6 +163,7 @@ void net_connected_check_reset_timeout(void)
 static void net_connected_check_thread(void)
 {
     int net_ch = 0;
+    int server_err = 0;
     __this->lte_phy_timeout = timer_get_sec();
     while (__this->net_check_th_ready) {
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
@@ -217,7 +218,17 @@ static void net_connected_check_thread(void)
         }
 #endif
         struct net_event net = {0};
-        if (__this->lte_phy_dhcp_succ == NET_DHCP_SUCCESS && net_connect_check()) {
+        int server_ok = 0;
+        if (__this->lte_phy_dhcp_succ == NET_DHCP_SUCCESS) {
+            server_ok = net_connect_check();
+            if (!server_ok && !net_ch) {
+                server_err++;
+                if (server_err == 2 && is_in_config_network_state()) {
+                    user_app_send_user_data_connet_server_err();
+                }
+            }
+        }
+        if (__this->lte_phy_dhcp_succ == NET_DHCP_SUCCESS && server_ok) {
             __this->lte_phy_timeout = 0;
             __this->net_connect_succ = NET_CONNECT_SERVER_OK;
             net.arg = "net";

@@ -116,6 +116,8 @@ typedef struct websocket_struct {
     u8 request_close;
     u8 recv_type_status;
     u8 no_alloc_buf;
+    u8 data_packet_aligned2_byte_en;//TCP使能2字节对齐，奇数则补0
+    u8 last_unaligned2_databyte;//TCP非2字节对齐后上次需要发送的数据（低8位，高8位作为标记）
     u16 port;
     struct sockaddr_in servaddr;
     struct sockaddr_in clientaddr;
@@ -231,6 +233,7 @@ typedef struct chatgtp_info {
     unsigned char alarm_del_all;
     unsigned char alarm_del;
     unsigned char alarm_cyc;
+    unsigned char even_only_data_en;
     unsigned char *alarm_url;
     int64_t alarm_int_val;
     unsigned int timeout_ms;
@@ -326,6 +329,8 @@ int  websockets_client_socket_init(struct websocket_struct *websocket_info);
 int  websockets1_client_socket_init(struct websocket_struct *websocket_info);
 int websockets_client_notify_disconnet_to_server(struct websocket_struct *websockets_info);//客户端往服务器发送disconnect消息
 int webcockets_client_socket_connect_check(struct websocket_struct *websockets_info);
+int websockets_client_socket_send_flush(struct websocket_struct *websockets_info);
+
 int websockets_request_head_user_data(struct websocket_struct *websockets_info, char *user_data);
 int websockets_request_close(struct websocket_struct *websockets_info, char enable);
 int websockets_recv_discon_type(struct websocket_struct *websockets_info);
@@ -340,7 +345,8 @@ int  websockets_serv_socket_hanshack(struct websocket_struct *websockets_info);
 int  websockets_serv_socket_init(struct websocket_struct *websockets_info);
 int websockets_struct_check(int sizeof_struct);
 int websockets_hanshake_set_content(struct websocket_struct *websockets_info, char *content, int len);
-
+int websockets_bin_packet_head_size(char mask_en, u64 bin_size);
+void websockets_send_pcmdata_oddnumber_add_zero(char enable);//发奇数数据补0
 int websockets_socket_valid(struct websocket_struct *websockets_info);
 
 #endif
