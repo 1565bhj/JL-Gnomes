@@ -55,16 +55,17 @@ void AXS15252_clear_screen(u32 color)
         buf[2 * i] = (color >> 8) & 0xff;
         buf[2 * i + 1] = color & 0xff;
     }
-    WriteCOM(0x2B);
-    WriteDAT_8(0);
-    WriteDAT_8(0);
-    WriteDAT_8((w - 1) >> 8);
-    WriteDAT_8((w - 1));
     WriteCOM(0x2A);
     WriteDAT_8(0);
     WriteDAT_8(0);
     WriteDAT_8((h - 1) >> 8);
     WriteDAT_8((h - 1));
+
+    WriteCOM(0x2B);
+    WriteDAT_8(0);
+    WriteDAT_8(0);
+    WriteDAT_8((w - 1) >> 8);
+    WriteDAT_8((w - 1));
     lcd_interface_non_block_wait();
     WriteCOM(0x2c);
     WriteDAT_DMA(buf, w * h * 2);
@@ -83,16 +84,17 @@ void AXS15252_Fill(u8 *img, u16 len)
 //    unsigned short h = LCD_H;
     unsigned short w = LCD_H;
     unsigned short h = LCD_W;
-    WriteCOM(0x2B);
-    WriteDAT_8(0);
-    WriteDAT_8(0);
-    WriteDAT_8((w - 1) >> 8);
-    WriteDAT_8((w - 1));
     WriteCOM(0x2A);
     WriteDAT_8(0);
     WriteDAT_8(0);
     WriteDAT_8((h - 1) >> 8);
     WriteDAT_8((h - 1));
+    WriteCOM(0x2B);
+    WriteDAT_8(0);
+    WriteDAT_8(0);
+    WriteDAT_8((w - 1) >> 8);
+    WriteDAT_8((w - 1));
+
     lcd_interface_non_block_wait();
     WriteCOM(0x2c);
     WriteDAT_DMA(img, len);

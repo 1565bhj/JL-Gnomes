@@ -206,7 +206,9 @@ static void net_ai_dialogue_resum_page(void *p)
     id = id < 0 ? 0 : id;
     char *app[] = {"ai_speaker", "bt_music", "sd_music", "usbdisk_music", "aux_music"};
     if (id == 0) {
-        lv_demo_switch_to_main_page();
+        if(!lv_demo_is_tomato_timer_page()){
+            lv_demo_switch_to_main_page();
+        }
     } else {
         lv_demo_switch_to_music_page(app[id]);
     }

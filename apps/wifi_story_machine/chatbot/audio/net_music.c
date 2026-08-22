@@ -260,7 +260,7 @@ int net_music_play_pause(u8 stop)
         at_uart_cmd_send(stop ? AI_UART_CMD_NET_MUSIC_STOP : AI_UART_CMD_NET_MUSIC_PLAY, NULL);
 #endif
     }
-    return http_music_play_set_puase(stop, 20 * 60);//暂停20分钟
+    err = http_music_play_set_puase(stop, 20 * 60);//暂停20分钟
 #else
     if (!__this->net_file || !__this->dec_server || __this->play_status == AUDIO_DEC_STOP  || __this->play_status == 0) {
         __this->play_status = 0;
@@ -279,15 +279,6 @@ int net_music_play_pause(u8 stop)
     if (__this->play_status == AUDIO_DEC_PAUSE && stop == 1) {
         return 1;
     }
-#ifdef AI_UART_CMD_CTROL_ENABLE
-    ai_uart_cmd_data_push(stop ? AI_UART_CMD_NET_MUSIC_STOP : AI_UART_CMD_NET_MUSIC_PLAY, NULL, 0);
-#endif
-#ifdef AT_UART_CMD_ENABLE
-    at_uart_cmd_send(stop ? AI_UART_CMD_NET_MUSIC_STOP : AI_UART_CMD_NET_MUSIC_PLAY, NULL);
-#endif
-#ifdef CONFIG_UI_PLAY_EMOJI
-    play_face_emoji(stop ? AI_UART_CMD_NET_MUSIC_STOP : AI_UART_CMD_NET_MUSIC_PLAY);
-#endif
     printf("__this->play_status = %d, %d \n", __this->play_status, stop);
     if (!stop) {
         __this->play_status = AUDIO_DEC_START;
@@ -297,6 +288,19 @@ int net_music_play_pause(u8 stop)
         net_music_dec_play_pause(0);
         err = 1;
     }
+#endif
+
+#ifdef AI_UART_CMD_CTROL_ENABLE
+    ai_uart_cmd_data_push(stop ? AI_UART_CMD_NET_MUSIC_STOP : AI_UART_CMD_NET_MUSIC_PLAY, NULL, 0);
+#endif
+#ifdef AT_UART_CMD_ENABLE
+    at_uart_cmd_send(stop ? AI_UART_CMD_NET_MUSIC_STOP : AI_UART_CMD_NET_MUSIC_PLAY, NULL);
+#endif
+#ifdef CONFIG_UI_PLAY_EMOJI
+    play_face_emoji(stop ? AI_UART_CMD_NET_MUSIC_STOP : AI_UART_CMD_NET_MUSIC_PLAY);
+#endif
+#if (defined CONFIG_UI_ENABLE && defined CONFIG_LVGL_UI_ENABLE)
+    lv_demo_music_play_pause_button(err);
 #endif
     return err;
 }
@@ -1072,6 +1076,20 @@ short *net_music_get_audio_fft(int *len)
 static void dec_server_event_handler(int event, int time)
 {
     switch (event) {
+    case AUDIO_DEC_START:
+#if (defined CONFIG_UI_ENABLE && defined CONFIG_LVGL_UI_ENABLE)
+        // 更新UI界面的总时长显示
+        printf("__this->total_time : %d\n", __this->total_time);
+        __this->total_time = time;
+        if (__this->total_time > 0) {
+            lv_demo_music_update_total_time(__this->total_time);
+        }
+        if (!lv_demo_is_ring_page()) {
+            void *websockets_music_url_type(char clear);
+            lv_demo_switch_to_music_page(__this->play_next_mode);
+        }
+#endif
+        break;
     case HTTP_REQ_NO_FILE:
         printf("net_music: HTTP_REQ_NO_FILE ERR\n");
     case AUDIO_SERVER_EVENT_ERR:

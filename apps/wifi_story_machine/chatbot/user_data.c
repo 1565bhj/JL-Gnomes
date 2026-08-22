@@ -15,7 +15,7 @@ static struct user_data_info {
 #ifdef CONFIG_UI_ENABLE
     unsigned char lcd_light;
 #if CONFIG_LVGL_AGENT_ENABLE
-    unsigned char agent_intell_id; /* http_ai_intell_set_id 参数，0 表示未记忆 */
+    unsigned int agent_intell_id; /* http_ai_intell_set_id 参数，0 表示未记忆 */
 #endif
 #if CONFIG_LVGL_OPTION_WIFI_ENABLE
     unsigned char account_bound;   /* 是否已绑定账号：0=未绑定，1=已绑定 */
@@ -135,10 +135,10 @@ int user_agent_intell_id_write(int id_index)
     if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
         memset(&USER_DATA, 0, sizeof(USER_DATA));
     }
-    if (id_index <= 0 || id_index > 65535) {
+    if (id_index <= 0) {
         return -1;
     }
-    USER_DATA.agent_intell_id = (unsigned short)id_index;
+    USER_DATA.agent_intell_id = (unsigned int)id_index;
     syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
     return 0;
 }
