@@ -14,6 +14,7 @@
 #include "hid.h"
 #include "audio.h"
 #include "usbnet.h"
+#include "usb_host_cdc.h"
 #include "event/key_event.h"
 
 #if TCFG_USB_APPLE_DOCK_EN
@@ -241,12 +242,23 @@ static int _usb_wireless_at_port_parser(struct usb_host_device *host_dev, u8 int
     return USB_DT_INTERFACE_SIZE;
 #endif
 }
+static int _usb_cdc_parser(struct usb_host_device *host_dev, u8 interface_num, const u8 *pBuf)
+{
+    log_info("find cdc @ interface %d", interface_num);
+#if TCFG_HOST_CDC_ENABLE
+    return usb_cdc_parser(host_dev, interface_num, pBuf);
+#else
+    return USB_DT_INTERFACE_SIZE;
+#endif
+}
 
 #if 0
 static int usb_descriptor_parser(struct usb_host_device *host_dev, const u8 *pBuf, u32 total_len, struct usb_device_descriptor *device_desc)
 {
     int len = 0;
     u8 interface_num = 0;
+    struct usb_private_data *private_data = &host_dev->private_data;
+
     struct usb_config_descriptor *cfg_desc = (struct usb_config_descriptor *)pBuf;
 
     if (cfg_desc->bDescriptorType != USB_DT_CONFIG ||
@@ -855,12 +867,13 @@ int qyai_usb_descriptor_parser(u8 usb_id, struct usb_host_device *host_dev, cons
                     g_usb_descriptor_pos += i;
                 }
                 have_find_valid_class = true;
-            } else if (!qyai_usb_h_device_serial_get_parse_flag(0) && (interface->bInterfaceClass == USB_CLASS_WIRELESS_CONTROLLER
-                       || (interface->bInterfaceClass == USB_CLASS_CDC_DATA && interface->bInterfaceSubClass == 0))) {
+            } else if (!qyai_usb_h_device_serial_get_parse_flag(0) &&
+                       (interface->bInterfaceClass == USB_CLASS_WIRELESS_CONTROLLER || (interface->bInterfaceClass == USB_CLASS_CDC_DATA && interface->bInterfaceSubClass == 0)
+                        || qyai_usb_net_set_rndis_device(host_dev, interface->bInterfaceClass, interface->bInterfaceSubClass))) {
                 printf("=======fetch wireless interface numbers:%d\r\n", interface->bInterfaceNumber);
                 qyai_usb_h_device_serial_set_parse_flag(0, 1);
 
-                i = _usb_wireless_parser(host_dev, interface_num, &g_usb_descriptor_buf[g_usb_descriptor_pos]);
+                i = _usb_wireless_parser(host_dev, interface->bInterfaceNumber, &g_usb_descriptor_buf[g_usb_descriptor_pos]);
                 if (i < 0) {
                     log_error("---%s %d---, i = %d", __func__, __LINE__, i);
                     len = g_usb_descriptor_len;
@@ -961,7 +974,7 @@ static int _usb_host_mount(const usb_dev usb_id, u32 retry, u32 reset_delay, u32
         private_data->devnum = 0;
         private_data->ep0_max_packet_size = 8;
         ret = usb_get_device_descriptor(host_dev, &device_desc);
-        printf("=============usb_get_device_descriptor==================");
+        printf("=============usb_get_device_descriptor 0==================");
         printf("device_desc.bLength:%d", device_desc.bLength);
         printf("device_desc.bDescriptorType:%d", device_desc.bDescriptorType);
         printf("device_desc.bMaxPacketSize0:%d", device_desc.bMaxPacketSize0);
@@ -969,6 +982,8 @@ static int _usb_host_mount(const usb_dev usb_id, u32 retry, u32 reset_delay, u32
         printf("device_desc.idVendor:0x%04x", device_desc.idVendor);
         printf("device_desc.bNumConfigurations:%d", device_desc.bNumConfigurations);
         printf("=========================================================");
+
+        put_buf(&device_desc, sizeof(device_desc));
 
         /**********set address*********/
         usb_mdelay(20);
@@ -987,6 +1002,18 @@ static int _usb_host_mount(const usb_dev usb_id, u32 retry, u32 reset_delay, u32
         usb_mdelay(20);
         ret = usb_get_device_descriptor(host_dev, &device_desc);
         check_usb_mount(ret);
+
+        printf("=============usb_get_device_descriptor 1==================");
+        printf("device_desc.bLength:%d", device_desc.bLength);
+        printf("device_desc.bDescriptorType:%d", device_desc.bDescriptorType);
+        printf("device_desc.bMaxPacketSize0:%d", device_desc.bMaxPacketSize0);
+        printf("device_desc.idProduct:0x%04x", device_desc.idProduct);
+        printf("device_desc.idVendor:0x%04x", device_desc.idVendor);
+        printf("device_desc.bNumConfigurations:%d", device_desc.bNumConfigurations);
+        printf("=========================================================");
+
+        put_buf(&device_desc, sizeof(device_desc));
+
         private_data->ep0_max_packet_size = device_desc.bMaxPacketSize0;
         private_data->vendor_id           = device_desc.idVendor;///<供应商
         private_data->product_id          = device_desc.idProduct;///<产品id号
@@ -1009,6 +1036,7 @@ static int _usb_host_mount(const usb_dev usb_id, u32 retry, u32 reset_delay, u32
 
         /**********set configuration*********/
         ret = set_configuration(host_dev);
+
         /* printf_buf(desc_buf, cfg_desc.wTotalLength); */
         //TODO: fix bug
         //ret |= usb_descriptor_parser(host_dev, desc_buf, cfg_desc.wTotalLength, &device_desc);

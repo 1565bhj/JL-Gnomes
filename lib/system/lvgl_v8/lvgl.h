@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+#define LVGL_MAIN "lvgl_main"
+
 /***************************
  * CURRENT VERSION OF LVGL
  ***************************/

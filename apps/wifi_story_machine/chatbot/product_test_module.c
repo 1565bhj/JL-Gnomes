@@ -485,6 +485,8 @@ void production_test_mic(void)
         music_play_res_file(KWS_NAME);
 #endif
         music_play_waite();
+        int msg[32];
+        os_taskq_accept(ARRAY_SIZE(msg), msg);
         os_time_dly(80);
         if (PD_TEST.step & PD_TEST_MIC1_OK) {
             PD_TEST.step &= ~(PD_TEST_MIC1 | PD_TEST_MIC1_OK);
@@ -509,6 +511,8 @@ void production_test_mic(void)
 #endif
         music_play_waite();
         os_time_dly(80);
+        int msg[32];
+        os_taskq_accept(ARRAY_SIZE(msg), msg);
         if (PD_TEST.step & PD_TEST_MIC2_OK) {
             PD_TEST.step &= ~(PD_TEST_MIC2 | PD_TEST_MIC2_OK);
             printf("-> PD_TEST_MIC_OK \n");
@@ -1031,6 +1035,7 @@ static int product_all_io_test(void)
 
 static int product_function_test_task(void *priv)
 {
+    int msg[32];
     int cnt = 0;
     int to = 60 * 10; //60秒超时
     if ((int)priv == 1) {
@@ -1055,6 +1060,8 @@ static int product_function_test_task(void *priv)
         extern u16 ai_at_get_test_code(void);
         while (!ai_at_is_test_start()) {
             os_time_dly(50);
+            int msg[32];
+            os_taskq_accept(ARRAY_SIZE(msg), msg);
         }
         u16 tcode = ai_at_get_test_code();
 #endif
@@ -1145,6 +1152,7 @@ static int product_function_test_task(void *priv)
 #endif
         product_all_io_set_init(1, 0);//检测IO前，把所有的IO开上拉
         while (1) {
+            os_taskq_accept(ARRAY_SIZE(msg), msg);
             if (read_power_key_press(1)) { //厂测模式下有按键按下则关机
                 sys_power_poweroff();
             }
@@ -1279,6 +1287,8 @@ __func_test:
                 }
             }
             os_time_dly(10);
+            int msg[32];
+            os_taskq_accept(ARRAY_SIZE(msg), msg);
         }
 __err:
         ;
@@ -1355,6 +1365,8 @@ __err:
         int sh_test_result = 30;
         production_test_led(test_ok);
         while (!test_ok && --sh_test_result) {
+            int msg[32];
+            os_taskq_accept(ARRAY_SIZE(msg), msg);
             production_test_led(test_ok);
         }
         is_production_test_clear();
@@ -1378,7 +1390,7 @@ int product_test_task_init(void *priv)
         memset(PD_TEST.app_name, 0, sizeof(PD_TEST.app_name));
     }
     product_function_app_start();
-    return thread_fork("pdfunc_test", 10, 1600, 0, 0, product_function_test_task, priv);
+    return thread_fork("pdfunc_test", 10, 1600, 320, 0, product_function_test_task, priv);
 }
 
 void enter_product_func_test(void *priv)

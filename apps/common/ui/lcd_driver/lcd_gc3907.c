@@ -88,16 +88,17 @@ void GC3907_Fill(u8 *img, u16 len)
     WriteDAT_DMA(img, len);
 }
 
-void GC3907_SleepInMode(void)
+static int GC3907_Sleep(char on)
 {
-    WriteCOM(0x10); //Sleep in
-    lcd_delay(120); //Delay 120ms
-}
-
-void GC3907_SleepOutMode(void)
-{
-    WriteCOM(0x11); //Sleep out
-    lcd_delay(120);  //Delay 120ms
+    return on;//确保LCD屏幕支持睡眠指令再进行修改
+    if (on) {
+        WriteCOM(0x10); //Sleep in
+        lcd_delay(120); //Delay 120ms
+    } else {
+        WriteCOM(0x11); //Sleep out
+        lcd_delay(120);  //Delay 120ms
+    }
+    return on;
 }
 
 void GC3907_Shown_Image(u8 *buff, u16 x_addr, u16 y_addr, u16 width, u16 height)
@@ -330,6 +331,7 @@ REGISTER_LCD_DEV(LCD_GC3907) = {
     .LCD_DrawToDev     = GC3907_Fill,//应用层直接到设备接口层，需要做好缓冲区共用互斥，慎用！
     .LCD_Lvgl_Full     = GC3907_lvgl_Fill,//LVGL发送数据接口
     .LCD_ClearScreen   = GC3907_clear_screen,
+    .LCD_Sleep         = GC3907_Sleep,
     .Reset             = GC3907_reset,
     .BackLightCtrl     = GC3907_led_ctrl,
 };

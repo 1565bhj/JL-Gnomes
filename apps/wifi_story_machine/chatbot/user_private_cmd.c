@@ -144,7 +144,7 @@ void aisp_timeout_callback(void)
 #endif
 #if (defined CONFIG_LVGL_UI_ENABLE)
     int lv_demo_switch_to_main_page(void);
-    int sec = audio_app_mode_check() == 1 ? 2 : 1;
+    int sec = lv_demo_is_alarms_page() ? 5 : (audio_app_mode_check() == 1 ? 2 : 1);
     if (switch_to_main_time_id) {
         sys_timer_modify(switch_to_main_time_id, sec * 1000);
     } else if (!websockets_recv_net_music_valid() && ai_speaker_app()) {
@@ -207,7 +207,7 @@ static void net_ai_dialogue_resum_page(void *p)
     char *app[] = {"ai_speaker", "bt_music", "sd_music", "usbdisk_music", "aux_music"};
     if (id == 0) {
 #if TOMATO_TIMER_ENABLE
-        if (!lv_demo_is_timer_page())
+        if (!lv_demo_is_timer_page() && !lv_demo_is_ring_page())
 #endif
         {
             lv_demo_switch_to_main_page();

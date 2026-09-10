@@ -28,6 +28,7 @@
 
 /****************************LVGL：设备接口*********************************/
 extern int is_module_production_test_enter(void);
+extern void alarm_music_play_stop(void);
 //模块厂测情况下退出LVGL所有接口功能（模块厂测没有初始化LVGL）
 #define PRODUCTION_TEST_FUNC_CHECK() if (is_module_production_test_enter()) return 0;
 
@@ -64,19 +65,35 @@ static unsigned char swipe_handled_in_current_touch = 0;
  */
 void lvgl_touch_pad_init(void)//触摸初始化
 {
-#ifdef TCFG_TOUCH_GST820_ENABLE
-    int check_GST820(void);
-    check_GST820();
-#endif
-#ifdef TCFG_TOUCH_GST328_ENABLE
-    int check_GST328(void);
-    check_GST328();
-#endif
-#ifdef TCFG_TOUCH_AXS15252_ENABLE
-    int check_axs15252(void);
-    check_axs15252();
-#endif
+    lcd_touch_init();
 }
+
+/**
+ * @brief 触摸接口休眠
+ * @param sleep_enable：1使能休眠，0不使能休眠
+ * @return NULL
+ */
+void lvgl_touch_pad_sleep(char sleep_enable)
+{
+    extern void lcd_touch_sleep(char sleep);
+    lcd_touch_sleep(sleep_enable);
+}
+
+/**
+ * @brief 触摸接口休眠后被触摸唤醒回调
+ * @param NULL
+ * @return NULL
+ * @note 在回调函数快速通知恢复系统（该函数值中断回调，禁止在该函数延时和调用系统操作接口）
+ */
+void lvgl_touch_pad_sleep_wakeup_callback(void)
+{
+    if (!cpu_in_irq()) {//非中断则清楚自动休眠
+        extern int auto_sleep_check_clear(void);
+        sys_timeout_add_to_task("app_core", NULL, auto_sleep_check_clear, 10);//必须使用app_core执行wifi lvgl退出休眠
+        lvgl_touch_pad_sleep(0);//执行触摸退出休眠
+    }
+}
+
 
 /**
  * @brief 获取当前滑动方向
@@ -97,8 +114,10 @@ static void lvgl_handle_page_swipe(void)
     unsigned char dir = lvgl_get_swipe_direction();
 
     if ((dir == SWIPE_LEFT || dir == SWIPE_RIGHT || dir == SWIPE_UP || dir == SWIPE_DOWN || dir == SWIPE_CLICK) &&
-        lv_demo_is_ring_page()) {//闹钟和计时器时间到情况下才停止播放
+        (lv_demo_is_ring_page() || music_play_alarm_ring())) {
+        /* 在响铃页，或已离开响铃页但铃声仍在播：滑动/点击一律停铃并回主界面 */
         lv_demo_alarms_ring_clean();
+        return;
     }
 
     switch (dir) {
@@ -162,8 +181,10 @@ int lvgl_touch_last_get_time(void)
  */
 void lvgl_touch_x_y_status_get(short *x, short *y, unsigned char *status)//获取触摸：status : true->一直按，false->释放
 {
+    extern int lcd_touch_get_xy(u16 * x, u16 * y, char *status);
+    lcd_touch_get_xy(x, y, status);
+
 #ifdef TCFG_TOUCH_GST820_ENABLE
-    GST820_get_xy(x, y, status);
     // 添加xy坐标交换
     short temp = *x;
     *x = *y;
@@ -172,17 +193,12 @@ void lvgl_touch_x_y_status_get(short *x, short *y, unsigned char *status)//获�
 #endif
 
 #ifdef TCFG_TOUCH_GST328_ENABLE
-    GST328_get_xy(x, y, status);
     // 添加xy坐标交换
     short temp = *x;
     *x = *y;
     *y = temp;
 #endif
 
-#ifdef TCFG_TOUCH_AXS15252_ENABLE
-    void axs15252_get_xy(short *x, short *y, char *press);
-    axs15252_get_xy(x, y, (char *)status);
-#endif
 #if 1
     static unsigned char last_status = 0;
     if (*status || last_status != *status) {
@@ -195,12 +211,15 @@ void lvgl_touch_x_y_status_get(short *x, short *y, unsigned char *status)//获�
     if (*status) {  // 触摸按下状态
         last_touch_time = timer_get_ms();  // 有触摸时刷新时间戳，供 is_touch_active() 使用
         if (!last_touch_status) {  // 新的触摸开始
+            auto_sleep_check_clear();
             // 记录触摸起始坐标
             touch_start_x = *x;
             touch_start_y = *y;
             // 重置滑动方向和处理标志
             current_swipe_direction = SWIPE_NONE;
             swipe_handled_in_current_touch = 0;
+            printf("开始触摸\n");
+            alarm_music_play_stop();
         } else {  // 之前也处于按下状态
             // 计算坐标差值
             // 改为使用起始点计算差值，而不是与上一点的差值
@@ -214,7 +233,7 @@ void lvgl_touch_x_y_status_get(short *x, short *y, unsigned char *status)//获�
                     // 水平方向滑动
                     current_swipe_direction = (delta_x > 0) ? SWIPE_RIGHT : SWIPE_LEFT;
                 } else if (abs(delta_y) > abs(delta_x) && abs(delta_y) > SWIPE_THRESHOLD &&
-                           ((touch_start_y >= 0 && touch_start_y <= 15) || (touch_start_y >= (LCD_H - 20) && touch_start_y <= LCD_H))) {
+                           ((touch_start_y >= 0 && touch_start_y <= 10) || (touch_start_y >= (LCD_H - 10) && touch_start_y <= LCD_H))) {
                     // 垂直方向滑动（添加开始触摸点阈值：顶部0-15或底部215-240范围才响应上下滑动）
                     current_swipe_direction = (delta_y > 0) ? SWIPE_DOWN : SWIPE_UP;
                 }
@@ -269,21 +288,19 @@ void lvgl_disp_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_t *area)
      */
     lv_coord_t hor_max = disp_drv->hor_res - 1;
     area->x1 &= ~(lv_coord_t)3;
-    {
-        lv_coord_t x2 = area->x2;
-        lv_coord_t r = x2 & 3;
-        if (r != 3) {
-            x2 += (lv_coord_t)((3 - r + 4) & 3);
-        }
-        if (x2 > hor_max) {
-            x2 = hor_max;
-        }
-        area->x2 = x2;
+    lv_coord_t x2 = area->x2;
+    lv_coord_t r = x2 & 3;
+    if (r != 3) {
+        x2 += (lv_coord_t)((3 - r + 4) & 3);
     }
-
+    if (x2 > hor_max) {
+        x2 = hor_max;
+    }
+    area->x2 = x2;
     if (area->x1 > area->x2) {
         area->x1 = area->x2 & ~(lv_coord_t)3;
     }
+    return ;
 #endif
 }
 
@@ -354,6 +371,17 @@ void lvgl_disp_get_width_hight(int *width, int *hight)//显示屏分辨率获取
 }
 
 /**
+ * @brief 设置屏幕休眠
+ * @param sleep : true进入休眠，false退出休眠
+ * @return NULL
+ */
+void lvgl_disp_sleep(char sleep)
+{
+    lcd_sleep(sleep);
+}
+
+
+/**
  * @brief 显示屏刷新接口
  * @param NULL
  * @return NULL
@@ -373,6 +401,17 @@ void lvgl_test_demo(void)
     lvgl_main_task_init();//跑lvgl demo，在库里
 }
 
+/**
+ * @brief lv_demo_net_connect_status
+ * @param success : true联网成功，false联网失败
+ * @return NULL
+ */
+void lv_demo_net_connect_status(char success)
+{
+    if (success) {
+        lv_net_time_weather_update(2000);
+    }
+}
 
 /****************************LVGL：字库接口*********************************/
 #define FONT24_PATH  CONFIG_UI_FONT_RES_FILE_PATH"Font24.bin"
@@ -569,6 +608,17 @@ void lv_demo_music_play_pause(char stop, char *type)
     }
 }
 
+
+/**
+ * @brief 设置单曲播放的模式状态
+ * @param status ："随机播放"、"单曲循环"
+ * @return NULL
+ */
+void lv_demo_set_current_play_mode_status(char *status)
+{
+    set_current_play_name_status(status);
+}
+
 /**
  * @brief 处理上下曲播放功能
  * @param next ：1下一曲，0上一曲
@@ -691,6 +741,18 @@ int lv_demo_switch_to_main_page(void)
 }
 
 /**
+ * @brief 选择界面切换
+ * @param NULL
+ * @return 成功返回0，失败返回非0
+ */
+int lv_demo_switch_to_option_page(void)
+{
+    PRODUCTION_TEST_FUNC_CHECK();
+    switch_to_option_page();
+    return 0;
+}
+
+/**
  * @brief 音乐面切换
  * @param NULL
  * @return 成功返回0，失败返回非0
@@ -805,6 +867,17 @@ int lv_demo_is_main_page(void)
     PRODUCTION_TEST_FUNC_CHECK();
     return is_main_page();
 }
+
+/**
+ * @brief 是否是选择页面
+ * @param NULL
+ * @return 是返回true，否false
+ */
+int lv_demo_is_option_page(void)
+{
+    PRODUCTION_TEST_FUNC_CHECK();
+    return is_option_page();
+}
 /**
  * @brief 是否是对话页面
  * @param NULL
@@ -849,6 +922,17 @@ int lv_demo_is_timer_page(void)
 }
 
 /**
+ * @brief 是否是番茄倒计时页面
+ * @param NULL
+ * @return 是返回true，否false
+ */
+int lv_demo_is_tomato_timer_page(void)
+{
+    PRODUCTION_TEST_FUNC_CHECK();
+    return is_tomato_page();
+}
+
+/**
  * @brief 是否是闹钟页面
  * @param NULL
  * @return 是返回true，否false
@@ -856,7 +940,7 @@ int lv_demo_is_timer_page(void)
 int lv_demo_is_alarms_page(void)
 {
     PRODUCTION_TEST_FUNC_CHECK();
-    return is_alarms_page();
+    return is_alarm_page();
 }
 
 /**
@@ -897,7 +981,6 @@ int lv_demo_is_ring_page(void)
 int lv_demo_alarms_ring_clean(void)
 {
     PRODUCTION_TEST_FUNC_CHECK();
-    void alarm_music_play_stop(void);
     alarm_music_play_stop();
     lv_demo_switch_to_main_page();
     printf("停止铃声播放\n");
@@ -979,7 +1062,11 @@ int lv_demo_timer_add_sec(int sec)
 int lv_demo_ai_dialogue_stt(char *text, int len)
 {
     PRODUCTION_TEST_FUNC_CHECK();
-    async_user_add_chat_message(text);
+    if (is_conversation_page()) {
+        async_user_add_chat_message(text);
+    } else if (0 /*is_translate_page()*/) {
+        //translate_async_user_add_chat_message(text);
+    }
     return 0;
 }
 
@@ -991,7 +1078,11 @@ int lv_demo_ai_dialogue_stt(char *text, int len)
 int lv_demo_ai_dialogue_tts(char *text, int len)
 {
     PRODUCTION_TEST_FUNC_CHECK();
-    async_ai_add_chat_message(text);
+    if (is_conversation_page()) {
+        async_ai_add_chat_message(text);
+    } else if (0 /*is_translate_page()*/) {
+        //translate_async_ai_add_chat_message(text);
+    }
     return 0;
 }
 
@@ -1005,6 +1096,7 @@ int lv_demo_ai_dialogue_start_mode(char mode)
 {
     PRODUCTION_TEST_FUNC_CHECK();
     async_user_add_chat_message(" ");
+    auto_sleep_check_clear();
     return 0;
 }
 

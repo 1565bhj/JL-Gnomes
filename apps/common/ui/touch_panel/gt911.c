@@ -15,7 +15,6 @@
 
 #if TCFG_TOUCH_GT911_ENABLE
 
-
 #if 1
 #define log_info(x, ...)    printf("\n[touch]>" x " \n", ## __VA_ARGS__)
 #else
@@ -133,7 +132,7 @@ exit:
     return ret;
 }
 
-int get_GT911_pid(void)
+static int GT911_get_pid(void)
 {
     u8 temp = 0;
     rdGT911Reg(GT_PID_REG0, &temp);
@@ -152,7 +151,7 @@ int get_GT911_pid(void)
     return 0;
 }
 
-static void get_GT911_xy(u16 addr, u16 *x, u16 *y)
+static void GT911_get_xy(u16 addr, u16 *x, u16 *y)
 {
     u8 buf[4];
     for (u8 i = 0; i < 4; i++) {
@@ -333,16 +332,26 @@ static void tpd_up(int x, int y)
     log_info("----tpd_up----x=%d, y=%d", x, y);
     ui_touch_msg_post(&t);
 }
-
+static u8 touch_sleep = 0;
 static void GT911_interrupt(void)
 {
     os_sem_post(&touch_sem);
-    printf("\n [ERROR] %s -[yuyu] %d\n", __FUNCTION__, __LINE__);
 }
 
-int check_gt911(void)
+static int GT911_sleep(char sleep)
 {
-    iic = dev_open("iic0", NULL);
+    touch_sleep = sleep;
+    return touch_sleep;
+}
+
+
+static int GT911_check(void*iic_dev_name)
+{
+    if (!iic_dev_name) {
+        printf("err in %s iic_dev_name\n", __func__);
+        return -1;
+    }
+    iic = dev_open(iic_dev_name, NULL);
     extern const struct ui_devices_cfg ui_cfg_data;
     static const struct ui_lcd_platform_data *pdata;
     pdata = (struct ui_lcd_platform_data *)ui_cfg_data.private_data;
@@ -363,7 +372,6 @@ int check_gt911(void)
     os_sem_create(&touch_sem, 0);
     //注册中断注意触摸用的事件0 屏幕TE用的事件1
     port_wakeup_reg(EVENT_IO_0, pdata->touch_int_pin, EDGE_NEGATIVE, GT911_interrupt);
-    GT911_task_init();
     printf(">>>>>>>>>>>>hello gt911<<<<<<<<<<<");
     return 0;
 
@@ -371,6 +379,7 @@ int check_gt911(void)
 static int GT911_init(void)
 {
     u8 status = 0;
+    u8 touch_sleep_cb = 0;
     static u16 touch_x = 0;
     static u16 touch_y = 0;
     static u8 touch_status = 0;
@@ -378,6 +387,16 @@ static int GT911_init(void)
     log_info("[gt911]>>>>>GT911 start!!!");
     while (1) {
         os_sem_pend(&touch_sem, 0);
+
+        if (touch_sleep && !touch_sleep_cb) {
+            touch_sleep_cb = true;
+            lcd_touch_irq_wakeup_callback();
+            continue;
+        }
+        if (touch_sleep) {
+            continue;
+        }
+        touch_sleep_cb = false;
 
         rdGT911Reg(GT_GSTID_REG, &status);  //读取触摸点的状态   // BIT7表示有数据 ,bit0-3 表示触摸点个数
 
@@ -402,16 +421,22 @@ static int GT911_init(void)
     return 0;
 }
 
-static void my_touch_test_task(void *priv)
-{
-    /*=====TE中断配置=====*/
-    GT911_init();
-}
-
 static int GT911_task_init(void)
 {
-    return thread_fork("my_touch_test_task", 29, 1024, 0, NULL, my_touch_test_task, NULL);
+    return thread_fork("touch_task", 20, 1024, 0, NULL, GT911_init, NULL);
 }
+
+
+REGISTER_LCD_TOUCH_DEV(GT911) = {
+    .name                           = "GT911",
+    .iic_dev_name                   = "iic0",
+    .LCD_Touch_check                = GT911_check,
+    .LCD_Touch_init                 = GT911_task_init,
+    .LCD_Touch_get                  = GT911_get_xy,
+    .LCD_Touch_sleep                = GT911_sleep,
+    .LCD_Touch_enable               = NULL,
+    .LCD_Touch_get_id               = GT911_get_pid,
+};
 
 #endif
 

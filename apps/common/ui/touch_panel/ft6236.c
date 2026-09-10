@@ -32,12 +32,12 @@ struct touch_hdl lvgl_touch_hdl;
 static OS_SEM touch_sem;
 static u8 touch_en = 1 ;
 
-void *get_touch_x_y(void)
+static void *get_touch_x_y(void)
 {
     return &lvgl_touch_hdl;
 }
 
-void get_touch_x_y_status(u16 *x, u16 *y, u8 *status)
+static void FT6236_get_touch_x_y_status(u16 *x, u16 *y, u8 *status)
 {
 #if HORIZONTAL_SCREEN==1
     *x = lvgl_touch_hdl.y;
@@ -178,17 +178,12 @@ exit:
     return ret;
 }
 
-void set_touch_enable(void)
+static void FT6236_set_touch_enable(char enable)
 {
-    touch_en = 1;
+    touch_en = enable;
 }
 
-void set_touch_disable(void)
-{
-    touch_en = 0;
-}
-
-int get_FT6236_pid(void)
+static int FT6236_get_pid(void)
 {
     u8 temp = 0;
     rdFT6236Reg(FTS_REG_CHIP_ID, &temp);
@@ -389,22 +384,26 @@ static void tpd_up(int x, int y)
 #endif
 }
 
+static u8 touch_sleep = 0;
 static void FT6236_interrupt(void)
 {
     os_sem_post(&touch_sem);
 }
 
-
-void FT6236_init(void)
+static int FT6236_sleep(char sleep)
 {
-    static u8 status = 0;
-    static int x, y;
-    static u16 touch_x = 0;
-    static u16 touch_y = 0;
+    touch_sleep = sleep;
+    return touch_sleep;
+}
+
+static int FT6236_check(void *iic_dev_name)
+{
+    if (!iic_dev_name) {
+        printf("err in %s iic_dev_name\n", __func__);
+        return -1;
+    }
     u8 read_data = 0;
-
     os_sem_create(&touch_sem, 0);
-
     extern const struct ui_devices_cfg ui_cfg_data;
     static const struct ui_lcd_platform_data *pdata;
     pdata = (struct ui_lcd_platform_data *)ui_cfg_data.private_data;
@@ -413,7 +412,7 @@ void FT6236_init(void)
     os_time_dly(6);
     gpio_direction_output(pdata->touch_reset_pin, 1);
 
-    iic = dev_open("iic0", NULL);
+    iic = dev_open(iic_dev_name, NULL);
     os_time_dly(10);
     //注册中断注意触摸用的事件0 屏幕TE用的事件1
     port_wakeup_reg(EVENT_IO_0, pdata->touch_int_pin, EDGE_NEGATIVE, FT6236_interrupt);
@@ -431,13 +430,31 @@ void FT6236_init(void)
     wrFT6236Reg(FT_ID_G_MODE, 1);
     rdFT6236Reg(FT_ID_G_MODE, &read_data);
     printf("[touch FT_ID_G_MODE]>>>>>>>>>>>read_data=%d", read_data);
-    if (get_FT6236_pid()) {
+    if (FT6236_get_pid()) {
         log_info("[err]>>>>>FT6236 err!!!");
+        return -1;
     }
+    return 0;
+}
+
+static void FT6236_init(void)
+{
+    static u8 status = 0;
+    static int x, y;
+    static u16 touch_x = 0;
+    static u16 touch_y = 0;
 
     while (1) {
         os_sem_pend(&touch_sem, 0);
-
+        if (touch_sleep && !touch_sleep_cb) {
+            touch_sleep_cb = true;
+            lcd_touch_irq_wakeup_callback();
+            continue;
+        }
+        if (touch_sleep) {
+            continue;
+        }
+        touch_sleep_cb = false;
         rdFT6236Reg(FT_REG_NUM_FINGER, &status);    //读取触摸点的状态   // BIT7表示有数据 ,bit0-3 表示触摸点个数
         if (status) { //有触摸值
             get_FT6236_xy(FT_TP1_REG, &touch_x, &touch_y);
@@ -455,18 +472,20 @@ void FT6236_init(void)
     }
 }
 
-static void my_touch_test_task(void *priv)
+static int FT6236_task_init(void)
 {
-    FT6236_init();
+    return thread_fork("touch_task", 20, 1024, 0, NULL, FT6236_init, NULL);
 }
 
-int FT6236_task_init(void)
-{
-    return thread_fork("my_touch_test_task", 29, 1024, 0, NULL, my_touch_test_task, NULL);
-}
-#else
-void get_touch_x_y_status(u16 *x, u16 *y, u8 *status)
-{
+REGISTER_LCD_TOUCH_DEV(FT6236) = {
+    .name                           = "FT6236",
+    .iic_dev_name                   = "iic0",
+    .LCD_Touch_check                = FT6236_check,
+    .LCD_Touch_init                 = FT6236_task_init,
+    .LCD_Touch_get                  = FT6236_get_touch_x_y_status,
+    .LCD_Touch_sleep                = FT6236_sleep,
+    .LCD_Touch_enable               = FT6236_set_touch_enable,
+    .LCD_Touch_get_id               = FT6236_get_pid,
+};
 
-}
 #endif

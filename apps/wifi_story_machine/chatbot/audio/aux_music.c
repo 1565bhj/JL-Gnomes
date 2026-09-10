@@ -884,8 +884,9 @@ static int aux_key_hand_up(struct key_event *key)
 
 static int aux_key_event_handler(struct key_event *key)
 {
+    int sleep = auto_sleep_is_enter();
     auto_sleep_check_clear();
-    if (!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) {
+    if ((!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) || sleep) {
         return true;//闹钟在响，按键失效
     }
     switch (key->action) {

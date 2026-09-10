@@ -38,34 +38,6 @@ static void disp_init(void);
 
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
 
-#if defined(TCFG_LCD_AXS15252_ENABLE) && TCFG_LCD_AXS15252_ENABLE
-/**
- * AXS15252 等屏 1x4 像素开窗：列窗口需满足 x1=4*N、x2=4*N+3（宽度为 4 的倍数）。
- */
-static void disp_hor_4px_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_t *area)
-{
-    lv_coord_t hor_max = disp_drv->hor_res - 1;
-
-    area->x1 &= ~(lv_coord_t)3;
-
-    {
-        lv_coord_t x2 = area->x2;
-        lv_coord_t r = x2 & 3;
-        if (r != 3) {
-            x2 += (lv_coord_t)((3 - r + 4) & 3);
-        }
-        if (x2 > hor_max) {
-            x2 = hor_max;
-        }
-        area->x2 = x2;
-    }
-
-    if (area->x1 > area->x2) {
-        area->x1 = area->x2 & ~(lv_coord_t)3;
-    }
-}
-#endif
-
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -74,7 +46,7 @@ static lv_disp_drv_t disp_drv;                         /*Descriptor of a display
 /**********************
  *      MACROS
  **********************/
-/* #define THREE_FB_ACCELERATION  //利用双核双线程+3FB加速 ,防止mcu lcd刷新完还空隙闲着,某些场景能够提升1-2帧    */
+#define THREE_FB_ACCELERATION  //利用双核双线程+3FB加速 ,防止mcu lcd刷新完还空隙闲着,某些场景能够提升1-2帧
 
 static int disp_width = 0;
 static int disp_hight = 0;
@@ -111,6 +83,18 @@ void __attribute__((weak)) lvgl_disp_flush(int xs, int xe, int ys, int ye, unsig
 {
     //lcd_lvgl_full(xs, xe, ys, ye, img);
 }
+
+int __attribute__((weak)) lvgl_disp_data_rotate(unsigned char *src, unsigned char *dst, int rgb_depth, int width, int height, int rotate_angle)
+{
+    return 0;
+}
+
+int __attribute__((weak)) lvgl_disp_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_t *area)
+{
+    return 0;
+}
+
+
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
@@ -167,28 +151,30 @@ void lv_port_disp_init(void)
 //    static lv_color_t buf_3_1[MY_DISP_HOR_RES * MY_DISP_VER_RES] __attribute__((aligned(4)));            /*A screen sized buffer*/
 //    static lv_color_t buf_3_2[MY_DISP_HOR_RES * MY_DISP_VER_RES] __attribute__((aligned(4)));            /*Another screen sized buffer*/
     lv_color_t *buf_3_1 = lv_mem_alloc(disp_width * disp_hight * sizeof(lv_color_t));
-    lv_color_t *buf_3_2 = lv_mem_alloc(disp_width * disp_hight * sizeof(lv_color_t));
+    lv_color_t *buf_3_2 = NULL;
+    lv_color_t *buf_3_3 = NULL;
     if (!buf_3_1) {
         printf("error in lvgl buf_3_1 malloc \n\n");
         return ;
     }
-    if (!buf_3_2) {
-        lv_mem_free(buf_3_1);
-        buf_3_1 = NULL;
-        printf("error in lvgl buf_3_1 malloc \n\n");
-        return ;
-    }
+//    buf_3_2 = lv_mem_alloc(disp_width * disp_hight * sizeof(lv_color_t));
+//    if (!buf_3_2) {
+//        lv_mem_free(buf_3_1);
+//        buf_3_1 = NULL;
+//        printf("error in lvgl buf_3_1 malloc \n\n");
+//        return ;
+//    }
 
     /* Example for 3) also set disp_drv.full_refresh = 1 below*/
     static lv_disp_draw_buf_t draw_buf_dsc_3;
 
-#ifndef THREE_FB_ACCELERATION
-#define  buf_3_3 NULL
-#else
-    lv_color_t *buf_3_3 = lv_mem_alloc(disp_width * disp_hight * sizeof(lv_color_t));
+#ifdef THREE_FB_ACCELERATION
+    buf_3_3 = lv_mem_alloc(disp_width * disp_hight * sizeof(lv_color_t));
     if (!buf_3_3) {
         lv_mem_free(buf_3_1);
-        lv_mem_free(buf_3_2);
+        if (buf_3_2) {
+            lv_mem_free(buf_3_2);
+        }
         buf_3_1 = NULL;
         buf_3_2 = NULL;
         printf("error in lvgl buf_3_1 malloc \n\n");
@@ -213,10 +199,8 @@ void lv_port_disp_init(void)
 
     /*Used to copy the buffer's content to the display*/
     disp_drv.flush_cb = disp_flush;
+    disp_drv.rounder_cb = lvgl_disp_rounder_cb;
 
-#if defined(TCFG_LCD_AXS15252_ENABLE) && TCFG_LCD_AXS15252_ENABLE
-    disp_drv.rounder_cb = disp_hor_4px_rounder_cb;
-#endif
 
     /*Set a display buffer*/
     disp_drv.draw_buf = &draw_buf_dsc_3;
@@ -232,6 +216,8 @@ void lv_port_disp_init(void)
 #ifdef THREE_FB_ACCELERATION
     /* next_offline_fb 变量保存下一帧的 offline_fb 地址  */
     next_offline_disp.fb = buf_3_3;
+    next_disp.fb = next_offline_disp.fb;
+
     /* 调用系统API把 online_fb 的地址设置为当前 LCD 的显示显存 */
     cur_disp.fb = buf_3_2;
 
@@ -239,7 +225,7 @@ void lv_port_disp_init(void)
     os_sem_create(&mcu_lcd_physics_flush_sem, 0);
     os_sem_create(&mcu_lcd_physics_flush_end_sem, 1);
     void lvgl_lcd_draw_task(void *p);
-    thread_fork("lvgl_lcd_draw_task", 29, 200, 0, NULL, lvgl_lcd_draw_task, NULL);
+    thread_fork("lvgl_lcd_draw_task", 29, 512, 0, NULL, lvgl_lcd_draw_task, NULL);
 #endif
 }
 
@@ -269,17 +255,20 @@ static void lv_lcd_draw_trig(const lv_area_t *area)
 {
     /* 等到s_next_fb空闲同步已完成 */
     os_sem_pend(&mcu_lcd_physics_flush_end_sem, 0);
-    /*while (next_disp.fb != NULL) {};*/
 
     spin_lock(&fb_lock);
     /* 将绘制好的 offline_fb 设置为 next_fb */
     lv_disp_draw_buf_t *draw_buf = lv_disp_get_draw_buf(_lv_refr_get_disp_refreshing());
-    next_disp.fb = draw_buf->buf_act;
-    if (disp_drv.full_refresh == 0) {
-        memcpy((void *)&next_disp.area, area, sizeof(lv_area_t));
+
+    if (!lvgl_disp_data_rotate(draw_buf->buf_act, next_disp.fb, LV_COLOR_DEPTH, disp_width, disp_hight, 270)) {
+        next_offline_disp.fb = cur_disp.fb ? cur_disp.fb : next_offline_disp.fb;
+        next_disp.fb = draw_buf->buf_act;
+        if (disp_drv.full_refresh == 0) {
+            memcpy((void *)&next_disp.area, area, sizeof(lv_area_t));
+        }
+        /* 把上一帧的 online_fb 作为下一帧的 offline_fb */
+        draw_buf->buf_act = next_offline_disp.fb;
     }
-    /* 把上一帧的 online_fb 作为下一帧的 offline_fb */
-    draw_buf->buf_act = next_offline_disp.fb;
     spin_unlock(&fb_lock);
 
     /*os_sem_set(&mcu_lcd_physics_flush_sem,0);*/
@@ -290,23 +279,27 @@ void lvgl_lcd_draw_task(void *p)
 {
     while (1) {
         os_sem_pend(&mcu_lcd_physics_flush_sem, 0);
-
-        while (next_disp.fb != NULL) {
+        if (next_disp.fb) {
             spin_lock(&fb_lock);
+
             /* next_offline_fb 变量保存上一帧的 online_fb 地址 */
-            next_offline_disp.fb = cur_disp.fb;
+            next_offline_disp.fb = cur_disp.fb ? cur_disp.fb : next_disp.fb;
+
             /* 调用系统API把 online_fb 的地址设置为当前 LCD 的显示显存 */
-            cur_disp.fb = next_disp.fb;
             if (disp_drv.full_refresh == 0) {
                 memcpy(&cur_disp.area, (const void *)&next_disp.area, sizeof(lv_area_t));
             }
-            next_disp.fb = NULL;
             spin_unlock(&fb_lock);
-            os_sem_post(&mcu_lcd_physics_flush_end_sem);
-            if (disp_drv.full_refresh == 0) {
+            if (cur_disp.fb) {//有一个显存缓冲区则立马post信号量
+                os_sem_post(&mcu_lcd_physics_flush_end_sem);
+            }
+            if (disp_drv.full_refresh == 0 && cur_disp.fb) {
                 lvgl_disp_flush(cur_disp.area.x1, cur_disp.area.x2, cur_disp.area.y1, cur_disp.area.y2, cur_disp.fb);
             } else {
-                lvgl_disp_flush(0, disp_width, 0, disp_hight, cur_disp.fb);
+                lvgl_disp_flush(0, disp_width - 1, 0, disp_hight - 1, cur_disp.fb ? cur_disp.fb : next_disp.fb);
+            }
+            if (!cur_disp.fb) {//没有显存缓冲区则等待发送完成再post信号量
+                os_sem_post(&mcu_lcd_physics_flush_end_sem);
             }
         }
     }
@@ -341,7 +334,11 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
 #endif
         }
 
+#ifdef THREE_FB_ACCELERATION
+        lv_lcd_draw_trig(area);
+#else
         lvgl_disp_flush(area->x1, area->x2, area->y1, area->y2, color_p);
+#endif
 
         /*IMPORTANT!!!
          *Inform the graphics library that you are ready with the flushing*/

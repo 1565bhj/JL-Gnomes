@@ -21,7 +21,8 @@
 /* 屏幕驱动的接口 */
 static struct lcd_device *lcd_dev;
 static const struct ui_lcd_platform_data *lcd_pdata = NULL;
-static void *lcd_hdl = NULL;
+static struct lcd_touch_device *lcd_touch_dev;
+static void *lcd_hw_hdl = NULL;
 static OS_MUTEX mutex;
 
 static u8 lvgl_enable = 0x1;
@@ -71,9 +72,9 @@ int lcd_te_interrupt_waite(void)
 }
 #endif // USE_LCD_TE
 
-void *get_lcd_hdl(void)
+void *get_lcd_hw_hdl(void)
 {
-    return lcd_hdl;
+    return lcd_hw_hdl;
 }
 // io口操作
 void lcd_rst_pinstate(u8 state)
@@ -161,8 +162,12 @@ void lcd_bl_pinstate(u8 state)
         static void *bl_pwm = NULL;
         static struct pwm_platform_data bl_pwm_data = {0};
         static float default_duty = 0;
-        if (!bl_pwm) {
-            bl_pwm = dev_open("pwm1", &bl_pwm_data);
+        char *dev_name = "pwm1";
+#ifdef TCFG_LCD_BL_PWM_DEV_NUM
+        dev_name = TCFG_LCD_BL_PWM_DEV_NUM;
+#endif
+        if (!bl_pwm && dev_name) {
+            bl_pwm = dev_open(dev_name, &bl_pwm_data);
             if (!bl_pwm) {
                 printf("warning open lcd bl pwm dev err !!!!\n");
             }
@@ -182,7 +187,17 @@ void lcd_bl_pinstate(u8 state)
             if (user_lcd_light_read() != (int)bl_pwm_data.duty && bl_pwm_data.duty != 0) {
                 user_lcd_light_write((int)bl_pwm_data.duty);
             }
+#ifdef TCFG_LCD_SLEEP_BACKLIGHT_PWM_DUTY
+            if (bl_pwm_data.duty == 0) {
+                bl_pwm_data.duty = TCFG_LCD_SLEEP_BACKLIGHT_PWM_DUTY;
+                dev_write(bl_pwm, (void *)&bl_pwm_data, 0);
+                bl_pwm_data.duty = 0;
+            } else {
+                dev_write(bl_pwm, (void *)&bl_pwm_data, 0);
+            }
+#else
             dev_write(bl_pwm, (void *)&bl_pwm_data, 0);
+#endif
         }
 #else
         gpio_direction_output(lcd_pdata->bl_pin, state);
@@ -190,24 +205,75 @@ void lcd_bl_pinstate(u8 state)
     }
 }
 
-void touch_int_pinstate(u8 state)
+void lcd_touch_int_pinstate(u8 state)
 {
     if (lcd_pdata->touch_int_pin != (u32) - 1) {
         gpio_direction_output(lcd_pdata->touch_int_pin, state);
     }
 }
 
-void touch_reset_pinstate(u8 state)
+void lcd_touch_reset_pinstate(u8 state)
 {
     if (lcd_pdata->touch_reset_pin != (u32) - 1) {
         gpio_direction_output(lcd_pdata->touch_reset_pin, state);
     }
 }
 
+int lcd_touch_get_xy(u16 *x, u16 *y, char *status)
+{
+    if (lcd_touch_dev && lcd_touch_dev->LCD_Touch_get) {
+        lcd_touch_dev->LCD_Touch_get(x, y, status);
+    }
+    return 0;
+}
+
+void lcd_touch_init(void)
+{
+    if (lcd_touch_dev) {
+        return;
+    }
+    list_for_each_lcd_touch_driver(lcd_touch_dev) {
+        if (lcd_touch_dev && lcd_touch_dev->LCD_Touch_check) {
+            if (!lcd_touch_dev->LCD_Touch_check(lcd_touch_dev->iic_dev_name)) {
+                printf("---> find touch dev : %s \n", lcd_touch_dev->name);
+                if (lcd_touch_dev->LCD_Touch_init) {
+                    lcd_touch_dev->LCD_Touch_init();
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void lcd_touch_irq_wakeup_callback(void)
+{
+#ifdef CONFIG_LVGL_UI_ENABLE
+    extern void lvgl_touch_pad_sleep_wakeup_callback(void);
+    lvgl_touch_pad_sleep_wakeup_callback();
+#endif
+}
+
+void lcd_touch_sleep(char sleep)
+{
+    if (lcd_touch_dev && lcd_touch_dev->LCD_Touch_sleep) {
+        lcd_touch_dev->LCD_Touch_sleep(sleep);
+    }
+}
+
+void lcd_sleep(char sleep)
+{
+    if (lcd_dev && lcd_dev->LCD_Sleep) {
+        lcd_dev->LCD_Sleep(sleep);
+    }
+    if (lcd_dev) {
+        lcd_bl_pinstate(sleep ? 0 : 1);
+    }
+}
+
 int lcd_send_byte(u8 data)
 {
-    if (lcd_hdl) {
-        return dev_write(lcd_hdl, &data, 1);
+    if (lcd_hw_hdl) {
+        return dev_write(lcd_hw_hdl, &data, 1);
     }
 
     return -1;
@@ -215,11 +281,11 @@ int lcd_send_byte(u8 data)
 
 int lcd_send_map(u8 *map, u32 len)
 {
-    if (lcd_hdl) {
+    if (lcd_hw_hdl) {
 #if USE_LCD_TE
         lcd_te_interrupt_waite();
 #endif
-        return dev_write(lcd_hdl, map, len);
+        return dev_write(lcd_hw_hdl, map, len);
     }
 
     return -1;
@@ -227,20 +293,20 @@ int lcd_send_map(u8 *map, u32 len)
 
 int lcd_read_data(u8 *buf, u32 len)
 {
-    if (lcd_hdl) {
-        return dev_read(lcd_hdl, buf, len);
+    if (lcd_hw_hdl) {
+        return dev_read(lcd_hw_hdl, buf, len);
     }
 
     return -1;
 }
 u8 *lcd_req_buf(u32 *size)
 {
-    if (lcd_pdata && lcd_pdata->lcd_if == LCD_IMD && lcd_hdl) {
+    if (lcd_pdata && lcd_pdata->lcd_if == LCD_IMD && lcd_hw_hdl) {
 #ifdef CONFIG_CPU_WL82
         u8 *buf = NULL;
         u32 buf_size = 0;
-        dev_ioctl(lcd_hdl, IOCTL_IMD_GET_FRAME_BUFF, (u32)&buf);
-        dev_ioctl(lcd_hdl, IOCTL_IMD_GET_FRAME_BUFF_SIZE, (u32)&buf_size);
+        dev_ioctl(lcd_hw_hdl, IOCTL_IMD_GET_FRAME_BUFF, (u32)&buf);
+        dev_ioctl(lcd_hw_hdl, IOCTL_IMD_GET_FRAME_BUFF_SIZE, (u32)&buf_size);
         if (buf && buf_size) {
             *size = buf_size;
             return buf;
@@ -252,9 +318,9 @@ u8 *lcd_req_buf(u32 *size)
 }
 void lcd_req_buf_update(u8 *buf, u32 *size)
 {
-    if (lcd_pdata && lcd_pdata->lcd_if == LCD_IMD && lcd_hdl) {
+    if (lcd_pdata && lcd_pdata->lcd_if == LCD_IMD && lcd_hw_hdl) {
 #ifdef CONFIG_CPU_WL82
-        dev_ioctl(lcd_hdl, IOCTL_IMD_UPDATE_BUFF, (u32)buf);
+        dev_ioctl(lcd_hw_hdl, IOCTL_IMD_UPDATE_BUFF, (u32)buf);
 #endif
     }
 }
@@ -324,24 +390,24 @@ static int lcd_interface_init(void)
 {
     void *priv = lcd_dev->lcd_priv;
     if (lcd_pdata->lcd_if == LCD_SPI) {
-        lcd_hdl = dev_open(lcd_pdata->spi_id, NULL);
-//        dev_ioctl(lcd_hdl, IOCTL_SPI_NON_BLOCK, 1);//设置为非阻塞发送数据包
-        dev_ioctl(lcd_hdl, IOCTL_SPI_NON_BLOCK, 0);//设置为非阻塞发送数据包
+        lcd_hw_hdl = dev_open(lcd_pdata->spi_id, NULL);
+//        dev_ioctl(lcd_hw_hdl, IOCTL_SPI_NON_BLOCK, 1);//设置为非阻塞发送数据包
+        dev_ioctl(lcd_hw_hdl, IOCTL_SPI_NON_BLOCK, 0);//设置为非阻塞发送数据包
     } else if (lcd_pdata->lcd_if == LCD_IMD) {
-        lcd_hdl = dev_open("imd", priv);
+        lcd_hw_hdl = dev_open("imd", priv);
     } else if (lcd_pdata->lcd_if == LCD_PAP) {
-        lcd_hdl = dev_open("pap", NULL);
+        lcd_hw_hdl = dev_open("pap", NULL);
     } else if (lcd_pdata->lcd_if == LCD_EMI) {
-        lcd_hdl = dev_open("emi", NULL);
-        if (lcd_hdl) {
-            dev_ioctl(lcd_hdl, EMI_SET_ISR_CB, get_lcd_send_ok);
-            dev_ioctl(lcd_hdl, EMI_USE_SEND_SEM, 1);
-//            dev_ioctl(lcd_hdl, IOCTL_EMI_WRITE_NON_BLOCK, 1);
-            dev_ioctl(lcd_hdl, IOCTL_EMI_WRITE_NON_BLOCK, 0);
+        lcd_hw_hdl = dev_open("emi", NULL);
+        if (lcd_hw_hdl) {
+            dev_ioctl(lcd_hw_hdl, EMI_SET_ISR_CB, get_lcd_send_ok);
+            dev_ioctl(lcd_hw_hdl, EMI_USE_SEND_SEM, 1);
+//            dev_ioctl(lcd_hw_hdl, IOCTL_EMI_WRITE_NON_BLOCK, 1);
+            dev_ioctl(lcd_hw_hdl, IOCTL_EMI_WRITE_NON_BLOCK, 0);
         }
     }
 
-    if (lcd_hdl == NULL) {
+    if (lcd_hw_hdl == NULL) {
         lcd_e("open lcd interface failed.\n");
         return -1;
     }
@@ -355,9 +421,9 @@ bool lcd_interface_get_non_block(void)
     bool non_block;
     void *priv = lcd_dev->lcd_priv;
     if (lcd_pdata->lcd_if == LCD_SPI) {
-        dev_ioctl(lcd_hdl, IOCTL_SPI_GET_NON_BLOCK, &non_block);
+        dev_ioctl(lcd_hw_hdl, IOCTL_SPI_GET_NON_BLOCK, &non_block);
     } else if (lcd_pdata->lcd_if == LCD_EMI) {
-        dev_ioctl(lcd_hdl, IOCTL_EMI_GET_NON_BLOCK, &non_block);
+        dev_ioctl(lcd_hw_hdl, IOCTL_EMI_GET_NON_BLOCK, &non_block);
     }
     return non_block;
 }
@@ -366,18 +432,18 @@ void lcd_interface_set_non_block(u8 block)
 {
     void *priv = lcd_dev->lcd_priv;
     if (lcd_pdata->lcd_if == LCD_SPI) {
-        dev_ioctl(lcd_hdl, IOCTL_SPI_NON_BLOCK, block);
+        dev_ioctl(lcd_hw_hdl, IOCTL_SPI_NON_BLOCK, block);
     } else if (lcd_pdata->lcd_if == LCD_EMI) {
-        dev_ioctl(lcd_hdl, IOCTL_EMI_WRITE_NON_BLOCK, block);
+        dev_ioctl(lcd_hw_hdl, IOCTL_EMI_WRITE_NON_BLOCK, block);
     }
 }
 void lcd_interface_non_block_wait(void)
 {
     void *priv = lcd_dev->lcd_priv;
     if (lcd_pdata->lcd_if == LCD_SPI) {
-        dev_ioctl(lcd_hdl, IOCTL_SPI_WRITE_NON_BLOCK_FLUSH, 0);//等待上一次发包完成
+        dev_ioctl(lcd_hw_hdl, IOCTL_SPI_WRITE_NON_BLOCK_FLUSH, 0);//等待上一次发包完成
     } else if (lcd_pdata->lcd_if == LCD_EMI) {
-        dev_ioctl(lcd_hdl, IOCTL_EMI_WRITE_NON_BLOCK_FLUSH, 0);//等待上一次发包完成
+        dev_ioctl(lcd_hw_hdl, IOCTL_EMI_WRITE_NON_BLOCK_FLUSH, 0);//等待上一次发包完成
     }
 }
 
@@ -392,7 +458,7 @@ static int lcd_init(void *p)
     lcd_cs_pin = BIT(0) | BIT(1);
 #endif
 
-    if (!lcd_hdl) {
+    if (!lcd_hw_hdl) {
         struct ui_devices_cfg *cfg = (struct ui_devices_cfg *)p;
         u8 find_lcd = 0;
         lcd_pdata = (const struct ui_lcd_platform_data *)cfg->private_data;
@@ -467,6 +533,17 @@ static int lcd_init(void *p)
         }
         if (lcd_dev && lcd_dev->LCD_Init) {
             lcd_dev->LCD_Init();
+            list_for_each_lcd_touch_driver(lcd_touch_dev) {
+                if (lcd_touch_dev && lcd_touch_dev->LCD_Touch_check) {
+                    if (!lcd_touch_dev->LCD_Touch_check(lcd_touch_dev->iic_dev_name)) {
+                        printf("--->lcd init touch dev : %s \n", lcd_touch_dev->name);
+                        if (lcd_touch_dev->LCD_Touch_init) {
+                            lcd_touch_dev->LCD_Touch_init();
+                            break;
+                        }
+                    }
+                }
+            }
             //图像合成线程初始化
 //#ifdef CONFIG_UI_PLAY_EMOJI
 //            picture_compose_task_init();
@@ -479,14 +556,14 @@ static int lcd_init(void *p)
 
 void lcd_set_send_noblobk(int noblock)
 {
-    if (lcd_hdl) {
-        dev_ioctl(lcd_hdl, IOCTL_SPI_NON_BLOCK, noblock);//1设置为非阻塞发送数据包
+    if (lcd_hw_hdl) {
+        dev_ioctl(lcd_hw_hdl, IOCTL_SPI_NON_BLOCK, noblock);//1设置为非阻塞发送数据包
     }
 }
 
 void user_lcd_init(void)
 {
-    if (!lcd_hdl) {
+    if (!lcd_hw_hdl) {
         extern const struct ui_devices_cfg ui_cfg_data;
         lcd_init(&ui_cfg_data);//ui_cfg_data参数可以在版籍配置
     }
@@ -754,10 +831,6 @@ void lcd_product_test(void)
         int cnt = sizeof(color) / sizeof(color[0]);
         int width = LCD_W;
         int height = LCD_H;
-#ifdef USE_LCD_TE_ROTATE_ENABLE
-        width = LCD_H;
-        height = LCD_W;
-#endif
         for (int n = 0; n < 2; n++) {
             memset(buf, 0, len);
             data = buf;
@@ -773,8 +846,8 @@ void lcd_product_test(void)
             data = buf;
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
-                    *data++ = (color[j / (width / cnt)] >> 8) & 0xff;
-                    *data++ = color[j / (width / cnt)] & 0xff;
+                    *data++ = (color[j / (height / cnt)] >> 8) & 0xff;
+                    *data++ = color[j / (height / cnt)] & 0xff;
                 }
             }
             lcd_show_frame_to_dev(buf, len);
@@ -820,6 +893,3 @@ REGISTER_LCD_INTERFACE(lcd) = {
 };
 
 #endif
-
-
-

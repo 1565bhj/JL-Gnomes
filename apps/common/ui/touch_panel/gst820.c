@@ -125,7 +125,7 @@ exit:
     return ret;
 }
 
-int get_GST820_pid(void)
+static int GST820_get_pid(void)
 {
     u8 temp = 0;
     rdGST820Reg(GT_PID_REG0, &temp);
@@ -166,16 +166,13 @@ static char get_GST820_status(u16 addr)
 static u16 touch_x = 0;
 static u16 touch_y = 0;
 static u8 touch_status = 0;
+static u8 touch_sleep = 0;
 
 static void GST820_interrupt(void)
 {
     os_sem_post(&touch_sem);
-    //printf("\n [ERROR] %s -[yuyu] %d\n", __FUNCTION__, __LINE__);
-
-    //IIC读取坐标值
-    //get_GST820_xy(GT_TP1_REG, &touch_x, &touch_y);
 }
-void GST820_get_xy(short *x, short *y, char *press)
+static void GST820_get_xy(short *x, short *y, char *press)
 {
     if (x) {
         *x = touch_x;
@@ -188,9 +185,13 @@ void GST820_get_xy(short *x, short *y, char *press)
     }
 }
 
-int check_GST820(void)
+static int GST820_check(void*iic_dev_name)
 {
-    iic = dev_open("iic0", NULL);
+    if (!iic_dev_name) {
+        printf("err in %s iic_dev_name\n", __func__);
+        return -1;
+    }
+    iic = dev_open(iic_dev_name, NULL);
     extern const struct ui_devices_cfg ui_cfg_data;
     static const struct ui_lcd_platform_data *pdata;
     pdata = (struct ui_lcd_platform_data *)ui_cfg_data.private_data;
@@ -211,7 +212,6 @@ int check_GST820(void)
     os_sem_create(&touch_sem, 0);
     //注册中断注意触摸用的事件0 屏幕TE用的事件1
     port_wakeup_reg(EVENT_IO_0, pdata->touch_int_pin, EDGE_NEGATIVE, GST820_interrupt);
-    GST820_task_init();
     printf(">>>>>>>>>>>>hello GST820<<<<<<<<<<<");
     return 0;
 
@@ -219,10 +219,22 @@ int check_GST820(void)
 static int GST820_init(void)
 {
     u8 status = 0;
+    u8 touch_sleep_cb = 0;
+    int ret = 0;
 
     printf("[GST820]>>>>>GST820 start!!!");
     while (1) {
-        if (!os_sem_pend(&touch_sem, 50)) {
+        ret = os_sem_pend(&touch_sem, 50);
+        if (!ret && touch_sleep && !touch_sleep_cb) {
+            touch_sleep_cb = true;
+            lcd_touch_irq_wakeup_callback();
+            continue;
+        }
+        if (touch_sleep) {
+            continue;
+        }
+        touch_sleep_cb = false;
+        if (!ret) {
             touch_status = get_GST820_xy(0x3, &touch_x, &touch_y) == 0x8;
         } else {//500ms没有触摸则强制清空触摸状态
             touch_status = 0;
@@ -235,17 +247,27 @@ static int GST820_init(void)
     return 0;
 }
 
-static void my_touch_test_task(void *priv)
+static int GST820_sleep(char sleep)
 {
-    /*=====TE中断配置=====*/
-    //check_GST820();
-    GST820_init();
+    touch_sleep = sleep;
+    return touch_sleep;
 }
 
-int GST820_task_init(void)
+static int GST820_task_init(void)
 {
-    return thread_fork("my_touch_test_task", 20, 1024, 0, NULL, my_touch_test_task, NULL);
+    return thread_fork("touch_task", 20, 1024, 0, NULL, GST820_init, NULL);
 }
+
+REGISTER_LCD_TOUCH_DEV(GST820) = {
+    .name                           = "GST820",
+    .iic_dev_name                   = "iic0",
+    .LCD_Touch_check                = GST820_check,
+    .LCD_Touch_init                 = GST820_task_init,
+    .LCD_Touch_get                  = GST820_get_xy,
+    .LCD_Touch_sleep                = GST820_sleep,
+    .LCD_Touch_enable               = NULL,
+    .LCD_Touch_get_id               = GST820_get_pid,
+};
 
 #endif
 

@@ -8,8 +8,8 @@
 #include "event/key_event.h"
 
 #ifdef CONFIG_LTE_PHY_ENABLE
-static char **LTE_MUDULE_AT_CMD = NULL;
-static unsigned char LTE_MUDULE_AT_VENDOR = 0;
+static char **LTE_MODULE_AT_CMD = NULL;
+static unsigned char LTE_MODULE_AT_VENDOR = 0;
 
 //Note: 不同AT指令的响应时间，有可能超时时间不够，会导致代码逻辑处理出错
 //eg: 切卡耗时就比较长
@@ -58,6 +58,7 @@ typedef struct usb_net_app {
     unsigned char sim_status;
     unsigned char check_res;
     unsigned char key_press_flag;
+    unsigned char module_vendor;
     char lte_rssi;
     unsigned char iccid[33];
     unsigned int check_sim_card_err;
@@ -77,12 +78,14 @@ typedef struct usb_net_app {
     pthread_mutex_t mutex_end;
 } USB_LTE_APP;
 
-static USB_LTE_APP LTE_APP = {0};
+static USB_LTE_APP LTE_APP = {
+    .module_vendor = 0xFF,
+};
 
 void *qyai_usb_h_device_serial_at_cmd_str_get(void);
 int qyai_usb_h_device_serial_at_id_prive_vendor_get(void);
 extern int usb_host_reset_ep(u8 usb_id);
-extern int lte_net_auto_rndis_up(u8 opt, u8 * auto_rndis);
+extern int lte_net_auto_rndis_up(u8 opt, u8 *auto_rndis, u8 *module_vendor);
 extern int lte_iccid_dev_info_opt(u8 opt_code, char *iccid, int iccid_len);
 
 int app_usb_get_controller_id(void)
@@ -116,7 +119,8 @@ static void app_usb_at_port_rx_cb(u8 *buf, u32 len)
 
     static int mode_value = 0;
     static int auto_value = 0;
-    char *str = (char *)buf;
+    /* USB receive buffers are not guaranteed to be NUL-terminated. */
+    char *str = tmp_buf;
     //最先检查是不是等OK
     if (LTE_APP.ml_state_code == ML_STATE_CHECK_WAIT_OK) {
         char *ok_str = strstr(str, "OK");
@@ -132,19 +136,21 @@ static void app_usb_at_port_rx_cb(u8 *buf, u32 len)
                 goto done;
             }
         }
+        /* Ignore command echoes and partial responses until the final OK. */
+        return;
     } else if (LTE_APP.ml_state_code == ML_STATE_CHECK_SIM_CARD) {
-        if (strstr(buf, "+CPIN: READY") || strstr(buf, "+CPIN:READY")) {
-            if (LTE_MUDULE_AT_VENDOR == VENDOR_AIR780E) {
+        if (strstr(str, "+CPIN: READY") || strstr(str, "+CPIN:READY")) {
+            if (LTE_MODULE_AT_VENDOR == VENDOR_AIR780E) {
                 LTE_APP.ml_state_code = ML_STATE_CHECK_COMPLETE;
                 goto done;
-            } else if (LTE_MUDULE_AT_VENDOR == VENDOR_ML307R) { //wait "OK"
+            } else if (LTE_MODULE_AT_VENDOR == VENDOR_ML307R) { //wait "OK"
                 LTE_APP.ml_state_code = ML_STATE_CHECK_WAIT_OK;
                 return;
-            } else if (LTE_MUDULE_AT_VENDOR == VENDOR_NT26K || LTE_MUDULE_AT_VENDOR == VENDOR_CE105) { //wait "OK"
+            } else if (LTE_MODULE_AT_VENDOR == VENDOR_NT26K || LTE_MODULE_AT_VENDOR == VENDOR_CE105) { //wait "OK"
                 LTE_APP.ml_state_code = ML_STATE_CHECK_COMPLETE;
                 return;
             }
-            if (strstr(buf, "OK")) {
+            if (strstr(str, "OK")) {
                 LTE_APP.ml_state_code = ML_STATE_CHECK_COMPLETE;
                 goto done;
             }
@@ -152,18 +158,18 @@ static void app_usb_at_port_rx_cb(u8 *buf, u32 len)
             return;
         }
     } else if (LTE_APP.ml_state_code == ML_STATE_READ_ICCID) {
-        if (strstr(buf, "CCID:")) {
-            char *data = strstr(buf, "CCID:");
+        if (strstr(str, "CCID:")) {
+            char *data = strstr(str, "CCID:");
             data += strlen("CCID:");
             int i = 0;
-            int max = len - ((int)data - (int)buf);
+            int max = len - (data - str);
             while (*data && !isxdigit(*data)) {
                 *data++;
             }
             while (*data && isxdigit(*data) && i < sizeof(LTE_APP.iccid) && i < max) {
                 LTE_APP.iccid[i++] = *data++;
             }
-            if (strstr(buf, "OK")) {
+            if (strstr(str, "OK")) {
                 LTE_APP.ml_state_code = ML_STATE_CHECK_COMPLETE;
                 goto done;
             } else {
@@ -174,8 +180,8 @@ static void app_usb_at_port_rx_cb(u8 *buf, u32 len)
             return;
         }
     } else if (LTE_APP.ml_state_code == ML_STATE_CHECK_NET) {
-        if (strstr(buf, "+CGATT: 1") || strstr(buf, "+CGATT:1")) {
-            if (strstr(buf, "OK")) {
+        if (strstr(str, "+CGATT: 1") || strstr(str, "+CGATT:1")) {
+            if (strstr(str, "OK")) {
                 LTE_APP.ml_state_code = ML_STATE_CHECK_COMPLETE;
                 goto done;
             }
@@ -245,14 +251,14 @@ done:
 int app_usb_at_cmd_send_reset(void)
 {
     int res = 0;
-    LTE_MUDULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
+    LTE_MODULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
     if (!LTE_APP.usb_driver_ready) {
         printf("usb not ready!!!");
         return -2;
     }
     //不允许4G网络通信，只允许AT指令通信
-    LTE_MUDULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
-    if (!LTE_MUDULE_AT_CMD || !strcmp(LTE_MUDULE_AT_CMD[3], "NULL")) {
+    LTE_MODULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
+    if (!LTE_MODULE_AT_CMD || !strcmp(LTE_MODULE_AT_CMD[3], "NULL")) {
         printf("warning no CMD\n");
         return -1;
     }
@@ -261,7 +267,7 @@ int app_usb_at_cmd_send_reset(void)
     os_sem_set(&LTE_APP.at_cmd_sem, 0);
     //获取对应4G设备的对应AT指令地址
     //CATA4全网通模组的复位AT指令:前4个固定顺序
-    res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[3], strlen(LTE_MUDULE_AT_CMD[3]));
+    res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[3], strlen(LTE_MODULE_AT_CMD[3]));
     if (res < 0) {
         return res;
     }
@@ -281,33 +287,38 @@ int app_usb_net_auto_dialup(u8 on_off)
 {
     int res = 0;
     int reboot_flag = 0;
+    unsigned char module_vendor = 0;
+
     if (!LTE_APP.usb_driver_ready) {
         printf("usb not ready!!!");
         return -2;
+    }
+    //获取对应4G设备的对应AT指令地址
+    LTE_MODULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
+    if (!LTE_MODULE_AT_CMD) {
+        printf("warning no AT CMD\n");
+        return -1;
+    }
+    LTE_MODULE_AT_VENDOR = qyai_usb_h_device_serial_at_id_prive_vendor_get();
+    if (LTE_APP.module_vendor != LTE_MODULE_AT_VENDOR) {
+        LTE_APP.module_vendor = LTE_MODULE_AT_VENDOR;
+        LTE_APP.usb_auto_rndis = 0;
     }
     if (LTE_APP.usb_auto_rndis) {//已经设置过上网
         return 0;
     }
 
-    //获取对应4G设备的对应AT指令地址
-    LTE_MUDULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
-    if (!LTE_MUDULE_AT_CMD) {
-        printf("warning no AT CMD\n");
-        return -1;
-    }
-    LTE_MUDULE_AT_VENDOR = qyai_usb_h_device_serial_at_id_prive_vendor_get();
-
 #if (defined PRODUCTION_TEST_ENABLE || defined PRODUCTION_ALL_TEST_ENABLE)
-    lte_net_auto_rndis_up(1, &LTE_APP.usb_auto_rndis);//从flash读取自动上网设置，已设置则不需要设置
-    if (LTE_APP.usb_auto_rndis) {
+    lte_net_auto_rndis_up(1, &LTE_APP.usb_auto_rndis, &module_vendor);//从flash读取自动上网设置，已设置则不需要设置
+    if (LTE_APP.usb_auto_rndis && module_vendor == LTE_APP.module_vendor) {
         return 0;
     }
 #endif
 
     os_sem_set(&LTE_APP.at_cmd_sem, 0);
-    if (LTE_MUDULE_AT_VENDOR == VENDOR_ML307R) {//中移：ML307R
+    if (LTE_MODULE_AT_VENDOR == VENDOR_ML307R) {//中移：ML307R
         LTE_APP.ml_state_code = ML_STATE_CHECK_MODE;
-        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[5], strlen(LTE_MUDULE_AT_CMD[5]));
+        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[5], strlen(LTE_MODULE_AT_CMD[5]));
         if (res < 0) {
             return res;
         }
@@ -318,7 +329,7 @@ int app_usb_net_auto_dialup(u8 on_off)
         //需要重新设置mode为0
         if (LTE_APP.ml_state_code == ML_STATE_CHECK_SET_MODE) {
             os_sem_set(&LTE_APP.at_cmd_sem, 0);
-            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[6], strlen(LTE_MUDULE_AT_CMD[6]));
+            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[6], strlen(LTE_MODULE_AT_CMD[6]));
             if (res < 0) {
                 return res;
             }
@@ -331,7 +342,7 @@ int app_usb_net_auto_dialup(u8 on_off)
 
         LTE_APP.ml_state_code = ML_STATE_CHECK_AUTO;
         os_sem_set(&LTE_APP.at_cmd_sem, 0);
-        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[7], strlen(LTE_MUDULE_AT_CMD[7]));
+        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[7], strlen(LTE_MODULE_AT_CMD[7]));
         if (res < 0) {
             return res;
         }
@@ -342,7 +353,7 @@ int app_usb_net_auto_dialup(u8 on_off)
         //需要重新设置auto为1
         if (LTE_APP.ml_state_code == ML_STATE_CHECK_SET_AUTO) {
             os_sem_set(&LTE_APP.at_cmd_sem, 0);
-            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[8], strlen(LTE_MUDULE_AT_CMD[8]));
+            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[8], strlen(LTE_MODULE_AT_CMD[8]));
             if (res < 0) {
                 return res;
             }
@@ -358,22 +369,16 @@ int app_usb_net_auto_dialup(u8 on_off)
 
         if (reboot_flag) {
             printf("reboot make at command effetct!!!");
-            app_usb_at_cmd_send_reset();
-            os_time_dly(10);
-            LTE_APP.usb_auto_rndis = true;
-
-#if (defined PRODUCTION_TEST_ENABLE || defined PRODUCTION_ALL_TEST_ENABLE)
-            lte_net_auto_rndis_up(0, &LTE_APP.usb_auto_rndis);//保存自动上网设置到flash
-#endif
+            app_usb_at_cmd_send_reset();//重启生效
         }
-    } else if (LTE_MUDULE_AT_VENDOR == VENDOR_ML120H) {//海思骐骏：ML120H
-        //LTE_MUDULE_AT_CMD = ML120H_AT_TX_CMD;
+    } else if (LTE_MODULE_AT_VENDOR == VENDOR_ML120H) {//海思骐骏：ML120H
+        //LTE_MODULE_AT_CMD = ML120H_AT_TX_CMD;
         //后续需要优化：开机先读取是否是自动上网，不是才重新设置，是则跳过
         os_sem_set(&LTE_APP.at_cmd_sem, 0);
         if (on_off) { //设置自动上网
-            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[5], strlen(LTE_MUDULE_AT_CMD[5]));
+            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[5], strlen(LTE_MODULE_AT_CMD[5]));
         } else { //取消自动上网
-            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[6], strlen(LTE_MUDULE_AT_CMD[6]));
+            res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[6], strlen(LTE_MODULE_AT_CMD[6]));
         }
         if (res < 0) {
             return res;
@@ -386,17 +391,12 @@ int app_usb_net_auto_dialup(u8 on_off)
 
         //重启生效
         app_usb_at_cmd_send_reset();
-        os_time_dly(10);
-        LTE_APP.usb_auto_rndis = true;
-#if (defined PRODUCTION_TEST_ENABLE || defined PRODUCTION_ALL_TEST_ENABLE)
-        lte_net_auto_rndis_up(0, &LTE_APP.usb_auto_rndis);//保存自动上网设置到flash
-#endif
-    } else if (LTE_MUDULE_AT_VENDOR == VENDOR_NT26K || LTE_MUDULE_AT_VENDOR == VENDOR_CE105) {//利尔达：NT26K，雁飞：CE105
+    } else if (LTE_MODULE_AT_VENDOR == VENDOR_NT26K || LTE_MODULE_AT_VENDOR == VENDOR_CE105) {//利尔达：NT26K，雁飞：CE105
         LTE_APP.ml_state_code = ML_STATE_CHECK_WAIT_OK; // 设置状态，确保收到OK时释放信号量
 
         // 步骤1: 启用ECM/RNDIS网卡总功能
         os_sem_set(&LTE_APP.at_cmd_sem, 0);
-        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[7], strlen(LTE_MUDULE_AT_CMD[7]));
+        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[7], strlen(LTE_MODULE_AT_CMD[7]));
         if (res < 0) {
             return res;
         }
@@ -407,7 +407,7 @@ int app_usb_net_auto_dialup(u8 on_off)
 
         // 步骤2: 设置USB网卡为RNDIS模式（会导致USB断开重连）
         os_sem_set(&LTE_APP.at_cmd_sem, 0);
-        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[8], strlen(LTE_MUDULE_AT_CMD[8]));
+        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[8], strlen(LTE_MODULE_AT_CMD[8]));
         if (res < 0) {
             return res;
         }
@@ -415,7 +415,10 @@ int app_usb_net_auto_dialup(u8 on_off)
             printf("WAIT AT CMD Time OUT, line:%d!!!", __LINE__);
             res = -1;
         }
-
+        if (LTE_MODULE_AT_VENDOR == VENDOR_CE105) {//雁飞CD105不用走后面命令
+            app_usb_at_cmd_send_reset();//重启生效
+            goto exit;
+        }
         // 等待USB重新连接（AT+ECPCFG=usbNet,0会导致模组切换USB配置）
         printf("waiting for USB reconnect after RNDIS mode change...\n");
         int wait_count = 0;
@@ -431,7 +434,7 @@ int app_usb_net_auto_dialup(u8 on_off)
 
         // 步骤3: 设置PDP上下文（手动测试验证通过，关键步骤！）
         os_sem_set(&LTE_APP.at_cmd_sem, 0);
-        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[9], strlen(LTE_MUDULE_AT_CMD[9]));
+        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[9], strlen(LTE_MODULE_AT_CMD[9]));
         if (res < 0) {
             return res;
         }
@@ -442,7 +445,7 @@ int app_usb_net_auto_dialup(u8 on_off)
 
         // 步骤4: 设置上电自动建立数据服务
         os_sem_set(&LTE_APP.at_cmd_sem, 0);
-        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[10], strlen(LTE_MUDULE_AT_CMD[10]));
+        res = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[10], strlen(LTE_MODULE_AT_CMD[10]));
         if (res < 0) {
             return res;
         }
@@ -450,18 +453,17 @@ int app_usb_net_auto_dialup(u8 on_off)
             printf("WAIT AT CMD Time OUT, line:%d!!!", __LINE__);
             res = -1;
         }
-
-        LTE_APP.ml_state_code = ML_STATE_CHECK_IDEL; // 重置状态
-
+    }
+exit:
+    if (res >= 0 && !LTE_APP.usb_auto_rndis) {
         // 标记自动拨号已设置，防止模组复位后重复设置导致死循环
         //auto_dialup_done = 1;
-
         //app_usb_at_cmd_send_reset();
         os_time_dly(10);
         LTE_APP.usb_auto_rndis = true;
-
+        LTE_APP.ml_state_code = ML_STATE_CHECK_IDEL; // 重置状态
 #if (defined PRODUCTION_TEST_ENABLE || defined PRODUCTION_ALL_TEST_ENABLE)
-        lte_net_auto_rndis_up(0, &LTE_APP.usb_auto_rndis);
+        lte_net_auto_rndis_up(0, &LTE_APP.usb_auto_rndis, &LTE_APP.module_vendor);
 #endif
     }
     return res;
@@ -486,17 +488,17 @@ int app_usb_net_manual_dialup(u8 net_on)
         printf("usb not ready!!!");
         return -2;
     }
-    LTE_MUDULE_AT_VENDOR = qyai_usb_h_device_serial_at_id_prive_vendor_get();
-    if (LTE_MUDULE_AT_VENDOR == VENDOR_ML120H) {//海思骐骏：ML120H
+    LTE_MODULE_AT_VENDOR = qyai_usb_h_device_serial_at_id_prive_vendor_get();
+    if (LTE_MODULE_AT_VENDOR == VENDOR_ML120H) {//海思骐骏：ML120H
         if (net_on) {
             //获取对应4G设备的对应AT指令地址
-            LTE_MUDULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
-            if (!LTE_MUDULE_AT_CMD) {
+            LTE_MODULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
+            if (!LTE_MODULE_AT_CMD) {
                 printf("warning no AT CMD\n");
                 return -1;
             }
             os_sem_set(&LTE_APP.at_cmd_sem, 0);
-            ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[8], strlen(LTE_MUDULE_AT_CMD[8]));
+            ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[8], strlen(LTE_MODULE_AT_CMD[8]));
             if (ret < 0) {
                 return ret;
             }
@@ -506,7 +508,7 @@ int app_usb_net_manual_dialup(u8 net_on)
             }
 
             os_sem_set(&LTE_APP.at_cmd_sem, 0);
-            ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[9], strlen(LTE_MUDULE_AT_CMD[9]));
+            ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[9], strlen(LTE_MODULE_AT_CMD[9]));
             if (ret < 0) {
                 return ret;
             }
@@ -516,7 +518,7 @@ int app_usb_net_manual_dialup(u8 net_on)
             }
         } else {
             os_sem_set(&LTE_APP.at_cmd_sem, 0);
-            ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[9], strlen(LTE_MUDULE_AT_CMD[9]));
+            ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[9], strlen(LTE_MODULE_AT_CMD[9]));
             if (ret < 0) {
                 return ret;
             }
@@ -574,8 +576,8 @@ static int app_usb_module_sim_card_det(void)
     }
 
     //获取对应4G设备的对应AT指令地址
-    LTE_MUDULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
-    if (!LTE_MUDULE_AT_CMD || !strcmp(LTE_MUDULE_AT_CMD[1], "NULL")) {
+    LTE_MODULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
+    if (!LTE_MODULE_AT_CMD || !strcmp(LTE_MODULE_AT_CMD[1], "NULL")) {
         printf("warning no AT CMD\n");
         return -1;
     }
@@ -584,7 +586,7 @@ static int app_usb_module_sim_card_det(void)
     LTE_APP.ml_state_code = ML_STATE_CHECK_SIM_CARD;
 
     //检测SIM卡是否存在
-    int ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[1], strlen(LTE_MUDULE_AT_CMD[1]));
+    int ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[1], strlen(LTE_MODULE_AT_CMD[1]));
     if (ret < 0) {
         return ret;
     }
@@ -607,7 +609,7 @@ static int app_usb_module_sim_card_det(void)
         LTE_APP.ml_state_code = ML_STATE_READ_ICCID;
 
         //检测SIM卡的ICCID
-        ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[4], strlen(LTE_MUDULE_AT_CMD[4]));
+        ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[4], strlen(LTE_MODULE_AT_CMD[4]));
         if (ret < 0) {
             return ret;
         }
@@ -638,8 +640,8 @@ static int app_usb_module_sim_card_net_check(void)
     }
 
     //获取对应4G设备的对应AT指令地址
-    LTE_MUDULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
-    if (!LTE_MUDULE_AT_CMD || !strcmp(LTE_MUDULE_AT_CMD[2], "NULL")) {
+    LTE_MODULE_AT_CMD = qyai_usb_h_device_serial_at_cmd_str_get();
+    if (!LTE_MODULE_AT_CMD || !strcmp(LTE_MODULE_AT_CMD[2], "NULL")) {
         printf("warning no AT CMD\n");
         return -1;
     }
@@ -648,7 +650,7 @@ static int app_usb_module_sim_card_net_check(void)
     LTE_APP.ml_state_code = ML_STATE_CHECK_NET;
 
     //检测SIM卡是否能联网
-    int ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MUDULE_AT_CMD[2], strlen(LTE_MUDULE_AT_CMD[2]));
+    int ret = usbnet_host_at_data_send(LTE_APP.usb_id, LTE_MODULE_AT_CMD[2], strlen(LTE_MODULE_AT_CMD[2]));
     if (ret < 0) {
         return ret;
     }
@@ -674,21 +676,32 @@ static int app_usb_module_sim_card_net_check(void)
 static void app_usb_check_process_thread(void (*lte_online_callback)(void))
 {
     int ret = 1;
+    int i = 0;
+    char at_cmd_ok = 0;
+    char *AT_TEST[] = {"AT\r\n", NULL};
 
-    //检测AT指令
-    os_sem_set(&LTE_APP.at_cmd_sem, 0);
-    ret = usbnet_host_at_data_send(LTE_APP.usb_id, "AT\r\n", strlen("AT\r\n"));
-    if (ret < 0) {
-        printf("=====AT CMD send fail=====");
-        LTE_APP.check_res = LTE_APP.check_res | LTE_MODULE_ERROR;
-        LTE_APP.ml_state_code = ML_STATE_CHECK_IDEL;
-        return;
+    for (i = 0; AT_TEST[i] != NULL; i++) {//检测AT指令
+        os_sem_set(&LTE_APP.at_cmd_sem, 0);
+        ret = usbnet_host_at_data_send(LTE_APP.usb_id, AT_TEST[i], strlen(AT_TEST[i]));
+        if (ret < 0) {
+            printf("=====AT CMD send err: %s =====\n", AT_TEST[i]);
+            LTE_APP.check_res = LTE_APP.check_res | LTE_MODULE_ERROR;
+            LTE_APP.ml_state_code = ML_STATE_CHECK_IDEL;
+            os_time_dly(50);
+        }
+        if (ret >= 0 && OS_TIMEOUT == os_sem_pend(&LTE_APP.at_cmd_sem, SEM_WAIT_TIME_OUT)) {
+            printf("=====AT CMD wait timeout err : %s =====\n", AT_TEST[i]);
+            LTE_APP.check_res = LTE_APP.check_res | LTE_MODULE_ERROR;
+            LTE_APP.ml_state_code = ML_STATE_CHECK_IDEL;
+            os_time_dly(50);
+        } else if (ret >= 0) {
+            at_cmd_ok = 1;
+            break;
+        }
     }
-    if (OS_TIMEOUT == os_sem_pend(&LTE_APP.at_cmd_sem, SEM_WAIT_TIME_OUT)) {
-        printf("=====AT CMD wait timeout=====");
-        LTE_APP.check_res = LTE_APP.check_res | LTE_MODULE_ERROR;
-        LTE_APP.ml_state_code = ML_STATE_CHECK_IDEL;
-        return;
+    if (!at_cmd_ok) {//所有AT指令都失效
+        printf("=====ALL AT CMD test err=====\n");
+        goto exit;
     }
 
     //设置自动拨号上网
@@ -709,8 +722,8 @@ static void app_usb_check_process_thread(void (*lte_online_callback)(void))
         os_time_dly(100);
     }
 
+exit:
     LTE_APP.ml_state_code = ML_STATE_CHECK_IDEL;
-
     if (lte_online_callback) {
         lte_online_callback();
     }
@@ -830,4 +843,3 @@ int app_usb_at_unregister_inter(void)
 }
 
 #endif
-

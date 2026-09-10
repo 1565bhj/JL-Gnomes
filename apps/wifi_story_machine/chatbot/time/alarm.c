@@ -633,6 +633,7 @@ __del:
                 memset(alarm_tmp, 0, sizeof(struct alarm_info));
                 del = 1;
             } else if (alarm_tmp->cyc) {
+#if 0
                 char del_weekday = sys_time_to_weekday(&alarm->time);
                 if (alarm_tmp->cyc == 1) {
                     alarm_tmp->cyc = 0xFE;
@@ -640,6 +641,13 @@ __del:
                 } else {
                     alarm_tmp->cyc &= ~BIT(del_weekday);
                 }
+#else
+                if (alarm->cyc) {
+                    alarm_tmp->cyc &= ~alarm->cyc;
+                } else {
+                    alarm_tmp->cyc = 0;
+                }
+#endif
                 del = 1;
             }
         }
@@ -836,6 +844,53 @@ int alarm_add_by_hour_min(int8_t index, uint8_t hour, uint8_t min, uint8_t cycle
 
     return 0;
 }
+/**
+ * @brief 通过小时和分钟添加闹钟，并可指定闹钟下标
+ * @param index 闹钟下标（0 到 ALARM_NUM - 1），如果为-1则自动选择
+ * @param hour 小时（0-23）
+ * @param min 分钟（0-59）
+ * @param sec 秒（0-59）
+ * @param cycle 重复循环（0:单次，1:每天, BIT(1)-BIT(7)：对应星期一到星期日）
+ * @return 0:成功，-1:失败
+ */
+int alarm_add_by_hour_min_sec(int8_t index, uint8_t hour, uint8_t min, uint8_t sec, uint8_t cycle)
+{
+    struct sys_time current_time = {0};
+    struct alarm_info alarm = {0};
+    int ret = 0;
+
+    // 获取当前时间
+    if (get_sys_time(&current_time) != 0) {
+        printf("alarm_add_by_hour_min: failed to get system time\n");
+        return -1;
+    }
+
+    // 构建闹钟时间（使用当前日期，设置指定的时分秒）
+    memcpy(&alarm.time, &current_time, sizeof(struct sys_time));
+    alarm.time.hour = hour;
+    alarm.time.min = min;
+    alarm.time.sec = sec;
+
+    // 检查是否今天的闹钟时间已过，如果已过则设置为明天
+    if ((hour * 60 * 60 + min * 60 + sec) <= (current_time.hour * 60 * 60 + current_time.min * 60 + current_time.sec)) {
+        if ((cycle == 0) || (cycle == 1)) {//星期一到星期日
+            time_day_add(&alarm.time, 1);
+        }
+    }
+    printf("alarm_add_by_hour_min: setting alarm for %04d-%02d-%02d %02d:%02d:%02d\n",
+           alarm.time.year, alarm.time.month, alarm.time.day,
+           alarm.time.hour, alarm.time.min, alarm.time.sec);
+
+    // 设置闹钟属性
+    alarm.enable = 1;
+    alarm.cyc = cycle;
+    alarm.music = 0; // 使用系统音乐
+    alarm_add(&alarm, NULL);
+
+    printf("alarm add by hour_min: added alarm at %02d:%02d, cycle: %d", hour, min, cycle);
+
+    return 0;
+}
 static void alarm_init(void)
 {
     if (syscfg_read(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab)) < 0) {
@@ -909,7 +964,7 @@ static void alarm_first_set(void)
             timeinfo.tm_sec = time.sec;
             time1 = mktime(&timeinfo);
 
-            printf("-> read alarm %d : %d-%d-%d %d:%d:%d\n", i,
+            printf("-> read alarm %d : %d-%d-%d %02d:%02d:%02d\n", i,
                    alarm_tmp->time.year,
                    alarm_tmp->time.month,
                    alarm_tmp->time.day,
@@ -991,7 +1046,7 @@ static void alarm_chack_time(struct sys_time *new_time)//检测时间小于当�
             time1 = mktime(&timeinfo);
 //            printf("-> time1 : %d\n",time1);
 
-//            printf("-> read alarm %d : %d-%d-%d %d:%d:%d\n",i,
+//            printf("-> read alarm %d : %d-%d-%d %02d:%02d:%02d\n",i,
 //            alarm_tmp->time.year,
 //            alarm_tmp->time.month,
 //            alarm_tmp->time.day,
@@ -1051,7 +1106,7 @@ static void alarm_chack_time(struct sys_time *new_time)//检测时间小于当�
 static void alarm_rings(void *priv)
 {
     char index = (char)priv;
-    printf("->alarm clock is rings\n");
+    printf("->alarm clock is rings : %d\n", index);
     if (alarm_tab[index].enable) {
         alarm_msg(ALARM_NOTIFY, index);//通知闹钟事件
     }
@@ -1081,11 +1136,7 @@ static void alarm_rings(void *priv)
             time_day_add(&alarm_tab[index].time, 1);//alarm_tab[index].time.day += 1;
         }
     } else {
-#ifdef CONFIG_LVGL_UI_ENABLE
-        // 删除只响一次闹钟
-        lv_demo_delete_once_alarm(alarm_tab[index].time.hour, alarm_tab[index].time.min, alarm_tab[index].time.sec);
-#endif
-        alarm_del_in_isr(index);
+        alarm_msg(ALARM_DEL, index);//重新设置闹钟
     }
 
     alarm_msg(ALARM_SAVE, 0);//保存更新闹钟
@@ -1592,6 +1643,7 @@ int alarm_music_play_stop(void)
         }
 #endif
         if (music_play_alarm_url_ring()) {
+            music_play_alarm_url_clear();
             net_music_dec_stop();
             net_music_play_set_stop();
             net_music_num_clear();
@@ -1723,6 +1775,13 @@ static void time_rtc_alarm_task(void *p)
                     break;
                 case ALARM_UPDATE2SERVER:
                     alarm_time_update_to_server();
+                    break;
+                case ALARM_DEL:
+                    index = msg[2];
+#ifdef CONFIG_LVGL_UI_ENABLE
+                    lv_demo_delete_once_alarm(alarm_tab[index].time.hour, alarm_tab[index].time.min, alarm_tab[index].time.sec);// 删除只响一次闹钟
+#endif
+                    alarm_delete_by_index(index);
                     break;
                 case ALARM_NOTIFY:
                     index = msg[2];

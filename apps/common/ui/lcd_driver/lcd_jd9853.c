@@ -78,16 +78,17 @@ void JD9853_Fill(u8 *img, u16 len)
     WriteDAT_DMA(img, len);
 }
 
-void JD9853_SleepInMode(void)
+static int JD9853_Sleep(char on)
 {
-    WriteCOM(0x10); //Sleep in
-    lcd_delay(120); //Delay 120ms
-}
-
-void JD9853_SleepOutMode(void)
-{
-    WriteCOM(0x11); //Sleep out
-    lcd_delay(120);  //Delay 120ms
+    return on;//确保LCD屏幕支持睡眠指令再进行修改
+    if (on) {
+        WriteCOM(0x10); //Sleep in
+        lcd_delay(120); //Delay 120ms
+    } else {
+        WriteCOM(0x11); //Sleep out
+        lcd_delay(120);  //Delay 120ms
+    }
+    return on;
 }
 
 static void JD9853_set_direction(int dir)
@@ -362,6 +363,20 @@ void JD9853_test(void)
     JD9853_clear_screen(BLACK);
     lcd_delay(50);//每个屏幕可能会在刷新清屏了，但是屏幕芯片缓存还没刷到屏幕，需要加延时
     lcd_bl_pinstate(1);
+//    while (1) {
+//        os_time_dly(100);
+//        JD9853_clear_screen(BLUE);
+//        printf("LCD_GC3907_TSET_BLUE\n");
+//        os_time_dly(100);
+//        JD9853_clear_screen(DCYAN);
+//        printf("LCD_GC3907_TSET_GRED\n");
+//        os_time_dly(100);
+//        JD9853_clear_screen(DGREEN);
+//        printf("LCD_GC3907_TSET_BRRED\n");
+//        os_time_dly(100);
+//        JD9853_clear_screen(YELLOW);
+//        printf("LCD_GC3907_TSET_YELLOW\n");
+//    }
 }
 
 int JD9853_init(void)
@@ -393,6 +408,7 @@ REGISTER_LCD_DEV(LCD_JD9853) = {
     .LCD_DrawToDev          = JD9853_Fill,//应用层直接到设备接口层，需要做好缓冲区共用互斥，慎用！
     .LCD_Lvgl_Full          = JD9853_lvgl_Fill,//LVGL发送数据接口
     .LCD_ClearScreen        = JD9853_clear_screen,
+    .LCD_Sleep              = JD9853_Sleep,
     .Reset                  = JD9853_reset,
     .BackLightCtrl          = JD9853_led_ctrl,
     .set_dirction           = JD9853_set_direction,

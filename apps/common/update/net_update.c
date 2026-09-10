@@ -271,6 +271,7 @@ void *net_fopen(char *path, char *mode)//net_fopen支持写flash固件升级和�
         if (strstr(path, CONFIG_UPGRADE_OTA_FILE_NAME_RES)) {
             net_update->update_res = true;
         }
+        music_play_stop(NULL);
         if (net_update->update_res) {
             music_play_res_file("UpdateRes.mp3");
         } else {

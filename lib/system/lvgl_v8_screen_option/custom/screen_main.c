@@ -16,6 +16,7 @@
 #include "gui_guider.h"
 #include "cJSON_common\cJSON.h"
 
+#define TASK_GET_WEATHER
 
 // 闹钟检测相关声明
 int get_alarm_count(void); // 获取闹钟数量
@@ -44,6 +45,11 @@ static bool g_network_failed = false;         // 网络连接失败标志
 static int  g_time_retry_count = 0;           // 时间获取重试计数器
 static int high_temp = 0;
 static int low_temp = 0;
+static char get_weather_ok = 0;
+
+#ifdef TASK_GET_WEATHER
+static int net_weather_task_pid = 0;
+#endif
 
 // 闹钟警告定时器ID
 static uint16_t alarm_warning_hide_timer_id = 0;
@@ -198,6 +204,7 @@ static void time_update_timer_cb(lv_timer_t *timer)
 
 
 static void network_connected_init_async(void *data);
+static void network_connected_init_task(void *data);
 /**
  * 网络连接检查与时间服务初始化
  * 网络未连接时进行重试
@@ -208,7 +215,13 @@ static void network_check_and_init(void *priv)
 
     if (lv_demo_system_net_connect_success()) {  // 检查网络连接状态
         //printf("[网络状态] 已连接，初始化时间服务...\n");
+#ifdef TASK_GET_WEATHER
+        if (!net_weather_task_pid) {
+            thread_fork("net_weather", 10, 1600, 0, &net_weather_task_pid, network_connected_init_task, NULL);
+        }
+#else
         lv_async_call(network_connected_init_async, NULL);
+#endif
     } else {
         g_time_retry_count++;
         //printf("[网络状态] 时间更新尝试 %d: 网络未连接\n", g_time_retry_count);
@@ -235,6 +248,17 @@ void start_time_update_with_net_wait(void)
     sys_timeout_add_to_task("sys_timer", NULL, network_check_and_init, 0); // 立即开始第一次检查
 }
 
+/**
+ * 启动时间更新流程
+ * 开始网络等待和时间同步
+ */
+void lv_net_time_weather_update(int time_out)
+{
+    g_time_retry_count = 0;
+    //printf("\n[时间服务] 启动时间更新流程，等待网络连接...\n");
+    sys_timeout_add_to_task("sys_timer", NULL, network_check_and_init, time_out); // 立即开始第一次检查
+}
+
 
 /**
  * 时间更新包装函数
@@ -248,10 +272,31 @@ static void time_update_async_cb(void *data)
 }
 
 /**
- * 网络连接后的初始化操作
- * 启动时间更新定时器
+ * 网络连接初始化异步包装任务
  */
-static void network_connected_init(void)
+static void network_connected_init_task(void *data)
+{
+    // 异步更新时间
+    lv_async_call(time_update_async_cb, NULL);
+
+    // 创建时间更新定时器
+    static lv_timer_t *time_update_timer = NULL;
+    if (!time_update_timer) {
+        time_update_timer = lv_timer_create(time_update_timer_cb, TIME_UPDATE_INTERVAL_MS, NULL);
+    }
+    g_time_retry_count = 0;
+    get_fetch_weather_data_success(1);
+    while (!get_fetch_weather_data_success(0)) {
+        fetch_weather_data(); // 调用天气函数
+        os_time_dly(TIME_RETRY_INTERVAL_MS * 2 / 10);
+    }
+    net_weather_task_pid = 0;
+}
+
+/**
+ * 网络连接初始化异步包装函数
+ */
+static void network_connected_init_async(void *data)
 {
     // 异步更新时间
     lv_async_call(time_update_async_cb, NULL);
@@ -266,15 +311,6 @@ static void network_connected_init(void)
     if (fetch_weather_data() && ++g_time_retry_count <= TIME_MAX_RETRY_COUNT) {  // 调用天气函数
         sys_timeout_add_to_task("sys_timer", NULL, network_check_and_init, TIME_RETRY_INTERVAL_MS);
     }
-}
-
-/**
- * 网络连接初始化异步包装函数
- */
-static void network_connected_init_async(void *data)
-{
-    LV_UNUSED(data);
-    network_connected_init();
 }
 
 /******************************************************************************************
@@ -377,7 +413,7 @@ int update_weather_ui_from_json(const char *json_data)
     cJSON *root = cJSON_Parse(json_data);
     if (!root) {
         //printf("[错误] JSON解析失败: %s\n", cJSON_GetErrorPtr());
-        return ret;
+        goto exit;
     }
 
     // 获取结果数组
@@ -385,7 +421,7 @@ int update_weather_ui_from_json(const char *json_data)
     if (!results || !cJSON_IsArray(results) || cJSON_GetArraySize(results) == 0) {
         //printf("[错误] 未找到有效的结果数组\n");
         cJSON_Delete(root);
-        return ret;
+        goto exit;
     }
 
     // 获取第一个结果
@@ -393,7 +429,7 @@ int update_weather_ui_from_json(const char *json_data)
     if (!first_result) {
         //printf("[错误] 未找到天气结果\n");
         cJSON_Delete(root);
-        return ret;
+        goto exit;
     }
 
     // 获取每日天气数组
@@ -401,7 +437,7 @@ int update_weather_ui_from_json(const char *json_data)
     if (!daily || !cJSON_IsArray(daily) || cJSON_GetArraySize(daily) == 0) {
         //printf("[错误] 未找到每日天气数据\n");
         cJSON_Delete(root);
-        return ret;
+        goto exit;
     }
 
     // 获取今天的天气数据（第一条数据）
@@ -409,7 +445,7 @@ int update_weather_ui_from_json(const char *json_data)
     if (!today) {
         //printf("[错误] 未找到今天的天气数据\n");
         cJSON_Delete(root);
-        return ret;
+        goto exit;
     }
 
     cJSON *location = cJSON_GetObjectItem(first_result, "location");
@@ -417,7 +453,7 @@ int update_weather_ui_from_json(const char *json_data)
     if (!location || !today) {
         //printf("[错误] location 或 daily 信息缺失\n");
         cJSON_Delete(root);
-        return ret;
+        goto exit;
     }
 
     const char *city = cJSON_GetStringValue(cJSON_GetObjectItem(location, "name"));
@@ -457,22 +493,41 @@ int update_weather_ui_from_json(const char *json_data)
 
     // 释放JSON对象
     cJSON_Delete(root);
+
+exit:
+    if (json_data) {
+        free(json_data);
+    }
+    if (ret) {
+        printf("[天气错误] 获取天气数据异常\n");
+    }
+    get_weather_ok = ret ? 0 : 2;
     return ret;
+}
+
+int get_fetch_weather_data_success(int clear)
+{
+    if (clear) {
+        get_weather_ok = 0;
+    }
+    return get_weather_ok == 2;
 }
 
 int fetch_weather_data(void)
 {
     int ret = -1;
-    // 1. 检查网络连接状态
-    if (!lv_demo_system_net_connect_success()) {
-        return ret;
-    }
 
+    // 1. 检查网络连接状态
+    if (!lv_demo_system_net_connect_success() || get_weather_ok) {
+        return get_fetch_weather_data_success(0) ? 0 : ret;
+    }
+    get_weather_ok = 0;
     char *buf = (char *)malloc(2048);
     if (buf == NULL) {
         printf("mem alloc err\n");
         return ret;
     }
+    get_weather_ok = 1;
     memset(buf, 0, 2048);
 
     // 2. 获取天气数据
@@ -488,13 +543,17 @@ int fetch_weather_data(void)
     } else {
         printf("\n%s\n", buf);
         // 4. 解析JSON
+#ifdef TASK_GET_WEATHER
+        ret = lv_async_call(update_weather_ui_from_json, buf) == LV_RES_OK ? 0 : -1;//异步更新UI组件
+#else
         ret = update_weather_ui_from_json(buf);
-        if (ret) {
-            printf("[天气错误] 获取天气数据异常\n");
-        }
+#endif
     }
     //printf("=========== 天气数据获取结束 ===========\n\n");
-    free(buf);
+    if (ret) {
+        free(buf);
+        get_weather_ok = 0;
+    }
     return ret;
 }
 
@@ -596,6 +655,8 @@ int ai_speaker_check_network_status(void)
         } else {//wifi
             if (net_status) {
                 lv_img_set_src(guider_ui.screen_dropdown_img_no_wifi, &_set_wifi_alpha_18x16);
+                // 异步更新时间
+                lv_async_call(time_update_async_cb, NULL);
             } else {
                 lv_img_set_src(guider_ui.screen_dropdown_img_no_wifi, &_no_wifi_alpha_18x16);
             }

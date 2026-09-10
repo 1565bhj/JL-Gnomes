@@ -164,10 +164,15 @@
 //#define TCFG_VBAT_CHECK_AD_PORT             IO_PORTA_10 //AD IO检测VBAT电池电量IO
 //#define TCFG_VBAT_CHECK_AD_PORT_PPS         0.6         //AD IO检测VBAT电池的分压占比
 
-//#define TCFG_AUTO_SLEEP_CHECK_EN            1           //使能特定时间待机检测空闲后进入关机
+#define TCFG_AUTO_SLEEP_CHECK_EN            1           //使能特定时间待机检测空闲后进入关机
 //#define TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH   1           //使能只检测语音对话作为是否空闲
-//#define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     30          //使能30秒进入外设低功耗(未关机，只是把耗电外设降低功耗)
-//#define AUTO_SLEEP_TIME_MIN                 5           //5分钟自动关机
+#define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     30          //使能30秒进入外设低功耗(未关机，只是把耗电外设降低功
+#define AUTO_DEEP_SLEEP_TIME_MIN            5           //使能进入（5分钟）: wifi关闭、蓝牙关闭、LVGL任务挂起
+//#define AUTO_PWEROFF_SLEEP_TIME_MIN         5           //5分钟自动关机
+
+#ifdef AUTO_DEEP_SLEEP_TIME_MIN
+#define TCFG_LCD_SLEEP_BACKLIGHT_PWM_DUTY   10           //0-100，睡眠时：LCD屏幕背光PWM值
+#endif // AUTO_DEEP_SLEEP_TIME_MIN
 
 //#define UART0_BUAD                          9600        //串口0的波特率
 //#define TIMER_UART_CALIBRATION_ENABLE       0           //使用串口0作为时钟校准
@@ -359,18 +364,24 @@
 #endif
 
 
-#define TCFG_CHARING_STATUS_PORT            IO_PORTC_06 //TYPE-C插入电池充电检测IO
-#define TCFG_CHARGFULL_STATUS_PORT          IO_PORT_PR_00 //充满检测IO
-#define TCFG_LCD_BL_PWM_PORT                IO_PORTH_03  //LCD背光灯的PWM IO
+#define TCFG_CHARING_STATUS_PORT            IO_PORTC_06     //TYPE-C插入电池充电检测IO
+#define TCFG_CHARGFULL_STATUS_PORT          IO_PORT_PR_00   //充满检测IO
+#define TCFG_LCD_BL_PWM_PORT                IO_PORTH_03     //LCD背光灯的PWM IO
+#define TCFG_LCD_BL_PWM_DEV_NUM             "pwm1"          //LCD背光灯的PWM设备名称
 
 //#define TCFG_VBAT_CHECK_EN                  1           //使能电量检测
 //#define TCFG_VBAT_CHECK_AD_PORT             IO_PORTA_10 //AD IO检测VBAT电池电量IO
 //#define TCFG_VBAT_CHECK_AD_PORT_PPS         0.6         //AD IO检测VBAT电池的分压占比
 
-//#define TCFG_AUTO_SLEEP_CHECK_EN            1           //使能特定时间待机检测空闲后进入关机
+#define TCFG_AUTO_SLEEP_CHECK_EN            1           //使能特定时间待机检测空闲后进入关机
 //#define TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH   1           //使能只检测语音对话作为是否空闲
-//#define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     30          //使能30秒进入外设低功耗(未关机，只是把耗电外设降低功耗)
-//#define AUTO_SLEEP_TIME_MIN                 5           //5分钟自动关机
+#define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     30          //使能30秒进入外设低功耗(未关机，只是把耗电外设降低功
+//#define AUTO_DEEP_SLEEP_TIME_MIN            5           //使能进入（5分钟）: wifi关闭、蓝牙关闭、LVGL任务挂起
+//#define AUTO_PWEROFF_SLEEP_TIME_MIN         5           //5分钟自动关机
+
+#ifdef AUTO_DEEP_SLEEP_TIME_MIN
+#define TCFG_LCD_SLEEP_BACKLIGHT_PWM_DUTY   10           //0-100，睡眠时：LCD屏幕背光PWM值
+#endif // AUTO_DEEP_SLEEP_TIME_MIN
 
 //#define UART0_BUAD                          9600        //串口0的波特率
 //#define TIMER_UART_CALIBRATION_ENABLE       0           //使用串口0作为时钟校准
@@ -500,8 +511,13 @@
 
 //#define TCFG_AUTO_SLEEP_CHECK_EN            1           //使能特定时间待机检测空闲后进入关机
 //#define TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH   1           //使能只检测语音对话作为是否空闲
-//#define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     30          //使能30秒进入外设低功耗(未关机，只是把耗电外设降低功耗)
+//#define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     30          //使能30秒进入外设低功耗(未关机，只是把耗电外设降低功
+//#define AUTO_DEEP_SLEEP_TIME_MIN            5           //使能进入（5分钟）: wifi关闭、蓝牙关闭、LVGL任务挂起
 //#define AUTO_SLEEP_TIME_MIN                 5           //5分钟自动关机
+
+#ifdef AUTO_DEEP_SLEEP_TIME_MIN
+#define TCFG_LCD_SLEEP_BACKLIGHT_PWM_DUTY   10           //0-100，睡眠时：LCD屏幕背光PWM值
+#endif // AUTO_DEEP_SLEEP_TIME_MIN
 
 //#define TCFG_LED_STATUES_PORT               IO_PORTH_04 //LED的IO:慢闪状态灯
 #if (TCFG_VBAT_CHECK_EN && defined TCFG_LED_STATUES_PORT)

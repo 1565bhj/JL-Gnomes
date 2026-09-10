@@ -132,16 +132,17 @@ void HX8357_Fill(u8 *img, u32 len)
     WriteDAT_DMA(img, len);
 }
 
-void HX8357_SleepInMode(void)
+static int HX8357_Sleep(char on)
 {
-//    WriteCOM_2bit(0x10); //Sleep in
-//    lcd_delay(120); //Delay 120ms
-}
-
-void HX8357_SleepOutMode(void)
-{
-//    WriteCOM_2bit(0x11); //Sleep out
-//    lcd_delay(120);  //Delay 120ms
+    return on;//确保LCD屏幕支持睡眠指令再进行修改
+    if (on) {
+        WriteCOM(0x10); //Sleep in
+        lcd_delay(120); //Delay 120ms
+    } else {
+        WriteCOM(0x11); //Sleep out
+        lcd_delay(120);  //Delay 120ms
+    }
+    return on;
 }
 
 void st7789_shown_image(u8 *buff, u16 x_addr, u16 y_addr, u16 width, u16 height)
@@ -1206,6 +1207,7 @@ REGISTER_LCD_DEV(LCD_HX8357) = {
     .LCD_DrawToDev     = HX8357_Fill,//应用层直接到设备接口层，需要做好缓冲区共用互斥，慎用！
     .LCD_Lvgl_Full     = HX8357_lvgl_Fill,//LVGL发送数据接口
     .LCD_ClearScreen   = HX8357_clear_screen,
+    .LCD_Sleep         = HX8357_Sleep,
     .Reset             = HX8357_reset,
     .BackLightCtrl     = HX8357_led_ctrl,
 };

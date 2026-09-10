@@ -17,6 +17,7 @@
 #include "lwip/inet.h"
 #include "lwip/netdb.h"
 
+#define HTTP_TASK_STACK_SIZE    1500
 
 #define http_chunck_stream_sleep  msleep
 

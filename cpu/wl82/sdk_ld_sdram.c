@@ -122,6 +122,13 @@ SECTIONS
 #endif
 
         . = ALIGN(4);
+        lcd_touch_device_begin = .;
+        PROVIDE(lcd_touch_device_begin = .);
+        *(.lcd_touch)
+        lcd_touch_device_end = .;
+        PROVIDE(lcd_touch_device_end = .);
+
+        . = ALIGN(4);
         *(.data)
 
         . = ALIGN(4);

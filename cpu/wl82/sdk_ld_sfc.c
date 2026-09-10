@@ -81,6 +81,13 @@ SECTIONS
 #if !defined CONFIG_RF_TRIM_CODE_AT_RAM && !defined CONFIG_RF_TRIM_CODE_MOVABLE
         *(*.rf.text.cache.L2.rf_trim)
 #endif
+        . = ALIGN(4);
+        lcd_touch_device_begin = .;
+        PROVIDE(lcd_touch_device_begin = .);
+        *(.lcd_touch)
+        lcd_touch_device_end = .;
+        PROVIDE(lcd_touch_device_end = .);
+
         . = ALIGN(32);
         _text_rodata_end = .;
         PROVIDE(text_rodata_end = .);

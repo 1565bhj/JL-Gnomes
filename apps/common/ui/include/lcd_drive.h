@@ -140,11 +140,22 @@ struct lcd_device {
     void (*LCD_DrawToDev)(u8 *map, u32 size);
     void (*LCD_Lvgl_Full)(u16 xs, u16 xe, u16 ys, u16 ye, char *img);
     void (*LCD_ClearScreen)(u32 color);
-    int (*LCD_Sleep)(u8);
+    int (*LCD_Sleep)(u8 on);
     void (*Reset)(void);
     void (*BackLightCtrl)(u8);
     void (*set_dirction)(int angle);
     void (*set_dirction_default)(int angle);
+};
+
+struct lcd_touch_device {
+    char *name;// 名称
+    char *iic_dev_name;
+    int (*LCD_Touch_check)(void *iic_dev_name);
+    int (*LCD_Touch_init)(void);
+    void (*LCD_Touch_get)(u16 *x, u16 *y, u8 *status);
+    void (*LCD_Touch_sleep)(char sleep);
+    void (*LCD_Touch_enable)(char enable);
+    int (*LCD_Touch_get_id)(void);
 };
 
 struct lcd_interface {
@@ -177,6 +188,16 @@ extern int lcd_device_end[];
 
 struct lcd_interface *lcd_get_hdl();
 
+
+#define REGISTER_LCD_TOUCH_DEV(lcd_touch_dev) \
+static const struct lcd_touch_device lcd_touch_dev SEC_USED(.lcd_touch)
+
+extern int lcd_touch_device_begin[];
+extern int lcd_touch_device_end[];
+
+#define list_for_each_lcd_touch_driver(lcd_touch_dev) \
+    for (lcd_touch_dev = (struct lcd_touch_device*)lcd_touch_device_begin; lcd_touch_dev < (struct lcd_touch_device*)lcd_touch_device_end; lcd_touch_dev++)
+
 void msleep(unsigned int ms);
 #define lcd_delay(x) msleep(x)
 
@@ -184,8 +205,12 @@ void lcd_rst_pinstate(u8 state);
 void lcd_cs_pinstate(u8 state);
 void lcd_rs_pinstate(u8 state);
 void lcd_bl_pinstate(u8 state);
-void touch_int_pinstate(u8 state);
-void touch_reset_pinstate(u8 state);
+void lcd_touch_int_pinstate(u8 state);
+void lcd_touch_reset_pinstate(u8 state);
+void lcd_touch_irq_wakeup_callback(void);
+void lcd_touch_init(void);
+void lcd_touch_sleep(char sleep);
+int lcd_touch_get_xy(u16 *x, u16 *y, char *status);
 int lcd_send_byte(u8 data);
 int lcd_send_map(u8 *map, u32 len);
 u8 *lcd_req_buf(u32 *size);

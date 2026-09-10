@@ -64,6 +64,10 @@ extern int tm_1629_time_shown_level_low_power(char enter_low_pwr);
 extern void dac_mute_control(char enable, char force);
 extern int sys_net_channel_read(void);
 
+#ifdef CONFIG_LVGL_UI_ENABLE
+extern int lvgl_main_task_sleep_pingpong(void);
+#endif
+
 extern int wifi_is_init(void);
 extern int wifi_is_online(void);
 extern void wifi_and_network_on(void);
@@ -87,6 +91,8 @@ static u8 net_work_on = NET_WORK_ON_NONE;
 //产测模式
 void enter_product_func_test(void *priv);
 
+int ai_speaker_mode_init(void);
+void ai_speaker_mode_exit(void);
 extern char *user_sys_get_lte_pai_code(void);
 extern void user_sys_clear_lte_pai_code(void);
 extern int http_wifi_device_bind_app(char *phone);
@@ -117,7 +123,12 @@ static struct ap_sp {
     unsigned short net_dicon_cnt;
     unsigned short associat_timeout_cnt;
     unsigned short auto_sleep_cnt;
+    unsigned char wifi_ble_sleep;
+    unsigned char system_sleep;
     unsigned short last_key;
+#ifdef CONFIG_LVGL_UI_ENABLE
+    unsigned short lv_pingpong_id;
+#endif
 } AI_SP = {0};
 
 #define __this (&AI_SP)
@@ -200,29 +211,85 @@ void system_restore_factory_settings(void)
     sys_volume_clear();
 }
 
+int wifi_ble_auto_sleep_power_off(void)
+{
+    if (!__this->wifi_ble_sleep) {
+        __this->wifi_ble_sleep = true;
+#if defined CONFIG_BT_ENABLE
+        if (is_in_config_network_state()) {
+            config_network_stop();
+        }
+#endif
+#ifdef CONFIG_WIFI_ENABLE
+        wifi_and_network_off();
+#endif
+    }
+    return 0;
+}
+
+int wifi_ble_auto_sleep_power_on(void)
+{
+    if (__this->wifi_ble_sleep) {
+        __this->wifi_ble_sleep = false;
+#ifdef CONFIG_WIFI_ENABLE
+        wifi_and_network_on();
+#if defined CONFIG_BT_ENABLE
+        //卸载wifi驱动后需要重新设置一下共存参数才能生效
+        void switch_rf_coexistence_config_table(u8 index);
+        switch_rf_coexistence_config_table(get_rf_coexistence_config_index());
+#endif
+#endif
+    }
+    return 0;
+}
+
 int auto_sleep_is_enter(void)
 {
 #ifdef TCFG_AUTO_DEV_LOW_PWER_TIME_SEC
-    if (__this->auto_sleep_cnt > TCFG_AUTO_DEV_LOW_PWER_TIME_SEC / 10) {
+    if (__this->auto_sleep_cnt >= TCFG_AUTO_DEV_LOW_PWER_TIME_SEC / 10) {
         return true;
     }
 #endif
-    return 0;
+    return __this->system_sleep;
 }
 
 int auto_sleep_check_clear(void)
 {
+    int sleep_cnt_temp = __this->auto_sleep_cnt;
+    if (!__this->auto_sleep_cnt) {
+        return 0;
+    }
     __this->auto_sleep_cnt = 0;
-    dac_mute_control(0, 0);
-#ifdef  USED_TM1629_SHOWN
-    tm_1629_time_shown_level_low_power(0);
+
+#ifdef TCFG_AUTO_DEV_LOW_PWER_TIME_SEC
+    if (sleep_cnt_temp >= TCFG_AUTO_DEV_LOW_PWER_TIME_SEC / 10)
 #endif
+    {
+        dac_mute_control(0, 0);
+#ifdef  USED_TM1629_SHOWN
+        tm_1629_time_shown_level_low_power(0);
+#endif
+    }
+
+#ifdef AUTO_DEEP_SLEEP_TIME_MIN
+    if (__this->system_sleep) {
+        __this->system_sleep = false;
+        wifi_ble_auto_sleep_power_on();
+#ifdef CONFIG_LVGL_UI_ENABLE
+        lvgl_main_task_sleep_exit();
+        if (__this->lv_pingpong_id) {
+            sys_timer_del(__this->lv_pingpong_id);
+            __this->lv_pingpong_id = 0;
+        }
+#endif
+        ai_speaker_mode_init();
+    }
+#endif
+
+    return __this->auto_sleep_cnt;
 }
 
 #if (defined TCFG_AUTO_SLEEP_CHECK_EN && TCFG_AUTO_SLEEP_CHECK_EN == 1)
-//#ifndef AUTO_SLEEP_TIME_MIN
-//#define AUTO_SLEEP_TIME_MIN  50000
-//#endif
 #define RETURN_CHECK(x) if(!(x)){__this->auto_sleep_cnt = 0;return 0;}
 static int auto_sleep_check(void)
 {
@@ -266,7 +333,7 @@ static int auto_sleep_check(void)
 #endif
 
 #ifdef TCFG_AUTO_DEV_LOW_PWER_TIME_SEC
-    if (__this->auto_sleep_cnt > TCFG_AUTO_DEV_LOW_PWER_TIME_SEC / 10) { //秒钟后低功耗
+    if (__this->auto_sleep_cnt >= TCFG_AUTO_DEV_LOW_PWER_TIME_SEC / 10) { //秒钟后低功耗
         if (stop_status) {
             dac_mute_control(1, 0);
         }
@@ -283,19 +350,36 @@ static int auto_sleep_check(void)
         dac_mute_control(0, 0);
     }
 #endif
-#ifdef AUTO_SLEEP_TIME_MIN
-    if (__this->auto_sleep_cnt >= AUTO_SLEEP_TIME_MIN * 6) { //5分钟后低功耗
+
+#ifdef AUTO_DEEP_SLEEP_TIME_MIN
+    if (__this->auto_sleep_cnt >= AUTO_DEEP_SLEEP_TIME_MIN * 6 && !__this->system_sleep) {
+        __this->system_sleep = true;
+        wifi_ble_auto_sleep_power_off();
+#ifdef CONFIG_LVGL_UI_ENABLE
+#define LVGL_PINGPONG_SEC   5
+        lvgl_main_task_sleep_enter();
+        if (!__this->lv_pingpong_id) {
+            __this->lv_pingpong_id = sys_timer_add(NULL, lvgl_main_task_sleep_pingpong, LVGL_PINGPONG_SEC * 1000);
+        }
+#endif
+        ai_speaker_mode_exit();
+    }
+#endif
+
+#ifdef AUTO_PWEROFF_SLEEP_TIME_MIN
+    if (__this->auto_sleep_cnt >= AUTO_PWEROFF_SLEEP_TIME_MIN * 6) {
+        int audio_app_mode_switch_set(char *name, char note);
 #if 1
         sys_power_poweroff();
 #else
-        if (__this->auto_sleep_cnt == AUTO_SLEEP_TIME_MIN * 6) {
+        if (__this->auto_sleep_cnt == AUTO_PWEROFF_SLEEP_TIME_MIN * 6) {
             music_play_res_file("autoPwrOff.mp3");
             sys_timer_add_to_task("sys_timer", NULL, power_off_check, 9000);//9秒后启动,autoPwrOff.mp3=4s
         }
-    }
 #endif
     }
 #endif
+    return stop_status;
 }
 static int auto_sleep_init(void)
 {
@@ -330,7 +414,10 @@ int MIC1_GAIN(int volume)
 
 int ai_speaker_mode_init(void)
 {
-    log_i("ai_speaker_play_main\n");
+    if (__this->system_sleep) {
+        puts("system is sleep\n");
+        return 0;
+    }
 #ifdef ASR_SAMPLE_RATE
     return aisp_open(ASR_SAMPLE_RATE);
 #else
@@ -629,8 +716,10 @@ int app_usb_is_plugin_state(void)
 static int ai_speaker_key_event_handler(struct key_event *key)
 {
     int ret = 0;
+    int sleep = auto_sleep_is_enter();
+
     auto_sleep_check_clear();
-    if (!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) {
+    if ((!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) || sleep) {
         return true;//闹钟在响，按键失效
     }
 
@@ -1077,7 +1166,7 @@ int ai_net_event_handler(struct net_event *event)
 #endif
 
 #if BT_NET_CFG_EN
-            if (is_in_config_network_state()) {
+            if (is_in_config_network_state() && event->event == NET_CONNECT_DHCP_TIMEOUT) { //只有在DHCP超时才通过BLE上报APP
                 ble_cfg_net_result_notify(NET_CONNECT_ASSOCIAT_FAIL);
             }
 #endif
@@ -1124,8 +1213,14 @@ int ai_net_event_handler(struct net_event *event)
                 }
             }
 
+#if BT_NET_CFG_EN
+            if (is_in_config_network_state()) {
+                ble_cfg_net_result_notify(event->event);
+            }
+#endif
             if (keyword_wifi_enter_congfig != 1) {
-                config_network_stop();
+                //config_network_stop();
+                sys_timeout_add_to_task("sys_timer", NULL, config_network_stop, 500);
                 keyword_wifi_enter_congfig = 0;
             }
 
@@ -1134,14 +1229,11 @@ int ai_net_event_handler(struct net_event *event)
             play_face_emoji(AI_UART_CMD_WIFI_CONNECTED);
 #endif
 
-
-#if BT_NET_CFG_EN
-            ble_cfg_net_result_notify(event->event);
-#endif
-
-#ifndef CONFIG_NO_SDRAM_ENABLE
-            extern void wifi_pcm_stream_task_init(void);
-            wifi_pcm_stream_task_init();
+#if (!defined CONFIG_NO_SDRAM_ENABLE && !defined CONFIG_LOW_POWER_ENABLE)
+            if (!net_ch) {
+                extern void wifi_pcm_stream_task_init(void);
+                wifi_pcm_stream_task_init();
+            }
 #endif
             extern void ntptime_update(void);
             ntptime_update();//NTP时间校准
@@ -1167,9 +1259,11 @@ int ai_net_event_handler(struct net_event *event)
             extern void led_status_set(int status);
             led_status_set(3);
 #endif
+#ifdef CONFIG_LVGL_UI_ENABLE
+            lv_demo_net_connect_status(true);
+#endif
 #ifndef CONFIG_NO_SDRAM_ENABLE
             extern void net_dns_ip_check_first_fast(char *task);
-            sys_timeout_add_to_task("app_core", "app_core", net_dns_ip_check_first_fast, 1 * 60 * 1000);//1分钟检测一次IP
             sys_timer_add_to_task("app_core", "app_core", net_dns_ip_check_first_fast, 20 * 60 * 1000);//20分钟检测一次IP
 #endif
 #if IP_NAPT
@@ -1192,11 +1286,21 @@ int ai_net_event_handler(struct net_event *event)
             http_ai_consume_photo_grap(2, http_consume_photo_grap_cb, photo_type);
 
 #endif
+#if 0
+            char font[32];
+            char img_size[32];
+            snprintf(font, sizeof(font), "char=%s", "狗");
+            snprintf(img_size, sizeof(img_size), "size=%d", 300);
+            http_ai_ch_char_get(3, http_ch_char_get_cb, font, img_size);
+#endif
             break;
         case NET_EVENT_DISCONNECTED:
             canceladdrinfo();
             __this->net_dicon_cnt = (keyword_wifi_enter_congfig == 1 || keyword_wifi_enter_congfig == 2) ? 0 : (__this->net_dicon_cnt + 1);//配网清空连接失败次数
             printf("NET_EVENT_DISCONNECTED : %d, %d \n", keyword_wifi_enter_congfig, __this->net_dicon_cnt);
+            if (__this->wifi_ble_sleep) {
+                break;
+            }
 #ifdef CONFIG_LTE_PHY_ENABLE
             if (net_work_on == NET_WORK_ON_LTE) {
                 printf("=====key switch to lte mode=====");
@@ -1280,6 +1384,9 @@ int ai_net_event_handler(struct net_event *event)
 #endif
             }
 #endif
+#ifdef CONFIG_LVGL_UI_ENABLE
+            lv_demo_net_connect_status(false);
+#endif
 #ifdef CONFIG_ALIYUN_IOT_ENABLE
             void aliyun_mqtt_uninit(void);
             aliyun_mqtt_uninit();
@@ -1308,7 +1415,7 @@ int ai_net_event_handler(struct net_event *event)
             break;
         case NET_EVENT_DISCONNECTED_AND_REQ_CONNECT:
             puts("\n NET_EVENT_DISCONNECTED_AND_REQ_CONNECT \n");
-            if (net_ch != 0 || keyword_wifi_enter_congfig) {
+            if (net_ch != 0 || keyword_wifi_enter_congfig || __this->wifi_ble_sleep) {
                 break;
             }
             if (app_usb_is_plugin_state()  && net_mode == NET_MODE_AUTO) {

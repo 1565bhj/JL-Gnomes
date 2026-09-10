@@ -12,6 +12,7 @@ static struct lte_wifi_info {
     unsigned char ssid[64];
     unsigned char pwd[64];
 #ifdef CONFIG_LTE_PHY_ENABLE
+    unsigned char module_vendor;
     unsigned char auto_rndis;
     unsigned char sim_card_status_flag; //SIM卡状态
     unsigned char iccid[21];
@@ -127,7 +128,7 @@ int sys_net_channel_ssid_write(char *ssid, char *pwd)
 }
 
 #ifdef CONFIG_LTE_PHY_ENABLE
-int lte_net_auto_rndis_up(u8 opt, u8 *auto_rndis)
+int lte_net_auto_rndis_up(u8 opt, u8 *auto_rndis, u8 *module_vendor)
 {
 #ifdef CONFIG_LTE_PHY_ENABLE
     if (syscfg_read(CFG_USER_LET_WIFI_SELECT, &LTE_WIFI_INFO, sizeof(LTE_WIFI_INFO)) < 0) {
@@ -137,9 +138,13 @@ int lte_net_auto_rndis_up(u8 opt, u8 *auto_rndis)
         if (auto_rndis) {
             *auto_rndis = LTE_WIFI_INFO.auto_rndis == true;
         }
+        if (module_vendor) {
+            *module_vendor = LTE_WIFI_INFO.module_vendor;
+        }
         return LTE_WIFI_INFO.auto_rndis == true;
-    } else if (auto_rndis && LTE_WIFI_INFO.auto_rndis != (u8) * auto_rndis) {
+    } else if (auto_rndis && LTE_WIFI_INFO.auto_rndis != (u8) *auto_rndis) {
         LTE_WIFI_INFO.auto_rndis = (u8) * auto_rndis;
+        LTE_WIFI_INFO.module_vendor = module_vendor ? (*module_vendor) : 0xFF;
         syscfg_write(CFG_USER_LET_WIFI_SELECT, &LTE_WIFI_INFO, sizeof(LTE_WIFI_INFO));
     }
     return LTE_WIFI_INFO.auto_rndis;

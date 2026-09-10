@@ -287,6 +287,9 @@ int music_play_stop(void *priv)
         fclose(__this->file);
         __this->file = NULL;
     }
+    if (qyai_chat_addr_version() <= 1) {
+        sys_vad_clear(1);
+    }
     os_sem_post(&__this->wait_sem);
     os_mutex_post(&__this->mutex);
     return 0;

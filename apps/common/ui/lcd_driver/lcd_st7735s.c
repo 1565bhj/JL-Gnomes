@@ -75,16 +75,17 @@ void ST7735S_Fill(u8 *img, u16 len)
     WriteDAT_DMA(img, len);
 }
 
-void ST7735S_SleepInMode(void)
+static int ST7735S_Sleep(char on)
 {
-    WriteCOM(0x10); //Sleep in
-    lcd_delay(120); //Delay 120ms
-}
-
-void ST7735S_SleepOutMode(void)
-{
-    WriteCOM(0x11); //Sleep out
-    lcd_delay(120);  //Delay 120ms
+    return on;//确保LCD屏幕支持睡眠指令再进行修改
+    if (on) {
+        WriteCOM(0x10); //Sleep in
+        lcd_delay(120); //Delay 120ms
+    } else {
+        WriteCOM(0x11); //Sleep out
+        lcd_delay(120);  //Delay 120ms
+    }
+    return on;
 }
 
 void ST7789_shown_image(u8 *buff, u16 x_addr, u16 y_addr, u16 width, u16 height)
@@ -422,6 +423,7 @@ REGISTER_LCD_DEV(LCD_ST7735S) = {
     .LCD_DrawToDev     = ST7735S_Fill,//应用层直接到设备接口层，需要做好缓冲区共用互斥，慎用！
     .LCD_Lvgl_Full     = ST7735S_lvgl_Fill,//LVGL发送数据接口
     .LCD_ClearScreen   = ST7735S_clear_screen,
+    .LCD_Sleep         = ST7735S_Sleep,
     .Reset             = ST7735S_reset,
     .BackLightCtrl     = ST7735S_led_ctrl,
 };

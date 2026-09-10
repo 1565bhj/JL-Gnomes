@@ -402,6 +402,7 @@ _exit:
     }
 _uninit:
     GIF_EYE[index].task_init = TASK_INIT;
+    GIF_EYE[index].task_suspend = 0;
     return 0;
 }
 int play_face_emoji_suspend(void)//挂起AVI文件播放
@@ -409,7 +410,7 @@ int play_face_emoji_suspend(void)//挂起AVI文件播放
     int to = 100;
     int index = 0;
     os_sem_set(&GIF_EYE[index].sem, 0);//
-    if (GIF_EYE[index].task_suspend == 2 || GIF_EYE[index].task_suspend == 0) {
+    if (GIF_EYE[index].task_suspend == 2 || GIF_EYE[index].task_init != TASK_CREATE) {
         return 0;
     }
     GIF_EYE[index].task_suspend = 1;

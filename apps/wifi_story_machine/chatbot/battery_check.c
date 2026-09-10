@@ -180,7 +180,7 @@ int sys_get_vbat_percent(void)
 #if TCFG_VBAT_CHECK_EN
     return vbat_get_percent();
 #endif
-    return 90;
+    return 0;
 }
 int sys_vbat_is_charging(void)
 {

@@ -1154,7 +1154,33 @@ void set_current_play_mode_status(char *status)
 {
     strcpy(g_current_play_mode.mode_status, status);
 }
+// 设置当前播放模式状态
+static void ansy_set_current_play_mode_status(char *status)
+{
+    lv_ui *ui = &guider_ui;
+    if (strcmp(g_current_play_mode.name, "随机播放") == 0) {
+        if (ui->screen_music_imgbtn_mode) {
+            printf("网络模式：随机播放\n");
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_play_random_alpha_20x20, NULL);
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            lv_obj_clear_state(ui->screen_music_imgbtn_mode, LV_STATE_CHECKED);
+        }
 
+    } else if (strcmp(g_current_play_mode.name, "单曲循环") == 0) {
+        printf("网络模式：单曲循环\n");
+        if (ui->screen_music_imgbtn_mode) {
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_play_random_alpha_20x20, NULL);
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            lv_obj_add_state(ui->screen_music_imgbtn_mode, LV_STATE_CHECKED);
+        }
+    }
+}
+// 设置当前播放模式状态
+void set_current_play_name_status(char *status)
+{
+    strcpy(g_current_play_mode.name, status);
+    lv_async_call(ansy_set_current_play_mode_status, NULL);
+}
 static void music_page_apply_loop_ui_sd_usb(int enable)
 {
     int mode = get_current_play_mode_id();
@@ -1259,7 +1285,7 @@ static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
                 printf("网络模式：随机播放和单曲循环\n");
                 lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_play_random_alpha_20x20, NULL);
                 lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
-            } else if (strcmp(g_current_play_mode.name, "蓝牙模式") == 0) {
+            } else if (strcmp(g_current_play_mode.name, "蓝牙模式") == 0 || strcmp(g_current_play_mode.name, "蓝牙") == 0) {
                 printf("蓝牙模式：蓝牙图标\n");
                 lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_BT_alpha_20x20, NULL);
                 lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_BT_alpha_20x20, NULL);

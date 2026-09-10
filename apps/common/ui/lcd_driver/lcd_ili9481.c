@@ -74,16 +74,17 @@ void ili9481_Fill(u8 *img, u32 len)
     WriteDAT_DMA(img, len);
 }
 
-void ili9481_SleepInMode(void)
+static int ili9481_Sleep(char on)
 {
-    WriteCOM(0x10); //Sleep in
-    lcd_delay(120); //Delay 120ms
-}
-
-void ili9481_SleepOutMode(void)
-{
-    WriteCOM(0x11); //Sleep out
-    lcd_delay(120);  //Delay 120ms
+    return on;//确保LCD屏幕支持睡眠指令再进行修改
+    if (on) {
+        WriteCOM(0x10); //Sleep in
+        lcd_delay(120); //Delay 120ms
+    } else {
+        WriteCOM(0x11); //Sleep out
+        lcd_delay(120);  //Delay 120ms
+    }
+    return on;
 }
 
 static void ili9481_set_direction(int dir)
@@ -262,6 +263,7 @@ REGISTER_LCD_DEV(LCD_ili9481) = {
     .LCD_DrawToDev     = ili9481_no_wait_Fill,//应用层直接到设备接口层，需要做好缓冲区共用互斥，慎用！
     .LCD_Lvgl_Full     = ILI9481_lvgl_Fill,//LVGL发送数据接口
     .LCD_ClearScreen   = ili9481_clear_screen,
+    .LCD_Sleep         = ili9481_Sleep,
     .Reset             = ili9481_reset,
     .BackLightCtrl     = ili9481_led_ctrl,
 };

@@ -118,8 +118,8 @@ void qyai_mutilmodal_int_transfer(void);
  * 打分结果通过 qyai_mutilmodal_oral_reg_result_cb() 注册的回调抛给应用层，
  * 评语语音走 qyai_mutilmodal_reg_dat_out_cb() 的 DATA_TYPE_PCM 数据流。
  *============================================================================*/
-#define ORAL_COMMENT_MAX        128     //评语文本最大长度(含结束符)
-#define ORAL_ASR_TEXT_MAX       128     //识别文本最大长度(含结束符)
+#define ORAL_COMMENT_MAX        512     //评语文本最大长度(含结束符)
+#define ORAL_ASR_TEXT_MAX       256     //识别文本最大长度(含结束符)
 
 //上行PCM分片大小: 3200字节≈100ms(16K采样/16bit/单声道)，与服务端测试脚本一致
 #define ORAL_PCM_CHUNK_SIZE     3200

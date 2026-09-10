@@ -83,7 +83,7 @@ void __attribute__((weak)) copy_usbnet_mac_addr(u8 *mac)
 
 }
 
-#define MAX_HARDWARE_ERROR_CNT (4)
+#define MAX_HARDWARE_ERROR_CNT (2)
 #define MAX_TRANSFER_ERROR_CNT (500)
 static volatile int usb_net_hd_reset_flag = 0;
 static volatile int rx_err_cnt = 0;
@@ -329,10 +329,10 @@ void usbnet_at_port_rx_isr(struct usb_host_device *host_dev, u32 ep)
     u32 target_ep = wireless_dev[usb_id].epin_at;
     u8 usb_recv_buf[64];
     u8 usb_recv_len = sizeof(usb_recv_buf);
-//    printf("usb_h_ep_read_async03\r\n");
-//    printf("r-03\r\n");
+    //printf("usb_h_ep_read_async03\r\n");
     //printf("usbnet_at_port_rx_isr:0x%02x======", USB_DIR_IN|target_ep);
     rx_len = usb_h_ep_read_async(usb_id, ep, target_ep, usb_recv_buf, usb_recv_len, USB_ENDPOINT_XFER_BULK, 0);
+    //printf("usbnet_at_port_rx_isr-rx_len:%d\r\n", rx_len);
     //fix bug
     if (rx_len == -DEV_ERR_TIMEOUT) {
         at_rx_err_cnt++;
@@ -351,7 +351,10 @@ void usbnet_at_port_rx_isr(struct usb_host_device *host_dev, u32 ep)
             usbnet_at_port_rx_handler(usb_recv_buf, rx_len);
         } else {
             printf("usbnet_at_port_rx_handler is NULL!!!");
-            return;
+            //这里不能直接return！否则有的模组没办法发起下一次请求。
+            //有的模组很特殊，枚举结束，HOST没主动发起AT，这里也会有中断！
+            //示例模块：雁飞CE105
+            //return;
         }
     }
 //    printf("usb_h_ep_read_async04\r\n");
@@ -849,6 +852,12 @@ int generic_rndis_bind(struct usb_host_device *device, int flags)
     int reply_len;
     unsigned char *bp;
 
+    if (qyai_usb_net_get_rndis_device()) {
+        qyai_usb_net_set_rndis_device(0, 0, 0);
+        printf("Error ECM Network Adapter Device\n");
+        return -ENOMEM;
+    }
+
     /* we can't rely on i/o from stack working, or stack allocation */
     u.buf = malloc(CONTROL_BUFFER_SIZE);
     if (!u.buf) {
@@ -1110,4 +1119,3 @@ int generic_rndis_bind(struct usb_host_device *device, int flags)
     return -EINVAL;
 }
 #endif
-

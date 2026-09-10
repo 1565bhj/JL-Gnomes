@@ -8,6 +8,7 @@
 #include "version.h"
 #include "jiffies.h"
 #include "system/timer.h"
+#include "FreeRTOS/task.h"
 
 long sysconf(int name)
 {
@@ -26,6 +27,13 @@ __attribute__((used)) int *__errno(void)
 }
 
 volatile unsigned long jiffies = 10;
+
+void TaskGetStackRemaing(void)
+{
+    UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);// 获取当前任务剩余栈空间，返回值单位是“字(word)”
+    printf("task: %s,stack ramain: %u (%ubytes)\n", os_current_task(), uxHighWaterMark, uxHighWaterMark * sizeof(StackType_t));
+}
+
 
 #if 0
 volatile unsigned long hi_jiffies = 10;

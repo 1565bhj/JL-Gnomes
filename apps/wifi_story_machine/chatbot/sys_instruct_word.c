@@ -37,11 +37,11 @@ int sys_alarm_look_callback(char *word)
 
     for (i = 0; sys_alarm_look[i] != NULL; i++) { //AI模式
         if (!strcmp(word, sys_alarm_look[i])) {
-            respon_ok(1);//好的
 #ifdef CONFIG_LVGL_UI_ENABLE
             lv_demo_switch_to_alarm_page();
 
 #endif
+            respon_ok(1);//好的\
             puts("-> sys_alarm_look\n");
             return 1;
         }
@@ -671,6 +671,11 @@ exit:
         if (music_buf_play_set_supspend_get() && (music_status == MUSIC_CLOSE || music_status == MUSIC_STOP)) {
             lv_demo_music_play_pause_button(1);//暂停图标显示
             //lv_demo_switch_to_music_page("net_music");
+        } else if (music_status == MUSIC_LOOP || music_status == MUSIC_LOOP_CLOSE) {
+            if (!net_music_play_stop_status()) {
+                lv_demo_switch_to_music_page("net_music");
+                lv_demo_set_current_play_mode_status(music_status == MUSIC_LOOP ? "单曲循环" : "随机播放");
+            }
         } else if (!net_music_play_pause_status() && ai_speaker_app()) { //不是暂停就是停止，则回到主页面
             lv_demo_switch_to_main_page();
         }

@@ -16,6 +16,15 @@
 #include "cJSON_common\cJSON.h"
 #include "app_config.h"
 
+enum {
+    LVGL_NONE = 0,
+    LVGL_SLEEP_ENTER,
+    LVGL_SLEEP_PINGPONG,
+    LVGL_SLEEP_EXIT,
+};
+static char lv_sleep = 0;
+static OS_SEM lv_sem;
+
 // 全局UI对象
 lv_ui guider_ui;
 
@@ -29,6 +38,7 @@ extern void ai_speaker_check_network_status(void);
 extern int BT_check_bluetooth_status(void);
 extern void alarm_status_check(void);
 void charge_status_init(void);
+void lvgl_touch_pad_sleep(char sleep_enable);
 
 // UI更新函数声明
 extern void time_ui_update(void);
@@ -66,6 +76,9 @@ static void system_status_check(void)
  */
 static void lvgl_main_task(void *priv)
 {
+    int msg[32];
+    os_sem_create(&lv_sem, 0);
+
     LV_UNUSED(priv);
     printf("[LVGL] 初始化系统...\n");
 
@@ -120,6 +133,29 @@ static void lvgl_main_task(void *priv)
         if (LV_DISP_DEF_REFR_PERIOD > 1 && time_till_next >= 1000 / OS_TICKS_PER_SEC) {
             msleep(time_till_next);
         }
+
+        int res = os_taskq_accept(ARRAY_SIZE(msg), msg);
+        if (res == OS_TASKQ) {
+            if (msg[0] == Q_USER) {
+                switch (msg[1]) {
+                case LVGL_SLEEP_ENTER:
+                    puts("lvgl_main_task enter sleep\n");
+                    lv_sleep = true;
+                    lv_timer_handler();//睡眠前刷新一次
+                    lvgl_touch_pad_sleep(1);
+                    lvgl_disp_sleep(1);
+                case LVGL_SLEEP_PINGPONG:
+                    os_sem_pend(&lv_sem, 0);
+                    break;
+                case LVGL_SLEEP_EXIT:
+                    lv_sleep = false;
+                    lvgl_touch_pad_sleep(0);
+                    lvgl_disp_sleep(0);
+                    puts("lvgl_main_task exit sleep\n");
+                    break;
+                }
+            }
+        }
     }
 }
 int lvgl_main_task_update(void)
@@ -140,13 +176,54 @@ void lvgl_main_task_update_async_cb(void *data)
     LV_UNUSED(data);
     lvgl_main_task_update();
 }
+
+/**
+ * LVGL主任务进入休眠
+ * 不能在中断、临界区、lvgl任务执行
+ */
+int lvgl_main_task_sleep_enter(void)
+{
+    if (os_sem_valid(&lv_sem) && !lv_sleep) {
+        os_sem_set(&lv_sem, 0);
+        return os_taskq_post(LVGL_MAIN, 1, LVGL_SLEEP_ENTER);
+    }
+    return -1;
+}
+
+/**
+ * LVGL主任务心跳刷新
+ * 不能在中断、临界区、lvgl任务执行
+ */
+int lvgl_main_task_sleep_pingpong(void)
+{
+    int err = 0;
+    if (os_sem_valid(&lv_sem) && lv_sleep) {
+        os_sem_post(&lv_sem);
+        return os_taskq_post(LVGL_MAIN, 1, LVGL_SLEEP_PINGPONG);
+    }
+    return -1;
+}
+
+/**
+ * LVGL主任务退出休眠
+ * 不能在中断、临界区、lvgl任务执行
+ */
+int lvgl_main_task_sleep_exit(void)
+{
+    if (os_sem_valid(&lv_sem) && lv_sleep) {
+        os_sem_post(&lv_sem);
+        return os_taskq_post(LVGL_MAIN, 1, LVGL_SLEEP_EXIT);
+    }
+    return -1;
+}
+
 /**
  * 初始化LVGL主任务
  * 创建线程运行UI主循环
  */
 int lvgl_main_task_init(void)
 {
-    return thread_fork("lvgl_main_task", 1, 16 * 1024, 0, 0, lvgl_main_task, NULL);
+    return thread_fork(LVGL_MAIN, 1, 16 * 1024, 64, 0, lvgl_main_task, NULL);
 }
 
 

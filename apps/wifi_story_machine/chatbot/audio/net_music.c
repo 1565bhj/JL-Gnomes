@@ -440,7 +440,7 @@ void net_music_name_save(char *name)
 {
     strncpy(music_name, name, sizeof(music_name));
 #if (defined CONFIG_UI_ENABLE && defined CONFIG_LVGL_UI_ENABLE)
-    if (!lv_demo_is_ring_page()) {
+    if (!lv_demo_is_ring_page() && !music_play_alarm_ring()) {
         lv_demo_music_update_title(name);// 使用解析出的歌曲名
     }
 #endif
@@ -666,7 +666,7 @@ static int __net_music_dec_file(void *file)
     if (__this->total_time > 0) {
         lv_demo_music_update_total_time(__this->total_time);
     }
-    if (!lv_demo_is_ring_page()) {
+    if (!lv_demo_is_ring_page() && !music_play_alarm_ring()) {
         void *websockets_music_url_type(char clear);
         lv_demo_switch_to_music_page(__this->play_next_mode);
     }
@@ -710,6 +710,7 @@ int net_music_dec_file(const char *url)
     if (!strcmp(music_url, url) && net_music_play_start_status() && !__this->play_loop) {
         return 0;
     }
+    printf("---> net_music_dec_file\n");
     strncpy(music_url, url, sizeof(music_url));
     __this->total_time = __this->play_time = 0;
     __this->request_status = timer_get_ms();
@@ -1084,7 +1085,7 @@ static void dec_server_event_handler(int event, int time)
         if (__this->total_time > 0) {
             lv_demo_music_update_total_time(__this->total_time);
         }
-        if (!lv_demo_is_ring_page()) {
+        if (!lv_demo_is_ring_page() && !music_play_alarm_ring()) {
             void *websockets_music_url_type(char clear);
             lv_demo_switch_to_music_page(__this->play_next_mode);
         }

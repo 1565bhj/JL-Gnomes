@@ -832,6 +832,33 @@ void lv_demo_music_sync_local_loop_ui(int enable)
     lv_async_call(async_lv_demo_music_sync_local_loop_ui, (void *)(uintptr_t)(enable ? 1 : 0));
 }
 
+static void ansy_set_current_play_mode_status(char *status)
+{
+    lv_ui *ui = &guider_ui;
+    if (strcmp(g_current_play_mode.name, "随机播放") == 0) {
+
+        if (ui->screen_music_imgbtn_mode) {
+            printf("网络模式：随机播放\n");
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_play_random_alpha_20x20, NULL);
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            lv_obj_clear_state(ui->screen_music_imgbtn_mode, LV_STATE_CHECKED);
+        }
+
+    } else if (strcmp(g_current_play_mode.name, "单曲循环") == 0) {
+        printf("网络模式：单曲循环\n");
+        if (ui->screen_music_imgbtn_mode) {
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_RELEASED, NULL, &_play_random_alpha_20x20, NULL);
+            lv_imgbtn_set_src(ui->screen_music_imgbtn_mode, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &_play_repeat_alpha_20x20, NULL);
+            lv_obj_add_state(ui->screen_music_imgbtn_mode, LV_STATE_CHECKED);
+        }
+    }
+}
+// 设置当前播放模式状态
+void set_current_play_name_status(char *status)
+{
+    strcpy(g_current_play_mode.name, status);
+    lv_async_call(ansy_set_current_play_mode_status, NULL);
+}
 // 模式切换按钮点击事件处理函数
 static void screen_music_imgbtn_mode_event_handler(lv_event_t *e)
 {

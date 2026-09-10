@@ -81,16 +81,17 @@ void NV3031A_Fill(u8 *img, u16 len)
     WriteDAT_DMA(img, len);
 }
 
-void NV3031A_SleepInMode(void)
+static int NV3031A_Sleep(char on)
 {
-    WriteCOM(0x10); //Sleep in
-    lcd_delay(120); //Delay 120ms
-}
-
-void NV3031A_SleepOutMode(void)
-{
-    WriteCOM(0x11); //Sleep out
-    lcd_delay(120);  //Delay 120ms
+    return on;//确保LCD屏幕支持睡眠指令再进行修改
+    if (on) {
+        WriteCOM(0x10); //Sleep in
+        lcd_delay(120); //Delay 120ms
+    } else {
+        WriteCOM(0x11); //Sleep out
+        lcd_delay(120);  //Delay 120ms
+    }
+    return on;
 }
 
 static void NV3031A_set_direction(int dir)
@@ -361,6 +362,7 @@ REGISTER_LCD_DEV(LCD_NV3031A) = {
     .LCD_DrawToDev          = NV3031A_Fill,//应用层直接到设备接口层，需要做好缓冲区共用互斥，慎用！
     .LCD_Lvgl_Full          = NV3031A_lvgl_Fill,//LVGL发送数据接口
     .LCD_ClearScreen        = NV3031A_clear_screen,
+    .LCD_Sleep              = NV3031A_Sleep,
     .Reset                  = NV3031A_reset,
     .BackLightCtrl          = NV3031A_led_ctrl,
     .set_dirction           = NV3031A_set_direction,

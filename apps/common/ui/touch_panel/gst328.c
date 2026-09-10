@@ -162,7 +162,7 @@ exit:
     return ret;
 }
 
-int get_GST328_pid(void)
+static int GST328_get_pid(void)
 {
 //    u8 temp = 0;
 //    rdGST328Reg(GT_PID_REG0, &temp);
@@ -210,12 +210,13 @@ static char get_GST328_status(u16 addr)
 static u16 touch_x = 0;
 static u16 touch_y = 0;
 static u8 touch_status = 0;
+static u8 touch_sleep = 0;
 
 static void GST328_interrupt(void)
 {
     os_sem_post(&touch_sem);
 }
-void GST328_get_xy(short *x, short *y, char *press)
+static void GST328_get_xy(unsigned short *x, unsigned short *y, char *press)
 {
     if (x) {
         *x = touch_x;
@@ -228,9 +229,13 @@ void GST328_get_xy(short *x, short *y, char *press)
     }
 }
 
-int check_GST328(void)
+static int GST328_check(void*iic_dev_name)
 {
-    iic = dev_open("iic0", NULL);
+    if (!iic_dev_name) {
+        printf("err in %s iic_dev_name\n", __func__);
+        return -1;
+    }
+    iic = dev_open(iic_dev_name, NULL);
     extern const struct ui_devices_cfg ui_cfg_data;
     static const struct ui_lcd_platform_data *pdata;
     pdata = (struct ui_lcd_platform_data *)ui_cfg_data.private_data;
@@ -251,20 +256,31 @@ int check_GST328(void)
     os_sem_create(&touch_sem, 0);
     //注册中断注意触摸用的事件0 屏幕TE用的事件1
     port_wakeup_reg(EVENT_IO_0, pdata->touch_int_pin, EDGE_NEGATIVE, GST328_interrupt);
-    GST328_task_init();
     printf(">>>>>>>>>>>>hello GST328<<<<<<<<<<<");
     return 0;
 
 }
 static int GST328_init(void)
 {
+    int ret = 0;
+    u8 touch_sleep_cb = 0;
     printf("[GST328]>>>>>GST328 start!!!");
     if (!wrGST328Reg(GT_NORMAL_MODE, 0)) {//设置正常模式
         os_time_dly(10);
         wrGST328Reg(GT_NORMAL_MODE, 0);//设置正常模式
     }
     while (1) {
-        if (!os_sem_pend(&touch_sem, 50)) {
+        ret = os_sem_pend(&touch_sem, 50);
+        if (!ret && touch_sleep && !touch_sleep_cb) {
+            touch_sleep_cb = true;
+            lcd_touch_irq_wakeup_callback();
+            continue;
+        }
+        if (touch_sleep) {
+            continue;
+        }
+        touch_sleep_cb = false;
+        if (!ret) {
             touch_status = get_GST328_xy(GT_GSTID_REG, &touch_x, &touch_y) == 6;
             //printf("[GST328]>>>>>touch_status: %d, touch_x: %d, touch_y: %d\n", touch_status, touch_x, touch_y);
         } else {//500ms没有触摸则强制清空触摸状态
@@ -275,17 +291,26 @@ static int GST328_init(void)
     return 0;
 }
 
-static void my_touch_test_task(void *priv)
+static int GST328_sleep(char sleep)
 {
-    /*=====TE中断配置=====*/
-    //check_GST328();
-    GST328_init();
+    touch_sleep = sleep;
+    return touch_sleep;
 }
 
-int GST328_task_init(void)
+static int GST328_task_init(void)
 {
-    return thread_fork("my_touch_test_task", 20, 1024, 0, NULL, my_touch_test_task, NULL);
+    return thread_fork("touch_task", 20, 1024, 0, NULL, GST328_init, NULL);
 }
 
+REGISTER_LCD_TOUCH_DEV(GST328) = {
+    .name                           = "GST328",
+    .iic_dev_name                   = "iic0",
+    .LCD_Touch_check                = GST328_check,
+    .LCD_Touch_init                 = GST328_task_init,
+    .LCD_Touch_get                  = GST328_get_xy,
+    .LCD_Touch_sleep                = GST328_sleep,
+    .LCD_Touch_enable               = NULL,
+    .LCD_Touch_get_id               = GST328_get_pid,
+};
 #endif
 

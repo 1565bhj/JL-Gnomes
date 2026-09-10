@@ -19,6 +19,9 @@ static int tts_buf_count = 0;
 
 int tts_buf_callback_reg(char *text, char *buf, int len, int payloadlen, char fin)
 {
+    if (music_play_alarm_ring()) {
+        return 0;
+    }
     if (buf) {
 #ifdef AC791
         music_buf_play_accept(1);

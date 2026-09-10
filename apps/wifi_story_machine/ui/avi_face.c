@@ -680,6 +680,7 @@ exit:
     }
     AVI_FACE.task_init = TASK_INIT;
     AVI_FACE.loop_disable = 0;
+    AVI_FACE.task_suspend = 0;
 #ifdef CONFIG_LVGL_UI_ENABLE
     lvgl_flush_enable();
 #endif
@@ -690,7 +691,7 @@ int play_face_emoji_suspend(void)//挂起AVI文件播放
 {
     int to = 100;
     os_sem_set(&AVI_FACE.sem, 0);//
-    if (AVI_FACE.task_suspend == 2 || AVI_FACE.task_suspend == 0) {
+    if (AVI_FACE.task_suspend == 2 || AVI_FACE.task_init != TASK_CREATE) {
         return 0;
     }
     AVI_FACE.task_suspend = 1;
