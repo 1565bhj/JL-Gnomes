@@ -167,7 +167,7 @@
 #define TCFG_AUTO_SLEEP_CHECK_EN            1           //使能特定时间待机检测空闲后进入关机
 //#define TCFG_AUTO_SLEEP_CHECK_ONLY_SPEECH   1           //使能只检测语音对话作为是否空闲
 #define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     30          //使能30秒进入外设低功耗(未关机，只是把耗电外设降低功
-#define AUTO_DEEP_SLEEP_TIME_MIN            5           //使能进入（5分钟）: wifi关闭、蓝牙关闭、LVGL任务挂起
+//#define AUTO_DEEP_SLEEP_TIME_MIN            5           //使能进入（5分钟）: wifi关闭、蓝牙关闭、LVGL任务挂起
 //#define AUTO_PWEROFF_SLEEP_TIME_MIN         5           //5分钟自动关机
 
 #ifdef AUTO_DEEP_SLEEP_TIME_MIN

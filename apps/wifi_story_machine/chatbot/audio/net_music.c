@@ -710,7 +710,6 @@ int net_music_dec_file(const char *url)
     if (!strcmp(music_url, url) && net_music_play_start_status() && !__this->play_loop) {
         return 0;
     }
-    printf("---> net_music_dec_file\n");
     strncpy(music_url, url, sizeof(music_url));
     __this->total_time = __this->play_time = 0;
     __this->request_status = timer_get_ms();
