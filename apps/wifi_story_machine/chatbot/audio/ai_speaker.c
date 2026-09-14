@@ -245,10 +245,13 @@ int wifi_ble_auto_sleep_power_on(void)
 
 int auto_sleep_is_enter(void)
 {
+//只有开启LVGL UI情况下才使用这个判断，当没有UI但是需要时自行返回
+#ifdef CONFIG_LVGL_UI_ENABLE
 #ifdef TCFG_AUTO_DEV_LOW_PWER_TIME_SEC
     if (__this->auto_sleep_cnt >= TCFG_AUTO_DEV_LOW_PWER_TIME_SEC / 10) {
         return true;
     }
+#endif
 #endif
     return __this->system_sleep;
 }
@@ -718,6 +721,7 @@ static int ai_speaker_key_event_handler(struct key_event *key)
     int ret = 0;
     int sleep = auto_sleep_is_enter();
 
+    printf("->key->action = %d, key->value = %d, sleep = %d\n", key->action, key->value, sleep);
     auto_sleep_check_clear();
     if ((!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) || sleep) {
         return true;//闹钟在响，按键失效
@@ -726,7 +730,6 @@ static int ai_speaker_key_event_handler(struct key_event *key)
     int cur_net_mode = sys_net_mode_read();
     int ch = sys_net_channel_read();
 
-    printf("->key->action = %d ,key->value = %d \n", key->action, key->value);
     switch (key->action) {
     case KEY_EVENT_UP:
         ai_speaker_key_hand_up(key);

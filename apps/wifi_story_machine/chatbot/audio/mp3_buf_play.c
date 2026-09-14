@@ -383,6 +383,7 @@ int mp3_buf_play_file(char *buf, int len)
     __this->play_pause = 0;
     printf("mp3_buf_play_file: ok\n");
     os_sem_set(&vt_file->sem, 0);
+    music_tts_play_hello_clear();
     os_mutex_post(&vt_file->mutex);
     return 0;
 }

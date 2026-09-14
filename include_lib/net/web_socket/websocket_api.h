@@ -297,7 +297,7 @@ typedef struct chatgtp_info {
 #define WEBSOCKET_DIALOGUE_TIMEOUT          (10*1000)           //10S
 #define WEBSOCKET_DIALOGUE_TOLONG_TIMEOUT   (30*1000)           //30S只能一次对话传30秒音频
 #define WEBSOCKET_SEND_LBUF_MAX             (15*(16*1000*2))    //PCM数据缓存大小,15秒
-#define WEBSOCKET_NOTHING_ALLOW_CNT         3                   //"不好意思没听清"允许次数
+#define WEBSOCKET_NOTHING_ALLOW_CNT         6                   //"不好意思没听清"允许次数
 //#define WEBSOCKET_DIALOGUE_ONECE_ENABLE                     //1次对话，每次都要唤醒
 
 //#define WEBSOCKET_STATIC_MEM_SMALL

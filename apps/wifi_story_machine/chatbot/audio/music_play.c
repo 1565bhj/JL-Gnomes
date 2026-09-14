@@ -22,6 +22,8 @@ struct music_play_hdl {
     char play_loop;
     char volume;
     char play_start;
+    char tts_play_hello;
+    unsigned short tts_check_time_id;
     int sleep_music_sec;
     int play_time;
     int total_time;
@@ -507,6 +509,9 @@ int music_play_res_file(const char *name) //Backdown1.mp3
         reply = "Hight brightness";
     } else if (!strcmp("PwrOff.mp3", name)) {
         reply = "Power off";
+        if (sys_connect_net_success()) {
+            return http_tts_reply_type(6);
+        }
     }
 #else
     if (!strcmp("LowLight.mp3", name)) {
@@ -515,6 +520,9 @@ int music_play_res_file(const char *name) //Backdown1.mp3
         reply = "已最高亮度";
     } else if (!strcmp("PwrOff.mp3", name)) {
         reply = "关机~";
+        if (sys_connect_net_success()) {
+            return http_tts_reply_type(6);
+        }
     }
 #endif
 
@@ -525,7 +533,8 @@ int music_play_res_file(const char *name) //Backdown1.mp3
     sprintf(buf, "%s%s", CONFIG_VOICE_PROMPT_FILE_PATH, name);
     return music_play_file(buf);
 }
-int music_play_backdown(void)//主人我退下了
+
+int music_play_backdown(void)   //主人我退下了
 {
     int ret = 0;
     printf("--->music_play_byebye\n");
@@ -556,7 +565,25 @@ int music_play_backdown(void)//主人我退下了
 #endif
     return ret;
 }
-int music_play_hello(char index)//主人我退下了
+
+void music_tts_play_hello_clear(void *priv)
+{
+    int time_id = __this->tts_check_time_id;
+    if (!__this->tts_play_hello) {
+        __this->tts_check_time_id = 0;
+        return;
+    }
+    __this->tts_play_hello = 0;
+    __this->tts_check_time_id = 0;
+    if (priv) {
+        char path[32];
+        char index = (char)priv;
+        sprintf(path, "hello%d.mp3", index + 1);
+        music_play_res_file(path);
+    }
+}
+
+int music_play_hello(char index)   //主人我在
 {
     int ret = 0;
     printf("--->music_play_hello : %d\n", index);
@@ -580,6 +607,10 @@ int music_play_hello(char index)//主人我退下了
 #endif
     //ret = http_tts_reply(hello[index], strlen(hello[index]) + 1);
     ret = http_tts_reply_type(1);
+    __this->tts_play_hello = true;
+    if (!__this->tts_check_time_id) {
+        __this->tts_check_time_id = sys_timeout_add_to_task("sys_timer", index, music_tts_play_hello_clear, 2.5 * 1000);
+    }
 #else
     char path[32];
     sprintf(path, "hello%d.mp3", index + 1);
@@ -639,7 +670,7 @@ int aisp_timeout_first_exit(int noclealy)
 #endif
     return 0;
 }
-int music_play_light_anser(void *p)//灯光回答
+int music_play_light_anser(void *p)   //灯光回答
 {
     int index = (int)p;
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
@@ -700,13 +731,13 @@ int music_play_light_anser(void *p)//灯光回答
     return 0;
 }
 
-int music_play_recording(void)//录音提示
+int music_play_recording(void)   //录音提示
 {
     music_play_res_file("Recording.mp3");
     return 0;
 }
 
-int music_play_anser_OK(void)//回答"好的"
+int music_play_anser_OK(void)   //回答"好的"
 {
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
     if (sys_connect_net_success()) {
@@ -723,7 +754,7 @@ int music_play_anser_OK(void)//回答"好的"
     return 0;
 }
 
-int music_play_anser_volume(int dec)//回答音量已加大已减小
+int music_play_anser_volume(int dec)   //回答音量已加大已减小
 {
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
     if (sys_connect_net_success()) {
@@ -744,14 +775,14 @@ int music_play_anser_volume(int dec)//回答音量已加大已减小
     return 0;
 }
 
-int music_play_server_err(void)//服务器不回复音频
+int music_play_server_err(void)   //服务器不回复音频
 {
     music_play_stop_all();
     music_play_res_file("ServErr.mp3");//播放音乐文件
     return 0;
 }
 
-int music_play_instruc_word_err(void)//不支持指令
+int music_play_instruc_word_err(void)   //不支持指令
 {
     int ret = 0;
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
@@ -795,7 +826,7 @@ int music_play_res_file_unloop(void)
     return ret;
 }
 
-int music_sleep_play(void *priv)//睡眠音乐
+int music_sleep_play(void *priv)   //睡眠音乐
 {
     char path[64];
     u8 id = (rand() % 50) % 4;
@@ -810,7 +841,7 @@ int music_sleep_play(void *priv)//睡眠音乐
     return 0;
 }
 
-int music_sleep_play_auto(void)//睡眠音乐
+int music_sleep_play_auto(void)   //睡眠音乐
 {
     static char slee_auto = 0;
     int ret = music_sleep_play((void*)slee_auto);
