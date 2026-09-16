@@ -80,7 +80,9 @@ cpu/wl82/tools/cache_ram_data.bin
 cpu/wl82/tools/data.bin
 cpu/wl82/tools/ram0_data.bin
 cpu/wl82/tools/text.bin
+cpu/wl82/tools/audlogo/
 cpu/wl82/tools/packres/AUPACKRES
+cpu/wl82/tools/packres/UIPACKRES
 apps/common/movable/section.txt
 apps/wifi_tuya_iot/readme.txt
 apps/wifi_tuya_iot/tuya/.vscode/settings.json

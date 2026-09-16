@@ -392,6 +392,37 @@ void lvgl_disp_flush(int xs, int xe, int ys, int ye, unsigned char *img)//往显
 }
 
 /**
+ * @brief lvgl_disp_data_rotate LVGL帧直推整个屏幕显示区翻转
+ * @param src lvgl RGB数据源
+ * @param dst lvgl RGB数据翻转输出源
+ * @param rgb_depth RGB数据位:1 (1 byte per pixel), 8 (RGB332), 16 (RGB565), 32 (ARGB8888)
+ * @param width 显示区宽
+ * @param height 显示区高
+ * @param rotate_angle 翻转角度
+ * @return 0：不支持翻转，其他值为翻转角度rotate_angle
+ */
+int lvgl_disp_data_rotate(unsigned char *src, unsigned char *dst, int rgb_depth, int width, int height, int rotate_angle)
+{
+#if TCFG_LCD_JD9853_ENABLE
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+    return rgb_data_rotate(src, dst, rgb_depth, width, height, TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE);//根据实际翻转角度进行翻转
+#endif
+#endif
+    return 0;
+}
+
+/**
+ * @brief lvgl_disp_area_enable LVGL使能区域刷新，默认整帧刷新
+ * @param NULL
+ * @return true LVGL区域刷新，false LVGL整帧整个屏幕刷新
+ */
+int lvgl_disp_area_enable(void)
+{
+    return false;
+}
+
+
+/**
  * @brief lvgl demo 主任务初始化
  * @param NULL
  * @return NULL

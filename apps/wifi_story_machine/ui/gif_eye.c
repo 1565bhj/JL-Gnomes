@@ -31,6 +31,9 @@ enum {
 #ifndef USE_LCD_TE_ROTATE_ENABLE
 #define USE_LCD_TE_ROTATE_ENABLE    0 //是否开启TE使用时播放视频翻转视频数据
 #endif
+#ifndef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+#define TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE    0
+#endif
 
 #define UI_RES_SD_ENABLE        0   //1：UI资源放在SD卡,0：UI资源放在flash
 #define UI_RES_USE_ANIME        0   //1：使用动漫两个眼睛
@@ -319,32 +322,7 @@ _init:
                 goto _exit;
             }
 #if (USE_LCD_TE_ROTATE_ENABLE && USE_LCD_TE && (__SDRAM_SIZE__ >= (8*1024*1024))) //使用TE信号解决播放视频撕裂感
-            unsigned short *r_datao = rgb_rev_buf;
-            int angle = 270;//数据翻转270度
-
-            switch (angle) { //rgb565翻转
-            case 90:
-                for (int i = 0; i < info.width; i++) {//90
-                    for (int j = info.height - 1; j >= 0; j--) {
-                        *r_datao = *((unsigned short *)((unsigned int)rgb565 + ((unsigned int)info.width * j + (unsigned int)i) * 2);
-                    }
-                }
-                break;
-            case 180:
-                for (int i = 0; i < info.height ; i++) {//180
-                    for (int j = 0; j < info.width; j++) {
-                        *r_datao = *((unsigned short *)((unsigned int)rgb565 + ((unsigned int)info.width * i + (unsigned int)j) * 2);
-                    }
-                }
-                break;
-            case 270:
-                for (int i = info.width - 1; i >= 0; i--) {//270
-                    for (int j = 0; j < info.height; j++) {
-                        *r_datao = *((unsigned short *)((unsigned int)rgb565 + ((unsigned int)info.width * j + (unsigned int)i) * 2);
-                    }
-                }
-                break;
-            }
+            rgb565_data_rotate(rgb565_buf, rgb_rev_buf, 16, info.width, info.height, TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE);
             lcd_show_frame_to_dev_flip(rgb_rev_buf, info.width * info.height * 2, 0);//视频缓存数据翻转后推屏，并设置屏幕不需要翻，即屏幕翻转0度
 #else
             lcd_show_frame_to_dev(rgb565_buf, info.xSize * info.ySize * 2);

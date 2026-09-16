@@ -7,7 +7,12 @@
 
 #if TCFG_LCD_JD9853_ENABLE
 
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+#define DEFAULT_ROTATE ROTATE_DEGREE_0
+#else
 #define DEFAULT_ROTATE ROTATE_DEGREE_270
+#endif
+
 static short dir_angle = -1;
 static void JD9853_lvgl_Fill(u16 xs, u16 xe, u16 ys, u16 ye, u8 *img);
 void JD9853_SetRange(u16 xs, u16 xe, u16 ys, u16 ye)
@@ -58,10 +63,20 @@ void JD9853_Fill(u8 *img, u16 len)
 {
     unsigned short w = LCD_W - 1;
     unsigned short h = LCD_H - 1;
+
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+    if ((DEFAULT_ROTATE == ROTATE_DEGREE_0 || DEFAULT_ROTATE == ROTATE_DEGREE_180) && (TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 90 || TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 270)) {
+        u16 tmp = w;
+        w = h;
+        h = tmp;
+    }
+#else
     if (dir_angle != (short) -1 && dir_angle != DEFAULT_ROTATE) {
         h = LCD_W - 1;
         w = LCD_H - 1;
     }
+#endif
+
     WriteCOM(0x2A);
     WriteDAT_8(0);
     WriteDAT_8(0);
@@ -338,16 +353,29 @@ static void JD9853_lvgl_Fill(u16 xs, u16 xe, u16 ys, u16 ye, u8 *img)
     u32 len = 0;
     lcd_interface_non_block_wait();
     len = (xe + 1 - xs) * (ye + 1 - ys) * 2;
+
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+    if (TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 90 || TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 270) {
+        u16 tmp = xs;
+        u16 tmp1 = xe;
+        xs = ys;
+        ys = tmp;
+        xe = ye;
+        ye = tmp1;
+    }
+#endif
     WriteCOM(0x2A);
     WriteDAT_8(xs >> 8);
     WriteDAT_8(xs);
     WriteDAT_8(xe >> 8);
     WriteDAT_8(xe);
+
     WriteCOM(0x2B);
     WriteDAT_8(ys >> 8);
     WriteDAT_8(ys);
     WriteDAT_8(ye >> 8);
     WriteDAT_8(ye);
+
     WriteCOM(0x2c);
     WriteDAT_DMA(img, len);
 }

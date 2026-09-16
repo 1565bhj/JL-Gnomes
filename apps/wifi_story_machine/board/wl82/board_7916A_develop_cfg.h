@@ -262,6 +262,11 @@
 #define CONFIG_LVGL_UI_ENABLE
 //#define CONFIG_UI_PLAY_EMOJI                        //开启眼睛表情显示
 
+//#define TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE 270       //LVGL帧直推旋转角度
+#if TCFG_LCD_JD9853_ENABLE
+#define TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE 270       //LVGL帧直推旋转角度
+#endif // TCFG_LCD_JD9853_ENABLE
+
 //是否开启(需要重编LVGL库)
 #ifdef CONFIG_LVGL_UI_ENABLE
 #define CONFIG_LVGL_AGENT_ENABLE            1  //开启智能体页面

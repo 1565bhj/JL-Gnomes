@@ -21,7 +21,7 @@
 /* 屏幕驱动的接口 */
 static struct lcd_device *lcd_dev;
 static const struct ui_lcd_platform_data *lcd_pdata = NULL;
-static struct lcd_touch_device *lcd_touch_dev;
+static struct lcd_touch_device *lcd_touch_dev = NULL;
 static void *lcd_hw_hdl = NULL;
 static OS_MUTEX mutex;
 
@@ -223,6 +223,10 @@ int lcd_touch_get_xy(u16 *x, u16 *y, char *status)
 {
     if (lcd_touch_dev && lcd_touch_dev->LCD_Touch_get) {
         lcd_touch_dev->LCD_Touch_get(x, y, status);
+    } else {
+        *x = 0;
+        *y = 0;
+        *status = 0;
     }
     return 0;
 }
@@ -238,11 +242,12 @@ void lcd_touch_init(void)
                 printf("---> find touch dev : %s \n", lcd_touch_dev->name);
                 if (lcd_touch_dev->LCD_Touch_init) {
                     lcd_touch_dev->LCD_Touch_init();
-                    break;
+                    return;
                 }
             }
         }
     }
+    lcd_touch_dev = NULL;
 }
 
 void lcd_touch_irq_wakeup_callback(void)
@@ -539,11 +544,13 @@ static int lcd_init(void *p)
                         printf("--->lcd init touch dev : %s \n", lcd_touch_dev->name);
                         if (lcd_touch_dev->LCD_Touch_init) {
                             lcd_touch_dev->LCD_Touch_init();
-                            break;
+                            return 0;
                         }
                     }
                 }
             }
+            lcd_touch_dev = NULL;
+
             //图像合成线程初始化
 //#ifdef CONFIG_UI_PLAY_EMOJI
 //            picture_compose_task_init();

@@ -94,6 +94,10 @@ int __attribute__((weak)) lvgl_disp_rounder_cb(lv_disp_drv_t *disp_drv, lv_area_
     return 0;
 }
 
+int __attribute__((weak)) lvgl_disp_area_enable(void)
+{
+    return 0;
+}
 
 /**********************
  *   GLOBAL FUNCTIONS
@@ -157,6 +161,8 @@ void lv_port_disp_init(void)
         printf("error in lvgl buf_3_1 malloc \n\n");
         return ;
     }
+    lv_memset_00(buf_3_1, disp_width * disp_hight * sizeof(lv_color_t));
+
 //    buf_3_2 = lv_mem_alloc(disp_width * disp_hight * sizeof(lv_color_t));
 //    if (!buf_3_2) {
 //        lv_mem_free(buf_3_1);
@@ -164,6 +170,7 @@ void lv_port_disp_init(void)
 //        printf("error in lvgl buf_3_1 malloc \n\n");
 //        return ;
 //    }
+//    lv_memset_00(buf_3_2, disp_width * disp_hight * sizeof(lv_color_t));
 
     /* Example for 3) also set disp_drv.full_refresh = 1 below*/
     static lv_disp_draw_buf_t draw_buf_dsc_3;
@@ -180,6 +187,7 @@ void lv_port_disp_init(void)
         printf("error in lvgl buf_3_1 malloc \n\n");
         return ;
     }
+    lv_memset_00(buf_3_3, disp_width * disp_hight * sizeof(lv_color_t));
 #endif
 
     lv_disp_draw_buf_init(&draw_buf_dsc_3, buf_3_1, buf_3_2, buf_3_3,
@@ -260,7 +268,7 @@ static void lv_lcd_draw_trig(const lv_area_t *area)
     /* 将绘制好的 offline_fb 设置为 next_fb */
     lv_disp_draw_buf_t *draw_buf = lv_disp_get_draw_buf(_lv_refr_get_disp_refreshing());
 
-    if (!lvgl_disp_data_rotate(draw_buf->buf_act, next_disp.fb, LV_COLOR_DEPTH, disp_width, disp_hight, 270)) {
+    if (!lvgl_disp_data_rotate(draw_buf->buf_act, next_disp.fb, LV_COLOR_DEPTH, disp_width, disp_hight, 0)) {
         next_offline_disp.fb = cur_disp.fb ? cur_disp.fb : next_offline_disp.fb;
         next_disp.fb = draw_buf->buf_act;
         if (disp_drv.full_refresh == 0) {
@@ -333,12 +341,14 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
             /*return;//仅统计软件渲染性能*/
 #endif
         }
-
 #ifdef THREE_FB_ACCELERATION
-        lv_lcd_draw_trig(area);
-#else
-        lvgl_disp_flush(area->x1, area->x2, area->y1, area->y2, color_p);
+        if (!lvgl_disp_area_enable()) {
+            lv_lcd_draw_trig(area);
+        } else
 #endif
+        {
+            lvgl_disp_flush(area->x1, area->x2, area->y1, area->y2, color_p);
+        }
 
         /*IMPORTANT!!!
          *Inform the graphics library that you are ready with the flushing*/

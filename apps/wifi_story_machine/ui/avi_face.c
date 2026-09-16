@@ -25,6 +25,9 @@
 #ifndef USE_LCD_TE_ROTATE_ENABLE
 #define USE_LCD_TE_ROTATE_ENABLE    0 //是否开启TE使用时播放视频翻转视频数据
 #endif
+#ifndef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+#define TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE    0
+#endif
 
 #define UI_RES_SD_ENABLE    0   //1：UI资源放在SD卡,0：UI资源放在flash
 
@@ -502,14 +505,11 @@ redo:
                 }
 
 #endif
-
+                yuv420p_fast_2rgb565(yuv, rgb565, info.width, info.height, 1, TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE);//默认JD9853使用翻转后推送竖屏
 #if (USE_LCD_TE_ROTATE_ENABLE && USE_LCD_TE && (__SDRAM_SIZE__ >= (8*1024*1024))) //使用TE信号解决播放视频撕裂感
-                int w, h;
-                YUV420p_REVERSAL(yuv, yuv_rev_buf, info.width, info.height, &w, &h, 270);//视频缓存需要翻转的角度
-                yuv420p_quto_rgb565(yuv_rev_buf, rgb565, info.height, info.width, 0);//YUV转RGB
                 lcd_show_frame_to_dev_flip(rgb565, info.width * info.height * 2, 0);//视频缓存数据翻转后推屏，并设置屏幕不需要翻，即屏幕翻转0度
 #else
-                yuv420p_quto_rgb565(yuv, rgb565, info.width, info.height, 0);
+
                 lcd_show_frame_to_dev(rgb565, info.width * info.height * 2);
 #endif
                 if (AVI_FACE.task_suspend) {
