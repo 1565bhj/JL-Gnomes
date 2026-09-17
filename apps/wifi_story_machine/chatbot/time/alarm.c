@@ -156,58 +156,159 @@ uint8_t sys_time_to_weekday(struct sys_time *t)
 }
 static void time_ntp_utc(struct sys_time *t, char ntp2utc)
 {
-    char days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int offset = UTC_USE;
-    int leap, max_day;
-
-    // 1. 转换年份和月份格式
-    if (ntp2utc) {
+    if (ntp2utc) { //NTP转UTC
         t->year += 1900;
         t->month += 1;
-        t->hour += offset;
-    } else {
-        t->hour -= offset;
-    }
-
-    // 2. 调整小时和日期
-    if (t->hour >= 24) {
-        t->hour -= 24;
-        t->day++;
-    } else if (t->hour < 0) {
-        t->hour += 24;
-        t->day--;
-    }
-
-    // 3. 处理日期借位
-    while (t->day <= 0) {
-        if (--t->month <= 0) {
-            t->month = 12;
-            t->year--;
+        if (UTC_USE > 0) { //东区
+            if (t->hour + UTC_USE >= 24) {
+                t->day += 1;
+                t->hour = t->hour + UTC_USE - 24;
+                if (t->month == 1 || t->month == 3 || t->month == 5 || t->month == 7 || t->month == 8 || t->month == 10 || t->month == 12) {
+                    if (t->day > 31) {
+                        t->day = 1;
+                        t->month += 1;
+                        if (t->month > 12) {
+                            t->year += 1;
+                            t->month = 1;
+                        }
+                    }
+                } else if (t->month == 2) {
+                    if ((t->year % 4 == 0 && t->year % 100 != 0) || t->year % 400 == 0) { //闰年
+                        if (t->day > 29) {
+                            t->day = 1;
+                            t->month += 1;
+                            if (t->month > 12) {
+                                t->year += 1;
+                                t->month = 1;
+                            }
+                        }
+                    } else {
+                        if (t->day > 28) {
+                            t->day = 1;
+                            t->month += 1;
+                            if (t->month > 12) {
+                                t->year += 1;
+                                t->month = 1;
+                            }
+                        }
+                    }
+                } else {
+                    if (t->day > 30) {
+                        t->day = 1;
+                        t->month += 1;
+                        if (t->month > 12) {
+                            t->year += 1;
+                            t->month = 1;
+                        }
+                    }
+                }
+            } else {
+                t->hour = t->hour + UTC_USE;
+            }
+        } else if (UTC_USE < 0) { //西区
+            if (t->hour + UTC_USE < 0) {
+                t->day -= 1;
+                t->hour = 24 + t->hour + UTC_USE;
+                if (t->day <= 0) {
+                    t->month -= 1;
+                    if (t->month <= 0) {
+                        t->month = 12;
+                        t->year -= 1;
+                    }
+                    if (t->month == 1 || t->month == 3 || t->month == 5 || t->month == 7 || t->month == 8 || t->month == 10 || t->month == 12) {
+                        t->day = 31;
+                    } else if (t->month == 2) {
+                        if ((t->year % 4 == 0 && t->year % 100 != 0) || t->year % 400 == 0) { //闰年
+                            t->day = 29;
+                        } else {
+                            t->day = 28;
+                        }
+                    } else {
+                        t->day = 30;
+                    }
+                }
+            } else {
+                t->hour = t->hour + UTC_USE;
+            }
         }
-        leap = ((t->year % 4 == 0 && t->year % 100 != 0) || t->year % 400 == 0);
-        t->day += (t->month == 2) ? (leap ? 29 : 28) : days[t->month - 1];
-    }
-
-    // 4. 处理日期进位
-    while (1) {
-        leap = ((t->year % 4 == 0 && t->year % 100 != 0) || t->year % 400 == 0);
-        max_day = (t->month == 2) ? (leap ? 29 : 28) : days[t->month - 1];
-        if (t->day <= max_day) {
-            break;
-        }
-        t->day -= max_day;
-        if (++t->month > 12) {
-            t->month = 1;
-            t->year++;
-        }
-    }
-
-    // 5. 转换回NTP格式（如果需要）
-    if (!ntp2utc) {
+    } else { //UTC转NTP
         t->year -= 1900;
         t->month -= 1;
+        if (UTC_USE > 0) { //东区
+            if (t->hour - UTC_USE <= 0) {
+                t->day -= 1;
+                t->hour = 24 + t->hour - UTC_USE;
+                if (t->day <= 0) {
+                    t->month -= 1;
+                    if (t->month <= 0) {
+                        t->month = 12;
+                        t->year -= 1;
+                    }
+                    if (t->month == 1 || t->month == 3 || t->month == 5 || t->month == 7 || t->month == 8 || t->month == 10 || t->month == 12) {
+                        t->day = 31;
+                    } else if (t->month == 2) {
+                        if ((t->year % 4 == 0 && t->year % 100 != 0) || t->year % 400 == 0) { //闰年
+                            t->day = 29;
+                        } else {
+                            t->day = 28;
+                        }
+                    } else {
+                        t->day = 30;
+                    }
+                }
+            } else {
+                t->hour = t->hour - UTC_USE;
+            }
+        } else if (UTC_USE < 0) { //西区
+            if (t->hour - UTC_USE < 0) {
+                t->day += 1;
+                t->hour = t->hour - UTC_USE - 24;
+                if (t->month == 1 || t->month == 3 || t->month == 5 || t->month == 7 || t->month == 8 || t->month == 10 || t->month == 12) {
+                    if (t->day > 31) {
+                        t->day = 1;
+                        t->month += 1;
+                        if (t->month > 12) {
+                            t->year += 1;
+                            t->month = 1;
+                        }
+                    }
+                } else if (t->month == 2) {
+                    if ((t->year % 4 == 0 && t->year % 100 != 0) || t->year % 400 == 0) { //闰年
+                        if (t->day > 29) {
+                            t->day = 1;
+                            t->month += 1;
+                            if (t->month > 12) {
+                                t->year += 1;
+                                t->month = 1;
+                            }
+                        }
+                    } else {
+                        if (t->day > 28) {
+                            t->day = 1;
+                            t->month += 1;
+                            if (t->month > 12) {
+                                t->year += 1;
+                                t->month = 1;
+                            }
+                        }
+                    }
+                } else {
+                    if (t->day > 30) {
+                        t->day = 1;
+                        t->month += 1;
+                        if (t->month > 12) {
+                            t->year += 1;
+                            t->month = 1;
+                        }
+                    }
+                }
+            } else {
+                t->hour = t->hour - UTC_USE;
+            }
+        }
     }
 }
+
 void time_day_add(struct sys_time *t, int add)
 {
     char days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -229,6 +330,7 @@ void time_day_add(struct sys_time *t, int add)
     }
 }
 
+
 /**
  * 带时区的时间戳转换函数（完整实现，包含星期和所有功能）
  * @param timep 时间戳指针
@@ -239,7 +341,7 @@ void time_day_add(struct sys_time *t, int add)
  */
 int timestamp_to_tm(time_t *timep, int timezone, struct tm* result, char year_real)
 {
-    char days_in_month[] = {
+    const char days_in_month[] = {
         31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
     };
 
@@ -1733,7 +1835,7 @@ static void time_rtc_alarm_task(void *p)
         alarm_chack_time(&new_time);//更新循环闹钟
     }
     alarm_first_set();//开机重设闹钟
-    sys_timer_add_to_task("sys_timer", NULL, ntptime_update, 30 * 60 * 1000); //30分钟校准时间一次
+    sys_timer_add_to_task("sys_timer", NULL, ntptime_update, 60 * 60 * 1000); //1小时校钟校准时间一次
     while (1) {
         res = os_task_pend("taskq", msg, ARRAY_SIZE(msg));
         if (res == OS_TASK_DEL_IDLE) {
