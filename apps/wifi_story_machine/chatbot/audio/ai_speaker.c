@@ -503,12 +503,18 @@ static int ai_speaker_key_click(struct key_event *key)
     switch (key->value) {
     case KEY_MUTE:
     case KEY_OK://按键播放或者启动识别
-
         /*
-        if(music_buf_play_supspend()){
+        //下面为按键实现播放音乐暂停/播放
+        if (system_keyword_start()) {
+            aisp_clear(0);
+        }
+        if (music_buf_play_supspend()) {
             net_music_play_resum();
-        }*/
-
+        } else {
+            net_music_play_puase();
+        }
+        break;
+        */
         if (net_music_play_start_status()) {
 #ifdef CONFIG_NO_SDRAM_ENABLE
             net_music_dec_stop();
@@ -1619,14 +1625,6 @@ static int ai_speaker_state_machine(struct application *app, enum app_state stat
     case APP_STA_START:
         switch (it->action) {
         case ACTION_HOME_MAIN:
-            ;
-#ifdef CONFIG_WIFI_ENABLE
-            if (net_ch == 0) {
-                if (!wifi_is_init()) {
-                    wifi_and_network_on();
-                }
-            }
-#endif
             //初始化操作
             ai_speaker_mode_init();
 #ifdef CONFIG_LTE_PHY_ENABLE

@@ -385,10 +385,20 @@ int net_music_dec_stop(void)
 #endif
     return 0;
 }
+
+int qyai_audio_pipe_buf_play_dec_analog_volume_enable(void)
+{
+#ifdef NET_MUSIC_CONFIG_DEC_ANALOG_VOLUME_ENABLE
+    return true;
+#endif
+    return false;
+}
+
 static void net_music_request_status_clear(void)
 {
     __this->request_status = 0;
 }
+
 int net_music_play_next(char *priv)
 {
     if (__this->timeout_id) {
