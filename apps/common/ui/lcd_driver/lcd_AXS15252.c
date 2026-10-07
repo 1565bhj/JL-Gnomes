@@ -7,7 +7,13 @@
 
 #if TCFG_LCD_AXS15252_ENABLE
 
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+#define DEFAULT_ROTATE ROTATE_DEGREE_0
+#else
+#define DEFAULT_ROTATE ROTATE_DEGREE_90
+#endif // TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
 
+static unsigned short dir_angle = 0;
 static void AXS15252_lvgl_Fill(u16 xs, u16 xe, u16 ys, u16 ye, u8 *img);
 void AXS15252_SetRange(u16 xs, u16 xe, u16 ys, u16 ye)
 {
@@ -80,20 +86,32 @@ void AXS15252_no_wait_Fill(u8 *img, u32 len)
 
 void AXS15252_Fill(u8 *img, u16 len)
 {
-//    unsigned short w = LCD_W;
-//    unsigned short h = LCD_H;
-    unsigned short w = LCD_H;
-    unsigned short h = LCD_W;
+    unsigned short w = LCD_W - 1;
+    unsigned short h = LCD_H - 1;
+
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+    if ((DEFAULT_ROTATE == ROTATE_DEGREE_0 || DEFAULT_ROTATE == ROTATE_DEGREE_180) && (TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 90 || TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 270)) {
+        u16 tmp = w;
+        w = h;
+        h = tmp;
+    }
+#else
+    if (dir_angle != (short) -1 && dir_angle != DEFAULT_ROTATE) {
+        h = LCD_W - 1;
+        w = LCD_H - 1;
+    }
+#endif
+
     WriteCOM(0x2A);
     WriteDAT_8(0);
     WriteDAT_8(0);
-    WriteDAT_8((h - 1) >> 8);
-    WriteDAT_8((h - 1));
+    WriteDAT_8(h >> 8);
+    WriteDAT_8(h);
     WriteCOM(0x2B);
     WriteDAT_8(0);
     WriteDAT_8(0);
-    WriteDAT_8((w - 1) >> 8);
-    WriteDAT_8((w - 1));
+    WriteDAT_8(w >> 8);
+    WriteDAT_8(w);
 
     lcd_interface_non_block_wait();
     WriteCOM(0x2c);
@@ -122,24 +140,15 @@ static void AXS15252_set_direction(int dir)
     }
     dir_angle = dir;
     WriteCOM(0x36);    //扫描方向控制
-    WriteDAT_8(0xA0);
-//    if (dir == ROTATE_DEGREE_0) { //
-//#if HORIZONTAL_SCREEN
-//        WriteDAT_8(0x00);
-//#else
-//        WriteDAT_8(0xC0);
-//#endif
-//    } else if (dir == ROTATE_DEGREE_180) { //翻转180
-//#if HORIZONTAL_SCREEN
-//        WriteDAT_8(0xA0);
-//#else
-//        WriteDAT_8(0x00);
-//#endif
-////       AXS15252_SetRange_1(0, LCD_W - 1, 0, LCD_H - 1);
-//    } else if (dir == ROTATE_DEGREE_90) { //翻转90  MX+MV
-//        WriteDAT_8(0x60);
-////        AXS15252_SetRange_1(0, LCD_W - 1, 0, LCD_H - 1);
-//    }
+    if (dir == ROTATE_DEGREE_0 || dir == 0) {
+        WriteDAT_8(0x00);
+    } else if (dir == ROTATE_DEGREE_90 || dir == 90) {
+        WriteDAT_8(0x60);
+    } else if (dir == ROTATE_DEGREE_180 || dir == 180) {
+        WriteDAT_8(0xC0);
+    } else if (dir == ROTATE_DEGREE_270 || dir == 270) {
+        WriteDAT_8(0xA0);
+    }
 }
 static void AXS15252_set_direction_default(int dir)
 {
@@ -564,6 +573,16 @@ static void AXS15252_lvgl_Fill(u16 xs, u16 xe, u16 ys, u16 ye, u8 *img)
     u32 len = 0;
     lcd_interface_non_block_wait();
     len = (xe + 1 - xs) * (ye + 1 - ys) * 2;
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
+    if (TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 90 || TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE == 270) {
+        u16 tmp = xs;
+        u16 tmp1 = xe;
+        xs = ys;
+        ys = tmp;
+        xe = ye;
+        ye = tmp1;
+    }
+#endif
     WriteCOM(0x2A);
     WriteDAT_8(xs >> 8);
     WriteDAT_8(xs);
@@ -614,7 +633,7 @@ int AXS15252_init(void)
     lcd_te_interrupt_init(1);
 #endif
     AXS15252_init_code();
-    AXS15252_set_direction_default(ROTATE_DEGREE_90);   /* 顺时针90度，0xE0 不镜像 */
+    AXS15252_set_direction_default(DEFAULT_ROTATE);   /* 顺时针90度，0xE0 不镜像 */
     AXS15252_test();
     printf("LCD_AXS15252 config succes\n");
     return 0;

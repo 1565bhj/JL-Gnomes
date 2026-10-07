@@ -67,19 +67,23 @@ static void mutil_modal_dat_out_cb(uint8_t data_type, uint8_t *data_buffer, int 
             break;
 
         case DATA_TYPE_PCM: //万物识图模式
+        case DATA_TYPE_MP3:
             printf("---> DATA_TYPE_PCM seq : %d \n", seq_num);
-            if (!seq_num) {
+            if (!__this->audio_seq) {
                 qyai_audio_pipe_buf_play_stop();
                 qyai_audio_pipe_buf_play_clear();
+                qyai_audio_pipe_buf_play_write(data_buffer, data_len, 1 * 1024 * 1024);
                 qyai_audio_pipe_buf_play_start();
+            } else {
+                qyai_audio_pipe_buf_play_write(data_buffer, data_len, 1 * 1024 * 1024);
             }
-            qyai_audio_pipe_buf_play_write(data_buffer, data_len, 1 * 1024 * 1024);
             __this->audio_seq++;
             break;
 
         case DATA_TYPE_TEXT: //万物识图模式
             printf("---> DATA_TYPE_TEXT seq : %d \n", seq_num);
             if (seq_num == 0) {//写文本
+                __this->audio_seq = 0;
             }
             if (!last_pkg) {//写文本
             } else {

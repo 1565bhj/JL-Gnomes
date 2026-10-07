@@ -84,7 +84,7 @@ static void wifi_container_click_event_handler(lv_event_t *e)
     printf("WiFi容器 %d 被点击了\n", index + 1);
 
     // 保存当前点击的WiFi名称和索引
-    const char *wifi_name = get_wifi_scan_ssid_name(index);
+    const char *wifi_name = wifi_get_scan_ssid_name(index);
     strcpy(current_wifi_name, wifi_name);
     current_wifi_index = index;
 
@@ -120,7 +120,7 @@ static void generate_wifi_containers_async(void *param)
     }
 
     // 动态生成WiFi容器
-    int wifi_count = get_wifi_scan_ssid_num();
+    int wifi_count = wifi_get_scan_ssid_name();
     printf("wifi_count: %d\n", wifi_count);
 
     int actual_container_count = 0; // 实际生成的容器数量
@@ -128,7 +128,7 @@ static void generate_wifi_containers_async(void *param)
     for (int i = 0; i < wifi_count && i < MAX_WIFI_COUNT; i++) {
         /* 仅当「已连接」区域真正显示时，才从列表里去掉当前 SSID，避免 span 里残留旧名称却未联网时误跳过 */
 
-        const char *init_wifi_name = get_wifi_scan_ssid_name(i);
+        const char *init_wifi_name = wifi_get_scan_ssid_name(i);
         const char *connected_wifi_name = NULL;
         bool ui_show_connected = guider_ui.screen_wifi_show_cont_wifi
                                  && !lv_obj_has_flag(guider_ui.screen_wifi_show_cont_wifi, LV_OBJ_FLAG_HIDDEN);
@@ -304,7 +304,7 @@ static void screen_wifi_show_btn_del_event_handler(lv_event_t *e)
     // 隐藏 cont_wifi_choose 容器
     lv_obj_add_flag(ui->screen_wifi_show_cont_wifi_choose, LV_OBJ_FLAG_HIDDEN);
 
-    scan_and_print_wifi_networks();
+    wifi_scan_start_request(NULL, 0);
     // 刷新WiFi容器
     refresh_wifi_containers();
 }
@@ -369,7 +369,7 @@ static void screen_wifi_show_cont_refresh_event_handler(lv_event_t *e)
     if (ui) {
         wifi_show_refresh_icon_spin_once(ui->screen_wifi_show_img_refresh);
     }
-    scan_and_print_wifi_networks();
+    wifi_scan_start_request(NULL, 0);
     // 刷新WiFi容器
     refresh_wifi_containers();
 

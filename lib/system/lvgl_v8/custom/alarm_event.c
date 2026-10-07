@@ -9,17 +9,17 @@
 #include "sys_time.h"
 
 // 定义alarm_info结构体以匹配alarm.c中的定义
-struct alarm_info { //10字节
+#define ALARM_NUM   10  //最多20个闹钟，20*12 <= 240
+
+struct alarm_info { //12字节
     unsigned char enable: 1; //是否使能闹钟
     unsigned char music: 1; //闹钟自定义音乐，0系统音乐
-    unsigned char index: 4; //设置的闹钟index
-    unsigned char resver: 2; //预留
+    unsigned char index: 6; //设置的闹钟index
     unsigned char cyc; //是否循环的闹钟: 0不循环，BIT(0)每天循环，BIT(1)-BIT(7)对应星期一到星期日
     unsigned char resver2; //预留
     struct sys_time time;
 };
 
-#define ALARM_NUM 10  // 与alarm.c中保持一致
 struct alarm_info alarm_data[ALARM_NUM] = {0};
 
 // 全局闹钟管理变量定义

@@ -220,6 +220,7 @@ void lvgl_touch_x_y_status_get(short *x, short *y, unsigned char *status)//获�
             swipe_handled_in_current_touch = 0;
             printf("开始触摸\n");
             alarm_music_play_stop();
+            aisp_timeout_id_del();
         } else {  // 之前也处于按下状态
             // 计算坐标差值
             // 改为使用起始点计算差值，而不是与上一点的差值
@@ -403,10 +404,8 @@ void lvgl_disp_flush(int xs, int xe, int ys, int ye, unsigned char *img)//往显
  */
 int lvgl_disp_data_rotate(unsigned char *src, unsigned char *dst, int rgb_depth, int width, int height, int rotate_angle)
 {
-#if TCFG_LCD_JD9853_ENABLE
 #ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
     return rgb_data_rotate(src, dst, rgb_depth, width, height, TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE);//根据实际翻转角度进行翻转
-#endif
 #endif
     return 0;
 }
@@ -418,7 +417,10 @@ int lvgl_disp_data_rotate(unsigned char *src, unsigned char *dst, int rgb_depth,
  */
 int lvgl_disp_area_enable(void)
 {
+#ifdef TCFG_LVGL_FRAME_BUFFER_ROTATE_ANGLE
     return false;
+#endif
+    return true;
 }
 
 

@@ -53,13 +53,23 @@ static struct {
     u32 rf_test_mode : 3;
     u32 reserved : 23;
 } wifi_app_hdl;
+static OS_SEM sem;
+static void (*wifi_scan_done)(void *ssid, int num);
+static void wifi_scan_complete(void);
+
+#define MAX_SSID_NUM    20
+static u8 wifi_ssid_names[MAX_SSID_NUM][64] = {0};  //存储WiFi名称的数组
+static u8 wifi_ssid_num = 0;
+static char wifi_is_scanning = false;
+static char wifi_connect_best_ssid = false;
 
 #define __this  (&wifi_app_hdl)
 
 extern void airkiss_ssid_check(void);
 extern int app_usb_is_plugin_state(void);
 extern int qyai_net_interface_set(char index);
-
+void wifi_sta_connect(char *ssid, char *pwd, char save);
+int wifi_sta_connect_best_ssid_request(void);
 int __attribute__((weak)) wifi_force_set_lan_setting_info(void)
 {
     return 0;
@@ -379,11 +389,6 @@ static int wifi_is_in_smp_cfg_mode(void)
 
 void wifi_sta_info_clear(void)
 {
-    int net_ch = 0;
-#if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
-    int sys_net_channel_read(void);
-    net_ch = sys_net_channel_read();
-#endif
 #define NONE_SSID "*#_~`^"
     struct wifi_stored_sta_info sta_info_get = {0};
     for (int i = 0; i < NETWORK_SSID_INFO_CNT; i++) {
@@ -404,17 +409,13 @@ void wifi_sta_info_clear_ssid(char *ssid)
     if (!ssid) {
         return;
     }
-    int net_ch = 0;
-#if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
-    int sys_net_channel_read(void);
-    net_ch = sys_net_channel_read();
-#endif
 #define NONE_SSID "*#_~`^"
     struct wifi_stored_sta_info sta_info_get = {0};
     for (int i = 0; i < NETWORK_SSID_INFO_CNT; i++) {
         if (syscfg_read(WIFI_STA_INFO_IDX_START + i, (char *)&sta_info_get, sizeof(struct wifi_stored_sta_info)) >= 0) {
             if (!strcmp(&sta_info_get.ssid, ssid)) {
                 strcpy(&sta_info_get.ssid, NONE_SSID);
+                memset(&sta_info_get.pwd, 0, sizeof(sta_info_get.pwd));
                 syscfg_write(WIFI_STA_INFO_IDX_START + i, (char *)&sta_info_get, sizeof(struct wifi_stored_sta_info));
                 printf("-> reset wifi vm index %d \n", i);
             }
@@ -424,9 +425,40 @@ void wifi_sta_info_clear_ssid(char *ssid)
     if (syscfg_read(WIFI_INFO_IDX, (char *)&store_info, sizeof(struct wifi_store_info)) >= 0) {
         if (!strcmp(&sta_info_get.ssid, ssid)) {
             strcpy(&store_info.ssid[STA_MODE - STA_MODE], NONE_SSID);
+            memset(&store_info.pwd, 0, sizeof(store_info.pwd));
             syscfg_write(WIFI_INFO_IDX, (char *)&store_info, sizeof(struct wifi_store_info));
         }
     }
+}
+int wifi_sta_connect_best_ssid_match(struct wifi_scan_ssid_info *sta_ssid_info, int num)
+{
+    if (!sta_ssid_info) {
+        return -1;
+    }
+    struct wifi_scan_ssid_info *ssid_info = sta_ssid_info;
+    struct wifi_stored_sta_info best_sta_info = {0};
+    char max_rssi = -100;
+    int max_rssi_index = -1;
+    for (int n = 0; n < num; n++) {
+        ssid_info = (struct wifi_scan_ssid_info *)((int)sta_ssid_info + n * sizeof(struct wifi_scan_ssid_info));
+        for (int i = 0; i < NETWORK_SSID_INFO_CNT; i++) {
+            struct wifi_stored_sta_info sta_info_get = {0};
+            if (syscfg_read(WIFI_STA_INFO_IDX_START + i, (char *)&sta_info_get, sizeof(struct wifi_stored_sta_info)) >= 0) {
+                //printf("get ssid_match : %s, %s\n", sta_info_get.ssid, sta_info_get.pwd);
+                if (ssid_info->ssid && !strcmp(&sta_info_get.ssid, ssid_info->ssid)) {
+                    if (max_rssi < ssid_info->rssi_db) {
+                        max_rssi_index = n;
+                        memcpy(&best_sta_info, &sta_info_get, sizeof(best_sta_info));
+                    }
+                }
+            }
+        }
+    }
+    if (max_rssi_index >= 0) {
+        printf("app best_ssid_match : %s, %s\n", best_sta_info.ssid, best_sta_info.pwd);
+        wifi_sta_connect(best_sta_info.ssid, best_sta_info.pwd, 1);
+    }
+    return max_rssi_index;
 }
 static void wifi_sta_save_ssid(void)
 {
@@ -659,6 +691,7 @@ static int wifi_event_callback(void *network_ctx, enum WIFI_EVENT event)
 #ifdef CONFIG_AIRKISS_NET_CFG
         airkiss_ssid_check();
 #endif
+        wifi_scan_complete();
         break;
 
     case WIFI_EVENT_STA_CONNECT_SUCC:
@@ -983,7 +1016,7 @@ static char wifi_is_on_flag = 0;
 static char wireless_init = 0;
 int wifi_is_init(void)
 {
-    return wireless_init == 2;
+    return wireless_init == 1;
 }
 
 int wifi_is_online(void)
@@ -996,7 +1029,6 @@ void wifi_and_network_on(void)
     if (wifi_is_on() || wifi_is_on_flag) {
         return;
     }
-    printf("=====wifi_and_network_on=====");
     wifi_is_on_flag = 1;
     wifi_on();
     net_app_init();
@@ -1004,15 +1036,12 @@ void wifi_and_network_on(void)
 
 void wifi_and_network_off(void)
 {
-    //printf("=====wifi_and_network_off1=====");
     if (wifi_is_on() == 0 || wifi_is_on_flag == 0) {
-        //printf("=====wifi_and_network_off2=====");
         return;
     }
     net_app_uninit();
     wifi_off();
     wifi_is_on_flag = 0;
-    //printf("=====wifi_and_network_off3=====");
 }
 
 void wifi_sta_reconnect(void)
@@ -1061,308 +1090,98 @@ void wifi_sta_connect(char *ssid, char *pwd, char save)
 #endif
 }
 
-
-
-#if CONFIG_LVGL_OPTION_WIFI_ENABLE
-// 存储WiFi名称的数组
-static u8 actual_wifi_names[20][64] = {0};  // 初始化避免脏数据
-static u8 actual_wifi_num = 0;  // 初始化避免脏数据
-// 扫描状态标志
-static bool is_scanning = false;
-/* UI 触发的扫描：在 wifi_app_task 里发起 wifi_scan_req + 周期取结果（与 demo_wifi_scan_req_start 一致，避免在 LVGL 线程里阻塞/调用栈不对） */
-static u16 s_ui_scan_kickoff_timeout_id = 0;
-static u8 s_ui_scan_poll_count = 0;
-
-int get_wifi_scan_ssid_num(void)
+int wifi_get_scan_ssid_num(void)
 {
-    return actual_wifi_num;
+    return wifi_ssid_num;
 }
 
-char *get_wifi_scan_ssid_name(int index)
+char *wifi_get_scan_ssid_name(int index)
 {
-    if (index < 0 || index >= actual_wifi_num) {
+    if (index < 0 || index >= wifi_ssid_num) {
         return NULL; // 索引越界，返回 NULL
     }
-    return &actual_wifi_names[index][0];
+    return &wifi_ssid_names[index][0];
 }
 
-static int get_wifi_scan_ssid_info(void)
+static void wifi_scan_complete(void)
 {
     struct wifi_scan_ssid_info *sta_ssid_info;
     u32 sta_ssid_num = 0;
     sta_ssid_info = wifi_get_scan_result(&sta_ssid_num);
 
-    // 存储WiFi名称到数组
-    memset(actual_wifi_names, 0, sizeof(actual_wifi_names)); // 清空数组，避免残留数据
+    memset(wifi_ssid_names, 0, sizeof(wifi_ssid_names)); // 清空数组，避免残留数据
     for (u32 i = 0; i < sta_ssid_num; i++) {
-        strncpy(actual_wifi_names[i], sta_ssid_info[i].ssid, sizeof(actual_wifi_names[i]) - 1);
-        actual_wifi_names[i][sizeof(actual_wifi_names[i]) - 1] = '\0';
+        strncpy(wifi_ssid_names[i], sta_ssid_info[i].ssid, sizeof(wifi_ssid_names[i]) - 1);
+        wifi_ssid_names[i][sizeof(wifi_ssid_names[i]) - 1] = '\0';
     }
+    wifi_ssid_num = sta_ssid_num;
 
-    printf("\n=============================================================\n");
-    printf("扫描到 %d 个WiFi网络:\n", sta_ssid_num);
-    actual_wifi_num = sta_ssid_num;
-    printf("=============================================================\n");
-
-    // 打印 actual_wifi_names 数组中的所有WiFi名称
-    printf("actual_wifi_names 数组内容:\n");
+    // 打印 wifi_ssid_names 数组中的所有WiFi名称
+    printf("=====================扫描到 %02d 个WiFi网络==================\n", sta_ssid_num);
     for (u32 i = 0; i < sta_ssid_num; i++) {
-        printf("actual_wifi_names[%d]: %s\n", i, actual_wifi_names[i]);
+        printf("  SSID: %-24s, rssi:%2d dB, ch:%2d, enc:%d\n", sta_ssid_info[i].ssid, sta_ssid_info[i].rssi_db, sta_ssid_info[i].channel_number, sta_ssid_info[i].auth_mode == WIFI_AUTH_MODE_OPEN);
     }
     printf("=============================================================\n");
 
-    for (u32 i = 0; i < sta_ssid_num; i++) {
-        printf("WiFi %d:\n", i + 1);
-        printf("  SSID: %s\n", sta_ssid_info[i].ssid);
-        printf("  MAC地址: %02X:%02X:%02X:%02X:%02X:%02X\n",
-               sta_ssid_info[i].mac_addr[0], sta_ssid_info[i].mac_addr[1],
-               sta_ssid_info[i].mac_addr[2], sta_ssid_info[i].mac_addr[3],
-               sta_ssid_info[i].mac_addr[4], sta_ssid_info[i].mac_addr[5]);
-        printf("  信号强度: %d dBm\n", sta_ssid_info[i].rssi_db);
-        printf("  信道: %d\n", sta_ssid_info[i].channel_number);
-        if (sta_ssid_info[i].auth_mode == WIFI_AUTH_MODE_OPEN) {
-            printf("  加密方式: 无加密\n");
-        } else {
-            printf("  加密方式: 加密\n");
+    if (wifi_scan_done) {
+        wifi_scan_done(sta_ssid_info, sta_ssid_num);
+        wifi_scan_done = NULL;
+    }
+    if (os_sem_valid(&sem)) {
+        os_sem_post(&sem);
+    }
+    if (wifi_connect_best_ssid && !wifi_sta_is_connected()) {
+        if (wifi_sta_connect_best_ssid_match(sta_ssid_info, sta_ssid_num) < 0) {//查找不到则继续等待下一次轮回检查
+            wifi_sta_connect_best_ssid_request();
         }
-        printf("-------------------------------------------------------------\n");
     }
-
-    /* 仅在有结果时清空缓存；过早清空会导致未联网时当次扫描永远拿不到列表（与 demo_wifi_ext 说明一致） */
     if (sta_ssid_num > 0) {
         wifi_clear_scan_result();
     }
-    return sta_ssid_num;
-}
-/* 在 wifi_app_task 中周期执行，与 demo_wifi_get_scan_result 一致 */
-static void wifi_scan_poll(void *priv)
-{
-    u32 sta_ssid_num = 0;
-
-    (void)priv;
-    s_ui_scan_poll_count++;
-
-    wifi_get_scan_result(&sta_ssid_num);
-    printf("---> ui_wifi_scan_poll ssid_cnt : %u (tick %u)\n", sta_ssid_num, s_ui_scan_poll_count);
-
-    if (sta_ssid_num > 0) {
-        get_wifi_scan_ssid_info();
-        wifi_show_request_refresh_after_scan();
-        is_scanning = false;
-
-    } else if (s_ui_scan_poll_count >= 60) {
-        get_wifi_scan_ssid_info();
-        wifi_show_request_refresh_after_scan();
-        is_scanning = false;
-    }
-    if (!is_scanning && s_ui_scan_kickoff_timeout_id) {
-        sys_timer_del(s_ui_scan_kickoff_timeout_id);
-        s_ui_scan_kickoff_timeout_id = 0;
-    }
+    wifi_is_scanning = false;
+    wifi_connect_best_ssid = false;
 }
 
-bool scan_and_print_wifi_networks(void)
+int wifi_scan_start_request(void (*done_cb)(void *ssid, int num), int waite_timerms)
 {
-    if (is_scanning) {
+    if (wifi_is_scanning) {
         return false;
     }
-    is_scanning = true;
-    s_ui_scan_poll_count = 0;
-    /* 取消上一轮未结束的定时器 */
-    if (s_ui_scan_kickoff_timeout_id) {
-        sys_timer_del(s_ui_scan_kickoff_timeout_id);
-        s_ui_scan_kickoff_timeout_id = 0;
-    }
-
+    printf("wifi_scan_start_request start\n");
+    wifi_is_scanning = true;
+    wifi_ssid_num = 0;
+    wifi_scan_done = done_cb;
     if (!wifi_is_on()) {
         wifi_and_network_on();
         os_time_dly(30);
     }
-
+    os_sem_set(&sem, 0);
     wifi_scan_req();
-
-    /*
-     * 与 demo_wifi_scan_req_start 相同思路：在 wifi_app_task 上下文里 wifi_scan_req，
-     * 再用 sys_timer 每 1s 取结果（见 system/timer.h：回调在发起 add 的同一线程执行，
-     * LVGL 里阻塞 os_time_dly 会卡住界面且易导致扫描/协议栈时序异常）。
-     */
-    s_ui_scan_kickoff_timeout_id = sys_timer_add_to_task("sys_timer", NULL, wifi_scan_poll, 3000);
-    if (s_ui_scan_kickoff_timeout_id == 0) {
-        printf("scan: sys_timeout_add_to_task(wifi_app_task) 失败\n");
-        is_scanning = false;
-        return false;
+    if (waite_timerms) {
+        os_sem_pend(&sem, waite_timerms / 10);
     }
-
-    return true;
-}
-#endif
-
-
-#ifdef CONFIG_BT_ENABLE
-/*===========================================================================
- * BLE触发的WiFi扫描（不依赖LVGL宏，由BLE层调用）
- * 流程：收到小程序扫描请求 → 发起wifi_scan_req → 轮询结果 → 通过BLE回传
- *===========================================================================*/
-
-// BLE层回调：扫描结果发送（定义在 le_net_cfg.c）
-__attribute__((weak)) int ble_send_wifi_scan_result(struct wifi_scan_ssid_info *info, u32 num)
-{
-    return -1;  // BLE未启用时，空实现
-}
-
-// BLE扫描状态
-static bool ble_scan_in_progress = false;
-static u16 ble_scan_poll_timer_id = 0;
-static u8 ble_scan_poll_count = 0;
-static void (*ble_scan_done_cb)(void) = NULL;  // 扫描完成后的回调
-
-#define BLE_SCAN_MAX_AP 20                     // 最大缓存AP数量
-static struct wifi_scan_ssid_info ble_scan_cached_info[BLE_SCAN_MAX_AP];  // 缓存结构体数组
-static u8 ble_scan_cached_num = 0;            // 当前缓存AP数量
-static u8 ble_scan_wait_count = 5;            // 等待轮数
-
-static void ble_wifi_scan_poll(void *priv)
-{
-    u32 sta_ssid_num = 0;
-    (void)priv;
-    ble_scan_poll_count++;
-
-    if (ble_scan_poll_count <= 5) {
-        wifi_scan_req();  // 忽略返回值，失败也无所谓
-    }
-
-    // 不管scan_req是否成功，都尝试读取结果（驱动内部扫描可能有结果）
-    struct wifi_scan_ssid_info *sta_ssid_info = wifi_get_scan_result(&sta_ssid_num);
-    printf("---> ble_wifi_scan_poll ssid_cnt: %u (poll %u, wait_count=%d)\n",
-           sta_ssid_num, ble_scan_poll_count, ble_scan_wait_count);
-
-    if (sta_ssid_num > 0 && sta_ssid_info) {
-        // 有结果，累积合并到缓存（按SSID去重）
-        u32 new_count = ble_scan_cached_num;
-        for (u32 i = 0; i < sta_ssid_num && new_count < BLE_SCAN_MAX_AP; i++) {
-            bool dup = false;
-            for (u32 j = 0; j < new_count; j++) {
-                if (strcmp((char *)ble_scan_cached_info[j].ssid,
-                           (char *)sta_ssid_info[i].ssid) == 0) {
-                    dup = true;
-                    if (sta_ssid_info[i].rssi_db > ble_scan_cached_info[j].rssi_db) {
-                        ble_scan_cached_info[j].rssi_db = sta_ssid_info[i].rssi_db;
-                        ble_scan_cached_info[j].SignalStrength = sta_ssid_info[i].SignalStrength;
-                    }
-                    break;
-                }
-            }
-            if (!dup && strlen((char *)sta_ssid_info[i].ssid) > 0) {
-                memcpy(&ble_scan_cached_info[new_count], &sta_ssid_info[i],
-                       sizeof(struct wifi_scan_ssid_info));
-                new_count++;
-            }
-        }
-        ble_scan_cached_num = new_count;
-        printf("BLE scan: accumulated %d WiFi (driver returned %d)\n",
-               ble_scan_cached_num, sta_ssid_num);
-
-        if (ble_scan_wait_count == 0) {
-            printf("BLE scan: sending %d WiFi networks\n", ble_scan_cached_num);
-            ble_send_wifi_scan_result((struct wifi_scan_ssid_info *)ble_scan_cached_info, ble_scan_cached_num);
-            ble_scan_in_progress = false;
-            ble_scan_cached_num = 0;
-            if (ble_scan_done_cb) {
-                ble_scan_done_cb();
-                ble_scan_done_cb = NULL;
-            }
-            if (ble_scan_poll_timer_id) {
-                sys_timer_del(ble_scan_poll_timer_id);
-                ble_scan_poll_timer_id = 0;
-            }
-            return;
-        }
-
-        ble_scan_wait_count--;
-        printf("BLE scan: wait_count = %d\n", ble_scan_wait_count);
-    } else if (ble_scan_wait_count > 0) {
-        ble_scan_wait_count--;
-        printf("BLE scan: no result, wait_count = %d\n", ble_scan_wait_count);
-        wifi_scan_req();  // 重试
-    } else if (ble_scan_poll_count >= 30) {
-        printf("BLE scan: timeout, cached=%d\n", ble_scan_cached_num);
-        if (ble_scan_cached_num > 0) {
-            ble_send_wifi_scan_result((struct wifi_scan_ssid_info *)ble_scan_cached_info, ble_scan_cached_num);
-        } else {
-            ble_send_wifi_scan_result(NULL, 0);
-        }
-        ble_scan_in_progress = false;
-        ble_scan_cached_num = 0;
-        wifi_clear_scan_result();
-        if (ble_scan_done_cb) {
-            ble_scan_done_cb();
-            ble_scan_done_cb = NULL;
-        }
-    }
-
-    if (!ble_scan_in_progress && ble_scan_poll_timer_id) {
-        sys_timer_del(ble_scan_poll_timer_id);
-        ble_scan_poll_timer_id = 0;
-    }
-}
-
-static void ble_wifi_scan_kickoff(void *priv)
-{
-    (void)priv;
-
-    printf("ble_wifi_scan_kickoff: using driver's internal scan results\n");
-
-    ble_scan_in_progress = true;
-    ble_scan_poll_count = 0;
-    ble_scan_wait_count = 5;
-
-    int ret = wifi_scan_req();
-    if (ret == 0) {
-        printf("ble_wifi_scan_kickoff: wifi_scan_req OK\n");
-    } else {
-        printf("ble_wifi_scan_kickoff: wifi_scan_req rejected, will read driver's scan cache\n");
-    }
-
-    ble_scan_poll_timer_id = sys_timer_add(NULL, ble_wifi_scan_poll, 1000);
-    if (ble_scan_poll_timer_id == 0) {
-        printf("ble_wifi_scan_kickoff: sys_timer_add failed\n");
-        ble_scan_in_progress = false;
-        if (ble_scan_done_cb) {
-            ble_scan_done_cb();
-            ble_scan_done_cb = NULL;
-        }
-    }
-}
-
-/**
- * @brief BLE层调用此函数触发WiFi扫描
- * @param done_cb 扫描完成后的回调（可为NULL）
- * @return 0=成功启动扫描, -1=正在扫描中
- */
-int ble_wifi_scan_request(void (*done_cb)(void))
-{
-    if (ble_scan_in_progress) {
-        printf("ble_wifi_scan_request: already scanning\n");
-        return -1;
-    }
-
-    ble_scan_in_progress = true;
-    ble_scan_poll_count = 0;
-    ble_scan_wait_count = 5;
-    ble_scan_done_cb = done_cb;
-
-    // 取消上一次未结束的轮询定时器
-    if (ble_scan_poll_timer_id) {
-        sys_timer_del(ble_scan_poll_timer_id);
-        ble_scan_poll_timer_id = 0;
-    }
-
-    // 延迟500ms触发扫描（让BLE协议栈先回复ack）
-    sys_timeout_add(NULL, ble_wifi_scan_kickoff, 500);
-
     return 0;
 }
+
+static int wifi_sta_connect_best_ssid_check(void)
+{
+    int net_ch = sys_net_channel_read();
+    int net_mode = sys_net_mode_read();
+    if (
+#if defined CONFIG_LTE_PHY_ENABLE
+        (net_mode == NET_MODE_MANUAL_SET && net_ch == NET_CH_SELECT_WIFI) &&
 #endif
+        !wifi_sta_is_connected()) {
+        wifi_connect_best_ssid = true;
+        wifi_scan_start_request(NULL, 0);
+    }
+}
+
+int wifi_sta_connect_best_ssid_request(void)
+{
+    return sys_timeout_add_to_task("sys_timer", NULL, wifi_sta_connect_best_ssid_check, 10000);
+}
+
 
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
 void sys_net_channel_get_wifi_info(void)
@@ -1446,9 +1265,6 @@ static void wifi_app_task(void *priv)  //主要是create wifi 线程的
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
     sys_net_channel_get_wifi_info();
 #endif
-#if CONFIG_LVGL_OPTION_WIFI_ENABLE
-    sys_timeout_add_to_task("sys_timer", NULL, scan_and_print_wifi_networks, 3000);
-#endif
 }
 
 #ifdef CONFIG_WIFI_ENABLE
@@ -1457,6 +1273,7 @@ int wireless_net_init(void)   //主要是create wifi 线程的
     if (wireless_init || production_test_io_get()) {
         return 0;
     }
+    os_sem_create(&sem, 0);
     wireless_init = 1;
     puts("wireless_net_init \n\n");
     return thread_fork("wifi_app_task", 10, 1792, 0, 0, wifi_app_task, NULL);

@@ -12,6 +12,7 @@
 #include "app_config.h"
 #include "ai_uart_ctrol.h"
 
+static void net_ai_dialogue_resum_page(void *p);
 int tm_instruction_word_callback(char *word, char *asr);
 int ai_uart_cmd_data_push(unsigned char data_type, char *buf, int len);
 void alarm_time_read(void *buf, int size);
@@ -132,6 +133,14 @@ static int user_emoji_check(char *buf, int len)
 }
 
 
+void aisp_timeout_id_del(void)
+{
+    if (switch_to_main_time_id) {
+        sys_timer_del(switch_to_main_time_id);
+        switch_to_main_time_id = 0;
+    }
+}
+
 //对话超时退出
 void aisp_timeout_callback(void)
 {
@@ -148,7 +157,7 @@ void aisp_timeout_callback(void)
     if (switch_to_main_time_id) {
         sys_timer_modify(switch_to_main_time_id, sec * 1000);
     } else if (!websockets_recv_net_music_valid() && ai_speaker_app()) {
-        sys_timeout_add_to_task("sys_timer", NULL, lv_demo_switch_to_main_page, sec * 1000);
+        switch_to_main_time_id = sys_timeout_add_to_task("sys_timer", "main", net_ai_dialogue_resum_page, sec * 1000);
     }
 #endif
 }

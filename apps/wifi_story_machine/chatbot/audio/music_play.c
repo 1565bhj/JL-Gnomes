@@ -484,48 +484,45 @@ int music_play_res_file(const char *name) //Backdown1.mp3
 #endif
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
     char *reply = NULL;
-#ifdef CONFIG_KWS_ENGLISH
-    if (!strcmp("MaxVolume.mp3", name)) {
-        reply = "Max Volume";
-    } else if (!strcmp("MinVolume.mp3", name)) {
-        reply = "Min Volume";
-    } else if (!strcmp("NoLight.mp3", name)) {
-        reply = "No Light";
+    if (strstr(qyai_chat_language(), "en")) {
+        if (!strcmp("MaxVolume.mp3", name)) {
+            reply = "Max Volume";
+        } else if (!strcmp("MinVolume.mp3", name)) {
+            reply = "Min Volume";
+        } else if (!strcmp("NoLight.mp3", name)) {
+            reply = "No Light";
+        }
+    } else {
+        if (!strcmp("MaxVolume.mp3", name)) {
+            reply = "音量已最大";
+        } else if (!strcmp("MinVolume.mp3", name)) {
+            reply = "音量已最小";
+        } else if (!strcmp("NoLight.mp3", name)) {
+            reply = "没有打开灯光";
+        }
     }
-#else
-    if (!strcmp("MaxVolume.mp3", name)) {
-        reply = "音量已最大";
-    } else if (!strcmp("MinVolume.mp3", name)) {
-        reply = "音量已最小";
-    } else if (!strcmp("NoLight.mp3", name)) {
-        reply = "没有打开灯光";
+    if (strstr(qyai_chat_language(), "en")) {
+        if (!strcmp("LowLight.mp3", name)) {
+            reply = "Low brightness";
+        } else if (!strcmp("HightLight.mp3", name)) {
+            reply = "Hight brightness";
+        } else if (!strcmp("PwrOff.mp3", name)) {
+            reply = "Power off";
+        }
+    } else {
+        if (!strcmp("LowLight.mp3", name)) {
+            reply = "已最低亮度";
+        } else if (!strcmp("HightLight.mp3", name)) {
+            reply = "已最高亮度";
+        } else if (!strcmp("PwrOff.mp3", name)) {
+            reply = "关机~";
+        }
     }
-#endif
-
-#ifdef CONFIG_KWS_ENGLISH
-    if (!strcmp("LowLight.mp3", name)) {
-        reply = "Low brightness";
-    } else if (!strcmp("HightLight.mp3", name)) {
-        reply = "Hight brightness";
-    } else if (!strcmp("PwrOff.mp3", name)) {
-        reply = "Power off";
+    if (!strcmp("PwrOff.mp3", name)) {
         if (sys_connect_net_success()) {
             return http_tts_reply_type(6);
         }
     }
-#else
-    if (!strcmp("LowLight.mp3", name)) {
-        reply = "已最低亮度";
-    } else if (!strcmp("HightLight.mp3", name)) {
-        reply = "已最高亮度";
-    } else if (!strcmp("PwrOff.mp3", name)) {
-        reply = "关机~";
-        if (sys_connect_net_success()) {
-            return http_tts_reply_type(6);
-        }
-    }
-#endif
-
     if (sys_connect_net_success() && reply) {
         return http_tts_request(reply, strlen(reply) + 1);
     }
@@ -539,21 +536,22 @@ int music_play_backdown(void)   //主人我退下了
     int ret = 0;
     printf("--->music_play_byebye\n");
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
-#ifdef CONFIG_KWS_ENGLISH
-    char *byebye[] = {
+    char *byebye_en[] = {
         "I rested.",
         "I take my leave.",
         "Just call me if you need anything.",
         "Goodbye",
     };
-#else
-    char *byebye[] = {
+    char *byebye_cn[] = {
         "我休息了",
         "我退下了",
         "有需要再叫我",
         "再见",
     };
-#endif
+    char *byebye = byebye_cn;
+    if (strstr(qyai_chat_language(), "en")) {
+        byebye = byebye_en;
+    }
     int index = rand() % 4;
     //ret = http_tts_reply(byebye[index], strlen(byebye[index]) + 1);
     ret = http_tts_reply_type(3);
@@ -588,23 +586,24 @@ int music_play_hello(char index)   //主人我在
     int ret = 0;
     printf("--->music_play_hello : %d\n", index);
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
-#ifdef CONFIG_KWS_ENGLISH
-    char *hello[] = {
+    char *hello_en[] = {
         "Hey, I’m here!",
         "Hello! how can I help?",
         "Hello, I’m here!",
         "Hi there!",
         "Yep,I'm listening.",
     };
-#else
-    char *hello[] = {
+    char *hello_cn[] = {
         "来喽",
         "在呢",
         "你说",
         "我在听",
         "嗯？",
     };
-#endif
+    char *hello = hello_cn;
+    if (strstr(qyai_chat_language(), "en")) {
+        hello = hello_en;
+    }
     //ret = http_tts_reply(hello[index], strlen(hello[index]) + 1);
     ret = http_tts_reply_type(1);
     __this->tts_play_hello = true;
@@ -622,33 +621,36 @@ int aisp_timeout_first_exit(int noclealy)
 {
 #ifdef CONFIG_MORE_NOTIC_REPLY_ENABLE
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
-#ifdef CONFIG_KWS_ENGLISH
-    char *req_nospeek[] = {
+    char *req_nospeek_en[] = {
         "Are you still there?",
         "Are you still chatting with me?",
         "Are you still there?",
         "Are you still talking to me?",
     };
-    char *req_noclealy[] = {
+    char *req_noclealy_en[] = {
         "Are you chatting with me?",
         "Are you talking to me? ",
         "I didn't catch what you said. Could you repeat it?",
         "Um, what were you just saying?",
     };
-#else
-    char *req_nospeek[] = {
+    char *req_nospeek_cn[] = {
         "你还在不在呢？",
         "你还在和我聊天吗？",
         "你还在吗？",
         "你还在和我说话吗？",
     };
-    char *req_noclealy[] = {
+    char *req_noclealy_cn[] = {
         "你是在和我聊天吗？",
         "你是在和我说话吗？",
         "没听清楚你再说什么？",
         "嗯，你刚刚在说什么？",
     };
-#endif
+    char *req_noclealy = req_noclealy_cn;
+    char *req_nospeek = req_nospeek_cn;
+    if (strstr(qyai_chat_language(), "en")) {
+        req_noclealy = req_noclealy_en;
+        req_nospeek = req_nospeek_en;
+    }
     aisp_mic_gain_suspend();
     int index = rand() % 4;
 //    if(noclealy){
@@ -670,40 +672,37 @@ int aisp_timeout_first_exit(int noclealy)
 #endif
     return 0;
 }
+
 int music_play_light_anser(void *p)   //灯光回答
 {
     int index = (int)p;
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
     char *reply = NULL;
+    char *language = qyai_chat_language();
     switch (index) {
     case 0:
         reply = "好的";
-#ifdef CONFIG_KWS_ENGLISH
-        reply = "OK";
-#else
-        reply = "好的";
-#endif
+        if (strstr(language, "en")) {
+            reply = "OK";
+        }
         break;
     case 1:
-#ifdef CONFIG_KWS_ENGLISH
-        reply = "Min brightness.";
-#else
-        reply = "已最低亮度";
-#endif
+        reply = "已是最低亮度";
+        if (strstr(language, "en")) {
+            reply = "Min brightness.";
+        }
         break;
     case 2:
-#ifdef CONFIG_KWS_ENGLISH
-        reply = "Max brightness.";
-#else
-        reply = "Max brightness.";
-#endif
+        reply = "已是最高亮度";
+        if (strstr(language, "en")) {
+            reply = "Max brightness.";
+        }
         break;
     case 3:
-#ifdef CONFIG_KWS_ENGLISH
-        reply = "NO light";
-#else
         reply = "没有打开灯光";
-#endif
+        if (strstr(language, "en")) {
+            reply = "NO light";
+        }
         break;
     default:
         break;
@@ -741,11 +740,10 @@ int music_play_anser_OK(void)   //回答"好的"
 {
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
     if (sys_connect_net_success()) {
-#ifdef CONFIG_KWS_ENGLISH
-        char *ok = "OK";
-#else
         char *ok = "好的";
-#endif
+        if (strstr(qyai_chat_language(), "en")) {
+            ok = "OK";
+        }
         //return http_tts_request(ok, strlen(ok) + 1);
         return http_tts_reply_type(5);
     }
@@ -754,16 +752,14 @@ int music_play_anser_OK(void)   //回答"好的"
     return 0;
 }
 
-int music_play_anser_volume(int dec)   //回答音量已加大已减小
+int music_play_anser_volume(int dec)//回答音量已加大已减小
 {
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
     if (sys_connect_net_success()) {
-#ifdef CONFIG_KWS_ENGLISH
-        char *volume = dec ? "Volume decreased" : "Volume increased";
-#else
         char *volume = dec ? "音量已减小" : "音量已加大";
-#endif
-
+        if (strstr(qyai_chat_language(), "en")) {
+            volume = dec ? "Volume decreased" : "Volume increased";
+        }
         return http_tts_request(volume, strlen(volume) + 1);
     }
 #endif
@@ -786,11 +782,10 @@ int music_play_instruc_word_err(void)   //不支持指令
 {
     int ret = 0;
 #ifdef CONFIG_USE_TTS_REPLY_ENABLE
-#ifdef CONFIG_KWS_ENGLISH
-    char *word = "I haven't learned this function yet.";
-#else
     char *word = "我还没学会这个功能呢";
-#endif
+    if (strstr(qyai_chat_language(), "en")) {
+        word = "I haven't learned this function yet.";
+    }
     ret = http_tts_request(word, strlen(word) + 1);
 #else
     ret = music_play_res_file("NoCMD.mp3");//播放音乐文件

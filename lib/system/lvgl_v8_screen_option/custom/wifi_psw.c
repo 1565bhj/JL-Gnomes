@@ -185,7 +185,7 @@ static void check_connect_status_cb(lv_timer_t *timer)
         /* 连接成功时勿设为 2：唤醒逻辑里 keyworld_wifi_enter_congfig 非 0 且非 3
          * 会走「配网」提示音分支，导致已联网仍像配网、无法进对话。
          * 置 0 清除配网态；NET_EVENT_CONNECTED 仍会完成后续清理。 */
-        set_keyworld_wifi_enter_config(0);
+        system_set_keyword_wifi_enter_config(0);
         // 使用异步调用处理密码验证成功后的操作
         lv_async_call(handle_password_success_async, ui);
     } else if (connect_state == WIFI_STA_CONNECT_ASSOCIAT_FAIL) {
@@ -252,6 +252,7 @@ static void screen_wifi_psw_btn_connect_event_handler(lv_event_t *e)
     lv_obj_clear_flag(ui->screen_wifi_psw_cont_connecting, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_pos(ui->screen_wifi_psw_cont_connecting, 0, 0);
 
+    system_set_keyword_wifi_enter_config(2);
     // 获取输入的密码
     const char *input_password = lv_textarea_get_text(ui->screen_wifi_psw_ta_input);
     // // 调用wifi_enter_sta_mode函数进行实际连接

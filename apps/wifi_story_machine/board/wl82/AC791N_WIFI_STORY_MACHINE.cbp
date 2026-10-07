@@ -1425,15 +1425,6 @@
 		<Unit filename="../../chatbot/key/key_wake_aisp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../chatbot/key/tm_touch_key.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../chatbot/key/tm_touch_key1.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../chatbot/key/wakeup_port_touch.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../chatbot/language_instruct/ar_instruct_word.h" />
 		<Unit filename="../../chatbot/language_instruct/bn_instruct_word.h" />
 		<Unit filename="../../chatbot/language_instruct/cn_instruct_word.h" />

@@ -645,10 +645,10 @@ void switch_to_wifi_show_page(void)
      */
     enum wifi_sta_connect_state st = wifi_get_sta_connect_state();
     bool sta_linked = (st == WIFI_STA_CONNECT_SUCC || st == WIFI_STA_NETWORK_STACK_DHCP_SUCC);
-    if (get_wifi_scan_ssid_num() > 0 || sta_linked || lv_demo_system_net_connect_success()) {
+    if (wifi_get_scan_ssid_num() > 0 || sta_linked || lv_demo_system_net_connect_success()) {
         switch_to_page("wifi_show");
-        if (get_wifi_scan_ssid_num() == 0) {
-            scan_and_print_wifi_networks(); /* 本工程未链接，扫描由其它模块或后续接入 */
+        if (wifi_get_scan_ssid_num() == 0) {
+            wifi_scan_start_request(NULL, 0); /* 本工程未链接，扫描由其它模块或后续接入 */
         }
         refresh_wifi_containers();
     } else {

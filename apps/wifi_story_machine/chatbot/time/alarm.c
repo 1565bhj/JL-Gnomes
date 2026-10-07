@@ -61,13 +61,12 @@ static u8 UTC_USE = UTC_EAST8;
 //#define UTC_USE             (UTC_EAST8) //东八区时间
 #define UTC_USE_DIFF_SEC    (UTC_USE*60*60) //东八区时间差的秒数
 
-#define ALARM_NUM   10  //最多10个闹钟，10*12 < 256
+#define ALARM_NUM   10  //最多20个闹钟，20*12 <= 240
 
 struct alarm_info { //12字节
     unsigned char enable: 1; //是否使能闹钟
     unsigned char music: 1; //闹钟自定义音乐，0系统音乐
-    unsigned char index: 4; //设置的闹钟index
-    unsigned char resver: 2; //预留
+    unsigned char index: 6; //设置的闹钟index
     unsigned char cyc; //是否循环的闹钟: 0不循环，BIT(0)每天循环，BIT(1)-BIT(7)对应星期一到星期日
     unsigned char resver2; //预留
     struct sys_time time;
@@ -1245,8 +1244,8 @@ static void alarm_rings(void *priv)
     alarm_msg(ALARM_ADD, 0);//重新设置闹钟
 }
 struct alarm_url_head {
-    unsigned int index;    // URL编号，0或0xFFFFFFFF表示空闲
-    unsigned char size;   // URL长度（包含'\0'）
+    unsigned char index[4];// URL编号，一个URL最多同时指向4个index
+    unsigned short size;   // URL长度（包含'\0'）
 };
 
 #define VM_PAGE_SIZE        240
@@ -1308,13 +1307,13 @@ int alarm_save_url(char alarm_index, char *url)
     }
 
     struct alarm_url_head head = {0};
-    head.index  = (unsigned char)buf[0] & 0xF;
-    head.size   = (unsigned char)buf[sizeof(head.index)];
-    if (!offset || head.index == 0 || head.index == 0xF) {
+    memcpy(&head, buf, ALARM_HEAD_SIZE);
+    if (!offset || head.index[0] == 0 || head.index[0] == 0xFF || len > (~((~0xFF) << ((sizeof(head.size) - 1) * 8)))) {
         offset = 0;
-        buf[offset] = alarm_index + 1;
-        buf[offset + sizeof(head.index)] = len;
-        memcpy(buf + ALARM_HEAD_SIZE, url, len);
+        head.index[0] = alarm_index + 1;
+        head.size = len;
+        memcpy(buf + offset, &head, ALARM_HEAD_SIZE);
+        memcpy(buf + offset + ALARM_HEAD_SIZE, url, len);
         printf("Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
         alarm_save_data(buf, TOTAL_STORAGE_SIZE);
         writeen = true;
@@ -1322,11 +1321,12 @@ int alarm_save_url(char alarm_index, char *url)
         offset = 0;
         last_offset = 0;
         while (offset < TOTAL_STORAGE_SIZE) {
-            if (head.index == 0 || head.index == 0xF) {
+            if (head.index[0] == 0 || head.index[0] == 0xFF) {//找到最后一个index（4个index第一个index为0/0xFF）
                 if ((offset + len + ALARM_HEAD_SIZE) <= TOTAL_STORAGE_SIZE) {
                     printf("Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
-                    buf[offset] = alarm_index + 1;
-                    buf[offset + sizeof(head.index)] = len;
+                    head.index[0] = alarm_index + 1;
+                    head.size = len;
+                    memcpy(buf + offset, &head, ALARM_HEAD_SIZE);
                     memcpy(buf + offset + ALARM_HEAD_SIZE, url, len);
                     alarm_save_data(buf, TOTAL_STORAGE_SIZE);
                     writeen = true;
@@ -1334,11 +1334,13 @@ int alarm_save_url(char alarm_index, char *url)
                 break;
             } else {
                 url_cnt++;
-                printf("read flash URL index %d, url_cnt = %d, offset = %d : %s\n", (head.index & 0xF) - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
-                if (!strcmp(&buf[offset + ALARM_HEAD_SIZE], url)) {
-                    for (char i = 1; i < 8; i++) {
-                        if (((buf[offset] >> (i * 4)) & 0xF) == 0 || ((buf[offset] >> (i * 4)) & 0xF) == 0xF) {
-                            buf[offset] |= (alarm_index + 1) << (i * 4);
+                printf("read flash URL index %d, url_cnt = %d, offset = %d : %s\n", (head.index[0] & 0xFF) - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
+                if (!strcmp(&buf[offset + ALARM_HEAD_SIZE], url)) {//已存在对应URL
+                    for (char i = 1; i < ARRAY_SIZE(head.index); i++) {//更新第2. 3. 4个已上url
+                        if (head.index[i] == 0 || head.index[i] == 0xFF) {
+                            head.index[i] = alarm_index + 1;
+                            memcpy(buf + offset, &head, ALARM_HEAD_SIZE);
+                            printf("URL already save flash\n");
                             alarm_save_data(buf, TOTAL_STORAGE_SIZE);
                             goto exit;
                         }
@@ -1347,11 +1349,13 @@ int alarm_save_url(char alarm_index, char *url)
                 llast_offset = last_offset;
                 last_offset = offset;
                 offset += ALARM_HEAD_SIZE + head.size;
-                head.index  = (unsigned char)buf[offset] & 0xF;
-                head.size   = (unsigned char)buf[offset + sizeof(head.index)];
+                memcpy(&head, buf + offset, ALARM_HEAD_SIZE);
             }
         }
         if (!writeen && last_offset < TOTAL_STORAGE_SIZE) {
+            memset(&head, 0, ALARM_HEAD_SIZE);
+            head.index[0] = alarm_index + 1;
+            head.size = len;
             if ((last_offset + len + ALARM_HEAD_SIZE) > TOTAL_STORAGE_SIZE) {
                 offset = 0;
                 if ((llast_offset + len + ALARM_HEAD_SIZE) < TOTAL_STORAGE_SIZE) {
@@ -1359,13 +1363,11 @@ int alarm_save_url(char alarm_index, char *url)
                 } else {
                     memset(buf, 0, TOTAL_STORAGE_SIZE);
                 }
-                buf[offset] = alarm_index + 1;
-                buf[offset + sizeof(head.index)] = len;
-                memcpy(buf + ALARM_HEAD_SIZE, url, len);
+                memcpy(buf + offset, &head, ALARM_HEAD_SIZE);
+                memcpy(buf + offset + ALARM_HEAD_SIZE, url, len);
                 printf("clean url, Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
             } else {
-                buf[last_offset] = alarm_index + 1;
-                buf[last_offset + sizeof(head.index)] = len;
+                memcpy(buf + last_offset, &head, ALARM_HEAD_SIZE);
                 memcpy(buf + last_offset + ALARM_HEAD_SIZE, url, len);
             }
             last_offset = offset;
@@ -1411,21 +1413,18 @@ static int alarm_read_url(char alarm_index, char *url, int url_buf_size)
 
     offset = 0;
     while (offset < TOTAL_STORAGE_SIZE) {
-        head.index  = (unsigned char)buf[offset] & 0xF;
-        head.size   = (unsigned char)buf[offset + sizeof(head.index)];
-        if (head.index == 0 || head.index == 0xF) {
+        memcpy(&head, buf + offset, ALARM_HEAD_SIZE);
+        if (head.index[0] == 0 || head.index[0] == 0xFF) {
             break;
         } else {
             url_cnt++;
-            for (char i = 0; i < 8; i++) {
-                head.index = (unsigned char)((buf[offset] >> (i * 4)) & 0xF);
-                if (head.index == (alarm_index + 1)) {
+            for (char i = 0; i < ARRAY_SIZE(head.index); i++) {//更新第2. 3. 4个已上url
+                if (head.index[i] == (alarm_index + 1)) {
                     readed = true;
                     strncpy(url, &buf[offset + ALARM_HEAD_SIZE], url_buf_size);
                     goto exit;
                 }
             }
-            head.index  = (unsigned char)buf[offset] & 0xF;
         }
         printf("read URL index %d, url_cnt = %d, offset = %d : %s\n", head.index - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
         offset += ALARM_HEAD_SIZE + head.size;
@@ -1580,20 +1579,6 @@ int ntp2utc_add_alarm_test(void)
     ntp2utc_add_alarm(timestamp + 10, 1, NULL, NULL);
     ntp2utc_add_alarm(timestamp + 30, 1, NULL, NULL);
 }
-/*
-//buf存储结构体,长度为10个如下结构体长度
-struct alarm_info { //12字节
-    unsigned char enable: 1; //是否使能闹钟
-    unsigned char music: 1; //闹钟自定义音乐，0系统音乐
-    unsigned char index: 4; //设置的闹钟index
-    unsigned char resver: 2; //预留
-    unsigned char cyc; //是否循环的闹钟: 0不循环，BIT(0)每天循环，BIT(1)-BIT(7)对应星期一到星期日
-    unsigned char resver2; //预留
-    struct sys_time time;
-};
-
-使用:enable判断闹钟是否开启，cyc判断是否是每天闹钟使能或者工作日以及某一天
-*/
 
 void alarm_time_clear(void)
 {
@@ -1602,6 +1587,7 @@ void alarm_time_clear(void)
 
 void alarm_time_read(void *buf, int size)
 {
+    //使用:enable判断闹钟是否开启，cyc判断是否是每天闹钟使能或者工作日以及某一天
     //printf("-> alarm_time_read size = %d , %d \n",size,sizeof(alarm_tab));
     if (buf && size >= sizeof(alarm_tab)) {
         os_mutex_pend(&mutex, 1000);

@@ -39,7 +39,7 @@ extern int wifi_enter_sta_mode(char *sta_ssid, char *sta_pwd);
 /** save=1：DHCP 成功后将当前 SSID/密码写入 syscfg，供下次上电自动连接 */
 extern void wifi_sta_connect(char *ssid, char *pwd, char save);
 extern enum wifi_sta_connect_state wifi_get_sta_connect_state(void);
-extern _Bool scan_and_print_wifi_networks(void);
+extern int wifi_scan_start_request(void (*done_cb)(void *ssid, int num), int waite_timerms);
 /* 扫描在 wifi 线程异步完成后，切回 LVGL 线程刷新列表 */
 void wifi_show_request_refresh_after_scan(void);
 /* STA DHCP 成功时更新 LVGL WiFi 已连界面（关闭 WiFi UI 宏时同上为空桩） */

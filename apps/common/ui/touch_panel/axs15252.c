@@ -12,6 +12,7 @@
 #include "sys_common.h"
 #include "lcd_config.h"
 #if TCFG_TOUCH_AXS15252_ENABLE
+
 #if 1
 #define log_info(x, ...)    printf("\n[AXS15252_touch]>" x " \n", ## __VA_ARGS__)
 #else
@@ -54,6 +55,7 @@ struct touch_hdl_axs15252 {
 static OS_SEM touch_sem_axs15252;
 static void my_touch_axs15252_task(void *priv);
 int AXS15252_touch_task_init(void);
+static int AXS15252_sleep(char sleep);
 extern int ui_touch_msg_post(struct touch_event *event);
 #define AXS15252_TP_CHIP_ID_REG     0x00
 static void *iic_axs15252 = NULL;
@@ -261,6 +263,7 @@ static char get_axs15252_status_reg(u16 addr)
 static u16 touch_x = 0;
 static u16 touch_y = 0;
 static u8 touch_status = 0;
+static u8 touch_sleep = 0;
 static void axs15252_interrupt(void)
 {
     os_sem_post(&touch_sem_axs15252);
@@ -304,9 +307,13 @@ int axs15252_fetch_xy_now(short *x, short *y, char *press)
     }
     return 0;
 }
-int check_axs15252(void)
+static int axs15252_check(void *iic_dev_name)
 {
-    iic_axs15252 = dev_open("iic0", NULL);
+    if (!iic_dev_name) {
+        printf("err in %s iic_dev_name\n", __func__);
+        return -1;
+    }
+    iic_axs15252 = dev_open(iic_dev_name, NULL);
     extern const struct ui_devices_cfg ui_cfg_data;
     static const struct ui_lcd_platform_data *pdata;
     pdata = (struct ui_lcd_platform_data *)ui_cfg_data.private_data;
@@ -318,17 +325,29 @@ int check_axs15252(void)
     os_time_dly(60);
     os_sem_create(&touch_sem_axs15252, 0);
     port_wakeup_reg(EVENT_IO_0, pdata->touch_int_pin, EDGE_NEGATIVE, axs15252_interrupt);
-    AXS15252_touch_task_init();
     printf(">>>>>>>>>>>>hello AXS15252 touch (W=0x%02X R=0x%02X)<<<<<<<<<<<\n",
            AXS15252_TP_WRCMD, AXS15252_TP_RDCMD);
     return 0;
 }
 static int AXS15252_init(void)
 {
+    u8 touch_sleep_cb = 0;
+    int ret = 0;
+
     printf("[AXS15252_touch]>>>>>start!!!\n");
     while (1) {
         axs15252_touch_info_t ti = {0};
-        if (!os_sem_pend(&touch_sem_axs15252, 50)) {
+        ret = os_sem_pend(&touch_sem_axs15252, 50);
+        if (!ret && touch_sleep && !touch_sleep_cb) {
+            touch_sleep_cb = true;
+            lcd_touch_irq_wakeup_callback();
+            continue;
+        }
+        if (touch_sleep) {
+            continue;
+        }
+        touch_sleep_cb = false;
+        if (!ret) {
             if (axs15252_read_touch_info(&ti) == 0) {
                 touch_x = ti.x;
                 touch_y = ti.y;
@@ -336,7 +355,7 @@ static int AXS15252_init(void)
             } else {
                 touch_status = 0;
             }
-        } else {
+        } else {//500ms没有触摸则强制清空触摸状态
             touch_status = 0;
         }
 //        printf("[AXS15252] touch_status: %d, x: %d, y: %d, gesture: 0x%02X\n",
@@ -344,6 +363,13 @@ static int AXS15252_init(void)
     }
     return 0;
 }
+
+static int AXS15252_sleep(char sleep)
+{
+    touch_sleep = sleep;
+    return touch_sleep;
+}
+
 static void my_touch_axs15252_task(void *priv)
 {
     AXS15252_init();
@@ -352,5 +378,27 @@ int AXS15252_touch_task_init(void)
 {
     return thread_fork("axs15252_touch", 20, 1024, 0, NULL, my_touch_axs15252_task, NULL);
 }
+
+/* 模块化触摸接口：读取触摸任务缓存的坐标与按压状态 */
+static void axs15252_lcd_touch_get(u16 *x, u16 *y, u8 *status)
+{
+    axs15252_get_xy((short *)x, (short *)y, (char *)status);
+#if TCFG_TOUCH_ROTATE_180
+    /* 屏 180° 显示，触摸坐标做 180° 镜像 */
+    *x = LCD_W - *x;
+    *y = LCD_H - *y;
+#endif
+}
+
+REGISTER_LCD_TOUCH_DEV(AXS15252) = {
+    .name                           = "AXS15252",
+    .iic_dev_name                   = "iic0",
+    .LCD_Touch_check                = axs15252_check,
+    .LCD_Touch_init                 = AXS15252_touch_task_init,
+    .LCD_Touch_get                  = axs15252_lcd_touch_get,
+    .LCD_Touch_sleep                = AXS15252_sleep,
+    .LCD_Touch_enable               = NULL,
+    .LCD_Touch_get_id               = get_axs15252_chip_id,
+};
 #endif /* TCFG_TOUCH_AXS15252_ENABLE */
 

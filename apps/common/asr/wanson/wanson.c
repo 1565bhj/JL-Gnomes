@@ -753,6 +753,7 @@ void aisp_all_pause(char stop)
     }
     music_buf_play_set_stop();
     http_tts_play_stop_force();
+    http_pipe_music_play_request_stop();
     websockets_free_lbuf_buf();
     music_buf_play_free_lbuf();
     websockets_close_request(1);
@@ -773,6 +774,7 @@ void aisp_clear(char stop_net_music)
     ifly_send_pcm = SEND_PCM_STOP;
     music_buf_play_set_stop();
     http_tts_play_stop_force();
+    http_pipe_music_play_request_stop();
     if (stop_net_music) {
         net_music_play_set_stop();
     }
@@ -897,6 +899,7 @@ __wakeup:
                         music_buf_play_stop_all();
                         music_buf_play_set_stop();
                         http_tts_play_stop_force();
+                        http_pipe_music_play_request_stop();
                         //net_music_play_set_stop();
                         music_buf_play_free_lbuf();
                         music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -1020,6 +1023,7 @@ __wifi_cfg:
                     music_buf_play_stop_all();
                     music_buf_play_set_stop();
                     http_tts_play_stop_force();
+                    http_pipe_music_play_request_stop();
                     //net_music_play_set_stop();
                     music_buf_play_free_lbuf();
                     music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -1100,6 +1104,7 @@ __wifi_cfg:
 //                sys_vad_lock(1);
 //                ifly_send_pcm = SEND_PCM_STOP;
 //                http_tts_play_stop_force();
+//                http_pipe_music_play_request_stop();
 //                music_buf_play_set_stop();
 //                net_music_play_set_stop();
 //                sys_vad_clear(0);
@@ -1148,6 +1153,7 @@ void aisp_wake_no_notic(void)
             music_buf_play_stop_all();
             music_buf_play_set_stop();
             http_tts_play_stop_force();
+            http_pipe_music_play_request_stop();
             //net_music_play_set_stop();
             websockets_free_lbuf_buf();
             music_buf_play_free_lbuf();
@@ -1195,6 +1201,7 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         music_buf_play_stop_all();
         music_buf_play_set_stop();
         http_tts_play_stop_force();
+        http_pipe_music_play_request_stop();
         websockets_free_lbuf_buf();
         music_buf_play_free_lbuf();
         music_buf_play_stop_waite();//等待关闭完成再播放提示音

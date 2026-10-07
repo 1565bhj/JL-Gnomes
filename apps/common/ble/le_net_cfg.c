@@ -851,8 +851,8 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
 
                 if (recv_crc == calc_crc) {
                     printf(">>> Scan request CRC OK, triggering WiFi scan...\n");
-                    extern int ble_wifi_scan_request(void (*done_cb)(void));
-                    ble_wifi_scan_request(NULL);
+                    extern int wifi_scan_start_request(void (*done_cb)(void *ssid, int num), int waite_timerms);
+                    wifi_scan_start_request(ble_send_wifi_scan_result, 0);
                 } else {
                     printf(">>> Scan request CRC FAIL! recv=0x%04X calc=0x%04X\n", recv_crc, calc_crc);
                 }

@@ -246,6 +246,7 @@ int sys_instruction_word_callback(char *word, char *asr)
 #ifdef CONFIG_ASR_POWER_OFF_ENABLE
             if (asr && strstr(asr, "关机") && strlen(asr) <= 9) {
                 int aisp_sys_power_off(void);
+                net_music_dec_stop();
                 sys_timeout_add_to_task("sys_timer", NULL, aisp_sys_power_off, 1000);
 #ifdef AI_UART_CMD_CTROL_ENABLE
                 ai_uart_cmd_data_push(AI_UART_CMD_PWR_OFF, NULL, 0);

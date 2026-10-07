@@ -1436,15 +1436,6 @@
 		<Unit filename="../../chatbot/key/key_wake_aisp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../chatbot/key/tm_touch_key.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../chatbot/key/tm_touch_key1.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../chatbot/key/wakeup_port_touch.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../chatbot/led/led.c">
 			<Option compilerVar="CC" />
 		</Unit>

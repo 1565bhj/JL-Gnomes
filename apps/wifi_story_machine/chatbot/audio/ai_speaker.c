@@ -297,6 +297,11 @@ int auto_sleep_check_clear(void)
 static int auto_sleep_check(void)
 {
     int stop_status = 1;
+
+    extern int http_pipe_music_play_stop_status(void);
+    stop_status = http_pipe_music_play_stop_status();
+    RETURN_CHECK(stop_status);
+
 #if defined CONFIG_BT_ENABLE && defined CONFIG_BT_MUSIC_MODE_ENABLE
     extern int bt_music_decode_stop_status(void);
     stop_status = bt_music_decode_stop_status();
@@ -461,7 +466,7 @@ static void ai_speaker_mode_stop(void)
 
 int ai_speaker_volume_set(int volume, char update_gain)
 {
-    int ret = music_buf_play_set_volume(volume) && music_play_set_volume(volume) && net_music_set_dec_volume(volume);
+    int ret = music_buf_play_set_volume(volume) && music_play_set_volume(volume) && net_music_set_dec_volume(volume) && http_pipe_music_play_set_volume(volume);
 #if defined CONFIG_BT_ENABLE && defined CONFIG_BT_MUSIC_MODE_ENABLE
     extern int bt_music_set_volume(u8 volume);
     ret |= bt_music_set_volume((u8)volume);
@@ -545,7 +550,7 @@ static int ai_speaker_key_click(struct key_event *key)
         break;
     case KEY_VOLUME_DEC:
         if (net_music_set_dec_volume_step(-VOLUME_STEP) && music_buf_play_set_volume_step(-VOLUME_STEP)
-            && music_play_set_volume_step(-VOLUME_STEP)) {
+            && music_play_set_volume_step(-VOLUME_STEP) && http_pipe_music_play_set_volume_step(-VOLUME_STEP)) {
             sys_volume_write_step(-VOLUME_STEP);
             play = 0;//没有播放音频
         }
@@ -556,7 +561,7 @@ static int ai_speaker_key_click(struct key_event *key)
         break;
     case KEY_VOLUME_INC:
         if (net_music_set_dec_volume_step(VOLUME_STEP) && music_buf_play_set_volume_step(VOLUME_STEP)
-            && music_play_set_volume_step(VOLUME_STEP)) {
+            && music_play_set_volume_step(VOLUME_STEP) && http_pipe_music_play_set_volume_step(VOLUME_STEP)) {
             sys_volume_write_step(VOLUME_STEP);
             play = 0;//没有播放音频
         }
@@ -1357,6 +1362,7 @@ int ai_net_event_handler(struct net_event *event)
                         wifi_and_network_off();
                         wifi_and_network_on();
                         wifi_sta_reconnect();
+                        wifi_sta_connect_best_ssid_request();//重连最优信号路由
 #endif
 #ifdef CONFIG_EXT_WIFI_ENABLE
                         //ext_wifi_off();
