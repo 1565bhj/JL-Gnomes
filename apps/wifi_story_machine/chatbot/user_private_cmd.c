@@ -334,8 +334,14 @@ int net_ai_asr_txt_recv_callback(char *buf, int len)
     }
 #endif
     printf("asr_txt : %s \n", buf);
+    /*
     if (!strcmp("模式切换", buf)) { //"模式切换"用户自定义私有命令检测
         return 1;//返回1立刻结束对话，返回0则走大模型对话
+    }*/
+    if (user_close_status && music_play_alarm_ring_kws_is_wakeup()) {
+        music_play_alarm_stop(1);
+        user_close_status = 0;
+        return 1;
     }
     return 0;
 }
@@ -416,6 +422,9 @@ int aisp_record_callbak(int start)
 //预留的AI对话的表情和系统命令
 int net_ai_dialogue_emoji(char *buf, int size)
 {
+    if (user_close_status) {
+        return 0;
+    }
 #ifdef CONFIG_UI_PLAY_EMOJI
     emoji_tts_callback(buf);
 #endif
@@ -424,11 +433,17 @@ int net_ai_dialogue_emoji(char *buf, int size)
 //预留的AI对话的表达回调
 int net_ai_dialogue_expression(char *buf, int size)
 {
+    if (user_close_status) {
+        return 0;
+    }
     printf("dialogue_expression : %s \n", buf);
     return 0;
 }
 int net_ai_dialogue_cmd(char *buf, int size)
 {
+    if (user_close_status) {
+        return 0;
+    }
     int ret = sys_instruction_word_callback(buf, NULL);
     if (ret) {
         return ret;

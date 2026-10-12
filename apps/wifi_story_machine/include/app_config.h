@@ -496,6 +496,8 @@
 #define CONFIG_IFLY_XF_MLP_RES_NAME             "mnt/sdfile/res/ifly_res/xf_mlp.bin"
 #define CONFIG_IFLY_XF_KEYWORD_RES_NAME         "mnt/sdfile/res/ifly_res/xf_keywords.bin"
 
+#define CONFIG_IFLY_KWS_RES_ROOT                "mnt/sdfile/res/ifly_res/"
+#define CONFIG_QYAI_RES_CFG_NAME                "mnt/sdfile/res/qyai_res/qyai.cfg"
 
 #if __FLASH_SIZE__ > (4 * 1024 * 1024)
 #define CONFIG_DOUBLE_BANK_ENABLE           1//双备份方式升级

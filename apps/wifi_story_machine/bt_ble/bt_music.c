@@ -2271,10 +2271,17 @@ static int bt_music_key_event_handler(struct key_event *key)
     u8 volume = 0;
     int sleep = auto_sleep_is_enter();
 
+#ifdef KEY_DATA_PLAN_REST_ENABLE
+    if (key_press_123((key->action & 0xFF) | ((key->value & 0xFF) << 8))) {
+        return true;
+    }
+#endif
+
     auto_sleep_check_clear();
     if ((!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) || sleep) {
         return true;//闹钟在响，按键失效
     }
+
     switch (key->action) {
     case KEY_EVENT_UP:
         switch (key->value) {

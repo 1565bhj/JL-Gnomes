@@ -21,6 +21,7 @@ static struct user_data_info {
     unsigned char account_bound;   /* 是否已绑定账号：0=未绑定，1=已绑定 */
 #endif
 #endif
+    unsigned char sim_data_plan_no_reset;//0 reset, 1 no reset
     unsigned char app_addiction_config;//APP用户防沉迷开关
     unsigned char local_addiction_config;//本地防沉迷开关
     unsigned short addiction_minutes; //防沉迷时间：分钟
@@ -37,6 +38,7 @@ static struct user_data_info {
     unsigned short udisk_last_file_num; //上次播放文件夹下文件数量
 #endif
     unsigned char alarm_index;
+    unsigned char keywords_list_index;
 } USER_DATA = {0};
 
 int user_connect_server_cnt_read(void)
@@ -55,6 +57,62 @@ int user_connect_server_cnt_write(void)
     USER_DATA.connnect_wifi_cnt++;
     syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
     return 0;
+}
+
+static void user_data_plan_reset(int err_code, char *buf)
+{
+    if (err_code < 0 || !buf) {
+        return;
+    }
+    printf("---> user_data_plan_reset\n");
+    syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+    USER_DATA.sim_data_plan_no_reset = 1;
+    syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+}
+int user_data_plan_reset_config(char opt, char reset)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        memset(&USER_DATA, 0, sizeof(USER_DATA));
+    }
+    switch (opt) {
+    case 0:
+        if (reset) {
+            USER_DATA.sim_data_plan_no_reset = reset ? 0 : 1;
+            syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+        } else {
+            //todo data plan reset
+        }
+        break;
+    case 1:
+        if (USER_DATA.sim_data_plan_no_reset == 0xFF) {
+            USER_DATA.sim_data_plan_no_reset = 0;
+        }
+        break;
+    }
+    return !USER_DATA.sim_data_plan_no_reset;
+}
+
+int user_app_keywords_index_config(char opt, unsigned char index)
+{
+    if (syscfg_read(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA)) < 0) {
+        memset(&USER_DATA, 0, sizeof(USER_DATA));
+    }
+    switch (opt) {
+    case 0:
+        if (USER_DATA.keywords_list_index != index) {
+            USER_DATA.keywords_list_index = index;
+            syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
+        }
+        break;
+    case 1:
+        if (USER_DATA.keywords_list_index == 0xFF) {
+            USER_DATA.keywords_list_index = 0;
+        }
+        break;
+    default:
+        break;
+    }
+    return USER_DATA.keywords_list_index;
 }
 
 int user_app_addiction_config(char opt, char enabled, int addiction_minutes)

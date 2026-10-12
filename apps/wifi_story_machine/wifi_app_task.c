@@ -379,6 +379,14 @@ void wifi_return_sta_mode(void)
     wifi_enter_sta_mode(info.ssid, info.pwd);
 }
 
+char *wifi_sta_get_ssid(void)
+{
+    struct wifi_mode_info info;
+    info.mode = STA_MODE;
+    wifi_get_mode_cur_info(&info);
+    return (info.ssid && info.ssid[0]) ? info.ssid : "";
+}
+
 static int wifi_is_in_smp_cfg_mode(void)
 {
     struct wifi_mode_info info;

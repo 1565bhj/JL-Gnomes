@@ -15,6 +15,7 @@
 #include "asm/gpio.h"
 #include "fs/fs.h"
 #include "ai_uart_ctrol.h"
+#include "qyai_config.h"
 
 extern int sys_net_channel_read(void);
 extern int wireless_net_init(void);
@@ -276,6 +277,7 @@ void app_default_event_handler(struct sys_event *event)
 //用户项目产品名称
 char *app_user_product_name(void)
 {
+    QYAI_CFG_RETURN_STR(CFG_IDX_PRODUCT_NAME);
 #ifdef CONFIG_KWS_ENGLISH
     return "OverseasTESTBOX";
 #else
@@ -292,18 +294,21 @@ char *app_user_product_name(void)
 //用户UUID
 char *app_user_product_uuid(void)
 {
+    QYAI_CFG_RETURN_STR(CFG_IDX_PRODUCT_UUID);
     return NULL; //客户ID
 }
 
 //产品批次号
 int app_user_product_batch(void)
 {
+    QYAI_CFG_RETURN_INT(CFG_IDX_PRODUCT_BATCH);
     return 1; //批次号
 }
 
 //产品批次的数量，单位K
 int app_user_product_batch_num(void)
 {
+    QYAI_CFG_RETURN_INT(CFG_IDX_PRODUCT_NUM);
     return 1; //批次号的数量，单位K
 }
 
@@ -312,7 +317,7 @@ int app_user_product_batch_num(void)
  */
 void app_main()
 {
-    puts("------------- wifi_story_machine app main -------------\n");
+    printf("------------- app main version: %s %s-------------\n", __DATE__, __TIME__);
 
 //    init_intent(&it);
 //    it.name = "app_music";
@@ -364,6 +369,9 @@ void app_main()
     * 2、非第一次上电关机、
     * 3、非电量低、
     *************************************************************/
+
+    //QYAI配置项读取
+    qyai_config_res_init(0, NULL, NULL);
 
     //关闭功放静音
     dac_mute_control(0, 0);

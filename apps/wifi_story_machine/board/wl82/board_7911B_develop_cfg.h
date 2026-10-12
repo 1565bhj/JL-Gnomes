@@ -16,7 +16,7 @@
 //#define CONFIG_USE_TTS_REPLY_ENABLE         //使能回复语对话使用在线TTS
 #define NET_MUSIC_CONFIG_DEC_ANALOG_VOLUME_ENABLE //网络音乐解码的淡入淡出
 #define CONFIG_MORE_NOTIC_REPLY_ENABLE      //使能多次提示回复语
-#define CONFIG_KWS_XIAOYUXIAOYU             //唤醒词：小语小语
+//#define CONFIG_KWS_XIAOYUXIAOYU             //唤醒词：小语小语
 //#define CONFIG_KWS_ENGLISH                  //英语版唤醒词：hello you you，海外版本（在本文件最后的海外语言配置项进行语言选择）
 
 #define SYS_COMMAND_ANSER_PLAY_ENABLE         //系统命令采用本地“好的”提示，注释则使用服务器下发
@@ -317,12 +317,11 @@
 
 #endif  //CONFIG_BOARD_DEVELOP
 
-
-
 //*********************************************************************************//
 //               海外离线语言配置（暂只支持打开一种语言配置）                      //
 //*********************************************************************************//
-#ifdef CONFIG_KWS_ENGLISH
+#define CONFIG_INSTRUCTION_CN                 //中文指令（非海外版默认）
+
 ////东亚语言
 //#define CONFIG_INSTRUCTION_YUE                //粤语指令
 //#define CONFIG_INSTRUCTION_JA                 //日语指令
@@ -361,9 +360,7 @@
 //#define CONFIG_INSTRUCTION_HE                 //希伯来语指令
 //#define CONFIG_INSTRUCTION_FA                 //波斯语指令
 //#define CONFIG_INSTRUCTION_TR                 //土耳其语指令
-#else
-#define CONFIG_INSTRUCTION_CN                 //中文指令（非海外版默认）
-#endif
+
 
 
 //*********************************************************************************//

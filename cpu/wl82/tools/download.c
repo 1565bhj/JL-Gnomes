@@ -235,30 +235,6 @@ del audlogo\GameWin.mp3
 del audlogo\MouseGame.mp3
 #endif
 
-#ifdef CONFIG_KWS_ENGLISH
-copy /y ifly_kws_res_all\en_keywords.bin ifly_res\en_keywords.bin
-copy /y ifly_kws_res_all\en_mlp.bin ifly_res\en_mlp.bin
-del ifly_res\keywords.bin
-del ifly_res\mlp.bin
-del ifly_res\xf_keywords.bin
-del ifly_res\xf_mlp.bin
-#elif (defined CONFIG_KWS_XIAOYUXIAOYU)
-copy /y ifly_kws_res_all\keywords.bin ifly_res\keywords.bin
-copy /y ifly_kws_res_all\mlp.bin ifly_res\mlp.bin
-del ifly_res\en_keywords.bin
-del ifly_res\en_mlp.bin
-del ifly_res\xf_keywords.bin
-del ifly_res\xf_mlp.bin
-#else
-copy /y ifly_kws_res_all\xf_keywords.bin ifly_res\xf_keywords.bin
-copy /y ifly_kws_res_all\xf_mlp.bin ifly_res\xf_mlp.bin
-del ifly_res\keywords.bin
-del ifly_res\mlp.bin
-del ifly_res\en_keywords.bin
-del ifly_res\en_mlp.bin
-#endif
-
-
 #if defined CONFIG_UI_ENABLE
 #if defined UI_USE_WIFI_CAMERA_PROJECT
 cd ..\..\..\ui_project\3.ui_demo_wifi_camera\ui_320x480_test\project
@@ -301,6 +277,9 @@ set AUDIO_RES=audlogo
 #endif
 #endif
 
+
+set QYAI_RES=qyai_res
+
 #if (CONFIG_ASR_ALGORITHM == IFLYTEK_ALGORITHM)
 set IFLY_RES=ifly_res
 #elif (CONFIG_ASR_ALGORITHM == WANSON_ALGORITHM)
@@ -337,9 +316,9 @@ set UPDATE_FILES=-update_files normal
 #if defined CONFIG_SDFILE_EXT_ENABLE
 fat_image_tool.exe --size CONFIG_SDNAND_HFAT_LEN_TEXT --sectors-per-cluster CONFIG_SDNAND_HFAT_CLUSTER_SIZE --lfn true --n-root 512 --volume-name HFAT_IMG --output jl_hfat.bin --fat-dir hfat_dir
 fat_image_tool.exe --size CONFIG_SDNAND_FAT1_LEN_TEXT --sectors-per-cluster CONFIG_SDNAND_FAT1_CLUSTER_SIZE --lfn true --n-root 512 --volume-name FAT1_IMG --output jl_fat1.bin --fat-dir fat1_dir
-isd_download.exe isd_config.ini -gen2 -to-sdcard -dev wl82 -boot 0x1c02000 -div1 -app app.bin cfg_tool.bin -res %AUDIO_RES% %UI_RES% %IFLY_RES% cfg -extend-bin -output-bin jl_hfs.bin %UPDATE_FILES% -no-app-bin-enc
+isd_download.exe isd_config.ini -gen2 -to-sdcard -dev wl82 -boot 0x1c02000 -div1 -app app.bin cfg_tool.bin -res %AUDIO_RES% %UI_RES% %IFLY_RES% %QYAI_RES% cfg -extend-bin -output-bin jl_hfs.bin %UPDATE_FILES% -no-app-bin-enc
 #elif defined CONFIG_SFC_ENABLE
-isd_download.exe isd_config.ini -gen2 -tonorflash -dev wl82 -boot 0x1c02000 -div1 -wait 300 -uboot uboot.boot -app app.bin cfg_tool.bin -res %AUDIO_RES% %UI_RES% %CFG_FILE% %IFLY_RES% -reboot 500 %KEY_FILE% %UPDATE_FILES% -extend-bin
+isd_download.exe isd_config.ini -gen2 -tonorflash -dev wl82 -boot 0x1c02000 -div1 -wait 300 -uboot uboot.boot -app app.bin cfg_tool.bin -res %AUDIO_RES% %UI_RES% %CFG_FILE% %IFLY_RES% %QYAI_RES% -reboot 500 %KEY_FILE% %UPDATE_FILES% -extend-bin
 #else
 REM @@@@@@@无效参数
 set run_addr=0x2000
@@ -348,7 +327,7 @@ set mask_addr=0x100000
 uboot_lz4.exe app.bin app.lz4 %run_addr% %load_addr% rom.image %mask_addr%
 REM @@@@@@@@@@@@@@@
 
-isd_download.exe isd_config.ini -gen2 -tonorflash -dev wl82 -boot 0x1c02000 -div1 -wait 300 -uboot uboot.boot -app app.lz4 cfg_tool.bin -res %AUDIO_RES% %UI_RES% %CFG_FILE% %IFLY_RES% -reboot 500 %KEY_FILE% %UPDATE_FILES% -extend-bin
+isd_download.exe isd_config.ini -gen2 -tonorflash -dev wl82 -boot 0x1c02000 -div1 -wait 300 -uboot uboot.boot -app app.lz4 cfg_tool.bin -res %AUDIO_RES% %UI_RES% %CFG_FILE% %IFLY_RES% %QYAI_RES% -reboot 500 %KEY_FILE% %UPDATE_FILES% -extend-bin
 #endif
 
 

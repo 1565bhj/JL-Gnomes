@@ -7,7 +7,7 @@
 #include "system/init.h"
 #include "websocket_sxy_mutilmodal.h"
 
-#ifdef CONFIG_QYAI_MUTILMODAL_ENABLE
+#ifdef CONFIG_LVGL_UI_ENABLE
 
 typedef struct mutil_info {
     void *img_buf;
@@ -162,9 +162,9 @@ int mutil_modal_wait_jpg_done(int timeout_ticks)
 int mutil_modal_stop(void)
 {
     printf("mutil_modal_stop\n");
-    qyai_audio_pipe_play_stop();
     //qyai_music_buf_play_accept(0);
     qyai_mutilmodal_int_transfer();//停止传输
+    qyai_audio_pipe_buf_play_stop();
     return 0;
 }
 

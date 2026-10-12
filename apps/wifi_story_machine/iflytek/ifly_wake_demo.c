@@ -16,6 +16,7 @@
 #include "ifly_aiui_net.h"
 #include "event/key_event.h"
 #include "ai_uart_ctrol.h"
+#include "qyai_config.h"
 
 #if (defined CONFIG_ASR_ALGORITHM) && (CONFIG_ASR_ALGORITHM == IFLYTEK_ALGORITHM)
 
@@ -76,6 +77,9 @@ static char aisp_mic_suspend = 0;
 
 int aisp_aec_gain_set(unsigned char volume);
 SEC_USED(.sram) ALIGNE(4) static cbuffer_t gs_mic_cbuf;
+
+static char keywords_name[80];
+static char mlp_name[80];
 
 #if (defined CONFIG_SFC_ENABLE && __SDRAM_SIZE__ == 2 * 1024 * 1024)
 #define SET_MIC_BUF_SEC SEC_USED(.sram)
@@ -578,6 +582,21 @@ void parseIvwResult(const char* res, int len)
     int vl_ncm = atoi(val);
     printf("-> iresid = %d , ncmThreshold = %d, ncm = %d \n",vl_resid,vl_ncmThreshold,vl_ncm);
     */
+
+    char *kws_idx = QYAI_CFG_GET(CFG_IDX_KEYWORDS_INDEX);
+    char *nwk_cfg_idx = QYAI_CFG_GET(CFG_IDX_NETWORK_CONFIG_INDEX);
+    if (kws_idx && *kws_idx == (char)vl_resid) {
+        vl_resid = 0;//唤醒
+        goto exit;
+    }
+    if (nwk_cfg_idx && *nwk_cfg_idx == (char)vl_resid) {
+        vl_resid = 8;//配网
+        goto exit;
+    }
+    if (kws_idx || nwk_cfg_idx) {//除了唤醒词和配网模式，其他暂时不适用
+        return;
+    }
+
 #ifdef CONFIG_KWS_XIAOYUXIAOYU
     if (vl_resid == 1) {
         vl_resid = 0;//唤醒
@@ -608,6 +627,7 @@ void parseIvwResult(const char* res, int len)
         lv_demo_ai_dialogue_start_mode(0);
     }
 #endif
+exit:
     if (aisp_asr_disable()) {//关闭唤醒词则唤醒词不发消息
         return;
     }
@@ -643,6 +663,12 @@ int ivwCallBackWakeup(const char* param, void* userparam)
 
 const char *ifly_get_mlp_res_path()
 {
+    char *mlp = QYAI_CFG_GET(CFG_IDX_MLP);
+    if (mlp) {
+        snprintf(mlp_name, sizeof(mlp_name), "%s%s", CONFIG_IFLY_KWS_RES_ROOT, mlp);
+        printf("ify mlp : %s\n", mlp_name);
+        return mlp_name;
+    }
 #ifdef CONFIG_KWS_ENGLISH
     return CONFIG_IFLY_EN_MLP_RES_NAME;
 #endif
@@ -655,6 +681,12 @@ const char *ifly_get_mlp_res_path()
 
 const char *ifly_get_keyword_res_path()
 {
+    char *kws = QYAI_CFG_GET(CFG_IDX_KEYWORDS);
+    if (kws) {
+        snprintf(keywords_name, sizeof(keywords_name), "%s%s", CONFIG_IFLY_KWS_RES_ROOT, kws);
+        printf("ify keywords : %s\n", keywords_name);
+        return keywords_name;
+    }
 #ifdef CONFIG_KWS_ENGLISH
     return CONFIG_IFLY_EN_KEYWORD_RES_NAME;
 #endif
@@ -886,7 +918,7 @@ void aisp_wake_set_noice(char noice_note)
                 music_buf_play_stop_all();
                 music_buf_play_set_stop();
                 http_tts_play_stop_force();
-                http_pipe_music_play_request_stop();
+                http_pipe_music_play_request_stop(NULL);
                 //net_music_play_set_stop();
                 music_buf_play_free_lbuf();
                 music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -933,6 +965,10 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
     char hello_index = rand() % 5;
     if (start) {
         printf("--->KAY VAD SPEAK_START\n");
+        if (vad_end_enable) {
+            sys_vad_clear(0);
+            sys_vad_lock(1);
+        }
         //通知app挂起
         struct key_event key = {0};
         key.type = KEY_EVENT_USER;
@@ -958,7 +994,7 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
             music_buf_play_stop_all();
             music_buf_play_set_stop();
             http_tts_play_stop_force();
-            http_pipe_music_play_request_stop();
+            http_pipe_music_play_request_stop(NULL);
             //net_music_play_set_stop();
             music_buf_play_free_lbuf();
             music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -996,6 +1032,8 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         music_buf_play_accept(1);
         if (vad_end_enable) {
             keyword_start = 1;
+            sys_vad_lock(0);
+            sys_vad_clear(1);
         } else {
             keyword_start = 2;
         }
@@ -1412,7 +1450,7 @@ int aisp_dialuoge_request(char *file_path)
 {
     music_buf_play_accept(0);
     http_tts_play_stop_force();
-    http_pipe_music_play_request_stop();
+    http_pipe_music_play_request_stop(NULL);
     music_buf_play_set_stop();
     websockets_free_lbuf_buf();
     music_buf_play_free_lbuf();
@@ -1500,7 +1538,7 @@ void aisp_all_pause(char stop)
     }
     music_buf_play_set_stop();
     http_tts_play_stop_force();
-    http_pipe_music_play_request_stop();
+    http_pipe_music_play_request_stop(NULL);
     websockets_free_lbuf_buf();
     music_buf_play_free_lbuf();
     websockets_close_request(1);
@@ -1531,7 +1569,7 @@ void aisp_clear(char stop_net_music)
     ifly_send_pcm = SEND_PCM_STOP;
     music_buf_play_set_stop();
     http_tts_play_stop_force();
-    http_pipe_music_play_request_stop();
+    http_pipe_music_play_request_stop(NULL);
     if (stop_net_music) {
         net_music_play_set_stop();
     }
@@ -1667,12 +1705,16 @@ __wakeup:
                     websockets_dialogue_timeout_del();
                     websockets_free_lbuf_buf();
 
-                    if (alarm_music_play_stop()) { //闹钟在响停止闹钟
+                    keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
+                    err = alarm_music_play_stop();
+                    keyword_start = 0;
+
+                    if (err) { //闹钟在响停止闹钟
                         music_play_stop(NULL);
                         music_buf_play_stop_all();
                         music_buf_play_set_stop();
                         http_tts_play_stop_force();
-                        http_pipe_music_play_request_stop();
+                        http_pipe_music_play_request_stop(NULL);
                         //net_music_play_set_stop();
                         music_buf_play_free_lbuf();
                         music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -1790,7 +1832,7 @@ __wifi_cfg:
                 music_buf_play_stop_all();
                 music_buf_play_set_stop();
                 http_tts_play_stop_force();
-                http_pipe_music_play_request_stop();
+                http_pipe_music_play_request_stop(NULL);
                 net_music_play_set_stop();
                 websockets_free_lbuf_buf();
                 music_buf_play_free_lbuf();
@@ -1871,7 +1913,7 @@ __wifi_cfg:
 //                ifly_send_pcm = SEND_PCM_STOP;
 //                music_buf_play_set_stop();
 //                http_tts_play_stop_force();
-//                http_pipe_music_play_request_stop();
+//                http_pipe_music_play_request_stop(NULL);
 //                net_music_play_set_stop();
 //                sys_vad_clear(0);
 //                websockets_free_lbuf_buf();

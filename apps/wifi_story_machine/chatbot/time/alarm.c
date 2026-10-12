@@ -820,18 +820,15 @@ int alarm_delete_by_index(int index)
         printf("alarm_delete_by_index: invalid index %d\n", index);
         return -1;
     }
-
     os_mutex_pend(&mutex, 1000);
     syscfg_read(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab));
 
     // 检查闹钟是否存在且启用
     if (alarm_tab[index].enable) {
-        struct alarm_info alarm_tmp;
-        memcpy(&alarm_tmp, &alarm_tab[index], sizeof(struct alarm_info));
+        memset(&alarm_tab[index], 0, sizeof(struct alarm_info));
+        syscfg_write(CFG_USER_ALARM, &alarm_tab, sizeof(alarm_tab));
         os_mutex_post(&mutex);
-
-        // 使用现有的alarm_del函数删除闹钟
-        alarm_del(&alarm_tmp, 0);
+        alarm_msg(ALARM_ADD, 0);//设置闹钟
         return 0;
     }
 
@@ -1732,16 +1729,11 @@ int alarm_music_play_stop(void)
 #endif
         if (music_play_alarm_url_ring()) {
             music_play_alarm_url_clear();
-            net_music_dec_stop();
-            net_music_play_set_stop();
-            net_music_num_clear();
         }
         music_play_stop(NULL);
-        music_buf_play_stop_all();
-        music_buf_play_set_stop();
-        music_buf_play_free_lbuf();
         music_play_res_file_unloop();
         mp3_buf_play_res_file_unloop();
+        music_play_alarm_stop(0);
         return 0;
     }
     return -1;
@@ -1873,7 +1865,11 @@ static void time_rtc_alarm_task(void *p)
                     break;
                 case ALARM_NOTIFY:
                     index = msg[2];
-                    aisp_clear(0);
+                    if (music_buf_playing_status()) {
+                        music_buf_play_pause_set(1);
+                    } else {
+                        aisp_clear(0);
+                    }
 //                    struct key_event key = {0};
 //                    aisp_app_suspend();
 //                    key.type = KEY_EVENT_USER;

@@ -727,11 +727,60 @@ int app_usb_is_plugin_state(void)
     return (usb_hp_state == DEVICE_EVENT_IN);
 }
 
+#ifdef KEY_DATA_PLAN_REST_ENABLE
+int key_press_123(int action_value)
+{
+    static int start_ms = 0;
+    static char start_cnt = 0;
+    unsigned char action = action_value & 0xFF;
+    unsigned char value = (action_value >> 8) & 0xFF;
+#define KEY_PRESS_123_VAL KEY_OK
+    switch (action) {
+    case KEY_EVENT_CLICK:
+        if (value == KEY_PRESS_123_VAL) {
+            start_ms = timer_get_ms();
+            start_cnt = 1;
+        }
+        break;
+    case KEY_EVENT_DOUBLE_CLICK:
+        if (value == KEY_PRESS_123_VAL && start_cnt == 1 && (timer_get_ms() - start_ms) < 5000) {
+            start_cnt = 2;
+            start_ms = timer_get_ms();
+        }
+        break;
+    case KEY_EVENT_TRIPLE_CLICK:
+        if (value == KEY_PRESS_123_VAL && start_cnt == 2 && (timer_get_ms() - start_ms) < 5000) {
+            user_data_plan_reset_config(0, 1);
+            music_play_stop_all();
+            websockets_client_dialogue_exit();
+            websockets_close_request(1);
+            websockets_dialogue_timeout_del();
+            music_buf_play_stop_all();
+            music_buf_play_set_stop();
+            websockets_free_lbuf_buf();
+            music_buf_play_free_lbuf();
+            music_play_res_file("KeyVol.mp3");
+            return true;
+        }
+        break;
+    default :
+        start_ms = 0;
+        start_cnt = 0;
+        break;
+    }
+    return false;
+}
+#endif // KEY_DATA_PLAN_REST
+
 static int ai_speaker_key_event_handler(struct key_event *key)
 {
     int ret = 0;
     int sleep = auto_sleep_is_enter();
-
+#ifdef KEY_DATA_PLAN_REST_ENABLE
+    if (key_press_123((key->action & 0xFF) | ((key->value & 0xFF) << 8))) {
+        return true;
+    }
+#endif
     printf("->key->action = %d, key->value = %d, sleep = %d\n", key->action, key->value, sleep);
     auto_sleep_check_clear();
     if ((!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) || sleep) {
@@ -740,7 +789,6 @@ static int ai_speaker_key_event_handler(struct key_event *key)
 
     int cur_net_mode = sys_net_mode_read();
     int ch = sys_net_channel_read();
-
     switch (key->action) {
     case KEY_EVENT_UP:
         ai_speaker_key_hand_up(key);
@@ -1291,6 +1339,9 @@ int ai_net_event_handler(struct net_event *event)
                 sys_timeout_add_to_task("app_core", NULL, http_sim_card_bind_request, 3000);//注意：低内存版本，联网同时开启多个http引起内存不足死机问题
             }
 #endif
+            if (user_data_plan_reset_config(1, 0)) {
+                user_data_plan_reset_config(0, 0);
+            }
 #if 0
             http_ai_get_photo_grap(http_get_photo_grap_cb);
 

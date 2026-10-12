@@ -1483,6 +1483,9 @@
 		<Unit filename="../../chatbot/qyai_config.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../chatbot/qyai_config_res.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../chatbot/qyai_mutilmodal.c">
 			<Option compilerVar="CC" />
 		</Unit>
