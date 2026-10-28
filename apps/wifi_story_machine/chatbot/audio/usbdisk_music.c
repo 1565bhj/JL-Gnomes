@@ -5,6 +5,7 @@
 #include "reverb_deal.h"
 #include "event/key_event.h"
 #include "event/bt_event.h"
+#include "event/net_event.h"
 #include "btstack/avctp_user.h"
 #include "event/device_event.h"
 #include "system/wait.h"

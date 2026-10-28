@@ -1320,7 +1320,7 @@ int alarm_save_url(char alarm_index, char *url)
         while (offset < TOTAL_STORAGE_SIZE) {
             if (head.index[0] == 0 || head.index[0] == 0xFF) {//找到最后一个index（4个index第一个index为0/0xFF）
                 if ((offset + len + ALARM_HEAD_SIZE) <= TOTAL_STORAGE_SIZE) {
-                    printf("Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
+                    printf("Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, offset, url_cnt);
                     head.index[0] = alarm_index + 1;
                     head.size = len;
                     memcpy(buf + offset, &head, ALARM_HEAD_SIZE);
@@ -1331,15 +1331,27 @@ int alarm_save_url(char alarm_index, char *url)
                 break;
             } else {
                 url_cnt++;
-                printf("read flash URL index %d, url_cnt = %d, offset = %d : %s\n", (head.index[0] & 0xFF) - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
+                printf("read flash URL index %d %d %d %d, url_cnt = %d, offset = %d : %s\n", (head.index[0] & 0xFF) - 1, head.index[1] & 0xFF, head.index[2] & 0xFF, head.index[3] & 0xFF,
+                       url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
                 if (!strcmp(&buf[offset + ALARM_HEAD_SIZE], url)) {//已存在对应URL
-                    for (char i = 1; i < ARRAY_SIZE(head.index); i++) {//更新第2. 3. 4个已上url
-                        if (head.index[i] == 0 || head.index[i] == 0xFF) {
+                    for (char i = 0; i < ARRAY_SIZE(head.index); i++) {//更新第2. 3. 4个已上url
+                        if (head.index[i] == 0 || head.index[i] == 0xFF || head.index[i] == (alarm_index + 1)) {
+                            if (head.index[i] == (alarm_index + 1) && !strcmp(&buf[offset + ALARM_HEAD_SIZE], url)) {
+                                printf("URL already save flash\n");
+                                goto exit;
+                            }
                             head.index[i] = alarm_index + 1;
                             memcpy(buf + offset, &head, ALARM_HEAD_SIZE);
-                            printf("URL already save flash\n");
+                            printf("URL save flash\n");
                             alarm_save_data(buf, TOTAL_STORAGE_SIZE);
                             goto exit;
+                        }
+                    }
+                } else {
+                    for (char i = 0; i < ARRAY_SIZE(head.index); i++) {//更新第2. 3. 4个已上url
+                        if (head.index[i] == (alarm_index + 1)) {
+                            head.index[i] = 0;
+                            memcpy(buf + offset, &head, ALARM_HEAD_SIZE);
                         }
                     }
                 }
@@ -1366,6 +1378,7 @@ int alarm_save_url(char alarm_index, char *url)
             } else {
                 memcpy(buf + last_offset, &head, ALARM_HEAD_SIZE);
                 memcpy(buf + last_offset + ALARM_HEAD_SIZE, url, len);
+                printf(" Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
             }
             last_offset = offset;
             printf("no found , Saved URL index %d, len=%d, offset %d, url_cnt = %d\n", alarm_index, len, last_offset, url_cnt);
@@ -1411,16 +1424,16 @@ static int alarm_read_url(char alarm_index, char *url, int url_buf_size)
     offset = 0;
     while (offset < TOTAL_STORAGE_SIZE) {
         memcpy(&head, buf + offset, ALARM_HEAD_SIZE);
-        if (head.index[0] == 0 || head.index[0] == 0xFF) {
+        if (head.index[0] == 0xFF || head.size == 0) {
             break;
-        } else {
-            url_cnt++;
-            for (char i = 0; i < ARRAY_SIZE(head.index); i++) {//更新第2. 3. 4个已上url
-                if (head.index[i] == (alarm_index + 1)) {
-                    readed = true;
-                    strncpy(url, &buf[offset + ALARM_HEAD_SIZE], url_buf_size);
-                    goto exit;
-                }
+        }
+        url_cnt++;
+        for (char i = 0; i < ARRAY_SIZE(head.index); i++) {//更新第2. 3. 4个已上url
+            if (head.index[i] == (alarm_index + 1)) {
+                readed = true;
+                strncpy(url, &buf[offset + ALARM_HEAD_SIZE], url_buf_size);
+                printf("read  OK URL index %d, url_cnt = %d, offset = %d : %s\n", head.index - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
+                goto exit;
             }
         }
         printf("read URL index %d, url_cnt = %d, offset = %d : %s\n", head.index - 1, url_cnt, offset, &buf[offset + ALARM_HEAD_SIZE]);
@@ -1701,6 +1714,7 @@ void ntptime_update_rtc(void)
 }
 char *alarm_get_url(char index)
 {
+    printf("alarm_get_url\n");
     alarm_read_url(index, mp3_url, sizeof(mp3_url));
     if (mp3_url[0] != 0) {
         return mp3_url;
@@ -1729,11 +1743,22 @@ int alarm_music_play_stop(void)
 #endif
         if (music_play_alarm_url_ring()) {
             music_play_alarm_url_clear();
+#ifdef CONFIG_NO_SDRAM_ENABLE
+            net_music_dec_stop();
+            net_music_play_set_stop();
+            net_music_num_clear();
+#endif // CONFIG_NO_SDRAM_ENABLE
         }
         music_play_stop(NULL);
         music_play_res_file_unloop();
         mp3_buf_play_res_file_unloop();
+#ifdef CONFIG_NO_SDRAM_ENABLE
+        music_buf_play_stop_all();
+        music_buf_play_set_stop();
+        music_buf_play_free_lbuf();
+#else
         music_play_alarm_stop(0);
+#endif // CONFIG_NO_SDRAM_ENABLE
         return 0;
     }
     return -1;

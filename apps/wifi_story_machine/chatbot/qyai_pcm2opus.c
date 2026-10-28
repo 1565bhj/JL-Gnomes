@@ -12,6 +12,9 @@ extern int websockets_send_pcm_buf_push(char *buf, int len);
 extern int websockets_send_audio_buf_start(void);
 extern int websockets_send_audio_buf_end(void);
 extern int websockets_send_audio_buf_push(char *buf, int len);
+extern int websockets_send_500ms_audio_buf_push(char *buf, int len, int clear);
+extern int websockets_client_send_msg(int msg);
+extern void websockets_client_best_one_packge_set(int size);
 
 static int QYAI_OPUS_SAMPLE_RATE = 16000;
 
@@ -22,6 +25,7 @@ static int QYAI_OPUS_SAMPLE_RATE = 16000;
 #define QYAI_OPUS_OUTPUT_BUF_LEN    (8 * 1024)
 /* 约 4s 的 320B 块缓冲 */
 #define QYAI_OPUS_PCM_CBUF_SIZE     (QYAI_IVW_PCM_CHUNK * 128)
+#define QYAI_OPUS_UPLINK_PACK_SIZE  2048
 
 /*
  * 云端未部署 Opus 时置 1：只跑本地编码，不走 websockets_send_pcm_buf_*，
@@ -45,6 +49,23 @@ static OS_SEM s_pcm_sem;
 static u8 s_sem_inited;
 static int s_last_push_ret;
 static u32 s_read_input_cnt;
+static u8 s_enc_dead;   // 1=编码器已结束/出错(s_opus_enc 还挂着但已停摆)
+/*
+ * websocket 库内部有 16KB(约 500ms) 的 PCM 预录缓存 gtp_info[61]/[62]。
+ * PCM 模式下它用于把唤醒前 500ms 原始 PCM 一起发给云端；
+ * Opus 模式下这段预录缓存里如果还是原始 PCM，就会在每次对话开始时
+ * 被库以裸 PCM 帧的形式发出(服务端看到的 44 + 15392 + 968)。
+ *
+ * 处理办法：
+ *   1. 对话开始时先清空该缓存(push(NULL,0,1))；
+ *   2. 编码器输出第一包 Opus 后，主动向库投递一条 msg 5，
+ *      库会在处理 msg 5 时把缓存里的数据(此时已全是 Opus)发送出去，
+ *      并把缓存长度 +16384 标记为“已冲洗”，后续 Opus 数据不再被缓存。
+ */
+static u8 s_prebuf_disable_done;   // 1=本次对话已完成库预录缓存冲洗/禁用
+static u32 s_enc_out_cnt;          // 编码器输出包计数(调试用)
+
+static void qyai_opus_enc_close(void);
 
 static void qyai_opus_enc_event_handler(void *priv, int argc, int *argv)
 {
@@ -53,9 +74,11 @@ static void qyai_opus_enc_event_handler(void *priv, int argc, int *argv)
     switch (argv[0]) {
     case AUDIO_SERVER_EVENT_ERR:
         printf("qyai opus uplink: AUDIO_SERVER_EVENT_ERR\n");
+        s_enc_dead = 1;
         break;
     case AUDIO_SERVER_EVENT_END:
         printf("qyai opus uplink: AUDIO_SERVER_EVENT_END\n");
+        s_enc_dead = 1;
         break;
     default:
         break;
@@ -65,6 +88,21 @@ static void qyai_opus_enc_event_handler(void *priv, int argc, int *argv)
 int qyai_audio_use_opus(void)
 {
     return !strcmp(qyai_chat_audio_enc_format(), "opus");
+}
+
+/*
+ * 必须在 websocket 客户端线程创建前调用。
+ * websocket 库启动时读取 gtp_info[11] 决定上行批量大小：
+ *   Opus 且未配置时默认 2048B(1.02s)，云端 VAD 会把 1s 的间隔当成静音，
+ *   提前下发 vad_end 导致长句/长故事被截断。
+ * 设为 640B 后约每 320ms 发一包。
+ */
+void qyai_audio_uplink_pack_size_init(void)
+{
+    if (qyai_audio_use_opus()) {
+        websockets_client_best_one_packge_set(QYAI_OPUS_UPLINK_PACK_SIZE);
+        printf("qyai opus uplink: ws batch size=%d\n", QYAI_OPUS_UPLINK_PACK_SIZE);
+    }
 }
 
 void qyai_audio_set_pcm_frame_bytes(u16 bytes)
@@ -86,7 +124,27 @@ static int audio_vfs_fwrite(void *file, void *data, u32 len)
 {
     s_last_push_ret = websockets_send_audio_buf_push((char *)data, len);
     if (s_last_push_ret < 0) {
+        printf("qyai opus uplink: push fail %d, len=%u\n", s_last_push_ret, len);
         return s_last_push_ret;
+    }
+
+    s_enc_out_cnt++;
+    if (s_enc_out_cnt <= 5 || (s_enc_out_cnt % 100) == 0) {
+        printf("qyai opus uplink: enc out #%u len=%u\n", s_enc_out_cnt, len);
+    }
+
+    /*
+     * 第一包 Opus 已经进入库的预录缓存，主动投递 msg 5：
+     * 库会把缓存内容(纯 Opus)当作音频数据发出，并将缓存标记为已冲洗，
+     * 之后推入的 Opus 数据会直接走 lbuf 发送，不会再被缓存 16KB。
+     */
+    if (!s_prebuf_disable_done) {
+        if (websockets_client_send_msg(5) == 0) {
+            s_prebuf_disable_done = 1;
+            printf("qyai opus uplink: prebuf flush+disable, first opus len=%u\n", len);
+        } else {
+            printf("qyai opus uplink: post msg5 fail\n");
+        }
     }
     return (int)len;
 }
@@ -167,16 +225,14 @@ static int qyai_opus_enc_open(void)
     int err;
 
     if (s_opus_enc) {
-        return 0;
+        if (!s_enc_dead) {
+            return 0;
+        }
+        //上一次编码器已结束/出错(s_opus_enc 还挂着但已停摆)，先释放再重建
+        qyai_opus_enc_close();
     }
-    printf("qyai_opus_enc_open\n");
-    audio_sem_init();
 
-    cbuf_init(&s_pcm_cbuf, s_pcm_cbuf_buf, sizeof(s_pcm_cbuf_buf));
-    cbuf_clear(&s_pcm_cbuf);
-    os_sem_set(&s_pcm_sem, 0);
-    s_read_input_cnt = 0;
-    s_pcm_eof = 0;
+    audio_sem_init();
 
     s_opus_enc = server_open("audio_server", "enc");
     if (!s_opus_enc) {
@@ -187,7 +243,12 @@ static int qyai_opus_enc_open(void)
     server_register_event_handler_to_task(s_opus_enc, NULL,
                                           qyai_opus_enc_event_handler, "app_core");
 
-    req.enc.volume = 100;
+    cbuf_init(&s_pcm_cbuf, s_pcm_cbuf_buf, sizeof(s_pcm_cbuf_buf));
+    cbuf_clear(&s_pcm_cbuf);
+    os_sem_set(&s_pcm_sem, 0);
+    s_read_input_cnt = 0;
+    s_pcm_eof = 0;
+
     req.enc.cmd = AUDIO_ENC_OPEN;
     req.enc.channel = 1;
     req.enc.sample_rate = QYAI_OPUS_SAMPLE_RATE;
@@ -202,6 +263,7 @@ static int qyai_opus_enc_open(void)
     req.enc.vir_data_wait = 1;
 
     s_enc_running = 1;
+    s_enc_dead = 0;
 
     err = server_request(s_opus_enc, AUDIO_REQ_ENC, &req);
     if (err) {
@@ -244,6 +306,16 @@ int qyai_audio_send_start(void)
         if (qyai_opus_enc_open()) {
             return -1;
         }
+        /*
+         * 清空 websocket 库内部的 16KB(约 500ms) PCM 预录缓存。
+         * 该缓存原本用于 PCM 模式把唤醒前 500ms 原始 PCM 发给云端，
+         * Opus 模式下必须清掉，否则会被库当成 PCM 直接发出。
+         * 唤醒前 500ms 音频由 first_500ms_buf 经 Opus 编码后发送。
+         */
+        websockets_send_500ms_audio_buf_push(NULL, 0, 1);
+        s_prebuf_disable_done = 0;
+        s_enc_out_cnt = 0;
+        printf("qyai opus uplink: send start, clear 500ms pcm prebuf\n");
     }
     return websockets_send_audio_buf_start();
 }
@@ -270,6 +342,7 @@ void qyai_audio_send_abort(void)
 int qyai_audio_send_end(void)
 {
     if (qyai_audio_use_opus()) {
+        printf("qyai opus uplink: send end, enc out total=%u\n", s_enc_out_cnt);
         s_pcm_eof = 1;
         os_sem_post(&s_pcm_sem);
         os_time_dly(2);

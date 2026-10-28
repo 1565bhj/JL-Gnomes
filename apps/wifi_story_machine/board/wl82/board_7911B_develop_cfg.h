@@ -16,7 +16,7 @@
 //#define CONFIG_USE_TTS_REPLY_ENABLE         //使能回复语对话使用在线TTS
 #define NET_MUSIC_CONFIG_DEC_ANALOG_VOLUME_ENABLE //网络音乐解码的淡入淡出
 #define CONFIG_MORE_NOTIC_REPLY_ENABLE      //使能多次提示回复语
-//#define CONFIG_KWS_XIAOYUXIAOYU             //唤醒词：小语小语
+#define CONFIG_KWS_XIAOYUXIAOYU             //唤醒词：小语小语
 //#define CONFIG_KWS_ENGLISH                  //英语版唤醒词：hello you you，海外版本（在本文件最后的海外语言配置项进行语言选择）
 
 #define SYS_COMMAND_ANSER_PLAY_ENABLE         //系统命令采用本地“好的”提示，注释则使用服务器下发

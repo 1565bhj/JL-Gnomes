@@ -59,6 +59,7 @@ typedef struct http_chunck_stream_mbedtls {
     mbedtls_ssl_config conf;
     mbedtls_x509_crt cacert;
     char ssl_fd;
+    char ssl_init;
 
     /*server*/
     u8 sll_ip_addr[16];
@@ -111,6 +112,7 @@ typedef struct http_chunck_stream_struct {
     struct http_chunck_stream_req_head req_head;
     struct http_chunck_stream_mbedtls http_chunck_stream_mbtls_info;
     int (*buf_cb)(void *http, char *buf, int len, int payloadlen,  char fin);
+    void *buf_cb_priv;
     u16 http_chunck_stream_valid;
 } HTTP_CHUNCK_STREAM_INFO;
 

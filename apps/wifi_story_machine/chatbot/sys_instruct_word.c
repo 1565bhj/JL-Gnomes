@@ -215,6 +215,7 @@ int sys_instruction_word_callback(char *word, char *asr)
     for (i = 0; sys_str_power_off[i] != NULL; i++) { //关机
         if (strstr(word, sys_str_power_off[i]) && strlen(word) <= strlen(sys_str_power_off[i]) + 3) {
             int aisp_sys_power_off(void);
+            net_music_dec_stop();
             sys_timeout_add_to_task("sys_timer", NULL, aisp_sys_power_off, 1000);
 #ifdef AI_UART_CMD_CTROL_ENABLE
             ai_uart_cmd_data_push(AI_UART_CMD_PWR_OFF, NULL, 0);

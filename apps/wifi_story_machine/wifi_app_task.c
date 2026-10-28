@@ -1284,7 +1284,13 @@ int wireless_net_init(void)   //主要是create wifi 线程的
     os_sem_create(&sem, 0);
     wireless_init = 1;
     puts("wireless_net_init \n\n");
-    return thread_fork("wifi_app_task", 10, 1792, 0, 0, wifi_app_task, NULL);
+    int ret = thread_fork("wifi_app_task", 10, 1792, 0, 0, wifi_app_task, NULL);
+    if (!ret) {
+        int to_cnt = 50;
+        while (wireless_init == 1 && --to_cnt) {
+            os_time_dly(1);
+        }
+    }
 }
 //late_initcall(wireless_net_init);
 #endif

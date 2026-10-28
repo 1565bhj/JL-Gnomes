@@ -12,6 +12,7 @@
 #include "app_config.h"
 #include "syscfg/syscfg_id.h"
 #include "event/key_event.h"
+#include "event/net_event.h"
 #include "storage_device.h"
 #include "action.h"
 #include "fs/fs.h"

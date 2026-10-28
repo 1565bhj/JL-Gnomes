@@ -8,11 +8,13 @@
 #include "event/net_event.h"
 #include "btstack/avctp_user.h"
 #include "event/device_event.h"
+#include "event/net_event.h"
 #include "system/wait.h"
 #include "system/app_core.h"
 #include "action.h"
 #include "volume.h"
 #include "ai_uart_ctrol.h"
+#include "asm/system_reset_reason.h"
 #include "qyai_config.h"
 
 #define MAX_FILENAME_LEN                128

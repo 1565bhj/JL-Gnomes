@@ -81,6 +81,7 @@ typedef struct websockets_mbedtls {
     mbedtls_ssl_config conf;
     mbedtls_x509_crt cacert;
     char ssl_fd;
+    char ssl_init;
 
     /*server*/
     u8 sll_ip_addr[16];

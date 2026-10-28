@@ -165,6 +165,11 @@ int qyai_net_socket_err_callback(char *msg, int err_code, const char *trace_id)
     return 0;
 }
 
+int qyai_chip_sdram_size(void)
+{
+    return __SDRAM_SIZE__;
+}
+
 //开启UI和开外挂WiFi，则降低音频缓存
 #if (defined CONFIG_UI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
 int ai_audio_play_buf_size_set(void)

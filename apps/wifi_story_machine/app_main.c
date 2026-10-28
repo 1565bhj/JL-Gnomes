@@ -390,15 +390,6 @@ void app_main()
     app_usb_at_register_inter();
 #endif
 
-#ifdef CONFIG_UI_ENABLE
-#ifdef CONFIG_UI_PLAY_EMOJI
-    play_face_emoji(AI_UART_CMD_PWR_ON);
-#endif
-#ifdef CONFIG_LVGL_UI_ENABLE
-    lvgl_test_demo();
-#endif
-#endif
-
     //闹钟唤醒
     if (system_reset_reason_get() == SYS_RST_ALM_WKUP) {
 #ifdef CONFIG_LVGL_UI_ENABLE
@@ -527,6 +518,15 @@ void app_main()
 #endif
 #ifdef CONFIG_GSENSOR_ENABLE
     sc7a20h_init();
+#endif
+
+#ifdef CONFIG_UI_ENABLE
+#ifdef CONFIG_UI_PLAY_EMOJI
+    play_face_emoji(AI_UART_CMD_PWR_ON);
+#endif
+#ifdef CONFIG_LVGL_UI_ENABLE
+    lvgl_test_demo();
+#endif
 #endif
 
     audio_app_mode_switch(NULL);

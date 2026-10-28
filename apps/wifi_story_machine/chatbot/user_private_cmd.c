@@ -338,11 +338,13 @@ int net_ai_asr_txt_recv_callback(char *buf, int len)
     if (!strcmp("模式切换", buf)) { //"模式切换"用户自定义私有命令检测
         return 1;//返回1立刻结束对话，返回0则走大模型对话
     }*/
+#ifndef CONFIG_NO_SDRAM_ENABLE
     if (user_close_status && music_play_alarm_ring_kws_is_wakeup()) {
         music_play_alarm_stop(1);
         user_close_status = 0;
         return 1;
     }
+#endif
     return 0;
 }
 

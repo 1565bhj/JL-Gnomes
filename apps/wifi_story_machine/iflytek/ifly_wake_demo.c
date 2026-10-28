@@ -1626,13 +1626,16 @@ void esr_queue_task(void *priv)
         key.type = KEY_EVENT_USER;
         int net_ch = 0;
 
-#define BEST_PACKET_SIZE    1024
+        extern void qyai_audio_uplink_pack_size_init(void);
+        qyai_audio_uplink_pack_size_init();
+
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
         net_ch = sys_net_channel_read();
         if (net_ch < 0) {
             net_ch = 0;
         }
         if (net_ch == 1) {
+#define BEST_PACKET_SIZE    1024
             websockets_client_best_one_packge_set(BEST_PACKET_SIZE);
             websockets_send_pcmdata_oddnumber_add_zero(BEST_PACKET_SIZE == 1);
         }
