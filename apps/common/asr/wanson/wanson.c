@@ -826,13 +826,17 @@ void esr_queue_task(void *priv)
         struct key_event key = {0};
         key.type = KEY_EVENT_USER;
         int net_ch = 0;
+        extern void qyai_audio_uplink_pack_size_init(void);
+        qyai_audio_uplink_pack_size_init();
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
         net_ch = sys_net_channel_read();
         if (net_ch < 0) {
             net_ch = 0;
         }
         if (net_ch == 1) {
-            websockets_client_best_one_packge_set(1024);
+#define BEST_PACKET_SIZE    1024
+            websockets_client_best_one_packge_set(BEST_PACKET_SIZE);
+            websockets_send_pcmdata_oddnumber_add_zero(BEST_PACKET_SIZE == 1);
         }
 #endif
         index = aisp_wake_world_callback(msg[1]);
@@ -893,6 +897,8 @@ __wakeup:
                     websockets_close_request(1);
                     websockets_dialogue_timeout_del();
                     websockets_free_lbuf_buf();
+                    http_tts_play_stop_force();
+                    http_pipe_music_play_request_stop(NULL);
 
                     keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
                     err = alarm_music_play_stop();
@@ -902,8 +908,6 @@ __wakeup:
                         music_play_stop(NULL);
                         music_buf_play_stop_all();
                         music_buf_play_set_stop();
-                        http_tts_play_stop_force();
-                        http_pipe_music_play_request_stop(NULL);
                         //net_music_play_set_stop();
                         music_buf_play_free_lbuf();
                         music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -1021,13 +1025,18 @@ __wifi_cfg:
                 websockets_close_request(1);
                 websockets_dialogue_timeout_del();
                 websockets_free_lbuf_buf();
+                http_tts_play_stop_force();
+                http_pipe_music_play_request_stop(NULL);
 
-                if (alarm_music_play_stop()) { //闹钟在响停止闹钟
+                keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
+                err = alarm_music_play_stop();
+                keyword_start = 0;
+
+                if (err) { //闹钟在响停止闹钟
                     music_play_stop(NULL);
                     music_buf_play_stop_all();
                     music_buf_play_set_stop();
-                    http_tts_play_stop_force();
-                    http_pipe_music_play_request_stop(NULL);
+
                     //net_music_play_set_stop();
                     music_buf_play_free_lbuf();
                     music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -1157,12 +1166,20 @@ void aisp_wake_no_notic(void)
             music_buf_play_stop_all();
             music_buf_play_set_stop();
             http_tts_play_stop_force();
-            http_pipe_music_play_request_stop(NULL);
-            //net_music_play_set_stop();
-            websockets_free_lbuf_buf();
-            music_buf_play_free_lbuf();
-            websockets_close_request(1);
-            music_buf_play_stop_waite();//等待关闭完成再播放提示音
+
+            keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
+            err = alarm_music_play_stop();
+            keyword_start = 0;
+
+            if (err) { //闹钟在响停止闹钟
+                music_play_stop(NULL);
+                music_buf_play_stop_all();
+                music_buf_play_set_stop();
+                //net_music_play_set_stop();
+                music_buf_play_free_lbuf();
+                music_buf_play_stop_waite();//等待关闭完成再播放提示音
+            }
+
             net_music_num_clear();
             led_eya_wake(1);//LED眼睛唤醒显示
 
@@ -1206,9 +1223,19 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         music_buf_play_set_stop();
         http_tts_play_stop_force();
         http_pipe_music_play_request_stop(NULL);
-        websockets_free_lbuf_buf();
-        music_buf_play_free_lbuf();
-        music_buf_play_stop_waite();//等待关闭完成再播放提示音
+
+        keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
+        int err = alarm_music_play_stop();
+        keyword_start = 0;
+
+        if (err) { //闹钟在响停止闹钟
+            music_play_stop(NULL);
+            music_buf_play_stop_all();
+            music_buf_play_set_stop();
+            //net_music_play_set_stop();
+            music_buf_play_free_lbuf();
+            music_buf_play_stop_waite();//等待关闭完成再播放提示音
+        }
         net_music_num_clear();
         led_eya_wake(1);//LED眼睛唤醒显示
         if (noice_note) {

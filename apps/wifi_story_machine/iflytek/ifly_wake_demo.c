@@ -301,6 +301,10 @@ static int ifly_audio_record_vfs_fwrite(void *file, void *data, u32 vp_len)
 #endif
         return vp_len;
     }
+    static unsigned int record_vfs_cnt = 0;
+    if (record_vfs_cnt++ % 1000 == 0) {
+        puts("pcm write\n");
+    }
 //    os_sem_set(&read_available_sem, 0);
     os_sem_post(&read_available_sem);
     return vp_len;
@@ -912,13 +916,17 @@ void aisp_wake_set_noice(char noice_note)
             websockets_close_request(1);
             websockets_dialogue_timeout_del();
             websockets_free_lbuf_buf();
+            http_tts_play_stop_force();
+            http_pipe_music_play_request_stop(NULL);
 
-            if (alarm_music_play_stop()) { //闹钟在响停止闹钟
+            keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
+            int err = alarm_music_play_stop();
+            keyword_start = 0;
+
+            if (err) { //闹钟在响停止闹钟
                 music_play_stop(NULL);
                 music_buf_play_stop_all();
                 music_buf_play_set_stop();
-                http_tts_play_stop_force();
-                http_pipe_music_play_request_stop(NULL);
                 //net_music_play_set_stop();
                 music_buf_play_free_lbuf();
                 music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -989,12 +997,17 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
         websockets_dialogue_timeout_del();
         websockets_free_lbuf_buf();
 
-        if (alarm_music_play_stop()) { //闹钟在响停止闹钟
+        http_tts_play_stop_force();
+        http_pipe_music_play_request_stop(NULL);
+
+        keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
+        int err = alarm_music_play_stop();
+        keyword_start = 0;
+
+        if (err) { //闹钟在响停止闹钟
             music_play_stop(NULL);
             music_buf_play_stop_all();
             music_buf_play_set_stop();
-            http_tts_play_stop_force();
-            http_pipe_music_play_request_stop(NULL);
             //net_music_play_set_stop();
             music_buf_play_free_lbuf();
             music_buf_play_stop_waite();//等待关闭完成再播放提示音
@@ -1123,7 +1136,8 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
 #else
     unsigned int vl_frame_len = IFLY_AUDIO_RECORD_ONCE_SR_POINTS * sizeof(short) * (IFLY_AUDIO_RECORD_MIC_COUNT + 1);
 #endif
-    volatile int vad_active = 0;
+    volatile unsigned int vad_active = 0;
+    volatile unsigned int pcm_read_cnt = 0;
     volatile unsigned int t1 = 0;
     volatile short pd_mic2_test = 0xFFFF;
     volatile short pd_mic1_test = 0xFFFF;
@@ -1174,6 +1188,9 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
 #endif
             os_sem_pend(&read_available_sem, 3);
             continue;
+        }
+        if (vad_active++ % 500 == 0) {
+            puts("pcm read\n");
         }
         extern int is_production_test_enter(char wake);
         extern int is_production_test_mic2_enter(void);
@@ -1294,13 +1311,14 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                     if (timer_get_ms() - t1 > 2000) { //2秒内没有语音活动
                         vad_active = 0;
                         t1 = 0;
+                        puts("detec no vad\n");
                     }
                 } else {
-                    vad_active = 1;
+                    vad_active++;
                     t1 = 0;
                 }
             } else {
-                vad_active = 1;
+                vad_active++;
                 t1 = 0;
             }
             if (!vad_active) {
@@ -1707,6 +1725,8 @@ __wakeup:
                     websockets_close_request(1);
                     websockets_dialogue_timeout_del();
                     websockets_free_lbuf_buf();
+                    http_tts_play_stop_force();
+                    http_pipe_music_play_request_stop(NULL);
 
                     keyword_start = 1;//闹钟在响停止闹钟先设置唤醒标记（闹钟停止恢复音乐）
                     err = alarm_music_play_stop();
