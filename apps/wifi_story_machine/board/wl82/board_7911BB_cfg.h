@@ -3,8 +3,12 @@
 
 #ifdef CONFIG_BOARD_7911BB
 
+#ifndef __FLASH_SIZE__
 #define __FLASH_SIZE__    (8 * 1024 * 1024)
+#endif
+#ifndef __SDRAM_SIZE__
 #define __SDRAM_SIZE__    (8 * 1024 * 1024)
+#endif
 
 //7911B
 #include "board_7911B_develop_cfg.h"

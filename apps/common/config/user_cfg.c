@@ -225,16 +225,31 @@ const char *bt_get_local_name(void)
 #ifndef CONFIG_RF_TEST_ENABLE
     const u8 *mac_addr;
     mac_addr = bt_get_mac_addr();
+    int slen = strlen(BT_DEV_NAME);
 //    sprintf(edr_name, "JL-AC791N-%02X%02X", mac_addr[4], mac_addr[5]);
+    if (slen <= 16) {
 #ifdef BT_DEV_NAME_LONE_ENABLE
-    sprintf(edr_name, "%s%02X%02X%02X%02X%02X%02X", BT_DEV_NAME, mac_addr[5], mac_addr[4], mac_addr[3], mac_addr[2], mac_addr[1], mac_addr[0]);
+        sprintf(edr_name, "%s_%02X%02X%02X%02X%02X%02X", BT_DEV_NAME, mac_addr[5], mac_addr[4], mac_addr[3], mac_addr[2], mac_addr[1], mac_addr[0]);
 #else
-    sprintf(edr_name, "%s%02X%02X", BT_DEV_NAME, mac_addr[4], mac_addr[5]);
+        sprintf(edr_name, "%s_%02X%02X", BT_DEV_NAME, mac_addr[4], mac_addr[5]);
 #endif
-    if (is_production_test_enter(0)) {
+        if (is_production_test_enter(0)) {
 #ifdef PRODUCTION_ALL_TEST_BT_NAME
-        sprintf(edr_name, "%s%s", BT_DEV_NAME, PRODUCTION_ALL_TEST_BT_NAME);
+            sprintf(edr_name, "%s_%s", BT_DEV_NAME, PRODUCTION_ALL_TEST_BT_NAME);
 #endif
+        }
+    } else {
+        if (slen <= 21) {
+            strcpy(edr_name, BT_DEV_NAME);
+        } else {
+            memcpy(edr_name, BT_DEV_NAME, 21);
+            edr_name[21] = 0;
+        }
+        if (is_production_test_enter(0)) {
+#ifdef PRODUCTION_ALL_TEST_BT_NAME
+            strcpy(edr_name, PRODUCTION_ALL_TEST_BT_NAME);
+#endif
+        }
     }
     printf("-> bt_name : %s \n", edr_name);
 #endif

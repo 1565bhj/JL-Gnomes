@@ -304,7 +304,7 @@ static int GST328_task_init(void)
 
 REGISTER_LCD_TOUCH_DEV(GST328) = {
     .name                           = "GST328",
-    .iic_dev_name                   = "iic0",
+    .iic_dev_name                   = LCD_TOUCH_IIC_NAME,
     .LCD_Touch_check                = GST328_check,
     .LCD_Touch_init                 = GST328_task_init,
     .LCD_Touch_get                  = GST328_get_xy,

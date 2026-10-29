@@ -5,7 +5,9 @@
 #include "qyai_config.h"
 #include "cJSON.h"
 #include "syscfg/syscfg_id.h"
+#include "ifly_kws_mlp.h"
 
+#ifdef CONFIG_QYAI_REC_CFG_ENABLE
 typedef struct qy_cfg {
     unsigned char config_init;
     unsigned char reserve;//预留
@@ -92,9 +94,11 @@ static void qyai_config_parse(cJSON *root, void *priv, void *(keywords_callback)
                     cJSON *item_keywords_text = parse_string_field(item, "keywords_text", NULL, 0);
                     cJSON *item_mlp = parse_string_field(item, "mlp", NULL, 0);
                     int keywords_index = parse_int_field(item, "keywords_index", NULL);
+#ifndef IFLY_KWS_MLP_CONST_ARRAY
                     if (item_keywords_text && item_mlp) {
                         keywords_callback(priv, idx, i, item_keywords_text->valuestring);
                     }
+#endif
                 }
             }
         } else {
@@ -112,15 +116,20 @@ static void qyai_config_parse(cJSON *root, void *priv, void *(keywords_callback)
         }
     }
 }
+#endif
 
 int qyai_config_kws_get_index(void)
 {
+#ifdef CONFIG_QYAI_REC_CFG_ENABLE
     qyai_config_res_init(0, NULL, NULL);
     return qyai_cfg.keywords_list_index_set;
+#endif
+    return 0;
 }
 
 void *qyai_config_res_get(int index)
 {
+#ifdef CONFIG_QYAI_REC_CFG_ENABLE
     qyai_config_res_init(0, NULL, NULL);
     if (!qyai_cfg.config_init) {
         return NULL;
@@ -198,11 +207,13 @@ void *qyai_config_res_get(int index)
     default:
         return NULL;
     }
+#endif
     return NULL;
 }
 
 int qyai_config_res_init(char reinit, void *priv, void *(keywords_callback)(void *priv, int kws_used_index, int kws_list_index, char *kws_text))
 {
+#ifdef CONFIG_QYAI_REC_CFG_ENABLE
     if (qyai_cfg.config_init && !reinit) {
         return 0;
     }
@@ -240,6 +251,15 @@ int qyai_config_res_init(char reinit, void *priv, void *(keywords_callback)(void
     } else {
         printf("QYAI_RES_CFG open err : %s\n", CONFIG_QYAI_RES_CFG_NAME);
     }
+#endif
+
+#ifdef IFLY_KWS_MLP_CONST_ARRAY
+    qyai_cfg.keywords_list_index_set = 0;
+    qyai_cfg.keywords_list_index_num = 1;
+    if (keywords_callback) {
+        keywords_callback(priv, 0, 0, IFLY_KWS_NAME);
+    }
+#endif
     return 0;
 }
 

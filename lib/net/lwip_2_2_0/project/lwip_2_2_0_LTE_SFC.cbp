@@ -36,6 +36,7 @@
 					<Add option="-DUSE_RTOS" />
 					<Add option="-DLWIP_PROVIDE_ERRNO" />
 					<Add option="-D_ASM_GENERIC_ERRNO_BASE_H" />
+					<Add option="-DLIWP_USE_SMALL_MEMORY" />
 					<Add directory="../../../../include_lib/system" />
 					<Add directory="../../../../include_lib/system/generic" />
 					<Add directory="../../../../include_lib/system/device" />

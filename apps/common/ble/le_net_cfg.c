@@ -851,8 +851,10 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
 
                 if (recv_crc == calc_crc) {
                     printf(">>> Scan request CRC OK, triggering WiFi scan...\n");
+#ifdef CONFIG_WIFI_ENABLE
                     extern int wifi_scan_start_request(void (*done_cb)(void *ssid, int num), int waite_timerms);
                     wifi_scan_start_request(ble_send_wifi_scan_result, 0);
+#endif
                 } else {
                     printf(">>> Scan request CRC FAIL! recv=0x%04X calc=0x%04X\n", recv_crc, calc_crc);
                 }
@@ -1328,7 +1330,7 @@ void bt_ble_init(void)
 #endif
     }
     const char *name_p = bl_name;
-    printf("-> bl_name : %s \n", bl_name);
+    printf("-> ble_name : %s \n", bl_name);
     u8 ext_name_len = 0;//sizeof(ble_ext_name) - 1;
 
     if (!os_mutex_valid(&mutex)) {
@@ -1421,6 +1423,12 @@ int ble_connected_net_notify(void)
         ret = sprintf(&rsp_mac_cmd[size], ",\"version\":\"%s.%s\"", format_date(), OTA_VERSON);
         size += ret;
         Length += ret;
+
+        if (user_rand_mac_20()) {
+            ret = sprintf(&rsp_mac_cmd[size], ",\"device_id\":\"%s%02x%02x%02x%02x%02x%02x\"", user_rand_mac_20(), mac[5], mac[4], mac[3], mac[2], mac[1], mac[0]);
+            size += ret;
+            Length += ret;
+        }
 
         extern char *qyai_appid_version(void);
         ret = sprintf(&rsp_mac_cmd[size], ",\"appid\":\"%s\"", qyai_appid_version());

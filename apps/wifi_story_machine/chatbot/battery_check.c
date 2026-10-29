@@ -18,6 +18,7 @@
 #define VBAT_LOW_NOTE_MAX_CNT   3 //低电量提示音提示次数
 #define VBAT_LOW_NOTE_PERCENT   22 //低电量提示百分比，<=22%通知低电量
 
+//#define TCFG_VBAT_95PERCENT_CHARGEGULL
 
 #ifdef TCFG_VBAT_CHECK_AD_PORT
 static const u8 adc_port[12][2] = {
@@ -246,8 +247,12 @@ static void charge_status_check(void)
 #endif
             charging_cnt = 0;
         }
+        char full = chargfull ? 1 : 0;
+#ifdef TCFG_VBAT_95PERCENT_CHARGEGULL
+        full = ((charging_cnt % 50 == 0 ? sys_get_vbat_percent() : 0) >= 95) ? 1 : (full ? 1 : 0);
+#endif
         // 如果已充满，且还没有播报过
-        if (!already_notified_full && (chargfull || (charging_cnt % 50 == 0 ? sys_get_vbat_percent() : 0) >= 95)) {
+        if (!already_notified_full && full) {
             already_notified_full = true;
             printf("ChargeFull : %d , percent : %d\n", chargfull, sys_get_vbat_percent());
             if (!system_is_alarm_wakeup()) {

@@ -81,8 +81,7 @@ UART1_PLATFORM_DATA_BEGIN(uart1_data)
 UART1_PLATFORM_DATA_END();
 
 UART2_PLATFORM_DATA_BEGIN(uart2_data)
-    .baudrate = 1000000,
-    .port = PORT_REMAP,
+    .baudrate = TCFG_DEBUG_BAUD,
 #if CONFIG_AUDIO_ENC_SAMPLE_SOURCE == AUDIO_ENC_SAMPLE_SOURCE_PLNK0
     .output_channel = OUTPUT_CHANNEL3,
 #else
@@ -98,7 +97,7 @@ UART2_PLATFORM_DATA_END();
 
 #else
 UART1_PLATFORM_DATA_BEGIN(uart1_data)
-    .baudrate = 1000000,
+    .baudrate = TCFG_DEBUG_BAUD,
     .port = PORT_REMAP,//PORTUSB_A
 #if CONFIG_AUDIO_ENC_SAMPLE_SOURCE == AUDIO_ENC_SAMPLE_SOURCE_PLNK0
     .output_channel = OUTPUT_CHANNEL3,
@@ -125,10 +124,16 @@ UART2_PLATFORM_DATA_BEGIN(uart2_data)
     .tx_pin = IO_PORTH_02,//IO_PORT_USB_DPA,
     .rx_pin = IO_PORTH_03,//IO_PORT_USB_DMA,
 #else
+#ifdef USED_WS2812B_SHOWN
+    .port = PORT_REMAP,
+    .tx_pin = WS2812_UART_TX_PORT,//IO_PORT_USB_DPA,
+    .rx_pin = -1,//IO_PORT_USB_DMA,
+#else
     .port = PORTC_9_10,
     .tx_pin = IO_PORTC_09,//IO_PORT_USB_DPA,
     .rx_pin = IO_PORTC_10,//IO_PORT_USB_DMA,
-#endif // UART2_PORT
+#endif
+#endif
     .output_channel = OUTPUT_CHANNEL3,
 //    .input_channel = INPUT_CHANNEL1,
     .max_continue_recv_cnt = 1024,
@@ -186,15 +191,15 @@ HW_IIC0_PLATFORM_DATA_BEGIN(hw_iic1_data)
 HW_IIC0_PLATFORM_DATA_END()
 
 SW_IIC_PLATFORM_DATA_BEGIN(sw_iic0_data)
-    .clk_pin = TCFG_SW_IIC_CLK_PORT,
-    .dat_pin = TCFG_SW_IIC_DAT_PORT,
-    .sw_iic_delay = 50,
+    .clk_pin = TCFG_SW_IIC0_CLK_PORT,
+    .dat_pin = TCFG_SW_IIC0_SDA_PORT,
+    .sw_iic_delay = TCFG_SW_IIC0_DELAY,
 SW_IIC_PLATFORM_DATA_END()
 
 SW_IIC_PLATFORM_DATA_BEGIN(sw_iic1_data)
     .clk_pin = TCFG_SW_IIC1_CLK_PORT,
-    .dat_pin = TCFG_SW_IIC1_DAT_PORT,
-    .sw_iic_delay = 50,
+    .dat_pin = TCFG_SW_IIC1_SDA_PORT,
+    .sw_iic_delay = TCFG_SW_IIC1_DELAY,
 SW_IIC_PLATFORM_DATA_END()
 
 #if TCFG_IRKEY_ENABLE
@@ -236,7 +241,11 @@ static const struct iokey_port iokey_list[] = {
     {
         .connect_way = ONE_PORT_TO_LOW,         //IO按键的连接方式
         .key_type.one_io.port = TCFG_IOKEY_PORT,    //IO按键对应的引脚
+#ifdef CONFIG_BOARD_OPEN_DEV_ENABLE
+        .key_value = KEY_1,
+#else
         .key_value = KEY_OK,            //按键值
+#endif
     },
 };
 const struct iokey_platform_data iokey_data = {
@@ -296,52 +305,112 @@ ad值小于150是按键1，
 ad值小于250是按键2，
 ad值小于350是按键3，
 */
-#define ADKEY_UPLOAD_R      22  //上拉电阻22K，单位K
-#define ADKEY0_DOWNLOAD_R   0   //按键0下拉电阻0K，单位K
-#define ADKEY1_DOWNLOAD_R   33  //按键1下拉电阻10K，单位K
-#define ADKEY2_DOWNLOAD_R   51  //按键2下拉电阻22K，单位K
-#define ADKEY3_DOWNLOAD_R   100 //按键3下拉电阻100K，单位K
+#ifndef ADKEY_PULLUP_RESISTOR
+#define ADKEY_PULLUP_RESISTOR      22  //上拉电阻22K，单位K，没有则0Ω
+#endif
+#ifndef ADKEY_KEY1_PULLDOWN_RESISTOR
+#define ADKEY_KEY1_PULLDOWN_RESISTOR   0//0  //按键1下拉电阻0Ω
+#endif
+#ifndef ADKEY_KEY2_PULLDOWN_RESISTOR
+#define ADKEY_KEY2_PULLDOWN_RESISTOR   0//22  //按键2下拉电阻22K，单位K
+#endif
+#ifndef ADKEY_KEY3_PULLDOWN_RESISTOR
+#define ADKEY_KEY3_PULLDOWN_RESISTOR   0//33  //按键3下拉电阻33K，单位K
+#endif
+#ifndef ADKEY_KEY4_PULLDOWN_RESISTOR
+#define ADKEY_KEY4_PULLDOWN_RESISTOR   0//51  //按键4下拉电阻51K，单位K
+#endif
+#ifndef ADKEY_KEY5_PULLDOWN_RESISTOR
+#define ADKEY_KEY5_PULLDOWN_RESISTOR   0//100 //按键5下拉电阻100K，单位K
+#endif
+#ifndef ADKEY_KEY6_PULLDOWN_RESISTOR
+#define ADKEY_KEY6_PULLDOWN_RESISTOR   0//120 //按键6下拉电阻120K，单位K
+#endif
 
 #define ADKEY_NONE_V 	(0x3FF)//1023
-#define ADKEY0_V 		(0x3FF * ADKEY0_DOWNLOAD_R / (ADKEY_UPLOAD_R + ADKEY0_DOWNLOAD_R))
-#define ADKEY1_V 		(0x3FF * ADKEY1_DOWNLOAD_R / (ADKEY_UPLOAD_R + ADKEY1_DOWNLOAD_R))
-#define ADKEY2_V 		(0x3FF * ADKEY2_DOWNLOAD_R / (ADKEY_UPLOAD_R + ADKEY2_DOWNLOAD_R))
-#define ADKEY3_V 		(0x3FF * ADKEY3_DOWNLOAD_R / (ADKEY_UPLOAD_R + ADKEY3_DOWNLOAD_R))
+#define ADKEY1_V 		(ADKEY_NONE_V * ADKEY_KEY1_PULLDOWN_RESISTOR / (ADKEY_PULLUP_RESISTOR + ADKEY_KEY1_PULLDOWN_RESISTOR))
+#define ADKEY2_V 		(ADKEY_NONE_V * (ADKEY_KEY2_PULLDOWN_RESISTOR ? ADKEY_KEY2_PULLDOWN_RESISTOR : ADKEY_PULLUP_RESISTOR) / (ADKEY_PULLUP_RESISTOR + ADKEY_KEY2_PULLDOWN_RESISTOR))
+#define ADKEY3_V 		(ADKEY_NONE_V * (ADKEY_KEY3_PULLDOWN_RESISTOR ? ADKEY_KEY3_PULLDOWN_RESISTOR : ADKEY_PULLUP_RESISTOR) / (ADKEY_PULLUP_RESISTOR + ADKEY_KEY3_PULLDOWN_RESISTOR))
+#define ADKEY4_V 		(ADKEY_NONE_V * (ADKEY_KEY4_PULLDOWN_RESISTOR ? ADKEY_KEY4_PULLDOWN_RESISTOR : ADKEY_PULLUP_RESISTOR) / (ADKEY_PULLUP_RESISTOR + ADKEY_KEY4_PULLDOWN_RESISTOR))
+#define ADKEY5_V 		(ADKEY_NONE_V * (ADKEY_KEY5_PULLDOWN_RESISTOR ? ADKEY_KEY5_PULLDOWN_RESISTOR : ADKEY_PULLUP_RESISTOR) / (ADKEY_PULLUP_RESISTOR + ADKEY_KEY5_PULLDOWN_RESISTOR))
+#define ADKEY6_V 		(ADKEY_NONE_V * (ADKEY_KEY6_PULLDOWN_RESISTOR ? ADKEY_KEY6_PULLDOWN_RESISTOR : ADKEY_PULLUP_RESISTOR) / (ADKEY_PULLUP_RESISTOR + ADKEY_KEY6_PULLDOWN_RESISTOR))
 
-#define ADKEY0_VAL      (ADKEY0_V + ADKEY1_V) / 2   //从小值开始放，两个按键AD值中间值作为判断
-#define ADKEY1_VAL      (ADKEY1_V + ADKEY2_V) / 2   //两个按键AD值中间值作为判断
-#define ADKEY2_VAL      (ADKEY2_V + ADKEY3_V) / 2   //两个按键AD值中间值作为判断
-#define ADKEY2_END      (ADKEY2_V + ADKEY_NONE_V) / 2   //两个按键AD值中间值作为判断，最高ad加上峰值进行除2
-#define ADKEY3_VAL      (ADKEY3_V + ADKEY_NONE_V) / 2   //两个按键AD值中间值作为判断，最高ad加上峰值进行除2
 
+#define ADKEY1_VAL      (ADKEY1_V + ADKEY2_V) / 2           //两个按键AD值中间值作为判断
+#define ADKEY2_VAL      (ADKEY2_V + ADKEY3_V) / 2           //两个按键AD值中间值作为判断
+#define ADKEY3_VAL      (ADKEY3_V + ADKEY4_V) / 2           //两个按键AD值中间值作为判断，最高ad加上峰值进行除2
+#define ADKEY4_VAL      (ADKEY4_V + ADKEY5_V) / 2           //从小值开始放，两个按键AD值中间值作为判断
+#define ADKEY5_VAL      (ADKEY5_V + ADKEY6_V) / 2           //从小值开始放，两个按键AD值中间值作为判断
+#define ADKEY6_VAL      (ADKEY6_V + ADKEY_NONE_V) / 2       //从小值开始放，两个按键AD值中间值作为判断
+
+#if TCFG_ADKEY_PORT == IO_PORTA_07
+#define ADKEY_ADCH  AD_CH_PA07
+#elif TCFG_ADKEY_PORT == IO_PORTA_08
+#define ADKEY_ADCH  AD_CH_PA08
+#elif TCFG_ADKEY_PORT == IO_PORTA_10
+#define ADKEY_ADCH  AD_CH_PA10
+#elif TCFG_ADKEY_PORT == IO_PORTB_01
+#define ADKEY_ADCH  AD_CH_PB01
+#elif TCFG_ADKEY_PORT == IO_PORTB_06
+#define ADKEY_ADCH  AD_CH_PB06
+#elif TCFG_ADKEY_PORT == IO_PORTB_07
+#define ADKEY_ADCH  AD_CH_PB07
+#elif TCFG_ADKEY_PORT == IO_PORTC_00
+#define ADKEY_ADCH  AD_CH_PC00
+#elif TCFG_ADKEY_PORT == IO_PORTC_01
+#define ADKEY_ADCH  AD_CH_PC01
+#elif TCFG_ADKEY_PORT == IO_PORTC_09
+#define ADKEY_ADCH  AD_CH_PC09
+#elif TCFG_ADKEY_PORT == IO_PORTC_10
+#define ADKEY_ADCH  AD_CH_PC10
+#elif TCFG_ADKEY_PORT == IO_PORTH_00
+#define ADKEY_ADCH  AD_CH_PH00
+#elif TCFG_ADKEY_PORT == IO_PORTH_03
+#define ADKEY_ADCH  AD_CH_PH03
+#else
+#define ADKEY_ADCH  AD_CH_PB01
+#endif
 const struct adkey_platform_data adkey_data = {
     .enable     = 1,
 	.adkey_pin  = TCFG_ADKEY_PORT,
     .extern_up_en = 1,
-	.ad_channel = 3,
+	.ad_channel = ADKEY_ADCH,
     .ad_value = {
-        ADKEY0_VAL,
         ADKEY1_VAL,
         ADKEY2_VAL,
-        ADKEY2_END,//3个按键，ADKEY3_VAL是4个按键
-        ADKEY_NONE_V,
-        ADKEY_NONE_V,
+        ADKEY3_VAL,
+        ADKEY4_VAL,
+        ADKEY5_VAL,
+        ADKEY6_VAL,
         ADKEY_NONE_V,
         ADKEY_NONE_V,
         ADKEY_NONE_V,
         ADKEY_NONE_V,
     },
     .key_value = {
+#ifdef ADKEY_KEY1_FUNC
+        KEY_1,
+        ADKEY_KEY2_PULLDOWN_RESISTOR ? KEY_2 : NO_KEY,
+        ADKEY_KEY3_PULLDOWN_RESISTOR ? KEY_3 : NO_KEY,
+        ADKEY_KEY4_PULLDOWN_RESISTOR ? KEY_4 : NO_KEY,
+        ADKEY_KEY5_PULLDOWN_RESISTOR ? KEY_5 : NO_KEY,
+        ADKEY_KEY6_PULLDOWN_RESISTOR ? KEY_6 : NO_KEY,
+        NO_KEY,
+        NO_KEY,
+        NO_KEY,
+        NO_KEY,
+#else
         KEY_OK,
         KEY_UP,//KEY_MODE,
         KEY_DOWN,
-        NO_KEY,//KEY_UP,
         NO_KEY,
         NO_KEY,
         NO_KEY,
         NO_KEY,
         NO_KEY,
         NO_KEY,
+        NO_KEY,
+#endif
     },
 };
 #endif
@@ -356,30 +425,39 @@ SPI0_PLATFORM_DATA_BEGIN(spi0_data)
     .attr   = SPI_SCLK_L_UPL_SMPH | SPI_UPDATE_SAMPLE_SAME,
 SPI0_PLATFORM_DATA_END()
 
+#ifndef SPI1_PORT
+#define SPI1_PORT 'B'
+#define SPI1_SPEED           48000000
+#endif
+#ifndef SPI1_BIDIR_MODE
+#define SPI1_BIDIR_MODE SPI_BIDIR_MODE
+#endif
+#ifndef SPI1_SMPHL_MODE
+#define SPI1_SMPHL_MODE SPI_SCLK_L_UPL_SMPH
+#endif
 SPI1_PLATFORM_DATA_BEGIN(spi1_data)
-    .clk    = 40000000,
+    .clk    = SPI1_SPEED,
     .mode   = SPI_STD_MODE,
-    .port   = 'B',
-//    .attr	= SPI_SCLK_L_UPH_SMPH | SPI_BIDIR_MODE,
-//    .attr	= SPI_SCLK_L_UPH_SMPL | SPI_BIDIR_MODE,
-    .attr	= SPI_SCLK_L_UPL_SMPH | SPI_BIDIR_MODE,
-//    .attr	= SPI_SCLK_L_UPL_SMPL | SPI_BIDIR_MODE,
-//    .attr	= SPI_SCLK_L_UPH_SMPH | SPI_BIDIR_MODE,//WS2818 RGB灯
+    .port   = SPI1_PORT,
+    .attr	= SPI1_SMPHL_MODE | SPI1_BIDIR_MODE,
 SPI1_PLATFORM_DATA_END()
 
-#ifndef SPI2_CLOCK_HZ
-#define SPI2_CLOCK_HZ   500000
+#ifndef SPI2_PORT
+#define SPI2_PORT 'A'
+#define SPI2_SPEED           24000000
 #endif
-#ifndef SPI2_ATTR_SET
-#define SPI2_ATTR_SET   SPI_SCLK_H_UPL_SMPH | SPI_UNIDIR_MODE //单向单线
+#ifndef SPI2_BIDIR_MODE
+#define SPI2_BIDIR_MODE SPI_BIDIR_MODE
+#endif
+#ifndef SPI12_SMPHL_MODE
+#define SPI12_SMPHL_MODE SPI_SCLK_L_UPL_SMPH
 #endif
 SPI2_PLATFORM_DATA_BEGIN(spi2_data)
-    .clk    = SPI2_CLOCK_HZ,
+    .clk    = SPI2_SPEED,
     .mode   = SPI_STD_MODE,
-    .port   = 'A',
-    .attr	= SPI2_ATTR_SET,
+    .port   = SPI2_PORT,
+    .attr	= SPI12_SMPHL_MODE | SPI2_BIDIR_MODE,
 SPI2_PLATFORM_DATA_END()
-
 
 #ifdef CONFIG_UI_ENABLE
 #if TCFG_LCD_ILI9341_ENABLE
@@ -423,6 +501,18 @@ static const struct pap_info pap_data = {
 #endif
 
 static const struct ui_lcd_platform_data pdata = {
+#if (defined CONFIG_BOARD_OPEN_DEV_ENABLE && defined LCD_SPI_NAME)
+    .spi_id  = LCD_SPI_NAME,
+    .rs_pin  = LCD_SPI_RS_PORT,
+    .te_pin  = LCD_SPI_TE_PORT,
+    .rst_pin = LCD_SPI_RST_PORT,
+    .cs_pin  = LCD_SPI_CS_PORT,
+    .cs1_pin = LCD_SPI_CS1_PORT,
+    .bl_pin  = LCD_SPI_BL_PORT,
+    .touch_int_pin = LCD_TOUCH_INT_PORT,
+    .touch_reset_pin = LCD_TOUCH_RESET_PORT,
+    .lcd_if  = LCD_SPI,//屏幕接口类型还有 PAP , SPI
+#else
 #if TCFG_LCD_ST7735S_ENABLE || TCFG_LCD_ST7789P3_ENABLE || TCFG_LCD_ST77912_ENABLE || TCFG_LCD_GC9D01_ENABLE || TCFG_LCD_ST7735P3_ENABLE || TCFG_LCD_JD9853_ENABLE
     .spi_id  = "spi1",
     .rs_pin  = IO_PORTC_00,
@@ -478,6 +568,7 @@ static const struct ui_lcd_platform_data pdata = {
 
 
     .lcd_if  = LCD_SPI,//屏幕接口类型还有 PAP , SPI
+#endif
 #endif
 
 };
@@ -660,11 +751,16 @@ LED_PLATFORM_DATA_END()
 #ifdef TCFG_LED_PWM0_PORT
 #ifndef TCFG_LED_PWMCH_PORT
 #define TCFG_LED_PWMCH_PORT 0
+#else
+#define TCFG_LED_PWMCH_PORT 0
+#define TCFG_LED_PWM0_PORT  -1
+#define TCFG_LED_PWM0_FREQ 1000
 #endif
+
 PWM_PLATFORM_DATA_BEGIN(pwm_data0)
     .port	= TCFG_LED_PWM0_PORT,
     .pwm_ch = PWM_TIMER3_OPCH3 | TCFG_LED_PWMCH_PORT,//初始化可选多通道,如:PWMCH0_H | PWMCH0_L | PWMCH1_H ... | PWMCH7_H | PWMCH7_L | PWM_TIMER2_OPCH2 | PWM_TIMER3_OPCH3 ,
-    .freq   = 10000,//频率
+    .freq   = TCFG_LED_PWM0_FREQ,//频率
     .duty   = 100,//占空比
     .point_bit = 0,//根据point_bit值调节占空比小数点精度位: 0<freq<=4K,point_bit=2;4K<freq<=40K,point_bit=1; freq>40K,point_bit=0;
 PWM_PLATFORM_DATA_END()
@@ -1256,7 +1352,7 @@ static void board_power_init(void)
 #endif
         for (int i = 0; i < 500; i++) {//500ms * 3
             if (!read_power_key_press(1)) {
-                sys_power_poweroff();
+                sys_power_poweroff(0);
                 break;
             }
         }
@@ -1271,6 +1367,12 @@ static void board_power_init(void)
 	gpio_set_pull_down(TCFG_IOVDD_CTRL_PORT,0);
 #endif
 
+#ifdef LCD_POWER_PORT
+    gpio_latch_en(LCD_POWER_PORT, 0);
+	gpio_direction_output(LCD_POWER_PORT, 1);
+    gpio_set_pull_up(LCD_POWER_PORT, 1);
+	gpio_set_pull_down(LCD_POWER_PORT,0);
+#endif
     extern void clean_wakeup_source_port(void);
     clean_wakeup_source_port();
     dac_mute_control_init();

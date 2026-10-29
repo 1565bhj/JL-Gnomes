@@ -72,12 +72,13 @@ void __attribute__((weak)) lvgl_disp_init(void)
 {
     //user_lcd_init();
 }
-void __attribute__((weak)) lvgl_disp_get_width_hight(int *width, int *hight)
+int __attribute__((weak)) lvgl_disp_get_width_hight(int *width, int *hight)
 {
     if (width && hight) {
         *width = 240;
         *hight = 320;
     }
+    return 0;
 }
 void __attribute__((weak)) lvgl_disp_flush(int xs, int xe, int ys, int ye, unsigned char *img)
 {

@@ -390,7 +390,7 @@ __attribute__((weak)) void sys_power_poweroff_wait_powerkey_up(void)
 
 }
 
-void sys_power_poweroff(void)
+void sys_power_poweroff(unsigned int time_ms)
 {
 #ifdef  USED_TM1629_SHOWN
     extern void tm_1629_spi_exit(void);
@@ -417,7 +417,7 @@ void sys_power_poweroff(void)
     //更新关机次数到flash
     user_soft_power_off_write();
     sys_power_poweroff_wait_powerkey_up();
-    power_set_soft_poweroff(0);
+    power_set_soft_poweroff(time_ms);
 }
 
 int sys_power_get_battery_voltage(void)

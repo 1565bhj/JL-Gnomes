@@ -5,6 +5,9 @@
  *  板级配置选择，需要删去app_config.h中前面跟此头文件重复的宏定义，不然此头文件宏定义无效,只能打开一个, 不然会报错
  */
 
+#include "board_open_dev_cfg.h"
+
+#ifndef CONFIG_BOARD_OPEN_DEV_ENABLE
 //7911B
 //#define CONFIG_BOARD_7911BA
 // #define CONFIG_BOARD_7911BB
@@ -27,7 +30,7 @@
 //7916A
 // #define CONFIG_BOARD_7916AA
 #define CONFIG_BOARD_7916AB
-
+#endif
 
 /*
  *  工程配置选择,只能打开一个, 不然会报错

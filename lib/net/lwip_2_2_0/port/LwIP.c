@@ -72,6 +72,11 @@ int __attribute__((weak)) ext_lwip_event_cb(void *lwip_ctx, enum LWIP_EVENT even
     return 0;
 }
 
+int __attribute__((weak)) ext_lwip_event_user_cb(void *lwip_ctx, enum LWIP_EVENT event)
+{
+    return 0;
+}
+
 int __attribute__((weak)) eth_lwip_event_cb(void *lwip_ctx, enum LWIP_EVENT event)
 {
     return 0;
@@ -586,7 +591,7 @@ static void network_is_dhcp_bound(struct netif *netif)
     }
 #endif
 
-    if ((++(*p_to))*DHCP_TMR_INTERVAL >  dhcp_timeout_msec) {
+    if ((++(*p_to)) * DHCP_TMR_INTERVAL >  dhcp_timeout_msec) {
         (*p_to) = 0;
 
 #if LWIP_IPV6
@@ -604,7 +609,8 @@ static void network_is_dhcp_bound(struct netif *netif)
         }
 #ifdef HAVE_EXT_WIRELESS_NETIF
         else if (netif == &ext_wireless_netif || is_aic_driver == TRUE) {
-            ext_lwip_event_cb(NULL, LWIP_EXT_WIRELESS_DHCP_BOUND_TIMEOUT);
+            //ext_lwip_event_cb(NULL, LWIP_EXT_WIRELESS_DHCP_BOUND_TIMEOUT);
+            ext_lwip_event_user_cb(NULL, LWIP_EXT_WIRELESS_DHCP_BOUND_TIMEOUT);
             parm = EXT_WIFI_NETIF;
         }
 #endif
@@ -696,7 +702,8 @@ static void network_is_dhcp_bound(struct netif *netif)
 
 #ifdef HAVE_EXT_WIRELESS_NETIF
             else if (netif == &ext_wireless_netif || is_aic_driver == TRUE) {
-                ext_lwip_event_cb(NULL, LWIP_EXT_WIRELESS_DHCP_BOUND_SUCC);
+                //ext_lwip_event_cb(NULL, LWIP_EXT_WIRELESS_DHCP_BOUND_SUCC);
+                ext_lwip_event_user_cb(NULL, LWIP_EXT_WIRELESS_DHCP_BOUND_SUCC);
             }
 #endif
 #ifdef HAVE_LTE_NETIF
@@ -1316,7 +1323,7 @@ void lwip_etharp_remove_static_entry(const char *ip_str)
 /*
  * 函数名：LWIP_Init
  * 描述  ：初始化LWIP协议栈，主要是把网卡与LWIP连接起来。
- 			包括IP、MAC地址，接口函数
+            包括IP、MAC地址，接口函数
  * 输入  ：是否使用DHCP获得IP地址
  * 输出  : 无
  * 调用  ：外部调用
@@ -1598,7 +1605,7 @@ int getnameinfo(const struct sockaddr *sa, int salen, char *host, int hostlen, c
 
     if ((flags & NI_NUMERICHOST) && host) {
         if (sa_in->sin_addr.s_addr == 0) {
-            Get_IPAddress(WIFI_NETIF, host);	//如果没有指定源IP地址就默认使用本地的无线网卡IP
+            Get_IPAddress(WIFI_NETIF, host);    //如果没有指定源IP地址就默认使用本地的无线网卡IP
         } else {
             inet_ntoa_r(sa_in->sin_addr.s_addr, host, hostlen);
         }

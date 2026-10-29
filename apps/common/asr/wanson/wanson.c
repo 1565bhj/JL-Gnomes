@@ -29,15 +29,15 @@
 //#define UNI_BUFF_SIZE       (FRAME_SAMPLES*CHANNEL_NUM)
 
 //#define AEC_GAIN(v)     (int)(CONFIG_AISP_AEC_ADC_GAIN)
-//#define MIC0_GAIN(v)    (int)(CONFIG_AISP_MIC_ADC_GAIN)   //固定CONFIG_AISP_MIC_ADC_GAIN-80
-//#define MIC1_GAIN(v)    (MIC0_GAIN(v))
+//#define MIC1_GAIN(v)    (int)(CONFIG_AISP_MIC_ADC_GAIN)   //固定CONFIG_AISP_MIC_ADC_GAIN-80
+//#define MIC2_GAIN(v)    (MIC1_GAIN(v))
 
 //宇航员.................
 //y = -0.7143x + 112.86
 #define AEC_GAIN(v)     (int)(-0.7143 * (double)(v) + 115.86)
 //y = -0.7143x + 122.86
-#define MIC0_GAIN(v)    (int)(-0.7143 * (double)(v) + 127.86)
-#define MIC1_GAIN(v)     MIC0_GAIN(v)
+#define MIC1_GAIN(v)    (int)(-0.7143 * (double)(v) + 127.86)
+#define MIC2_GAIN(v)     MIC1_GAIN(v)
 
 #define MIC_MAX_GAIN 95
 #define AUDIO_RECORD_MIC_COUNT 1
@@ -1506,8 +1506,8 @@ int aisp_mic_gain_set(unsigned char volume)
 
     if (__this->server_handle && __this->run_flag) {
         aisp_aec_gain = AEC_GAIN(volume);
-        aisp_mic0_gain = MIC0_GAIN(volume);
-        aisp_mic1_gain = MIC1_GAIN(volume);
+        aisp_mic0_gain = MIC1_GAIN(volume);
+        aisp_mic1_gain = MIC2_GAIN(volume);
 
         aisp_aec_gain = aisp_aec_gain >= MIC_MAX_GAIN ? MIC_MAX_GAIN : (aisp_aec_gain < 30 ? 30 : aisp_aec_gain);
         aisp_mic0_gain = aisp_mic0_gain >= MIC_MAX_GAIN ? MIC_MAX_GAIN : (aisp_mic0_gain < 10 ? 10 : aisp_mic0_gain);

@@ -137,7 +137,7 @@ static int http_ota_task(void *priv)
         }
 #endif
         if (priv == NULL) {
-            os_time_dly(500);//非MQTT触发，5秒钟后升级
+            os_time_dly(1000);//非MQTT触发，5秒钟后升级
         }
         if (to) {
             bt_ble_get_mac(&mac);//使用蓝牙mac

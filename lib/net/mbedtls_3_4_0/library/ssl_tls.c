@@ -675,7 +675,7 @@ static unsigned int extension_type_table[] = {
 const char *mbedtls_ssl_get_extension_name(unsigned int extension_type)
 {
     return extension_name_table[
-            mbedtls_ssl_get_extension_id(extension_type)];
+               mbedtls_ssl_get_extension_id(extension_type)];
 }
 
 static const char *ssl_tls13_get_hs_msg_name(int hs_msg_type)

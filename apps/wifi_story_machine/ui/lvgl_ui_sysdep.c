@@ -363,12 +363,13 @@ void lvgl_disp_init(void)//显示屏初始化
  * @param NULL
  * @return NULL
  */
-void lvgl_disp_get_width_hight(int *width, int *hight)//显示屏分辨率获取
+int lvgl_disp_get_width_hight(int *width, int *hight)//显示屏分辨率获取
 {
     if (width && hight) {
         *width = LCD_W;
         *hight = LCD_H;
     }
+    return LCD_W;
 }
 
 /**

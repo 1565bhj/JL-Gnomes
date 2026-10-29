@@ -164,6 +164,7 @@
 					<Add directory="../../../common/jl_math" />
 					<Add directory="../../../../lib/system/lvgl_v8/src/core" />
 					<Add directory="../../../common/gsensor" />
+					<Add directory="../../iflytek" />
 				</Compiler>
 				<Linker>
 					<Add option="-flto" />
@@ -304,6 +305,7 @@
 					<Add option="../../../../cpu/wl82/liba/crypto_toolbox_Osize.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_lvgl_v8.a" />
 					<Add option="../../../../cpu/wl82/liba/qyai_mqtt.a" />
+					<Add option="../../../../cpu/wl82/liba/sxy_qyai.a" />
 					<Add option="--end-group" />
 					<Add option="../../../../cpu/wl82/liba/video_dec_server.a" />
 					<Add option="../../../../cpu/wl82/liba/ui.a" />
@@ -313,7 +315,6 @@
 					<Add option="../../../../cpu/wl82/liba/libVolcEngineRTCLite.a" />
 					<Add option="../../../../cpu/wl82/liba/libcurl.a" />
 					<Add option="../../../../cpu/wl82/liba/libwebsockets.a" />
-					<Add option="../../../../cpu/wl82/liba/sxy_qyai.a" />
 					<Add option="../../../../cpu/wl82/liba/libe2e.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_twetalk.a" />
 					<Add option="-T../../../../cpu/wl82/sdk.ld" />
@@ -1203,6 +1204,9 @@
 		<Unit filename="../../../common/ui/lcd_driver/lcd_st7735s.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../../common/ui/lcd_driver/lcd_st7735sv.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../../common/ui/lcd_driver/lcd_st7789p3.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1418,7 +1422,7 @@
 		<Unit filename="../../chatbot/irarc/irarc_instruct_word.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../chatbot/key/key_vad.c">
+		<Unit filename="../../chatbot/key/key_func.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/key/key_wake_aisp.c">
@@ -1602,6 +1606,10 @@
 		<Unit filename="../../iflytek/asr/param_module.h" />
 		<Unit filename="../../iflytek/asr/vtn_auth_adapter.h" />
 		<Unit filename="../../iflytek/asr/w_ivw.h" />
+		<Unit filename="../../iflytek/ifly_kws_mlp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../iflytek/ifly_kws_mlp.h" />
 		<Unit filename="../../iflytek/ifly_wake_demo.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1711,6 +1719,7 @@
 		<Unit filename="board_7916AB_cfg.h" />
 		<Unit filename="board_7916A_develop_cfg.h" />
 		<Unit filename="board_config.h" />
+		<Unit filename="board_open_dev_cfg.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

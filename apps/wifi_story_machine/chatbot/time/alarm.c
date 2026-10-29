@@ -1738,7 +1738,7 @@ int alarm_music_play_stop(void)
     if (music_play_alarm_ring()) {
 #if 1 //闹钟唤醒响铃下、按下按键停止闹钟并关机
         if (system_reset_reason_get() == SYS_RST_ALM_WKUP) {//超时而且是闹钟唤醒
-            sys_power_poweroff();
+            sys_power_poweroff(0);
         }
 #endif
         if (music_play_alarm_url_ring()) {

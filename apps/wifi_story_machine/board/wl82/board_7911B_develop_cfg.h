@@ -2,8 +2,9 @@
 #define CONFIG_BOARD_7911B_DEVELOP_CFG_H
 
 #ifdef CONFIG_BOARD_DEVELOP
+//#define CONFIG_FLASH_FOUR_WIDTH_ENABLE                 //FLASH四线模式
 
-#define CONFIG_STORE_VOLUME     1           //保存音量大小
+#ifndef  CONFIG_BOARD_OPEN_DEV_ENABLE
 #define VOLUME_STEP             10          //音量设置梯度
 #define GAIN_STEP               10          //录音增益梯度
 #define MIN_VOLUME_VALUE        10          //最小音量
@@ -12,18 +13,29 @@
 #define HW_VOLUME_VALUE         70          //解码硬件最大音量
 #define PRODUCTION_TEST_VOLUME  80          //厂测音量
 #define FORCE_DAC_SAMPLE_TRATE  0           //强制解码采样率（暂无用）
-#define ASR_CONTINIU_ENABLE     0           //语音识别连续对话（暂无用）
-//#define CONFIG_USE_TTS_REPLY_ENABLE         //使能回复语对话使用在线TTS
+
 #define NET_MUSIC_CONFIG_DEC_ANALOG_VOLUME_ENABLE //网络音乐解码的淡入淡出
 #define CONFIG_MORE_NOTIC_REPLY_ENABLE      //使能多次提示回复语
-#define CONFIG_KWS_XIAOYUXIAOYU             //唤醒词：小语小语
+#endif
+
+#define CONFIG_STORE_VOLUME     1           //保存音量大小
+#define ASR_CONTINIU_ENABLE     0           //语音识别连续对话（暂无用）
+#define SYS_COMMAND_ANSER_PLAY_ENABLE         //系统命令采用本地“好的”提示，注释则使用服务器下发
+
+
+//#define CONFIG_USE_TTS_REPLY_ENABLE         //使能回复语对话使用在线TTS
+
+// #define CONFIG_KWS_XIAOYUXIAOYU             //唤醒词：小语小语
 //#define CONFIG_KWS_ENGLISH                  //英语版唤醒词：hello you you，海外版本（在本文件最后的海外语言配置项进行语言选择）
 
-#define SYS_COMMAND_ANSER_PLAY_ENABLE         //系统命令采用本地“好的”提示，注释则使用服务器下发
+
 //#define BT_DISCON_MUSIC_NOTICE_ENABLE       //播报蓝牙断开开关
 //#define TCFG_EQ_ONLINE_ENABLE     1           //1:支持在线EQ调试
-//#define PRODUCTION_ALL_TEST_ENABLE            //所有功能产测模式使能
+
+#ifndef  CONFIG_BOARD_OPEN_DEV_ENABLE
 #define CONFIG_QYAI_MQTT_IOT_ENABLE             //开启QYAI-MQTT
+#endif
+#define CONFIG_QYAI_REC_CFG_ENABLE              //开启QYAI配置文件
 
 /***********************4G模组芯片厂商*****************************************/
 #define VENDOR_ML307R       0 //中移,307R/C系列
@@ -34,17 +46,21 @@
 #define VENDOR_NT26K        5 //利尔达NT26K
 #define VENDOR_CE105        6 //雁飞CE105
 
+#ifndef CONFIG_USB_OTG_EN_VAL
 //根据不同的芯片去分配不同的USB口
 //USB口使能：0x1-->USB0； 0x2-->USB1； 0x3--->USB0和USB1
 //#define CONFIG_USB_OTG_EN_VAL   0x02 //High-Speed端口，7916两组端口都有
 #define CONFIG_USB_OTG_EN_VAL   0x01 //Full-Speed端口，7911只有FUSB
 #define DEFAULT_NET_CHANNEL     0 //默认出厂设置的网络模式：0-wifi模式，1-4G模式
+#endif
 /*****************************************************************************/
 
 #ifdef CONFIG_NET_ENABLE
 #define CONFIG_ASR_ALGORITHM_ENABLE         //mode:打断唤醒模式使能
 #define CONFIG_NET_MUSIC_MODE_ENABLE        //mode:网络播放模式使能
-//#define CONFIG_BT_MUSIC_MODE_ENABLE         //蓝牙播放模式使能
+#ifndef  CONFIG_BOARD_OPEN_DEV_ENABLE
+#define CONFIG_BT_MUSIC_MODE_ENABLE         //蓝牙播放模式使能
+#endif
 //#define CONFIG_USB_DISK_MUSIC_MODE_ENABLE   //U盘播放模式使能
 //#define CONFIG_SD_MUSIC_MODE_ENABLE         //SD卡播放模式使能
 //#define CONFIG_AUX_MUSIC_MODE_ENABLE        //line in线路输入模式使能
@@ -105,8 +121,8 @@
 
 
 //#define PRODUCTION_ALL_TEST_ENABLE                          //开启量产测试所有功能
-//#define PRODUCTION_ALL_TEST_PORT            IO_PORTA_10//IO_PORTB_01     //触发量产测试所有功能的IO口
-#ifdef PRODUCTION_ALL_TEST_ENABLE
+////#define PRODUCTION_ALL_TEST_PORT            IO_PORTA_10//IO_PORTB_01     //触发量产测试所有功能的IO口
+#if (defined PRODUCTION_ALL_TEST_ENABLE || defined PRODUCTION_TEST_ENABLE)
 #define PRODUCTION_ALL_TEST_WIFI_SSID       "WIFI-PD-TEST"    //量产测试WiFi名称
 #define PRODUCTION_ALL_TEST_WIFI_PWD        "12345678"        //量产测试WiFi密码
 #define PRODUCTION_ALL_TEST_BT_NAME         "PD_TEST"           //量产测试蓝牙名称
@@ -123,18 +139,22 @@
 #endif
 #endif
 
-#define CONFIG_BT_MUSIC_MODE_ENABLE                     //蓝牙播放模式使能
+//#define CONFIG_BT_MUSIC_MODE_ENABLE         //蓝牙播放模式使能
 //#define CONFIG_SD_MUSIC_MODE_ENABLE         //SD卡播放模式使能
 //#define CONFIG_SD_AUTO_ENABLE
 
 
 //语音检测的灵敏度相关参数
-#define CONFIG_AISP_MIC_ADC_GAIN            90      //本地空闲下mic增益，远场拾音加大80以上，进场拾音40以下
-#define SPEECH_ENERGY_MIN                   (84)   //语音检测最小值能量值
+#ifndef CONFIG_AISP_MIC_ADC_GAIN
+#define CONFIG_AISP_MIC_ADC_GAIN            80      //本地空闲下mic增益，远场拾音加大80以上，进场拾音40以下
+#endif
+#define SPEECH_ENERGY_MIN                   (128)   //语音检测最小值能量值
 #define DIGITAL_VOL_AGC                     0      //AEC后的音频数字增益
 
+
+#ifndef  CONFIG_BOARD_OPEN_DEV_ENABLE
 #define TCFG_DEBUG_PORT                     IO_PORTA_07 //打印调试IO
-#define TCFG_VCC33_CTRL_PORT                IO_PORTA_10 //3.3V电原控制IO
+//#define TCFG_VCC33_CTRL_PORT                IO_PORTA_10 //3.3V电原控制IO，默认使用SFGAT
 #define TCFG_IOVDD_CTRL_PORT                IO_PORTA_00 //VDDIO电原控制IO
 
 //#define TCFG_FIRST_POWER_OFF_EN                 //第一次上电开机需要关机
@@ -224,6 +244,7 @@
 #define TCFG_SD_DET_IO                      -1          //SD_DET_MODE为SD_IO_DECT时有效
 #define TCFG_SD_DET_IO_LEVEL                0           //IO检卡上线的电平(0/1),SD_DET_MODE为SD_IO_DECT时有效
 #define TCFG_SD_CLK                         24000000    //SDIO时钟
+#endif // CONFIG_BOARD_OPEN_DEV_ENABLE
 
 #if TCFG_VBAT_CHECK_EN
 #define CONFIG_ASR_POWER_OFF_ENABLE         //语音在线关机功能
@@ -237,8 +258,17 @@
 #define TCFG_CAMERA_XCLK_PORT               IO_PORTC_00
 #define TCFG_CAMERA_RESET_PORT              -1
 
-#define TCFG_SW_IIC_CLK_PORT                IO_PORTC_01
-#define TCFG_SW_IIC_DAT_PORT                IO_PORTC_02
+#ifndef TCFG_SW_IIC0_CLK_PORT
+#define TCFG_SW_IIC0_CLK_PORT                IO_PORTC_01
+#define TCFG_SW_IIC0_SDA_PORT                IO_PORTC_02
+#define TCFG_SW_IIC0_DELAY                   20
+#endif
+#ifndef TCFG_SW_IIC1_CLK_PORT
+#define TCFG_SW_IIC1_CLK_PORT                IO_PORTC_03
+#define TCFG_SW_IIC1_SDA_PORT                IO_PORTC_04
+#define TCFG_SW_IIC1_DELAY                   20
+#endif
+
 //*********************************************************************************//
 //                            AUDIO_ADC应用的通道配置                              //
 //*********************************************************************************//
@@ -256,54 +286,66 @@
 //   LADC_CH_AUX2  AUX通道2 PA5
 //   LADC_CH_AUX3  AUX通道3 PH4
 **********************************/
+
 #ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
-#define TCFG_LINEIN_CHANNEL_MAP             LADC_CH_AUX0// | LADC_CH_AUX3
-#define TCFG_LINEIN_CHANNEL_NUM             1
+#ifndef AUX_CHANNEL
+#define AUX_CHANNEL     LADC_CH_AUX0// | LADC_CH_AUX3
+#endif
 #else
 #if CONFIG_AISP_AEC_USE_LINEIN
-#define TCFG_LINEIN_CHANNEL_MAP             LADC_CH_AUX3//LADC_CH_AUX0
-#define TCFG_LINEIN_CHANNEL_NUM             1
+#ifndef AUX_CHANNEL
+#define AUX_CHANNEL     LADC_CH_AUX3// | LADC_CH_AUX3
+#endif
 #else
-#define TCFG_LINEIN_CHANNEL_MAP             -1//LADC_CH_AUX0 | LADC_CH_AUX3
-#define TCFG_LINEIN_CHANNEL_NUM             0
+#define AUX_CHANNEL     0
 #endif
 #endif
+#define TCFG_LINEIN_CHANNEL_MAP             AUX_CHANNEL
+#define TCFG_LINEIN_CHANNEL_NUM             (AUX_CHANNEL ? 1 : 0)
 
-#ifdef CONFIG_NO_SDRAM_ENABLE
-#define MIC0                                1   //mic0通道：对应LADC_CH_MIC1_P_N
-#define MIC1                                2   //mic1通道：对应LADC_CH_MIC2_P_N
-#define MIC2_AEC                            0   //回采AEC回声消除通道：对应LADC_CH_MIC0_P_N
+#ifndef  CONFIG_BOARD_OPEN_DEV_ENABLE
+#define MIC1                                1   //mic0通道：对应LADC_CH_MIC1_P_N
+#define MIC2                                2   //mic1通道：对应LADC_CH_MIC2_P_N
+#define MIC_AEC                             0   //回采AEC回声消除通道：对应LADC_CH_MIC0_P_N
+#endif
 
 #define TCFG_MIC_CHANNEL_NUM                (2 | (AEC_MIC_P_N ? 1 : 0))   //MIC通道数量
-#else
-#define MIC0                                1   //mic0通道：对应LADC_CH_MIC1_P_N
-#define MIC1                                1   //mic1通道：对应LADC_CH_MIC2_P_N
-#define MIC2_AEC                            0   //回采AEC回声消除通道：对应LADC_CH_MIC0_P_N
 
-#define TCFG_MIC_CHANNEL_NUM                (2)   //MIC通道数量
+#define CONFIG_ASR_CLOUD_ADC_CHANNEL        MIC1        //云端识别mic通道
+#define CONFIG_VOICE_NET_CFG_ADC_CHANNEL    MIC1        //声波配网mic通道
+#define CONFIG_AISP_MIC0_ADC_CHANNEL        MIC1        //本地唤醒左mic通道
+#define CONFIG_AISP_MIC1_ADC_CHANNEL        MIC2        //本地唤醒右mic通道
+#define CONFIG_REVERB_ADC_CHANNEL           MIC1        //混响mic通道
+#define CONFIG_PHONE_CALL_ADC_CHANNEL       MIC1        //通话mic通道
+#define CONFIG_UAC_MIC_ADC_CHANNEL          MIC1        //UAC mic通道
+
+#ifndef AUDIO_RECORD_MIC_COUNT
+#define AUDIO_RECORD_MIC_COUNT              2 //1单麦,2双麦
 #endif
-
-#define CONFIG_ASR_CLOUD_ADC_CHANNEL        MIC0        //云端识别mic通道
-#define CONFIG_VOICE_NET_CFG_ADC_CHANNEL    MIC0        //声波配网mic通道
-#define CONFIG_AISP_MIC0_ADC_CHANNEL        MIC0        //本地唤醒左mic通道
-#define CONFIG_AISP_MIC1_ADC_CHANNEL        MIC1        //本地唤醒右mic通道
-#define CONFIG_REVERB_ADC_CHANNEL           MIC0        //混响mic通道
-#define CONFIG_PHONE_CALL_ADC_CHANNEL       MIC0        //通话mic通道
-#define CONFIG_UAC_MIC_ADC_CHANNEL          MIC0        //UAC mic通道
-
-#define AUDIO_RECORD_MIC_COUNT              1 //1单麦,2双麦
 
 #ifndef CONFIG_AISP_MIC_ADC_GAIN
 #define CONFIG_AISP_MIC_ADC_GAIN            90      //本地唤醒mic增益
 #endif
 #define CONFIG_AISP_AEC_ADC_GAIN            (CONFIG_AISP_MIC_ADC_GAIN - 10)     //本地AEC回采增益
 
-#define CONFIG_AISP_MIC2_AEC_ADC_CHANNEL    MIC2_AEC        //本地使用硬件回采的回声消除mic通道
+#define CONFIG_AISP_MIC2_AEC_ADC_CHANNEL    MIC_AEC        //本地使用硬件回采的回声消除mic通道
 
 #define CONFIG_AISP_LINEIN_ADC_GAIN         CONFIG_AISP_AEC_ADC_GAIN
 #define CONFIG_AISP_LINEIN_ADC_CHANNEL      (AEC_MIC_P_N ? 3 : 0)           //本地唤醒LINEIN回采DAC通道，值为:0/1/2/3，不能和MIC冲突使用，和TCFG_LINEIN_CHANNEL_MAP有关
 #define CONFIG_AUDIO_LINEIN_CHANNEL         TCFG_LINEIN_CHANNEL_NUM         //LIENIN通道数，使用LINEIN回采DAC通道需要使能通道数>0
 #define CONFIG_AUDIO_LINEIN_CHANNEL_MAP     TCFG_LINEIN_CHANNEL_MAP
+
+//麦克风/回采增益线性曲线斜率和拮据
+#ifndef AEC_SLOPE
+#define AEC_SLOPE           -0.75
+#define AEC_INTERCEPT       128
+
+#define MIC1_SLOPE          -0.6
+#define MIC1_INTERCEPT      102
+
+#define MIC2_SLOPE          -0.76
+#define MIC2_INTERCEPT      100
+#endif
 
 #ifdef CONFIG_USB_DISK_MUSIC_MODE_ENABLE
 #define TCFG_UDISK_ENABLE                   1     //U盘主机功能

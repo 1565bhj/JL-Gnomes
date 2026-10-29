@@ -165,6 +165,7 @@
 					<Add directory="../../../common/jl_math" />
 					<Add directory="../../../../lib/system/lvgl_v8/src/core" />
 					<Add directory="../../../common/gsensor" />
+					<Add directory="../../iflytek" />
 				</Compiler>
 				<Linker>
 					<Add option="-flto" />
@@ -302,6 +303,7 @@
 					<Add option="../../../../cpu/wl82/liba/lib_sig_mesh.a" />
 					<Add option="../../../../cpu/wl82/liba/crypto_toolbox_Osize.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_mqtt.a" />
+					<Add option="../../../../cpu/wl82/liba/sxy_qyai_sfc.a" />
 					<Add option="--end-group" />
 					<Add option="../../../../cpu/wl82/liba/video_dec_server.a" />
 					<Add option="../../../../cpu/wl82/liba/ui.a" />
@@ -311,7 +313,6 @@
 					<Add option="../../../../cpu/wl82/liba/libVolcEngineRTCLite.a" />
 					<Add option="../../../../cpu/wl82/liba/libcurl.a" />
 					<Add option="../../../../cpu/wl82/liba/libwebsockets.a" />
-					<Add option="../../../../cpu/wl82/liba/sxy_qyai_sfc.a" />
 					<Add option="../../../../cpu/wl82/liba/libe2e.a" />
 					<Add option="../../../../cpu/wl82/liba/lib_twetalk.a" />
 					<Add option="-T../../../../cpu/wl82/sdk.ld" />
@@ -1116,16 +1117,10 @@
 		<Unit filename="../../chatbot/battery_check.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../chatbot/key/key_vad.c">
+		<Unit filename="../../chatbot/key/key_func.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/key/key_wake_aisp.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../chatbot/key/tm_touch_key.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../chatbot/key/tm_touch_key1.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/key/wakeup_port_touch.c">
@@ -1190,6 +1185,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/qyai_config.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../chatbot/qyai_config_res.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/qyai_pcm2opus.c">
@@ -1271,6 +1269,7 @@
 		<Unit filename="../../iflytek/asr/param_module.h" />
 		<Unit filename="../../iflytek/asr/vtn_auth_adapter.h" />
 		<Unit filename="../../iflytek/asr/w_ivw.h" />
+		<Unit filename="../../iflytek/ifly_kws_mlp.h" />
 		<Unit filename="../../include/action.h" />
 		<Unit filename="../../include/app_config.h" />
 		<Unit filename="../../include/app_music.h" />
@@ -1313,6 +1312,7 @@
 		<Unit filename="board_7916AB_cfg.h" />
 		<Unit filename="board_7916A_develop_cfg.h" />
 		<Unit filename="board_config.h" />
+		<Unit filename="board_open_dev_cfg.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

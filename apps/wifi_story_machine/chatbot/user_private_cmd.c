@@ -333,6 +333,15 @@ int net_ai_asr_txt_recv_callback(char *buf, int len)
         return ret;
     }
 #endif
+
+#ifdef USED_WS2812B_SHOWN
+    int ws2812_cmd_callback(char *word);
+    ret = ws2812_cmd_callback(buf);
+    if (ret) {
+        return ret;
+    }
+#endif
+
     printf("asr_txt : %s \n", buf);
     /*
     if (!strcmp("模式切换", buf)) { //"模式切换"用户自定义私有命令检测

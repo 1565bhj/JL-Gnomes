@@ -403,7 +403,7 @@ static void uart_recv_task_main(void *priv)
                     music_play_res_file("PwrOff.mp3");
                     music_play_waite();
                     uart_send_data(AT_OK);
-                    sys_power_poweroff();
+                    sys_power_poweroff(0);
                 }
                 if (strstr(cmd, AT_CMD_DIALUOGE_CLOSE) || strstr(cmd, AT_CMD_AI_DIALUOGE_STOP)) {
                     aisp_clear(0);

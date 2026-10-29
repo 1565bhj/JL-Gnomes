@@ -782,7 +782,7 @@ static void sys_timeout_power_off(void *p)
 #ifdef CONFIG_UI_PLAY_EMOJI
                 play_face_emoji(AI_UART_CMD_PWR_OFF);
 #endif
-                sys_power_poweroff();//关闭时候不提示
+                sys_power_poweroff(0);//关闭时候不提示
             }
         }
     } else if (p) {
@@ -803,7 +803,7 @@ static void sys_timeout_power_off(void *p)
 #ifdef CONFIG_UI_PLAY_EMOJI
         play_face_emoji(AI_UART_CMD_PWR_OFF);
 #endif
-        sys_power_poweroff();//关闭时候不提示
+        sys_power_poweroff(0);//关闭时候不提示
     }
 }
 

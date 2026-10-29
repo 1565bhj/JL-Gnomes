@@ -3,8 +3,12 @@
 
 #ifdef CONFIG_BOARD_7916AA
 
+#ifndef __FLASH_SIZE__
 #define __FLASH_SIZE__    (8 * 1024 * 1024)
+#endif
+#ifndef __SDRAM_SIZE__
 #define __SDRAM_SIZE__    (2 * 1024 * 1024)
+#endif
 
 #define TCFG_HOST_UVC_ENABLE                0     //UVC主机功能
 

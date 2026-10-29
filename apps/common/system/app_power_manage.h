@@ -40,7 +40,7 @@ void sys_power_init(void);
 int sys_power_get_battery_voltage(void);
 int sys_power_get_battery_persent(void);
 int sys_power_is_charging(void);
-void sys_power_poweroff(void);
+void sys_power_poweroff(unsigned int time_ms);
 /*
  * @brief 软关机，触发DEVICE_EVENT_POWER_SHUTDOWN事件，app捕获事件释放资源再调用sys_power_poweroff()
  */

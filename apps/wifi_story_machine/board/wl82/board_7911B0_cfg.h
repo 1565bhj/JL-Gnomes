@@ -3,9 +3,12 @@
 
 #ifdef CONFIG_BOARD_7911B0
 
+#ifndef __FLASH_SIZE__
 #define __FLASH_SIZE__    (8 * 1024 * 1024)
+#endif
+#ifndef __SDRAM_SIZE__
 #define __SDRAM_SIZE__    (0 * 1024 * 1024)
-
+#endif
 #undef CONFIG_VIDEO_ENABLE
 
 //7911B

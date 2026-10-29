@@ -1180,6 +1180,19 @@ dns_correct_response(u8_t idx, u32_t ttl)
 {
     struct dns_table_entry *entry = &dns_table[idx];
 
+    if (entry->server_idx != 0) { //把成功的DNS服务器调到首位 modify bu shunjian
+#if LWIP_IPV4 && LWIP_IPV6
+        LWIP_DEBUGF((0xffU & ~(LWIP_DBG_HALT)), ("CHANGE DNS_SERVERS[%d->0[0x%x][0x%x]\r\n", entry->server_idx, dns_getserver(entry->server_idx)->u_addr.ip4.addr, dns_getserver(0)->u_addr.ip4.addr));
+#else
+        LWIP_DEBUGF((0xffU & ~(LWIP_DBG_HALT)), ("CHANGE DNS_SERVERS[%d->0[0x%x][0x%x]\r\n", entry->server_idx, dns_getserver(entry->server_idx)->addr, dns_getserver(0)->addr));
+#endif
+        ip_addr_t dns_addr_0 = *dns_getserver(0);
+        ip_addr_t dns_addr_idx = *dns_getserver(entry->server_idx);
+        dns_setserver(0, &dns_addr_idx);
+        dns_setserver(entry->server_idx, &dns_addr_0);
+        entry->server_idx = 0;
+    }
+
     entry->state = DNS_STATE_DONE;
 
     LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": response = ", entry->name));

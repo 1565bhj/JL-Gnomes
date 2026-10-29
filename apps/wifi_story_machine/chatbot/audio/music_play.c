@@ -564,21 +564,21 @@ int music_play_backdown(void)   //主人我退下了
     return ret;
 }
 
-void music_tts_play_hello_clear(void *priv)
+int music_tts_play_hello_clear(void *priv)
 {
-    int time_id = __this->tts_check_time_id;
-    if (!__this->tts_play_hello) {
+    if (!__this->tts_play_hello && __this->tts_check_time_id) {
         __this->tts_check_time_id = 0;
-        return;
+        return -1;
     }
     __this->tts_play_hello = 0;
     __this->tts_check_time_id = 0;
     if (priv) {
         char path[32];
-        char index = (char)priv;
+        char index = (char)priv - 1;
         sprintf(path, "hello%d.mp3", index + 1);
         music_play_res_file(path);
     }
+    return 0;
 }
 
 int music_play_hello(char index)   //主人我在
@@ -608,7 +608,7 @@ int music_play_hello(char index)   //主人我在
     ret = http_tts_reply_type(1);
     __this->tts_play_hello = true;
     if (!__this->tts_check_time_id) {
-        __this->tts_check_time_id = sys_timeout_add_to_task("sys_timer", index, music_tts_play_hello_clear, 2.5 * 1000);
+        __this->tts_check_time_id = sys_timeout_add_to_task("sys_timer", index + 1, music_tts_play_hello_clear, 2.5 * 1000);
     }
 #else
     char path[32];

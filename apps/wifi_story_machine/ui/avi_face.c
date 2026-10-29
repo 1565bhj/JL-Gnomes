@@ -509,7 +509,6 @@ redo:
 #if (USE_LCD_TE_ROTATE_ENABLE && USE_LCD_TE && (__SDRAM_SIZE__ >= (8*1024*1024))) //使用TE信号解决播放视频撕裂感
                 lcd_show_frame_to_dev_flip(rgb565, info.width * info.height * 2, 0);//视频缓存数据翻转后推屏，并设置屏幕不需要翻，即屏幕翻转0度
 #else
-
                 lcd_show_frame_to_dev(rgb565, info.width * info.height * 2);
 #endif
                 if (AVI_FACE.task_suspend) {

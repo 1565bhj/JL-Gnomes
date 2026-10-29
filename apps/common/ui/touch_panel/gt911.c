@@ -429,7 +429,7 @@ static int GT911_task_init(void)
 
 REGISTER_LCD_TOUCH_DEV(GT911) = {
     .name                           = "GT911",
-    .iic_dev_name                   = "iic0",
+    .iic_dev_name                   = LCD_TOUCH_IIC_NAME,
     .LCD_Touch_check                = GT911_check,
     .LCD_Touch_init                 = GT911_task_init,
     .LCD_Touch_get                  = GT911_get_xy,

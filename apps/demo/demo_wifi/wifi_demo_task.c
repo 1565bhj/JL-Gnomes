@@ -19,8 +19,8 @@ static u8 use_static_ipaddr_flag;
 #endif
 
 //选择其中一种开机默认的模式测试
-//#define AP_MODE_TEST
-#define STA_MODE_TEST //选择从机模式
+#define AP_MODE_TEST
+//#define STA_MODE_TEST //选择从机模式
 //#define MONITOR_MODE_TEST
 
 //#define WIFI_MODE_CYCLE_TEST //从起始测试模式开始(FORCE_DEFAULT_MODE=1)或者最后记忆模式开始((FORCE_DEFAULT_MODE=0)), 循环测试WIFI模式切换: ->AP_MODE ->STA_MODE ->MONITOR_MODE ->AP_MODE ...

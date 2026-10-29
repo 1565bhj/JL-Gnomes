@@ -1,0 +1,7 @@
+{
+  "name": "pcm-wave-monitor",
+  "version": "1.1.0",
+  "main": "proxy.js",
+  "scripts": { "start": "node proxy.js" },
+  "dependencies": { "ws": "^8.18.0" }
+}

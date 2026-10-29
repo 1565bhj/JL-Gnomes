@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>PCM 波形监视 · 广播选择 · 重置视图</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; background:#1e1e1e; color:#ddd; font-family:Consolas,Menlo,monospace; font-size:13px;
+         display:flex; flex-direction:column; height:100vh; }
+  #toolbar { padding:8px; background:#2d2d2d; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+             border-bottom:1px solid #444; }
+  #toolbar label { color:#aaa; }
+  select,input,button { background:#3c3c3c; color:#ddd; border:1px solid #555; padding:4px 8px;
+                        font-family:inherit; font-size:13px; border-radius:3px; }
+  button { cursor:pointer; } button:hover { background:#4a4a4a; }
+  input[type=number] { width:60px; }
+  #udpStatus { font-size:12px; color:#8f8; }
+  #udpStatus.err { color:#f55; }
+  #udpStatus.warn { color:#fc6; }
+  #udpStatus.info { color:#8cf; }
+  #status { margin-left:auto; color:#8f8; font-size:12px; }
+  #status.err { color:#f88; }
+  #rxStats { font-size:12px; color:#4fc3f7; font-weight:bold; margin-left: 10px; }
+  
+  #leftHint { font-size: 12px; color: #ffb74d; font-weight: bold; margin-right: 15px; white-space: nowrap; }
+
+  #canvasWrap { position:relative; flex:1; overflow:hidden; cursor: grab; }
+  #canvasWrap:active { cursor: grabbing; }
+  canvas { display:block; width:100%; height:100%; background:#111; }
+  .db-labels { position:absolute; left:4px; top:0; bottom:0; display:flex; flex-direction:column;
+               justify-content:space-between; font-size:10px; color:#888; pointer-events:none; padding:4px 0; }
+  
+  #deviceBar {
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    background: #252525; padding: 6px 12px; border-bottom: 1px solid #3a3a3a;
+  }
+  #deviceBar .label { color: #aaa; font-weight: normal; margin-right: 4px; }
+  #broadcastList { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .device-chip {
+    background: #2e2e2e; border: 1px solid #4a4a4a; border-radius: 16px;
+    padding: 4px 12px; font-size: 12px; cursor: pointer; display: flex;
+    align-items: center; gap: 8px; color: #ccc; user-select: none;
+  }
+  .device-chip:hover { background: #3d3d3d; border-color: #6a6a6a; }
+  .device-chip.selected {
+    background: #1e4a6b; border-color: #4fc3f7; color: #fff;
+    box-shadow: 0 0 6px rgba(79, 195, 247, 0.3);
+  }
+  .device-chip .product-name { font-weight: 600; color: #ffb74d; }
+  .device-chip.selected .product-name { color: #ffd54f; }
+  .device-chip .ip { font-weight: 500; color: #8cf; }
+  .device-chip.selected .ip { color: #fff; }
+  .device-chip .mac { color: #aaa; font-size: 10px; }
+  .device-chip.selected .mac { color: #ddd; }
+  .device-chip .badge {
+    background: #4fc3f7; color: #000; border-radius: 10px;
+    padding: 1px 6px; font-size: 10px; font-weight: bold;
+  }
+  .device-chip .time { font-size: 10px; color: #888; font-variant-numeric: tabular-nums; }
+  .device-chip.selected .time { color: #b0e0ff; }
+  .clear-btn {
+    background: transparent; border: 1px solid #555; border-radius: 16px;
+    padding: 2px 10px; font-size: 11px; color: #aaa; cursor: pointer;
+  }
+  .clear-btn:hover { background: #3a3a3a; color: #fff; }
+  .no-device { color: #777; font-size: 12px; font-style: italic; }
+
+  #rawDataPanel {
+    display: flex; align-items: center; gap: 10px; margin-left: auto;
+    background: #1a1a1a; padding: 4px 12px; border-radius: 6px;
+    border: 1px solid #444; max-width: 50%; overflow: hidden;
+  }
+  #rawDataLabel { color: #888; font-size: 11px; white-space: nowrap; }
+  #rawDataText {
+    color: #8cf; font-size: 12px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; font-family: Consolas, monospace;
+  }
+  #resetViewBtn {
+    background: #2d4a6b; border-color: #4fc3f7; color: #b0e0ff;
+  }
+  #resetViewBtn:hover {
+    background: #3a5f8a;
+  }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span id="leftHint">音量从大到小调试：100/90/80/70/60/50/40/30</span>
+
+  <label>测试模式:</label>
+  <select id="testMode">
+    <option value="">不做任何音频测试</option>
+    <option value="local_file" selected>音乐测试</option>
+    <option value="sin_test">正弦测试</option>
+    <option value="1-24Khz_test">扫频测试</option>
+  </select>
+  
+  <label>音量</label>
+  <input id="vol" type="number" value="100" min="10" max="100" step="10">
+  
+  <label title="从最大音量往下调：100/95/90...">回采增益</label>
+  <input id="aec" type="number" value="50" min="10" max="100" step="5" title="步进 5">
+  
+  <label>麦1增益</label>
+  <input id="mic0" type="number" value="50" min="10" max="100" step="5">
+  
+  <label id="mic1Label">麦2增益</label>
+  <input id="mic1" type="number" value="50" min="10" max="100" step="5">
+  
+  <button id="applyBtn">设置</button>
+  <button id="resetViewBtn" title="清空所有音频波形数据，重新开始接收PCM">🔄 重置视图</button>
+  <button id="stopBtn" style="background: #6b1e1e; border-color: #f77; color: #fdd;">停止接收</button>
+  
+  <span id="udpStatus">UDP: 未初始化</span>
+  <span id="rxStats">📊 已接收: 0 包 (0 KB)</span>
+  <span id="status">等待设备…</span>
+</div>
+
+<div id="deviceBar">
+  <span class="label">📡 广播设备:</span>
+  <div id="broadcastList">
+    <span class="no-device">暂无广播设备，请等待…</span>
+  </div>
+  <button id="clearDevicesBtn" class="clear-btn" title="清除所有已发现设备">清除列表</button>
+
+  <div id="rawDataPanel">
+    <span id="rawDataLabel">最新原始包:</span>
+    <span id="rawDataText">等待数据...</span>
+  </div>
+</div>
+
+<div id="canvasWrap">
+  <canvas id="wave"></canvas>
+  <div class="db-labels" id="dbLabels"></div>
+</div>
+
+<script>
+const WS_URL = `ws://${location.hostname}:8081`;
+const SAMPLE_RATE = 16000;
+const BYTES_PER_SAMPLE = 2;
+const LABELS_4 = ['MIC1', 'MIC2', 'AEC(回采)', 'AEC_OUT'];
+const LABELS_3 = ['MIC1', 'AEC(回采)', 'AEC_OUT'];
+const COLORS = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373'];
+
+let micChannels = 2;
+let dataChannels = 4;
+let deviceIP = null;
+let ws = null;
+let isDblClickLocked = false; 
+
+let chData = []; 
+let totalSamples = 0; 
+
+let totalPackets = 0;
+let totalBytes = 0;
+
+// 缩放与平移状态
+let zoomLevel = 1.0; 
+let panOffset = 0;   
+let isDragging = false;
+let dragStartX = 0;
+let dragStartPanOffset = 0;
+
+let discoveredDevices = new Map(); 
+let selectedDeviceIP = null;
+let broadcastListEl = document.getElementById('broadcastList');
+let deviceNodes = new Map();       
+let noBroadcastTimer = null;
+let gotAnyBroadcast = false;
+
+const canvasWrap = document.getElementById('canvasWrap');
+const canvas = document.getElementById('wave');
+const ctx = canvas.getContext('2d');
+const rawDataTextEl = document.getElementById('rawDataText');
+const rxStatsEl = document.getElementById('rxStats');
+
+// ==========================================
+// 核心解析函数
+// ==========================================
+function parseBroadcastData(rawString) {
+  let vol = null, mac = '', resetReason = '', productName = '', micCh = 2, hasCh = false;
+  if (!rawString || typeof rawString !== 'string') return { vol, mac, resetReason, productName, micCh, hasCh };
+  const cleanStr = rawString.trim();
+  const parts = cleanStr.split('-');
+  const volPart = parts.find(p => p.startsWith('vol:'));
+  if (volPart) vol = volPart.replace('vol:', '');
+  const macPart = parts.find(p => p.startsWith('mac:'));
+  if (macPart) mac = macPart.replace('mac:', '').toUpperCase();
+  else {
+    const match = cleanStr.match(/([0-9A-Fa-f]{12})/);
+    if (match) mac = match[1].toUpperCase();
+  }
+  const chPart = parts.find(p => p.startsWith('ch:'));
+  if (chPart) {
+    const num = parseInt(chPart.replace('ch:', ''), 10);
+    if (num === 1 || num === 2) {
+      micCh = num;
+      hasCh = true;
+    }
+  }
+  const resetPart = parts.find(p => p.startsWith('0x') || p.startsWith('0X'));
+  if (resetPart) resetReason = resetPart;
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    if (p.startsWith('vol:') || p.startsWith('ch:') || p.startsWith('mac:') || p.startsWith('0x') || p.startsWith('0X') || p.includes('wifi_pcm')) continue;
+    productName = p;
+    break;
+  }
+  return { vol, mac, resetReason, productName, micCh, hasCh };
+}
+
+// vol:1 或 ch:1 都视为单麦（3 通道，去掉 MIC2）
+function resolveMicChannels(vol, micCh) {
+  if (String(vol) === '1') return 1;
+  return micCh === 1 ? 1 : 2;
+}
+
+// ---------- 设备列表渲染 ----------
+function renderDeviceList() {
+  const entries = Array.from(discoveredDevices.values());
+  entries.sort((a, b) => (a.firstSeen || 0) - (b.firstSeen || 0));
+
+  if (entries.length === 0) {
+    broadcastListEl.innerHTML = '<span class="no-device">暂无广播设备，请等待…</span>';
+    deviceNodes.clear();
+    return;
+  }
+
+  if (broadcastListEl.querySelector('.no-device')) broadcastListEl.innerHTML = '';
+  const existingNodes = new Set(deviceNodes.values());
+
+  entries.forEach(dev => {
+    let chip = deviceNodes.get(dev.ip);
+    const timeStr = new Date(dev.lastSeen).toLocaleTimeString('zh-CN', {hour12: false});
+    const micText = dev.micChannels === 1 ? '单麦' : '双麦';
+    const displayProductName = dev.productName || '未知产品';
+
+    if (!chip) {
+      chip = document.createElement('div');
+      chip.className = 'device-chip';
+      chip.dataset.ip = dev.ip;
+      chip.dataset.mac = dev.mac || '';
+      chip.dataset.port = dev.port || 5003; 
+      chip.title = `设备IP: ${dev.ip}\nMAC: ${dev.mac || '--'}\n原始报文: ${dev.raw || '无'}\n双击连接并播放音频`;
+      chip.innerHTML = `
+        <span class="product-name">${displayProductName}</span>
+        <span class="ip">${dev.ip}</span>
+        <span class="mac">${dev.mac || '--'}</span>
+        <span class="badge">${micText}</span>
+        <span class="time">${timeStr}</span>
+      `;
+      chip.addEventListener('click', () => selectDevice(chip.dataset.ip));
+      chip.addEventListener('dblclick', () => onDeviceDblClick(chip.dataset.ip));
+      deviceNodes.set(dev.ip, chip);
+      broadcastListEl.appendChild(chip);
+    } else {
+      chip.title = `设备IP: ${dev.ip}\nMAC: ${dev.mac || '--'}\n原始报文: ${dev.raw || '无'}\n双击连接并播放音频`;
+      chip.dataset.port = dev.port || 5003; 
+      const pnEl = chip.querySelector('.product-name');
+      if (pnEl && pnEl.textContent !== displayProductName) pnEl.textContent = displayProductName;
+      
+      const badgeEl = chip.querySelector('.badge');
+      // ★ 无视任何锁，强制更新徽章
+      if (badgeEl && badgeEl.textContent !== micText) badgeEl.textContent = micText;
+      
+      if (!isDblClickLocked) {
+        const timeEl = chip.querySelector('.time');
+        if (timeEl && timeEl.textContent !== timeStr) timeEl.textContent = timeStr;
+      }
+      
+      const macEl = chip.querySelector('.mac');
+      const displayMac = dev.mac || '--';
+      if (macEl && macEl.textContent !== displayMac) {
+        macEl.textContent = displayMac;
+        chip.dataset.mac = dev.mac || '';
+      }
+    }
+    if (dev.ip === selectedDeviceIP) chip.classList.add('selected');
+    else chip.classList.remove('selected');
+    existingNodes.delete(chip);
+  });
+
+  existingNodes.forEach(node => {
+    node.remove();
+    deviceNodes.delete(node.dataset.ip);
+  });
+}
+
+function selectDevice(ip) {
+  if (!discoveredDevices.has(ip)) return;
+  const prevSelected = selectedDeviceIP;
+  selectedDeviceIP = ip;
+  deviceIP = ip;
+
+  if (prevSelected !== ip) {
+    clearDataBuffers(); 
+    if (!isDblClickLocked) setStatus(`已选择设备 ${ip}，等待音频数据…`);
+  }
+
+  renderDeviceList();
+  const dev = discoveredDevices.get(ip);
+  const newMic = dev.micChannels;
+  
+  if (newMic !== micChannels) rebuildBuffers(newMic, true);
+
+  if (!isDblClickLocked) {
+    setStatus(`设备 ${ip} MAC=${dev.mac || '-'} 麦通道=${micChannels} 数据通道=${dataChannels} (已选定)`);
+  }
+}
+
+function onDeviceDblClick(ip) {
+  if (!discoveredDevices.has(ip)) return;
+  
+  isDblClickLocked = true; 
+  selectDevice(ip); 
+  if (!ws || ws.readyState !== 1) return;
+
+  const dev = discoveredDevices.get(ip);
+  const targetMicCh = dev.micChannels;
+  
+  if (targetMicCh !== micChannels) {
+    rebuildBuffers(targetMicCh, true);
+  } else {
+    clearDataBuffers(); 
+  }
+
+  const mode = document.getElementById('testMode').value;
+  const targetPort = dev.port || 5003;
+
+  sendTestModePackets(ip, targetPort, mode);
+  setStatus(`已下发 UDP 测试包，1秒后连接 ${ip} 的 TCP 5002…`);
+
+  setTimeout(() => {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ type: 'connectDevice', ip })); 
+    setStatus(`正在连接设备 ${ip} 的 TCP 5002…`);
+  }, 1000);
+}
+
+function sendTestModePackets(ip, port, mode) {
+  if (!ws || ws.readyState !== 1) return;
+  const vol = document.getElementById('vol').value;
+  const aec = document.getElementById('aec').value;
+  const mic0 = document.getElementById('mic0').value;
+  const mic1 = document.getElementById('mic1').value;
+  const isDual = String(vol) !== '1';
+
+  let payload = `wifi_pcm_start-vol:${vol}-aec:${aec}-mic0:${mic0}`;
+  if (isDual) payload += `-mic1:${mic1}`;
+  if (mode) payload += '-' + mode;
+
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      if (!ws || ws.readyState !== 1) return;
+      ws.send(JSON.stringify({ type: 'udpSend', ip, port, payload }));
+    }, i * 50);
+  }
+}
+
+function sendSettingsTo(ip) {
+  if (!ws || ws.readyState !== 1) return;
+  const dev = discoveredDevices.get(ip);
+  const targetPort = dev ? dev.port : 5003;
+  const vol = document.getElementById('vol').value;
+  const aec = document.getElementById('aec').value;
+  const mic0 = document.getElementById('mic0').value;
+  const mic1 = document.getElementById('mic1').value;
+  const isDual = String(vol) !== '1';
+
+  let payload = `wifi_pcm_start-vol:${vol}-aec:${aec}-mic0:${mic0}`;
+  if (isDual) payload += `-mic1:${mic1}`;
+
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      if (!ws || ws.readyState !== 1) return;
+      ws.send(JSON.stringify({ type: 'udpSend', ip, port: targetPort, payload }));
+    }, i * 50);
+  }
+}
+
+function clearDevices() {
+  discoveredDevices.clear();
+  selectedDeviceIP = null;
+  deviceIP = null;
+  isDblClickLocked = false;
+  deviceNodes.clear();
+  broadcastListEl.innerHTML = '<span class="no-device">暂无广播设备，请等待…</span>';
+  setStatus('已清除所有广播设备');
+  rawDataTextEl.textContent = '等待数据...'; 
+  clearDataBuffers();
+}
+
+function upsertDevice(ip, port, parsedData, rawString) {
+  const now = Date.now();
+  const { mac, micCh, productName, vol } = parsedData;
+
+  const effectiveMicCh = resolveMicChannels(vol, micCh);
+
+  if (discoveredDevices.has(ip)) {
+    const dev = discoveredDevices.get(ip);
+    dev.lastSeen = now;
+    if (port) dev.port = port;
+    if (mac) dev.mac = mac;
+    if (productName) dev.productName = productName;
+    if (rawString) dev.raw = rawString;
+    
+    // ★ 核心修复：完全无视 isDblClickLocked 锁定，只要收到报文变化，立刻强制切换
+    if (dev.micChannels !== effectiveMicCh) {
+      dev.micChannels = effectiveMicCh;
+      if (ip === selectedDeviceIP) {
+        rebuildBuffers(effectiveMicCh, false);   
+      }
+    }
+  } else {
+    discoveredDevices.set(ip, {
+      ip, port: port || 5003, mac: mac || '', productName: productName || '',
+      lastSeen: now, firstSeen: now, micChannels: effectiveMicCh, raw: rawString || ''
+    });
+  }
+
+  if (!selectedDeviceIP) {
+    const firstIp = Array.from(discoveredDevices.keys())[0];
+    if (firstIp) {
+      setTimeout(() => {
+        if (!selectedDeviceIP && discoveredDevices.has(firstIp)) selectDevice(firstIp);
+      }, 50);
+    }
+  }
+  renderDeviceList();
+}
+
+// ---------- 基础功能 ----------
+function rebuildBuffers(micCh, forceClear) {
+  micChannels = micCh === 1 ? 1 : 2;
+  dataChannels = micChannels + 2;
+  
+  if (forceClear) {
+    clearDataBuffers();
+  }
+  
+  const show = micChannels >= 2;
+  document.getElementById('mic1').style.display = show ? '' : 'none';
+  document.getElementById('mic1Label').style.display = show ? '' : 'none';
+
+  while (chData.length < dataChannels) {
+    chData.push([]);
+  }
+  if (chData.length > dataChannels) {
+    chData.length = dataChannels;
+  }
+
+  // 强制同步重绘一次，防止因定时器导致视觉延迟
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  draw(); 
+}
+
+function clearDataBuffers() {
+  totalSamples = 0;
+  totalPackets = 0;
+  totalBytes = 0;
+  updateRxStats();
+  for (let c = 0; c < chData.length; c++) {
+    chData[c] = [];
+  }
+  zoomLevel = 1.0;
+  panOffset = 0;
+}
+
+function resizeCanvas() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = r.width * dpr;
+  canvas.height = r.height * dpr;
+  canvas.style.width = r.width + 'px';
+  canvas.style.height = r.height + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const el = document.getElementById('dbLabels');
+  el.style.height = r.height + 'px';
+  el.innerHTML = ['0 dB','-6','-12','-24','-48','-∞'].map(t => `<span>${t}</span>`).join('');
+}
+window.addEventListener('resize', resizeCanvas);
+
+function setUdpStatus(text, cls) {
+  const el = document.getElementById('udpStatus');
+  el.textContent = 'UDP: ' + text;
+  el.className = cls || '';
+}
+
+function updateRxStats() {
+  if (!rxStatsEl) return;
+  const kb = (totalBytes / 1024).toFixed(1);
+  rxStatsEl.textContent = `📊 已接收: ${totalPackets} 包 (${kb} KB)`;
+}
+
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+  ws.binaryType = 'arraybuffer';
+
+  ws.onopen = () => {
+    setStatus('WebSocket 已连接，等待设备广播…');
+    gotAnyBroadcast = false;
+    if (noBroadcastTimer) clearTimeout(noBroadcastTimer);
+    noBroadcastTimer = setTimeout(() => {
+      if (!gotAnyBroadcast) setStatus('5 秒内未收到任何 UDP 广播，请检查：端口占用 / 防火墙 / 子网 / 目的端口', true);
+    }, 5000);
+  };
+
+  ws.onmessage = (evt) => {
+    if (typeof evt.data === 'string') handleText(evt.data);
+    else handlePcm(evt.data);
+  };
+
+  ws.onclose = () => {
+    setStatus('WebSocket 断开，3秒后重连…', true);
+    setUdpStatus('连接断开', 'err');
+    setTimeout(connectWS, 3000);
+  };
+
+  ws.onerror = () => setStatus('WebSocket 错误', true);
+}
+
+function handleText(text) {
+  let msg = null;
+  try { msg = JSON.parse(text); } catch (e) { msg = { type: 'device', ip: '未知IP(纯文本)', raw: text }; }
+  if (typeof msg === 'string') msg = { type: 'device', ip: '未知IP(纯文本)', raw: msg };
+
+  if (msg.type === 'udpStatus') {
+    if (msg.status === 'listening') setUdpStatus(`监听中 ${msg.address}:${msg.port}`, '');
+    else if (msg.status === 'error') { setUdpStatus(msg.msg, 'err'); setStatus(msg.msg, true); }
+    else if (msg.status === 'pending') setUdpStatus(msg.msg || '尚未绑定', 'warn');
+    else if (msg.status === 'received') {
+      if (!gotAnyBroadcast) { gotAnyBroadcast = true; if (noBroadcastTimer) clearTimeout(noBroadcastTimer); }
+      setUdpStatus(`收到 ${msg.from} 的广播`, 'info');
+    }
+    return;
+  }
+
+  if (msg.type === 'device' || msg.ip || msg.raw || msg.data || msg.payload || msg.text || msg.msg) {
+    let rawDataString = '';
+    for (const key of ['raw', 'data', 'payload', 'text', 'msg', 'rawString', 'str']) {
+      if (msg[key] && typeof msg[key] === 'string') {
+        if (msg[key].includes('wifi_pcm') || msg[key].includes('mac:') || msg[key].split('-').length > 3) {
+          rawDataString = msg[key];
+          break;
+        }
+      }
+    }
+    if (!rawDataString && typeof msg === 'string') rawDataString = msg;
+    if (!rawDataString && typeof text === 'string' && text.includes('wifi_pcm')) rawDataString = text;
+
+    const ip = msg.ip || msg.from || '未知IP';
+    const port = msg.port || 5003;
+
+    let parsedData = { mac: '', micCh: 2, productName: '', vol: 0, resetReason: '', hasCh: false };
+    if (rawDataString) parsedData = parseBroadcastData(rawDataString);
+
+    if (msg.mac) parsedData.mac = msg.mac;
+    if (msg.micChannels && !parsedData.hasCh) {
+      parsedData.micCh = msg.micChannels === 1 ? 1 : 2;
+    }
+    if (msg.productName || msg.name) parsedData.productName = msg.productName || msg.name;
+
+    if (!isDblClickLocked) {
+      if (rawDataString) rawDataTextEl.textContent = rawDataString;
+      else if (text && !text.startsWith('{')) rawDataTextEl.textContent = text;
+    }
+
+    upsertDevice(ip, port, parsedData, rawDataString);
+
+    if (!isDblClickLocked) {
+      if (selectedDeviceIP === ip) {
+        deviceIP = ip;
+        const newMic = resolveMicChannels(parsedData.vol, parsedData.micCh);
+        if (newMic !== micChannels) rebuildBuffers(newMic, false);
+        setStatus(`设备 ${ip} MAC=${parsedData.mac || '-'} 麦通道=${micChannels} 数据通道=${dataChannels}`);
+      }
+    } else {
+      if (selectedDeviceIP === ip) deviceIP = ip;
+    }
+
+    setUdpStatus(`收到 ${ip} 的广播`, 'info');
+    if (!gotAnyBroadcast) {
+      gotAnyBroadcast = true;
+      if (noBroadcastTimer) clearTimeout(noBroadcastTimer);
+    }
+    return;
+  }
+
+  if (msg.type === 'tcp') {
+    if (msg.status === 'connected') {
+      setStatus(`TCP 已连接 ${msg.ip || deviceIP}:5002`);
+      const dev = discoveredDevices.get(selectedDeviceIP);
+      if (dev && dev.micChannels !== micChannels) {
+        rebuildBuffers(dev.micChannels, false);
+      }
+    }
+    else if (msg.status === 'closed') setStatus('TCP 已关闭，等待重连…', true);
+    else if (msg.status === 'error') setStatus('TCP 错误: ' + msg.msg, true);
+    return;
+  }
+}
+
+function handlePcm(arrayBuffer) {
+  if (!selectedDeviceIP) return;
+  
+  const dev = discoveredDevices.get(selectedDeviceIP);
+  if (dev && dev.micChannels !== micChannels) {
+    rebuildBuffers(dev.micChannels, false);
+  }
+
+  const bpf = BYTES_PER_SAMPLE * dataChannels;
+  if (bpf <= 0) return;
+  const view = new DataView(arrayBuffer);
+  const frames = Math.floor(arrayBuffer.byteLength / bpf);
+  if (frames <= 0) return;
+
+  totalPackets++;
+  totalBytes += arrayBuffer.byteLength;
+  updateRxStats();
+
+  for (let f = 0; f < frames; f++) {
+    const base = f * bpf;
+    for (let c = 0; c < dataChannels; c++) {
+      chData[c].push(view.getInt16(base + c * BYTES_PER_SAMPLE, true));
+    }
+  }
+  totalSamples += frames;
+}
+
+canvasWrap.addEventListener('wheel', (e) => {
+  e.preventDefault(); 
+  if (totalSamples === 0) return;
+
+  const zoomFactor = 1.2;
+  if (e.deltaY < 0) {
+    zoomLevel = Math.min(zoomLevel * zoomFactor, totalSamples / 100);
+  } else {
+    zoomLevel = Math.max(1.0, zoomLevel / zoomFactor);
+  }
+
+  const visibleSamples = totalSamples / zoomLevel;
+  panOffset = Math.max(0, Math.min(panOffset, totalSamples - visibleSamples));
+}, { passive: false });
+
+canvasWrap.addEventListener('mousedown', (e) => {
+  if (totalSamples === 0 || zoomLevel <= 1.0) return;
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartPanOffset = panOffset;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  const W = canvas.clientWidth;
+  const visibleSamples = totalSamples / zoomLevel;
+  const samplesPerPix = visibleSamples / W;
+  
+  panOffset = dragStartPanOffset - dx * samplesPerPix;
+  panOffset = Math.max(0, Math.min(panOffset, totalSamples - visibleSamples));
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+
+function resetViewAndClearData() {
+  clearDataBuffers();
+  for (let c = 0; c < chData.length; c++) {
+    chData[c] = [];
+  }
+  updateRxStats();
+  zoomLevel = 1.0;
+  panOffset = 0;
+  setStatus(selectedDeviceIP ? `已重置视图，等待 ${selectedDeviceIP} 的 PCM 数据…` : '已重置视图，请选择设备');
+}
+
+document.getElementById('resetViewBtn').addEventListener('click', () => {
+  resetViewAndClearData();
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+  if (!ws || ws.readyState !== 1) return;
+  ws.send(JSON.stringify({ type: 'disconnectDevice' }));
+  isDblClickLocked = false;
+  setStatus('已停止接收，请选择新的设备');
+  renderDeviceList();
+});
+
+document.getElementById('clearDevicesBtn').addEventListener('click', clearDevices);
+
+let lastDraw = 0;
+function draw() {
+  requestAnimationFrame(draw);
+  const now = performance.now();
+  if (now - lastDraw < 33) return;
+  lastDraw = now;
+
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+
+  ctx.clearRect(0, 0, W, H);
+  const rows = dataChannels;
+  const rowH = H / rows;
+
+  ctx.strokeStyle = '#222';
+  for (let i = 1; i < rows; i++) {
+    ctx.beginPath(); ctx.moveTo(0, i * rowH); ctx.lineTo(W, i * rowH); ctx.stroke();
+  }
+  ctx.strokeStyle = '#1a1a1a';
+  for (let x = 0; x < W; x += W / 10) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+
+  if (totalSamples === 0 || !selectedDeviceIP) {
+    ctx.fillStyle = '#666'; ctx.font = '14px monospace'; ctx.textAlign = 'center';
+    let hint = !selectedDeviceIP ? '请在上方选择一个广播设备' : `等待音频数据… (已收 ${totalPackets} 包)`;
+    ctx.fillText(hint, W / 2, H / 2);
+    return;
+  }
+
+  const labels = rows === 3 ? LABELS_3 : LABELS_4;
+  const visibleSamples = totalSamples / zoomLevel;
+  const startSample = panOffset;
+  const samplesPerPix = visibleSamples / W;
+
+  const db9Linear = Math.pow(10, -3 / 20);
+
+  for (let c = 0; c < rows; c++) {
+    const buf = chData[c];
+    const yMid = c * rowH + rowH / 2;
+    const amp = rowH * 0.45;
+    const channelColor = COLORS[c % COLORS.length];
+
+    const db9Offset = amp * db9Linear;
+
+    ctx.strokeStyle = channelColor;
+    ctx.globalAlpha = 0.55;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(0, yMid - db9Offset);
+    ctx.lineTo(W, yMid - db9Offset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, yMid + db9Offset);
+    ctx.lineTo(W, yMid + db9Offset);
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = channelColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+
+    for (let x = 0; x < W; x++) {
+      const startIdx = Math.floor(startSample + x * samplesPerPix);
+      let endIdx = Math.floor(startSample + (x + 1) * samplesPerPix);
+      if (endIdx > totalSamples) endIdx = totalSamples;
+      
+      if (startIdx >= endIdx) continue;
+
+      let min = 32767, max = -32768;
+      for (let k = startIdx; k < endIdx; k++) {
+        const v = buf[k];
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+
+      if (min === 32767) continue;
+      const y1 = yMid - (max / 32768) * amp;
+      const y2 = yMid - (min / 32768) * amp;
+
+      if (x === 0) ctx.moveTo(x, y1); else ctx.lineTo(x, y1);
+      ctx.lineTo(x, y2);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(W - 96, c * rowH + 2, 92, 16);
+    ctx.fillStyle = channelColor;
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(labels[c] || ('CH' + c), W - 6, c * rowH + 14);
+  }
+}
+
+function setStatus(t, err) {
+  const el = document.getElementById('status');
+  el.textContent = t; el.className = err ? 'err' : '';
+}
+
+document.getElementById('testMode').addEventListener('change', (e) => {
+  if (!ws || ws.readyState !== 1) return;
+  if (selectedDeviceIP) {
+    const dev = discoveredDevices.get(selectedDeviceIP);
+    const targetPort = dev ? dev.port : 5003;
+    sendTestModePackets(selectedDeviceIP, targetPort, e.target.value);
+    setStatus(`已向 ${selectedDeviceIP} 发送测试模式: ${e.target.value || '无'}`);
+  } else {
+    ws.send(JSON.stringify({ type: 'testMode', mode: e.target.value }));
+    setStatus('已发送测试模式: ' + (e.target.value || '无'));
+  }
+});
+
+document.getElementById('applyBtn').addEventListener('click', () => {
+  if (!ws || ws.readyState !== 1) { setStatus('WebSocket 未连接', true); return; }
+  if (selectedDeviceIP) {
+    sendSettingsTo(selectedDeviceIP);
+    setStatus(`已向 ${selectedDeviceIP} 发送设置…`);
+  } else {
+    ws.send(JSON.stringify({
+      type: 'settings',
+      vol: document.getElementById('vol').value,
+      aec: document.getElementById('aec').value,
+      mic0: document.getElementById('mic0').value,
+      mic1: document.getElementById('mic1').value
+    }));
+    setStatus('已发送设置…');
+  }
+});
+
+window.addEventListener('load', () => {
+  resizeCanvas();
+  rebuildBuffers(2, true);
+  broadcastListEl.innerHTML = '<span class="no-device">暂无广播设备，请等待…</span>';
+  connectWS();
+  requestAnimationFrame(draw);
+});
+</script>
+</body>
+</html>

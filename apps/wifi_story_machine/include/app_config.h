@@ -118,7 +118,7 @@
 #endif
 
 #if defined CONFIG_UI_FILE_SAVE_IN_RESERVED_EXPAND_ZONE
-#define CONFIG_UI_PACKRES_LEN 0x23a000
+#define CONFIG_UI_PACKRES_LEN 0x190000
 #define CONFIG_UI_PACKRES_ADR ((__FLASH_SIZE__) - 0x1000 - CONFIG_FONT_PACKRES_LEN - CONFIG_UI_PACKRES_LEN)
 #else
 #define CONFIG_UI_PACKRES_LEN 0
@@ -185,7 +185,12 @@
 #endif
 
 #define CONFIG_RTC_ENABLE                       //RTC开关
+#ifndef CONFIG_DEBUG_ENABLE
 #define CONFIG_DEBUG_ENABLE                     //打印开关
+#endif
+#ifndef TCFG_DEBUG_BAUD
+#define TCFG_DEBUG_BAUD     1000000
+#endif
 #define RTOS_STACK_CHECK_ENABLE                 //是否启用定时检查任务栈
 #ifdef CONFIG_RELEASE_ENABLE
 // #define CONFIG_EXCEPTION_AUTO_FIX_ENABLE     //异常自动增大电源档位配置和降频
@@ -490,8 +495,8 @@
 #define CONFIG_IFLY_EN_MLP_RES_NAME              "mnt/sdfile/res/ifly_res/en_mlp.bin"
 #define CONFIG_IFLY_EN_KEYWORD_RES_NAME          "mnt/sdfile/res/ifly_res/en_keywords.bin"
 
-#define CONFIG_IFLY_MLP_RES_NAME                 "mnt/sdfile/res/ifly_res/mlp.bin"
-#define CONFIG_IFLY_KEYWORD_RES_NAME             "mnt/sdfile/res/ifly_res/keywords.bin"
+#define CONFIG_IFLY_MLP_RES_NAME                 "mnt/sdfile/res/ifly_res/xy_mlp.bin"
+#define CONFIG_IFLY_KEYWORD_RES_NAME             "mnt/sdfile/res/ifly_res/xy_keywords.bin"
 
 #define CONFIG_IFLY_XF_MLP_RES_NAME             "mnt/sdfile/res/ifly_res/xf_mlp.bin"
 #define CONFIG_IFLY_XF_KEYWORD_RES_NAME         "mnt/sdfile/res/ifly_res/xf_keywords.bin"
@@ -739,14 +744,10 @@
 //*********************************************************************************//
 #ifdef CONFIG_BT_ENABLE
 
-#ifdef CONFIG_WFT_ENBALE
-#define BLE_DEV_NAME                "XWAI_AC_"
-#define BT_DEV_NAME                 "XWAI_"
-#define BT_DEV_NAME_LONE_ENABLE            //升级设备名称长名称
-#else
 #define BLE_DEV_NAME                "QYAI_AC_"
-#define BT_DEV_NAME                 "QYAI_"
-#endif
+#ifndef BT_DEV_NAME
+#define BT_DEV_NAME                 "QYAI"
+#endif // BT_DEV_NAME
 
 #define BT_EMITTER_EN     1
 #define BT_RECEIVER_EN    2
@@ -897,22 +898,28 @@
 #define TCFG_LCD_ENABLE                     1  //使用lcd屏幕
 #define TCFG_USE_SD_ADD_UI_FILE             0  //使用SD卡加载资源文件
 
-#if TCFG_LCD_ENABLE
 #define TCFG_LCD_ILI9481_ENABLE             0
 #define TCFG_LCD_ILI9341_ENABLE             0
-#define TCFG_LCD_ST7789S_ENABLE             0
 #define TCFG_LCD_480x272_8BITS              0
-#define TCFG_LCD_ST7735S_ENABLE             0
-#define TCFG_LCD_ST7789V_ENABLE             1 //2.1寸320*240屏幕
-#define TCFG_LCD_JD9853_ENABLE              0
-#define TCFG_LCD_GC3907_ENABLE              0
 
-#define TCFG_LCD_ST7789P3_ENABLE            0 //1.5寸手表屏幕
-#define TCFG_LCD_ST77912_ENABLE             0 //1.28寸手表屏幕
-#define TCFG_LCD_GC9D01_ENABLE              0 //0.71寸手表屏幕
-#define TCFG_LCD_ST7735P3_ENABLE            0 //1.77寸160*128屏幕
-#define TCFG_LCD_NV3031A_ENABLE             0 //2.8寸320*240屏幕
-#define TCFG_LCD_AXS15252_ENABLE            0 //AXS15252 320*240 SPI 屏
+#ifndef CONFIG_BOARD_OPEN_DEV_ENABLE
+#if TCFG_LCD_ENABLE
+#define TCFG_LCD_ST7789S_ENABLE              0
+#define TCFG_LCD_ST7735S_ENABLE              0
+#define TCFG_LCD_ST7735SV_ENABLE             0 //0.8寸160*160方屏幕
+#define TCFG_LCD_ST7789V_ENABLE              0 //2.1寸320*240屏幕
+#define TCFG_LCD_JD9853_ENABLE               0 //2.1寸296*240屏幕
+#define TCFG_LCD_GC3907_ENABLE               0
+#define TCFG_LCD_ST7789P3_ENABLE             0 //1.5寸手表圆屏
+#define TCFG_LCD_ST77912_ENABLE              0 //1.28寸手表圆屏
+#define TCFG_LCD_GC9D01_ENABLE               0 //0.71寸手表圆屏
+#define TCFG_LCD_ST7735P3_ENABLE             0 //1.77寸160*128屏幕
+#define TCFG_LCD_NV3031A_ENABLE              0 //2.8寸320*240屏幕
+#define TCFG_LCD_AXS15252_ENABLE             0 //320*240屏幕
+#endif
+
+#ifndef LCD_TOUCH_IIC_NAME
+#define LCD_TOUCH_IIC_NAME "iic0"
 #endif
 
 #if TCFG_LCD_NV3031A_ENABLE && (!defined TCFG_TOUCH_GST820_ENABLE)
@@ -946,12 +953,19 @@
 #define USE_LCD_TE                          1 //使用TE信号解决撕裂现象
 #endif
 
+#endif //CONFIG_BOARD_OPEN_DEV_ENABLE
+
+
+#ifndef LCD_W
 #if (TCFG_LCD_ST77912_ENABLE || TCFG_LCD_ST7789P3_ENABLE)
 #define LCD_W     240
 #define LCD_H     240
 #elif TCFG_LCD_GC9D01_ENABLE
 #define LCD_W     160
 #define LCD_H     160
+#elif TCFG_LCD_ST7735SV_ENABLE
+#define LCD_W     128
+#define LCD_H     128
 #elif TCFG_LCD_ST7735P3_ENABLE
 #define LCD_W     160
 #define LCD_H     128
@@ -969,6 +983,7 @@
 #else //竖屏
 #define LCD_W     240
 #define LCD_H     320
+#endif
 #endif
 #endif
 

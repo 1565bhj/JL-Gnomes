@@ -115,99 +115,7 @@ static int tm_led_pwm_write(int duty)
 {
     if (pwm_dev_handler) {
         tm_led_pwm.duty = duty;
-        int pwm_ch, tprd;
-        PWM_TIMER *treg = NULL;
-        PWM_CHCON *creg = NULL;
-
-        for (int i = 0; i < 8; i++) {
-            pwm_ch = tm_led_pwm.pwm_ch & BIT(i);
-            switch (pwm_ch) {
-            case PWMCH0_H:
-                treg = &JL_PWM->TMR0_CON;
-                creg = &JL_PWM->CH0_CON0;
-                break;
-            case PWMCH1_H:
-                treg = &JL_PWM->TMR1_CON;
-                creg = &JL_PWM->CH1_CON0;
-                break;
-            case PWMCH2_H:
-                treg = &JL_PWM->TMR2_CON;
-                creg = &JL_PWM->CH2_CON0;
-                break;
-            case PWMCH3_H:
-                treg = &JL_PWM->TMR3_CON;
-                creg = &JL_PWM->CH3_CON0;
-                break;
-            case PWMCH4_H:
-                treg = &JL_PWM->TMR4_CON;
-                creg = &JL_PWM->CH4_CON0;
-                break;
-            case PWMCH5_H:
-                treg = &JL_PWM->TMR5_CON;
-                creg = &JL_PWM->CH5_CON0;
-                break;
-            case PWMCH6_H:
-                treg = &JL_PWM->TMR6_CON;
-                creg = &JL_PWM->CH6_CON0;
-                break;
-            case PWMCH7_H:
-                treg = &JL_PWM->TMR7_CON;
-                creg = &JL_PWM->CH7_CON0;
-                break;
-            }
-            if (treg) {
-                tprd = treg->prd;
-                creg->cmph = tprd * duty / (100 * my_pow(10, tm_led_pwm.point_bit));
-            }
-            treg = NULL;
-            creg = NULL;
-        }
-        for (int i = PWM_CHL_OFFSET; i < PWM_CHL_OFFSET + 8; i++) {
-            pwm_ch = tm_led_pwm.pwm_ch & BIT(i);
-            switch (pwm_ch) {
-            case PWMCH0_L:
-                treg = &JL_PWM->TMR0_CON;
-                creg = &JL_PWM->CH0_CON0;
-                break;
-            case PWMCH1_L:
-                treg = &JL_PWM->TMR1_CON;
-                creg = &JL_PWM->CH1_CON0;
-                break;
-            case PWMCH2_L:
-                treg = &JL_PWM->TMR2_CON;
-                creg = &JL_PWM->CH2_CON0;
-                break;
-            case PWMCH3_L:
-                treg = &JL_PWM->TMR3_CON;
-                creg = &JL_PWM->CH3_CON0;
-                break;
-            case PWMCH4_L:
-                treg = &JL_PWM->TMR4_CON;
-                creg = &JL_PWM->CH4_CON0;
-                break;
-            case PWMCH5_L:
-                treg = &JL_PWM->TMR5_CON;
-                creg = &JL_PWM->CH5_CON0;
-                break;
-            case PWMCH6_L:
-                treg = &JL_PWM->TMR6_CON;
-                creg = &JL_PWM->CH6_CON0;
-                break;
-            case PWMCH7_L:
-                treg = &JL_PWM->TMR7_CON;
-                creg = &JL_PWM->CH7_CON0;
-                break;
-            }
-            if (treg) {
-                tprd = treg->prd;
-                creg->cmpl = tprd * duty / (100 * my_pow(10, tm_led_pwm.point_bit));
-            }
-            treg = NULL;
-            creg = NULL;
-        }
-        if (tm_led_pwm.pwm_ch & PWM_TIMER2_OPCH2 || tm_led_pwm.pwm_ch & PWM_TIMER3_OPCH3) {
-            dev_write(pwm_dev_handler, (void *)&tm_led_pwm, 0);
-        }
+        dev_write(pwm_dev_handler, (void *)&tm_led_pwm, 0);
     }
     return pwm_dev_handler ? 0 : -1;
 }
@@ -372,7 +280,6 @@ void tm_light_breath(char open, char notice)
     puts("->tm_light_breath\n");
     tm_light_send_msg(open ? TM_LIGHT_BREATH_OPEN : TM_LIGHT_BREATH_CLOSE, notice);
 }
-
 
 static void tm_led_open_auto_set(char note);
 #if TCFG_LED_PWM0_EYE_EN

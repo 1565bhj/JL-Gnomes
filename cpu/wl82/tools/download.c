@@ -148,6 +148,8 @@ cd /d %~dp0
 
 echo %*
 
+REM call "%~dp0kws_file_cpy.bat"
+
 if not exist audlogo\ mkdir audlogo
 
 
@@ -281,9 +283,13 @@ set AUDIO_RES=audlogo
 set QYAI_RES=qyai_res
 
 #if (CONFIG_ASR_ALGORITHM == IFLYTEK_ALGORITHM)
+#if (__SDRAM_SIZE__ >= (8*1024*1024) && !defined IFLY_KWS_MLP_CONST_ARRAY)
 set IFLY_RES=ifly_res
+#else
+set IFLY_RES=
+#endif
 #elif (CONFIG_ASR_ALGORITHM == WANSON_ALGORITHM)
-set KEY_FILE=-key1 503华镇工程_AC69XX_8c59.key1 -mkey 503-HZ0042-[机器码CRC-9076].mkey 
+set KEY_FILE=-key1 503华镇工程_AC69XX_8c59.key1 -mkey 503-HZ0042-[机器码CRC-9076].mkey
 #else
 set KEY_FILE=
 #endif

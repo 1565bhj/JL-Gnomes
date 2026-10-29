@@ -455,7 +455,6 @@ void lcd_interface_non_block_wait(void)
 
 static int lcd_init(void *p)
 {
-    printf("\n [lcd_init] %s -[init start] %d\n", __FUNCTION__, __LINE__);
     os_mutex_create(&mutex);
 
     u8 lcd_choice = CONFIG_ILI9481_ID;
@@ -537,6 +536,7 @@ static int lcd_init(void *p)
             return -1;
         }
         if (lcd_dev && lcd_dev->LCD_Init) {
+            printf("LCD_WH : %d x %d\n", LCD_W, LCD_H);
             lcd_dev->LCD_Init();
             list_for_each_lcd_touch_driver(lcd_touch_dev) {
                 if (lcd_touch_dev && lcd_touch_dev->LCD_Touch_check) {

@@ -303,7 +303,9 @@ int mp3_buf_play_file(char *buf, int len)
     struct music_buf_file *vt_file = &__this->vt_file;
     struct server *dec_server = vt_file->dec_server;
 
-    music_tts_play_hello_clear();
+    if (music_tts_play_hello_clear(NULL)) {
+        return -1;
+    }
     mp3_buf_play_init();
     os_mutex_pend(&vt_file->mutex, 1000);
     if (!len && buf && strstr(buf, CONFIG_VOICE_PROMPT_FILE_PATH)) {
@@ -383,7 +385,7 @@ int mp3_buf_play_file(char *buf, int len)
     __this->play_pause = 0;
     printf("mp3_buf_play_file: ok\n");
     os_sem_set(&vt_file->sem, 0);
-    music_tts_play_hello_clear();
+    music_tts_play_hello_clear(NULL);
     os_mutex_post(&vt_file->mutex);
     return 0;
 }

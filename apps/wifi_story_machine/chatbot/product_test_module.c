@@ -362,6 +362,10 @@ void production_test_led(char always_on)
             PD_TEST.step |= PD_TEST_LED_OK;
         }
     }
+#ifdef USED_WS2812B_SHOWN
+    ws2812_shown_product(!always_on, 0);
+    os_time_dly(t);
+#endif
 #endif
 }
 
@@ -624,12 +628,12 @@ static int product_test_key_event_handler(struct key_event *key)
     case KEY_EVENT_LONG:
         if (key->value == KEY_OK || key->value == KEY_POWER || key->value == KEY_MODE) {
 #if (defined TCFG_VBAT_CHECK_EN && TCFG_VBAT_CHECK_EN == 1)
-            extern void sys_power_poweroff(void);
+            extern void sys_power_poweroff(unsigned int time_ms);
             extern int music_play_waite(void);
             music_play_stop_all();
             music_play_res_file("PwrOff.mp3");
             music_play_waite();
-            sys_power_poweroff();
+            sys_power_poweroff(0);
 #else
             music_play_stop_all();
             music_play_res_file("SysReset.mp3");
@@ -658,7 +662,7 @@ static int product_test_key_event_handler(struct key_event *key)
                 net_ch = net_ch ? 0 : 1;
                 sys_net_channel_write(net_ch);
                 if (sys_net_channel_read() == net_ch) {
-                    extern void sys_power_poweroff(void);
+                    extern void sys_power_poweroff(unsigned int time_ms);
                     extern int music_play_waite(void);
                     aisp_all_pause(1);
                     music_play_waite();
@@ -1154,7 +1158,7 @@ static int product_function_test_task(void *priv)
         while (1) {
             os_taskq_accept(ARRAY_SIZE(msg), msg);
             if (read_power_key_press(1)) { //厂测模式下有按键按下则关机
-                sys_power_poweroff();
+                sys_power_poweroff(0);
             }
             os_time_dly(1);
         }
@@ -1369,6 +1373,7 @@ __err:
             os_taskq_accept(ARRAY_SIZE(msg), msg);
             production_test_led(test_ok);
         }
+        production_test_led(0);
         is_production_test_clear();
         extern int audio_app_mode_switch_set(char *name, char note);
         if (PD_TEST.app_name[0] != 0) {

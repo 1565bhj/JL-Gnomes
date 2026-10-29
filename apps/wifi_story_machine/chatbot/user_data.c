@@ -80,7 +80,7 @@ int user_data_plan_reset_config(char opt, char reset)
             USER_DATA.sim_data_plan_no_reset = reset ? 0 : 1;
             syscfg_write(CFG_USER_CONFIG_DATA, &USER_DATA, sizeof(USER_DATA));
         } else {
-            //todo data plan reset
+            //解绑
         }
         break;
     case 1:

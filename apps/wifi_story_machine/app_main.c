@@ -277,23 +277,23 @@ void app_default_event_handler(struct sys_event *event)
 //用户项目产品名称
 char *app_user_product_name(void)
 {
+#ifdef PRODUCT_NAME
+    return PRODUCT_NAME;
+#endif
     QYAI_CFG_RETURN_STR(CFG_IDX_PRODUCT_NAME);
 #ifdef CONFIG_KWS_ENGLISH
     return "OverseasTESTBOX";
 #else
-#ifdef CONFIG_LTE_PHY_ENABLE
-    //带4G版本(WIFI+4G两种网络模式)
-    return "TestBox4G"; //英文名称
-#else
-    //只有WIFI网络模式
-    return "TestBox"; //英文名称
-#endif
+    return "TESTBOX"; //英文名称
 #endif
 }
 
 //用户UUID
 char *app_user_product_uuid(void)
 {
+#ifdef PRODUCT_UUID
+    return PRODUCT_UUID;
+#endif
     QYAI_CFG_RETURN_STR(CFG_IDX_PRODUCT_UUID);
     return NULL; //客户ID
 }
@@ -301,13 +301,19 @@ char *app_user_product_uuid(void)
 //产品批次号
 int app_user_product_batch(void)
 {
+#ifdef PRODUCT_BATCH
+    return PRODUCT_BATCH; //批次
+#endif
     QYAI_CFG_RETURN_INT(CFG_IDX_PRODUCT_BATCH);
-    return 1; //批次号
+    return 1; //批次
 }
 
 //产品批次的数量，单位K
 int app_user_product_batch_num(void)
 {
+#ifdef PRODUCT_UUID
+    return PRODUCT_NUM; //批次号的数量，单位K
+#endif
     QYAI_CFG_RETURN_INT(CFG_IDX_PRODUCT_NUM);
     return 1; //批次号的数量，单位K
 }
@@ -318,11 +324,6 @@ int app_user_product_batch_num(void)
 void app_main()
 {
     printf("------------- app main version: %s %s-------------\n", __DATE__, __TIME__);
-
-//    init_intent(&it);
-//    it.name = "app_music";
-//    it.action = ACTION_MUSIC_PLAY_MAIN;
-//    start_app(&it);
 
     //校验，防止复制flash放在另外flash可以启动
     while (!flash_protect_check_match()) {
@@ -348,7 +349,7 @@ void app_main()
          system_reset_reason_get() != SYS_RST_ALM_WKUP && //非闹钟
          system_reset_reason_get() != SYS_RST_PORT_WKUP && //非按键
          system_reset_reason_get() != SYS_RST_LONG_PRESS)) { //非长按
-        sys_power_poweroff(); //异常重启或者开启第一次插电关机的进入关机
+        sys_power_poweroff(0); //异常重启或者开启第一次插电关机的进入关机
     }
 #endif
 
@@ -358,7 +359,7 @@ void app_main()
         vbat_perc = vbat_check_percent();
         if (vbat_perc <= 20) { //电压过低
             os_time_dly(50);
-            sys_power_poweroff(); //电压过低强制关机
+            sys_power_poweroff(0); //电压过低强制关机
         }
     }
 #endif
@@ -405,8 +406,8 @@ void app_main()
     tm_time_init();
 #endif
 #ifdef  USED_WS2812B_SHOWN
-    extern int ws_shown_init(void);
-    ws_shown_init();
+    extern int ws2812_shown_init(void);
+    ws2812_shown_init();
 #endif
 
     //todo

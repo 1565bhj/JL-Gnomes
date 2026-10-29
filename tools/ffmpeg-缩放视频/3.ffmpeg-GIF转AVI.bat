@@ -1,14 +1,25 @@
+@echo off
+setlocal enabledelayedexpansion
 
-::-q:v 2 , 2 - 31, 越小质量越高
+set "FFMPEG=ffmpeg.exe"
+set "SRC=gif-org"
+set "DST=avi-out"
 
-ffmpeg.exe -i ./400p-org/1.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/1-240p.avi
-ffmpeg.exe -i ./400p-org/2.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/2-240p.avi
-ffmpeg.exe -i ./400p-org/3.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/3-240p.avi
-ffmpeg.exe -i ./400p-org/4.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/4-240p.avi
-ffmpeg.exe -i ./400p-org/5.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/5-240p.avi
-ffmpeg.exe -i ./400p-org/6.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/6-240p.avi
-ffmpeg.exe -i ./400p-org/7.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/7-240p.avi
-ffmpeg.exe -i ./400p-org/8.gif -filter_complex "[0:v]scale=240:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p ./240p-avi/8-240p.avi
+REM 输出目录不存在则创建
+if not exist "%DST%" mkdir "%DST%"
 
+REM -q:v 2 , 2 - 31, 越小质量越高
+REM 遍历 gif-org 下所有 gif（含子文件夹则加 /s，这里只扫当前层）
+for %%F in ("%SRC%\*.gif") do (
+    set "NAME=%%~nF"
+    echo Converting: %%~nxF
+    "%FFMPEG%" -y -i "%%F" -filter_complex "[0:v]scale=128:-1" -r 15 -c:v mjpeg -q:v 5 -pix_fmt yuvj420p "%DST%\!NAME!.avi"
+    if errorlevel 1 (
+        echo   [FAILED] %%~nxF
+    ) else (
+        echo   [OK] %%~nxF
+    )
+)
 
+echo Done.
 pause

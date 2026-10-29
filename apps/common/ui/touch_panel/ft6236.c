@@ -479,7 +479,7 @@ static int FT6236_task_init(void)
 
 REGISTER_LCD_TOUCH_DEV(FT6236) = {
     .name                           = "FT6236",
-    .iic_dev_name                   = "iic0",
+    .iic_dev_name                   = LCD_TOUCH_IIC_NAME,
     .LCD_Touch_check                = FT6236_check,
     .LCD_Touch_init                 = FT6236_task_init,
     .LCD_Touch_get                  = FT6236_get_touch_x_y_status,

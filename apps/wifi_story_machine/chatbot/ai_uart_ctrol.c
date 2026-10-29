@@ -111,7 +111,7 @@ static int ai_uart_data_recv(char *buf, int len)
             music_play_waite();
             music_play_res_file("PwrOff.mp3");
             music_play_waite();
-            sys_power_poweroff();
+            sys_power_poweroff(0);
             break;
         case AI_UART_CMD_DIALUOGE_CLOSE:    // 81：对话关闭
             printf("-->关闭当前对话\n");

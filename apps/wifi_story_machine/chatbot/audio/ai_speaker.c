@@ -24,7 +24,7 @@
 //0:小飞小飞，8：配网模式
 extern void aisp_wake(char index);
 extern void key_vad_pcm_send_set_status(char start, char noice_not);
-extern void sys_power_poweroff(void);
+extern void sys_power_poweroff(unsigned int time_ms);
 extern int music_play_waite(void);
 extern int net_music_dec_stop(void);
 extern int is_production_test_enter(char wake);
@@ -378,7 +378,7 @@ static int auto_sleep_check(void)
     if (__this->auto_sleep_cnt >= AUTO_PWEROFF_SLEEP_TIME_MIN * 6) {
         int audio_app_mode_switch_set(char *name, char note);
 #if 1
-        sys_power_poweroff();
+        sys_power_poweroff(0);
 #else
         if (__this->auto_sleep_cnt == AUTO_PWEROFF_SLEEP_TIME_MIN * 6) {
             music_play_res_file("autoPwrOff.mp3");
@@ -400,24 +400,22 @@ late_initcall(auto_sleep_init);
 //回声消除回采增益（播放音频下）
 int AEC_GAIN(int volume)
 {
-    //y = -0.75x + 128.21
-    return (int)(-0.75 * (double)(volume) + 128.21);
-    //return (CONFIG_AISP_AEC_ADC_GAIN);
-}
-
-//麦克风0增益（播放音频下）
-int MIC0_GAIN(int volume)
-{
-    //y = -0.6429x + 102.857
-    return (int)(-0.6429 * (double)(volume) + 102.857);
-    //return (CONFIG_AISP_MIC_ADC_GAIN);
+    //y = -0.75x + 128
+    return (int)((AEC_SLOPE) * (double)(volume) + (AEC_INTERCEPT));
 }
 
 //麦克风1增益（播放音频下）
 int MIC1_GAIN(int volume)
 {
-    return MIC0_GAIN(volume);
-    //return (CONFIG_AISP_MIC_ADC_GAIN);
+    //y = -0.6x + 102
+    return (int)((MIC1_SLOPE) * (double)(volume) + (MIC1_INTERCEPT));
+}
+
+//麦克风2增益（播放音频下）
+int MIC2_GAIN(int volume)
+{
+    //y = -0.6x + 100
+    return (int)((MIC2_SLOPE) * (double)(volume) + (MIC2_INTERCEPT));
 }
 
 int ai_speaker_mode_init(void)
@@ -500,81 +498,29 @@ int sys_all_volume_auto_set(int volume)
 static int ai_speaker_key_click(struct key_event *key)
 {
     int ret = true;
-    int res;
-    int play = 1;
-    u8 volume = 0;
-
     printf("-->ai_speaker_key_click  = %d \n", key->value);
     switch (key->value) {
     case KEY_MUTE:
     case KEY_OK://按键播放或者启动识别
-        /*
-        //下面为按键实现播放音乐暂停/播放
-        if (system_keyword_start()) {
-            aisp_clear(0);
-        }
-        if (music_buf_play_supspend()) {
-            net_music_play_resum();
-        } else {
-            net_music_play_puase();
-        }
-        break;
-        */
-        if (net_music_play_start_status()) {
-#ifdef CONFIG_NO_SDRAM_ENABLE
-            net_music_dec_stop();
-#else
-            net_music_play_puase();
-#endif
-        } else {
-#ifdef CONFIG_LVGL_UI_ENABLE
-            lv_demo_ai_dialogue_start_mode(1);
-#endif
-            aisp_wake(0);
-        }
+        key_do_short_action(KEY_SHORT_WAKEUP);
         break;
     case KEY_DOWN:
-        net_music_play_next(net_music_play_type_get());
+        key_do_short_action(KEY_SHORT_PREV_SONG);
         break;
     case KEY_UP:
-        if (net_music_play_last_check()) {
-            net_music_play_last_request();
-        } else {
-            net_music_play_next(net_music_play_type_get());
-        }
+        key_do_short_action(KEY_SHORT_NEXT_SONG);
         break;
     case KEY_MODE:
-        ai_speaker_mode_stop();
-        extern int audio_app_mode_switch(char *name);
-        audio_app_mode_switch(NULL);
+        key_do_short_action(KEY_SHORT_MODE_SWITCH);
         break;
     case KEY_VOLUME_DEC:
-        if (net_music_set_dec_volume_step(-VOLUME_STEP) && music_buf_play_set_volume_step(-VOLUME_STEP)
-            && music_play_set_volume_step(-VOLUME_STEP) && http_pipe_music_play_set_volume_step(-VOLUME_STEP)) {
-            sys_volume_write_step(-VOLUME_STEP);
-            play = 0;//没有播放音频
-        }
-        sys_volume_read(&volume);
-        if (volume > 0 && volume <= 100 && play) {
-            aisp_mic_gain_set(volume);
-        }
+        key_do_long_action(__this->last_key, KEY_LONG_VOL_DOWN);
         break;
     case KEY_VOLUME_INC:
-        if (net_music_set_dec_volume_step(VOLUME_STEP) && music_buf_play_set_volume_step(VOLUME_STEP)
-            && music_play_set_volume_step(VOLUME_STEP) && http_pipe_music_play_set_volume_step(VOLUME_STEP)) {
-            sys_volume_write_step(VOLUME_STEP);
-            play = 0;//没有播放音频
-        }
-        sys_volume_read(&volume);
-        if (volume > 0 && volume <= 100 && play) {
-            aisp_mic_gain_set(volume);
-        }
+        key_do_long_action(__this->last_key, KEY_LONG_VOL_UP);
         break;
     case KEY_POWER:;//唤醒
-#ifdef CONFIG_LVGL_UI_ENABLE
-        lv_demo_ai_dialogue_start_mode(1);
-#endif
-        aisp_wake(0);
+        key_do_short_action(KEY_SHORT_WAKEUP);
         break;
     case KEY_SUPSPEND:
         if (!music_buf_play_supspend()) {
@@ -608,47 +554,24 @@ static int ai_speaker_key_long(struct key_event *key)
     printf("-->ai_speaker_key_long  = %d \n", key->value);
     switch (key->value) {
     case KEY_MODE:
-        ;
 #if (defined TCFG_POWER_KEY_LONG_PRESS_VAD_EN)
-        if (((__this->last_key >> 8) & 0xFF) != KEY_EVENT_LONG) {
-            key_vad_pcm_send_set_status(1, 1);
-        }
-#else
-        aisp_wake(8); //按键进入配网
+        key_do_long_action(__this->last_key, KEY_LONG_KEY_VAD);
 #endif
         break;
     case KEY_VOLUME_DEC:
     case KEY_DOWN:
-        if (net_music_set_dec_volume_step(-VOLUME_STEP) && music_buf_play_set_volume_step(-VOLUME_STEP)
-            && music_play_set_volume_step(-VOLUME_STEP)) {
-            sys_volume_write_step(-VOLUME_STEP);
-            play = 0;//没有播放音频
-        }
-        sys_volume_read(&volume);
+        key_do_long_action(__this->last_key, KEY_LONG_VOL_DOWN);
 #if (SXY_LL_YHH_BOARD && defined USED_TM1629_SHOWN)
         extern void tm_1629_shown_set_volume(int vol);
         tm_1629_shown_set_volume(volume);
-#endif
-        if (volume > 0 && volume <= 100 && play) {
-            aisp_mic_gain_set(volume);
-        }
-        break;
+#endif        break;
     case KEY_VOLUME_INC:
     case KEY_UP:
-        if (net_music_set_dec_volume_step(VOLUME_STEP) && music_buf_play_set_volume_step(VOLUME_STEP)
-            && music_play_set_volume_step(VOLUME_STEP)) {
-            sys_volume_write_step(VOLUME_STEP);
-            play = 0;//没有播放音频
-        }
-        sys_volume_read(&volume);
+        key_do_long_action(__this->last_key, KEY_LONG_VOL_UP);
 #if (SXY_LL_YHH_BOARD && defined USED_TM1629_SHOWN)
         extern void tm_1629_shown_set_volume(int vol);
         tm_1629_shown_set_volume(volume);
-#endif
-        if (volume > 0 && volume <= 100 && play) {
-            aisp_mic_gain_set(volume);
-        }
-        break;
+#endif        break;
     case KEY_SUPSPEND:
         aisp_all_pause(1);
         break;
@@ -657,17 +580,7 @@ static int ai_speaker_key_long(struct key_event *key)
         break;
     case KEY_OK:
     case KEY_POWER:
-        ;
-        aisp_all_pause(1);
-        ai_speaker_mode_exit();
-        music_play_stop_all();
-        music_play_waite();
-#ifdef CONFIG_UI_PLAY_EMOJI
-        play_face_emoji(AI_UART_CMD_PWR_OFF);
-#endif
-        music_play_res_file("PwrOff.mp3");
-        music_play_waite();
-        sys_power_poweroff();
+        key_do_long_action(__this->last_key, KEY_LONG_POWER);
         break;
     default:
         ret = false;
@@ -688,10 +601,7 @@ static int ai_speaker_key_hand_up(struct key_event *key)
     case KEY_MODE:
         ;
 #if (defined TCFG_POWER_KEY_LONG_PRESS_VAD_EN)
-        if (((__this->last_key >> 8) & 0xFF) == KEY_EVENT_LONG) {
-            printf("-->KEY_EVENT_LONG hand_up\n");
-            key_vad_pcm_send_set_status(0, 1);
-        }
+        key_do_handup(__this->last_key, KEY_LONG_KEY_VAD);
 #endif
         break;
     case KEY_SUPSPEND:
@@ -727,51 +637,6 @@ int app_usb_is_plugin_state(void)
     return (usb_hp_state == DEVICE_EVENT_IN);
 }
 
-#ifdef KEY_DATA_PLAN_REST_ENABLE
-int key_press_123(int action_value)
-{
-    static int start_ms = 0;
-    static char start_cnt = 0;
-    unsigned char action = action_value & 0xFF;
-    unsigned char value = (action_value >> 8) & 0xFF;
-#define KEY_PRESS_123_VAL KEY_OK
-    switch (action) {
-    case KEY_EVENT_CLICK:
-        if (value == KEY_PRESS_123_VAL) {
-            start_ms = timer_get_ms();
-            start_cnt = 1;
-        }
-        break;
-    case KEY_EVENT_DOUBLE_CLICK:
-        if (value == KEY_PRESS_123_VAL && start_cnt == 1 && (timer_get_ms() - start_ms) < 5000) {
-            start_cnt = 2;
-            start_ms = timer_get_ms();
-        }
-        break;
-    case KEY_EVENT_TRIPLE_CLICK:
-        if (value == KEY_PRESS_123_VAL && start_cnt == 2 && (timer_get_ms() - start_ms) < 5000) {
-            user_data_plan_reset_config(0, 1);
-            music_play_stop_all();
-            websockets_client_dialogue_exit();
-            websockets_close_request(1);
-            websockets_dialogue_timeout_del();
-            music_buf_play_stop_all();
-            music_buf_play_set_stop();
-            websockets_free_lbuf_buf();
-            music_buf_play_free_lbuf();
-            music_play_res_file("KeyVol.mp3");
-            return true;
-        }
-        break;
-    default :
-        start_ms = 0;
-        start_cnt = 0;
-        break;
-    }
-    return false;
-}
-#endif // KEY_DATA_PLAN_REST
-
 static int ai_speaker_key_event_handler(struct key_event *key)
 {
     int ret = 0;
@@ -786,9 +651,11 @@ static int ai_speaker_key_event_handler(struct key_event *key)
     if ((!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) || sleep) {
         return true;//闹钟在响，按键失效
     }
-
-    int cur_net_mode = sys_net_mode_read();
-    int ch = sys_net_channel_read();
+    //所有按键事件都要先判断是否是重复按键，如果是重复按键则不处理
+    if (key_func_set(__this->last_key, key->action, key->value)) {
+        __this->last_key = ((key->action & 0xFF) << 8) | (key->value & 0xFF);
+        return true;
+    }
     switch (key->action) {
     case KEY_EVENT_UP:
         ai_speaker_key_hand_up(key);
@@ -797,15 +664,6 @@ static int ai_speaker_key_event_handler(struct key_event *key)
         ai_speaker_key_click(key);
         break;
     case KEY_EVENT_HOLD:
-        if (key->value == KEY_CANCLE) { //暂停播放
-            music_buf_play_set_stop();
-            websockets_free_lbuf_buf();
-            music_buf_play_free_lbuf();
-            break;
-        } else {//闹钟唤醒事件
-            //music_play_res_file("AlarmRing1.mp3");
-            music_play_alarm(key->value);
-        }
         break;
     case KEY_EVENT_LONG:
         ai_speaker_key_long(key);
@@ -814,24 +672,10 @@ static int ai_speaker_key_event_handler(struct key_event *key)
         //模式切换
         if (key->value == KEY_OK) {
 #ifdef CONFIG_QYAI_MUTILMODAL_ENABLE
-            qyai_text2img_cyc_mode_auto(1);
-            break;
+            //qyai_text2img_cyc_mode_auto(1);
+            //break;
 #endif
-#if (SXY_LL_YHH_BOARD)
-            extern int tm_light_pwm_auto(void);
-            tm_light_pwm_auto();
-            //不是AD按键支持双击模式切换
-#else //if (!defined TCFG_ADKEY_ENABLE || TCFG_ADKEY_ENABLE == 0)
-            ai_speaker_mode_stop();
-            extern int audio_app_mode_switch(char *name);
-            audio_app_mode_switch(NULL);
-#endif
-#ifdef CONFIG_UI_PLAY_EMOJI
-            extern int play_face_emoji(int avi_index);
-            if (audio_app_mode_check() == 1) {
-                play_face_emoji(AI_UART_CMD_BT_MODE);
-            }
-#endif
+            key_do_double_action(KEY_DOUBLE_MODE_SWITCH);
         }
 #ifdef  USED_TM1629_SHOWN
         else if (key->value == KEY_MODE) { //显示亮度切换
@@ -839,16 +683,6 @@ static int ai_speaker_key_event_handler(struct key_event *key)
             tm_1629_led_shown_bright_level_auto();
         }
 #endif
-        //是否开启自动切换：0->NOT AUTO MODE、1->AUTO MODE
-        else if (key->value == KEY_UP) {
-//            int net_mode = sys_net_mode_read();
-//            net_mode = (net_mode + 1) % 2;
-//            printf("write net_mode:%d", net_mode);
-//            sys_net_mode_write(net_mode);
-//            system_reset();
-        } else if (key->value == KEY_DOWN) {
-            ;
-        }
         break;
     case KEY_EVENT_TRIPLE_CLICK:
 #if IP_NAPT
@@ -864,12 +698,11 @@ static int ai_speaker_key_event_handler(struct key_event *key)
         //配网按键
         if (key->value == KEY_OK) {
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
-            if (ch == 1) {
+            if (sys_net_channel_read() == 1) {
                 break;
             }
 #endif
-            //WIFI模式下按键进入配网
-            aisp_wake(8);
+            key_do_triple_action(KEY_TRIPLE_NET_CFG);
         }
 
         break;
@@ -880,91 +713,12 @@ static int ai_speaker_key_event_handler(struct key_event *key)
         break;
 #endif
         if (key->value == KEY_OK) {
-            if (cur_net_mode == NET_MODE_MANUAL_SET) { //手动模式: 4G和WiFi切换
-                int net_ch = sys_net_channel_read();
-                if (net_ch < 0) {
-                    sys_net_channel_write(NET_CH_SELECT_WIFI);
-                    net_ch = sys_net_channel_read();
-                } else {
-                    net_ch = net_ch ? 0 : 1;
-                    sys_net_channel_write(net_ch);
-                    if (sys_net_channel_read() == net_ch) {
-                        aisp_all_pause(1);
-                        usb_net_set_module_reset_status(1);
-                        music_play_res_file("SysReset.mp3");
-                        music_play_waite();
-                        //4G模式下切走，先发复位指令再断电
-                        if (sys_net_channel_read() == 0 && app_usb_get_driver_status()) {
-                            app_usb_at_cmd_send_reset();
-                            lte_power_control(0);
-                        }
-                        system_reset();
-                    }
-                }
-            } else {
-                //UI界面/按键触发选择网络模式
-                if (cur_net_mode == NET_MODE_AUTO) {
-                    goto done;
-                }
-
-                u8 key_down_cnt = sys_net_channel_read();
-                if (key_down_cnt == 0) {
-                    //切到4G模式[wifi->lte]
-                    printf("=====switch to lte mode=====");
-                    if (wifi_connect_net_success()) {
-                        printf("=====wifi state: connect!!!=====");
-                        wifi_and_network_off();
-                    } else {
-                        printf("=====wifi state: not connect!!!=====");
-                        if (wifi_is_online()) { //处于扫描的状态
-                            music_play_res_file("NetConting.mp3");
-                            wifi_and_network_off();
-                        }
-                    }
-                    //music_play_res_file("NetConting.mp3");
-                    net_work_on = NET_WORK_ON_LTE;
-                    sys_net_channel_write(NET_CH_SELECT_LTE);
-                    //设置lte为网卡
-                    qyai_net_interface_set(1);
-                    lte_power_control(1);
-                } else if (key_down_cnt == 1) {
-                    lte_power_control(0);
-                    //切到WIFI模式[lte->wifi]
-                    printf("=====switch to wifi mode=====");
-                    if (lte_connect_net_success()) {
-                        printf("=====lte state: connect!!!=====");
-                    } else {
-                        printf("=====lte state: not connect!!!=====");
-                    }
-                    net_work_on = NET_WORK_ON_WIFI;
-                    sys_net_channel_write(NET_CH_SELECT_WIFI);
-                    //设置wifi为网卡
-                    qyai_net_interface_set(0);
-                }
-
-                if (++key_down_cnt >= 2) {
-                    key_down_cnt = 0;
-                }
-            }
+            key_do_fourth_action(KEY_FOURTH_4G_WIFI);
         } else
 #endif
             //四连按进产测模式
             if (key->value == KEY_MODE || key->value == KEY_OK || key->value == KEY_UP) {
-#ifdef PRODUCTION_ALL_TEST_ENABLE
-                if (is_in_config_network_state()) {
-                    config_network_stop();
-                }
-                aisp_all_pause(1);
-                int wait = 100;
-                while (--wait) {
-                    if (music_buf_play_stop_status() && music_play_stop_status() && !net_music_play_start_status()) {
-                        break;
-                    }
-                    os_time_dly(1);
-                }
-                aisp_all_pause(0);
-                enter_product_func_test(1);
-#endif
+                key_do_fourth_action(KEY_FOURTH_FACTORY_TEST);
             }
 done:
         break;
@@ -982,16 +736,7 @@ done:
     //六连击以上，恢复出厂设置
     case KEY_EVENT_MORE_CLICK:
         if (key->value == KEY_OK || key->value == KEY_MODE) {
-            extern int http_wifi_device_unbind_app_task(void);
-            http_wifi_device_unbind_app_task();
-            aisp_all_pause(1);
-            music_play_res_file("SysRstFaSet.mp3");
-            music_play_waite();
-            //恢复出厂设置
-            system_restore_factory_settings();
-            music_play_res_file("SysReset.mp3");
-            music_play_waite();
-            system_reset();
+            key_do_many_action(KEY_MANY_FACTORY_RESET);
         }
         break;
     default:

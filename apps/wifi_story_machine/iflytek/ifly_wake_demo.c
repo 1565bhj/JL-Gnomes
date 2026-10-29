@@ -16,6 +16,7 @@
 #include "ifly_aiui_net.h"
 #include "event/key_event.h"
 #include "ai_uart_ctrol.h"
+#include "ifly_kws_mlp.h"
 #include "qyai_config.h"
 
 #if (defined CONFIG_ASR_ALGORITHM) && (CONFIG_ASR_ALGORITHM == IFLYTEK_ALGORITHM)
@@ -24,7 +25,6 @@
 #define CONFIG_AISP_AEC_USE_LINEIN 0
 #endif
 
-char aisp_mic_channel_set = 0;
 static char aisp_mic_suspend = 0;
 //#define ASR_WORDS_CHANGE //唤醒词更改：唤醒词、配网模式
 
@@ -70,8 +70,8 @@ static char aisp_mic_suspend = 0;
 #endif
 
 //#define AEC_GAIN(v)     (int)(CONFIG_AISP_AEC_ADC_GAIN)
-//#define MIC0_GAIN(v)    (int)(CONFIG_AISP_MIC_ADC_GAIN)   //固定CONFIG_AISP_MIC_ADC_GAIN-80
-//#define MIC1_GAIN(v)    (MIC0_GAIN(v))
+//#define MIC1_GAIN(v)    (int)(CONFIG_AISP_MIC_ADC_GAIN)   //固定CONFIG_AISP_MIC_ADC_GAIN-80
+//#define MIC2_GAIN(v)    (MIC1_GAIN(v))
 
 #define MIC_MAX_GAIN 95
 
@@ -117,6 +117,12 @@ static int ifly_sample_rate;
 static TAECParam g_tAECParam;
 static volatile char ifly_send_pcm;
 
+//微聊接口
+static volatile char key_omni_pcm;
+extern int qyai_omni_client_create(void);
+extern int qyai_omni_send_pcm_push(char *buf, int len);
+extern int qyai_omni_send_pcm_end(void);
+
 int bt_music_play_get_pause(void);
 
 extern int keyword_start;
@@ -136,10 +142,12 @@ void sys_vad_lock(int lock);
 int aisp_all_mic_gain_set(int volume, int aec_gian, int mic0_gian, int mic1_gian);
 int aisp_mic_gain_set(unsigned char volume);
 
+#if !(defined IFLY_KWS_MLP_CONST_ARRAY && defined IFLY_KEYWORDS)
 SEC_USED(.sram) ALIGNE(4) static char ga_cae_mlp_res_buf[CAE_MLP_BIN_SIZE_MAX] = {0};
 SEC_USED(.sram) ALIGNE(4) static char ga_cae_filter_res_buf[CAE_KEYWORD_BIN_SIZE_MAX] = {0};
-SEC_USED(.sram) ALIGNE(4) static char ga_cae_aec_buf[CAE_AEC_BUF_SIZE_MAX] = {0};
+#endif
 
+SEC_USED(.sram) ALIGNE(4) static char ga_cae_aec_buf[CAE_AEC_BUF_SIZE_MAX] = {0};
 SEC_USED(.sram) ALIGNE(4) static short ifly_audio_record_buf_read[IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 3];
 SEC_USED(.sram) ALIGNE(4) static short ifly_asr_buf_feed_to_engine[IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 3];
 
@@ -153,8 +161,6 @@ SEC_USED(.sram) ALIGNE(4) static short g_aecOutput[AEC_FRAME_SIZE] = {0};
 SEC_USED(.sram) ALIGNE(4) static s16 s_aduo_buf[IVW_FRAME_SIZE * IVW_FRAME_CNT] = {0};
 SEC_USED(.sram) ALIGNE(4) static cbuffer_t s_audio_cbuf = {0};
 
-SEC_USED(.sram) ALIGNE(4) s16 s_aiui_buf[IFLY_AIUI_VOICE_ONCE_SEND_BYTES * 10] = {0};
-
 cbuffer_t s_aiui_cbuf = {0};
 #if (ASR_USED_AVD == ASR_IFLY_AVD)
 SEC_USED(.sram) ALIGNE(4) s16 s_vad_buf[IFLY_AIUI_VOICE_ONCE_SEND_BYTES * 10] = {0};
@@ -162,10 +168,8 @@ cbuffer_t s_vad_cbuf = {0};
 #endif // USER_VAD_ENABLE
 
 static u8 last_key_supspend = 0;
-OS_SEM aiui_sem;
-// static uint8_t esr_timeout = 1; // 默认超时状态
 
-#ifdef WIFI_PCM_STREAN_SOCKET_ENABLE
+#if (defined WIFI_PCM_STREAN_SOCKET_ENABLE && !defined PRODUCTION_ALL_TEST_ENABLE)
 static short wifi_stream_buf[IFLY_AUDIO_RECORD_ONCE_SR_POINTS * 4];//mic2 + mic2 + mic3 + aec
 static short aec_out_buf[IFLY_AUDIO_RECORD_ONCE_SR_POINTS];
 #else
@@ -335,6 +339,7 @@ int checkResFile(const char* file_path)
 int readRes(const char* file_name, char** p, char* pp_res_sram_buf)
 {
     int ret = MIDDLE_OK;
+
     FILE* fp = fopen(file_name, "rb");
     do {
         if (fp == NULL) {
@@ -362,7 +367,6 @@ int readRes(const char* file_name, char** p, char* pp_res_sram_buf)
     } while (0);
     fclose(fp);
     fp = NULL;
-
     return ret;
 }
 
@@ -370,6 +374,10 @@ int initIvw80(const char* mlp_file, const char* filler_file)
 {
     int ret = MIDDLE_OK;
     do {
+#if (defined IFLY_KWS_MLP_CONST_ARRAY && defined IFLY_KEYWORDS)
+        g_mlpResCtx = IFLY_MLP;
+        g_fillerResCtx = IFLY_KEYWORDS;
+#else
         ret = readRes(mlp_file, &g_mlpResCtx, ga_cae_mlp_res_buf);
         if (ret) {
             printf("read res file:%s error!\n", mlp_file);
@@ -383,7 +391,7 @@ int initIvw80(const char* mlp_file, const char* filler_file)
             ret = IVW_READ_FILLER_ERROR;
             break;
         }
-
+#endif
         int instSize = wIvwGetInstSize();
         g_ivwInstance = (WIVW_INST)malloc(instSize);
         if (!g_ivwInstance) {
@@ -398,7 +406,6 @@ int initIvw80(const char* mlp_file, const char* filler_file)
             ret = IVW_CREATE_INST_ERROR;
             break;
         }
-
     } while (0);
 
     return ret;
@@ -586,9 +593,20 @@ void parseIvwResult(const char* res, int len)
     int vl_ncm = atoi(val);
     printf("-> iresid = %d , ncmThreshold = %d, ncm = %d \n",vl_resid,vl_ncmThreshold,vl_ncm);
     */
-
     char *kws_idx = QYAI_CFG_GET(CFG_IDX_KEYWORDS_INDEX);
     char *nwk_cfg_idx = QYAI_CFG_GET(CFG_IDX_NETWORK_CONFIG_INDEX);
+#if (defined IFLY_KWS_MLP_CONST_ARRAY && defined IFLY_KWS_INDEX)
+    if (IFLY_KWS_INDEX == (char)vl_resid) {
+        vl_resid = 0;//唤醒
+        goto exit;
+    }
+#endif
+#if (defined IFLY_KWS_MLP_CONST_ARRAY && defined IFLY_NWK_CFG_INDEX)
+    if (IFLY_NWK_CFG_INDEX == (char)vl_resid) {
+        vl_resid = 8;//配网
+        goto exit;
+    }
+#endif
     if (kws_idx && *kws_idx == (char)vl_resid) {
         vl_resid = 0;//唤醒
         goto exit;
@@ -704,6 +722,7 @@ const char *ifly_get_keyword_res_path()
 void initIvw()
 {
     int ret = MIDDLE_OK;
+#if !(defined IFLY_KWS_MLP_CONST_ARRAY && defined IFLY_KEYWORDS)
     g_mlpRes = ifly_get_mlp_res_path();
     if (checkResFile(g_mlpRes)) {
         printf("check mlp:[%s] res failed!\n", g_mlpRes);
@@ -715,7 +734,7 @@ void initIvw()
         printf("check keyword:[%s] res failed!\n", g_mlpRes);
         return;
     }
-
+#endif
     printf("call initIvw80\n");
     ret = initIvw80(g_mlpRes, g_keywordRes);
     if (ret) {
@@ -968,15 +987,23 @@ void aisp_wake_set_noice(char noice_note)
     }
 }
 
-static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable)
+static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable, int omni)
 {
     char hello_index = rand() % 5;
     if (start) {
-        printf("--->KAY VAD SPEAK_START\n");
+        if (key_omni_pcm) {
+            return;
+        }
+        if (omni) {
+            key_omni_pcm = 2;
+            keyword_start = 2;
+            ifly_send_pcm = SEND_PCM_INI;
+        }
         if (vad_end_enable) {
             sys_vad_clear(0);
             sys_vad_lock(1);
         }
+        printf("--->KAY VAD SPEAK_START\n");
         //通知app挂起
         struct key_event key = {0};
         key.type = KEY_EVENT_USER;
@@ -1039,9 +1066,18 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
             music_buf_play_set_stop();//停止TTS使用PIPE BUF
         }
         //websocket_client_thread_create(1);
-        websockets_send_audio_buf_init();
-        websockets_send_500ms_audio_buf_push(NULL, 0, 1);
-        websocket_client_thread_create_new(1, 1);
+        if (omni) { //创建微聊发送线程
+            if (qyai_omni_client_create()) {
+                printf("qyai_omni_client_create failed\n");
+                keyword_start = 0;
+                key_omni_pcm = 0;
+                return;
+            }
+        } else { //普通的聊天接口
+            websockets_send_audio_buf_init();
+            websockets_send_500ms_audio_buf_push(NULL, 0, 1);
+            websocket_client_thread_create_new(1, 1);
+        }
         music_buf_play_accept(1);
         if (vad_end_enable) {
             keyword_start = 1;
@@ -1051,7 +1087,12 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
             keyword_start = 2;
         }
         ifly_send_pcm = SEND_PCM_START;
-    } else if (qyai_chat_addr_version() <= 1) {
+
+        //todo
+        if (omni) {
+            key_omni_pcm = 1;
+        }
+    } else if (omni || qyai_chat_addr_version() <= 1) {
         if (ifly_send_pcm == SEND_PCM_DOING || ifly_send_pcm == SEND_PCM_START) {
             ifly_send_pcm = SEND_PCM_STOP;
 #ifdef CONFIG_UI_PLAY_EMOJI
@@ -1066,12 +1107,21 @@ static void key_vad_pcm_send_set(char start, char noice_note, int vad_end_enable
 
 void key_vad_pcm_send_set_status(char start, char noice_note)
 {
-    key_vad_pcm_send_set(start, noice_note, 0);
+    key_vad_pcm_send_set(start, noice_note, 0, 0);
+}
+
+//todo
+void key_omni_pcm_send_set_status(char start, char noice_note)
+{
+    if (!start && !key_omni_pcm) {
+        return;
+    }
+    key_vad_pcm_send_set(start, noice_note, 0, 1);
 }
 
 void key_vad_start_vad_end_auto(char start, char noice_note)
 {
-    key_vad_pcm_send_set(start, noice_note, 1);
+    key_vad_pcm_send_set(start, noice_note, 1, 0);
 }
 
 void sys_vad_event_handler(void *priv)
@@ -1221,12 +1271,68 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
         }
 #endif
 
-#if MIC2_AEC != 0 //清楚如何改之后请删除下面4行代码
-#error "回采不是MIC0通道，需要改下面的重组数据顺序，否则无法唤醒和打断，注意-MIC数据输出格式：低通道在前，高通道在后。算法数据存储格式：MIC1 MIC2 AEC"
-#error "默认单麦使用MIC1通道，双麦使用MIC1通道和MIC2通道，回采统一使用MIC0通道。清楚如何改之后请删除下面4行代码"
-#endif
+#if IFLY_AUDIO_RECORD_MIC_COUNT == 1
+        /* ========== 编译期排名：rank(x) = x 在 {a,b} 中比它小的个数（0 或 1） ========== */
+#define RANK_IN2(x, a, b) (((x) > (a)) + ((x) > (b)))
+
+        /* 各通道在缓冲区中的位置 */
+#define POS_MIC1    RANK_IN2(CONFIG_AISP_MIC0_ADC_CHANNEL,    CONFIG_AISP_MIC0_ADC_CHANNEL, CONFIG_AISP_MIC2_AEC_ADC_CHANNEL)
+#define POS_AEC     RANK_IN2(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL, CONFIG_AISP_MIC0_ADC_CHANNEL, CONFIG_AISP_MIC2_AEC_ADC_CHANNEL)
+
+        /* ========== 按排名取缓冲区数据 ========== */
+#define READ_MIC_DATA(buf)   ((buf)[POS_MIC1])
+#define READ_AEC_DATA(buf)   ((buf)[POS_AEC])
+
+        /* ========== 一次填充 2 个输出样本 ========== */
+#define FILL_PDTEST_PCM_OUT_2(out, buf, m1, aec, idx)   do { \
+            *(out)++ = (m1)  & READ_MIC_DATA(buf);           \
+            *(out)++ = (aec) & READ_AEC_DATA(buf);           \
+            (idx) += 2;                                      \
+            buf += 2;                                        \
+        } while (0);
+        /* ========== 一次填充 2 个输出样本 ========== */
+#define FILL_PCM_OUT_2(out, buf, idx)   do { \
+            *(out)++ = READ_MIC_DATA(buf);   \
+            *(out)++ = READ_AEC_DATA(buf);   \
+            (idx) += 2;                      \
+            buf += 2;                        \
+        } while (0);
+#else
+        /* ========== 编译期排名：rank(x) = x 在 {a,b,c} 中比它小的个数 ========== */
+#define RANK_IN3(x, a, b, c) (((x) > (a)) + ((x) > (b)) + ((x) > (c)))
+
+        /* 各通道在缓冲区中的位置（升序排名，最小者为 0） */
+#define POS_MIC1   RANK_IN3(CONFIG_AISP_MIC0_ADC_CHANNEL,    CONFIG_AISP_MIC0_ADC_CHANNEL, CONFIG_AISP_MIC1_ADC_CHANNEL, CONFIG_AISP_MIC2_AEC_ADC_CHANNEL)
+#define POS_MIC2   RANK_IN3(CONFIG_AISP_MIC1_ADC_CHANNEL, CONFIG_AISP_MIC0_ADC_CHANNEL, CONFIG_AISP_MIC1_ADC_CHANNEL, CONFIG_AISP_MIC2_AEC_ADC_CHANNEL)
+#define POS_AEC    RANK_IN3(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL, CONFIG_AISP_MIC0_ADC_CHANNEL, CONFIG_AISP_MIC1_ADC_CHANNEL, CONFIG_AISP_MIC2_AEC_ADC_CHANNEL)
+
+        /* ========== 按排名取缓冲区数据 ========== */
+#define READ_MIC1_DATA(buf) ((buf)[POS_MIC1])
+#define READ_MIC2_DATA(buf) ((buf)[POS_MIC2])
+#define READ_AEC_DATA(buf)  ((buf)[POS_AEC])
+
+        /* ========== 一次填充 3 个输出样本 ========== */
+#define FILL_PDTEST_PCM_OUT_3(out, buf, m1, m2, aec, idx)   do { \
+            *(out)++ = (m1)  & READ_MIC1_DATA(buf);              \
+            *(out)++ = (m2)  & READ_MIC2_DATA(buf);              \
+            *(out)++ = (aec) & READ_AEC_DATA(buf);               \
+            (idx) += 3;                                          \
+            buf += 3;   \
+        } while (0);
+        /* ========== 一次填充 3 个输出样本 ========== */
+#define FILL_PCM_OUT_3(out, buf, idx)   do { \
+            *(out)++ = READ_MIC1_DATA(buf);  \
+            *(out)++ = READ_MIC2_DATA(buf);  \
+            *(out)++ = READ_AEC_DATA(buf);   \
+            (idx) += 3;                      \
+            buf += 3;                        \
+        } while (0);
+#endif // IFLY_AUDIO_RECORD_MIC_COUNT'
+
         //重组数据
         short *pl_pcm_out = (short *)ifly_asr_buf_feed_to_engine;
+        short *mic_pcm_in = (short *)ifly_audio_record_buf_read;
+        int vl_idx = 0;
 #if CONFIG_AISP_AEC_USE_LINEIN
         if (pd_test == 0) { //厂测模式
             for (volatile int i = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
@@ -1234,9 +1340,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                 *pl_pcm_out++ = pd_mic2_test & ifly_audio_record_buf_read[i];
                 *pl_pcm_out++ = pd_test & ifly_linein_record_buf_read[i];
 #else
-                //2 mics
-                *pl_pcm_out++ = pd_mic2_test & ifly_audio_record_buf_read[i * 2];//mic1
-                *pl_pcm_out++ = pd_mic1_test & ifly_audio_record_buf_read[i * 2 + 1];//mic2
+                FILL_PCM_OUT_2(pl_pcm_out, mic_pcm_in, vl_idx);
                 *pl_pcm_out++ = pd_test & ifly_linein_record_buf_read[i];//ref
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
             }
@@ -1246,38 +1350,29 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                 *pl_pcm_out++ = ifly_audio_record_buf_read[i];
                 *pl_pcm_out++ = ifly_linein_record_buf_read[i];//ref
 #else
-                //2 mics
-                *pl_pcm_out++ = ifly_audio_record_buf_read[i * 2];//mic1
-                *pl_pcm_out++ = ifly_audio_record_buf_read[i * 2 + 1];//mic2
+                FILL_PCM_OUT_2(pl_pcm_out, mic_pcm_in, vl_idx);
                 *pl_pcm_out++ = ifly_linein_record_buf_read[i];//ref
 #endif // IFLY_AUDIO_RECORD_MIC_COUNT
             }
         }
 #else
-        int vl_idx = 0;
         if (pd_test == 0) { //厂测模式
             for (volatile int i = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
 #if IFLY_AUDIO_RECORD_MIC_COUNT == 1
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
-                *pl_pcm_out++ = pd_test & ifly_audio_record_buf_read[vl_idx];
+                FILL_PDTEST_PCM_OUT_2(pl_pcm_out, mic_pcm_in, pd_mic1_test, pd_test, vl_idx);
                 vl_idx += 2;
 #else
-                *pl_pcm_out++ = pd_mic2_test & ifly_audio_record_buf_read[vl_idx + 1];
-                *pl_pcm_out++ = pd_mic1_test & ifly_audio_record_buf_read[vl_idx + 2];
-                *pl_pcm_out++ = pd_test & ifly_audio_record_buf_read[vl_idx];
+                FILL_PDTEST_PCM_OUT_3(pl_pcm_out, mic_pcm_in, pd_mic1_test, pd_mic2_test, pd_test, vl_idx);
                 vl_idx += 3;
 #endif
             }
         } else { //正常模式
             for (volatile int i = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
 #if IFLY_AUDIO_RECORD_MIC_COUNT == 1
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx];
+                FILL_PCM_OUT_2(pl_pcm_out, mic_pcm_in, vl_idx);
                 vl_idx += 2;
 #else
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 1];
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx + 2];
-                *pl_pcm_out++ = ifly_audio_record_buf_read[vl_idx];
+                FILL_PCM_OUT_3(pl_pcm_out, mic_pcm_in, vl_idx);
                 vl_idx += 3;
 #endif
             }
@@ -1336,7 +1431,7 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
         aecProcess2(ifly_asr_buf_feed_to_engine, NULL, 0);
 #endif
 
-#ifdef WIFI_PCM_STREAN_SOCKET_ENABLE
+#if (defined WIFI_PCM_STREAN_SOCKET_ENABLE && !defined PRODUCTION_ALL_TEST_ENABLE)
         if (wifi_pcm_stream_socket_valid()) {
             pl_pcm_out = (char*)wifi_stream_buf;
             for (volatile int i = 0, vl_idx = 0; i < IFLY_AUDIO_RECORD_ONCE_SR_POINTS; i++) {
@@ -1404,6 +1499,32 @@ SEC_USED(.volatile_ram_code) ALIGNE(4) void ivwProcess()
                     }
                 }
 
+                //微聊
+                if (key_omni_pcm) {
+                    if (key_omni_pcm == 2) {
+                        continue;
+                    }
+                    if (ifly_send_pcm == SEND_PCM_START || ifly_send_pcm == SEND_PCM_DOING) {
+                        //直接存音频数据
+                        int pcm_ret = qyai_omni_send_pcm_push(buf, rlen);
+                        if (pcm_ret == -2) {
+                            ifly_send_pcm = SEND_PCM_INI;
+                            keyword_start = 0;
+                            key_omni_pcm = 0;
+                        } else if (ifly_send_pcm == SEND_PCM_START) {
+                            ifly_send_pcm = SEND_PCM_DOING;
+                        }
+                    } else if (ifly_send_pcm == SEND_PCM_STOP) {
+                        qyai_omni_send_pcm_push(buf, rlen);
+                        qyai_omni_send_pcm_end();
+                        ifly_send_pcm = SEND_PCM_INI;
+                        key_omni_pcm = 0;
+                    } else {
+                        qyai_omni_send_pcm_end();
+                        key_omni_pcm = 0;
+                    }
+                    continue;
+                }
                 //if(keyword_start)
                 {
                     if (ifly_send_pcm == SEND_PCM_START) {
@@ -2075,18 +2196,10 @@ void aisp_resume(void)
 #if IFLY_AUDIO_RECORD_MIC_COUNT == 1
 #if CONFIG_AISP_AEC_USE_LINEIN
     req_mic.enc.channel = 1;
-    if (aisp_mic_channel_set) {
-        req_mic.enc.channel_bit_map = BIT(aisp_mic_channel_set);
-    } else {
-        req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
-    }
+    req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
 #else
     req_mic.enc.channel = 2;
-    if (aisp_mic_channel_set) {
-        req_mic.enc.channel_bit_map = BIT(aisp_mic_channel_set) | BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
-    } else {
-        req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL) | BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
-    }
+    req_mic.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL) | BIT(CONFIG_AISP_MIC2_AEC_ADC_CHANNEL);
 #endif
 #else
 #if CONFIG_AISP_AEC_USE_LINEIN
@@ -2136,11 +2249,7 @@ void aisp_resume(void)
 
     union audio_req req_vol = {0};
     //麦克风增益分开设置
-    if (aisp_mic_channel_set) {
-        req_vol.enc.channel_bit_map = BIT(aisp_mic_channel_set);
-    } else {
-        req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
-    }
+    req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
     req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
     req_vol.enc.volume = CONFIG_AISP_MIC_ADC_GAIN;
     server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
@@ -2189,11 +2298,7 @@ int aisp_mic_gain_resum(void)
     union audio_req req_vol = {0};
     if (server_handle && run_flag) {
         speech_digital_vol_agc_enable(0);//只有播放音乐才加数字增益
-        if (aisp_mic_channel_set) {
-            req_vol.enc.channel_bit_map = BIT(aisp_mic_channel_set);
-        } else {
-            req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
-        }
+        req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
         req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
         req_vol.enc.volume = CONFIG_AISP_MIC_ADC_GAIN;//恢复增益到默认
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
@@ -2228,19 +2333,15 @@ int aisp_mic_gain_set(unsigned char volume)
 
     if (server_handle && run_flag) {
         aisp_aec_gain = AEC_GAIN(volume);
-        aisp_mic0_gain = MIC0_GAIN(volume);
-        aisp_mic1_gain = MIC1_GAIN(volume);
+        aisp_mic0_gain = MIC1_GAIN(volume);
+        aisp_mic1_gain = MIC2_GAIN(volume);
 
         aisp_aec_gain = aisp_aec_gain >= MIC_MAX_GAIN ? MIC_MAX_GAIN : (aisp_aec_gain < 30 ? 30 : aisp_aec_gain);
         aisp_mic0_gain = aisp_mic0_gain >= MIC_MAX_GAIN ? MIC_MAX_GAIN : (aisp_mic0_gain < 10 ? 10 : aisp_mic0_gain);
         aisp_mic1_gain = aisp_mic1_gain >= MIC_MAX_GAIN ? MIC_MAX_GAIN : (aisp_mic1_gain < 10 ? 10 : aisp_mic1_gain);
         printf("-> volume = %d, aec = %d, mic0 = %d, mic1 = %d \n", volume, aisp_aec_gain, aisp_mic0_gain, aisp_mic1_gain);
 
-        if (aisp_mic_channel_set) {
-            req_vol.enc.channel_bit_map = BIT(aisp_mic_channel_set);
-        } else {
-            req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
-        }
+        req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
         req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
         req_vol.enc.volume = aisp_mic0_gain;//CONFIG_AISP_MIC_ADC_GAIN;
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);
@@ -2279,11 +2380,7 @@ int aisp_all_mic_gain_set(int volume, int aec_gian, int mic0_gian, int mic1_gian
         mic1_gian = mic1_gian >= MIC_MAX_GAIN ? MIC_MAX_GAIN : (mic1_gian < 10 ? 10 : mic1_gian);
         printf("-> volume = %d, aec_gain = %d, mic0_gian = %d, mic1_gian = %d\n", volume, aec_gian, mic0_gian, mic1_gian);
 
-        if (aisp_mic_channel_set) {
-            req_vol.enc.channel_bit_map = BIT(aisp_mic_channel_set);
-        } else {
-            req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
-        }
+        req_vol.enc.channel_bit_map = BIT(CONFIG_AISP_MIC0_ADC_CHANNEL);
         req_vol.enc.cmd = AUDIO_ENC_SET_VOLUME;
         req_vol.enc.volume = mic0_gian;//CONFIG_AISP_MIC_ADC_GAIN;
         server_request(server_handle, AUDIO_REQ_ENC, &req_vol);

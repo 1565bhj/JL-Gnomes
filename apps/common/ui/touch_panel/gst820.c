@@ -260,7 +260,7 @@ static int GST820_task_init(void)
 
 REGISTER_LCD_TOUCH_DEV(GST820) = {
     .name                           = "GST820",
-    .iic_dev_name                   = "iic0",
+    .iic_dev_name                   = LCD_TOUCH_IIC_NAME,
     .LCD_Touch_check                = GST820_check,
     .LCD_Touch_init                 = GST820_task_init,
     .LCD_Touch_get                  = GST820_get_xy,

@@ -191,6 +191,29 @@ typedef enum JL_CONFIG_ERR_TABLE {
 
 #define    CFG_USER_DEFINE_END          59
 
+/*
+#define CFG_USER_MEETING_LIST_DATA      34
+#define CFG_USER_COURSE_LIST_DATA       35
+#define CFG_USER_TASK_0                 36
+#define CFG_USER_TASK_1                 37
+#define CFG_USER_TASK_2                 38
+#define CFG_USER_TASK_3                 39
+#define CFG_USER_TASK_4                 44
+#define CFG_USER_TASK_5                 45
+#define CFG_USER_TASK_6                 46
+#define CFG_USER_TASK_7                 47
+#define CFG_USER_TASK_8                 48
+#define CFG_USER_TASK_9                 49
+#define CFG_USER_MEETING_1              51
+#define CFG_USER_MEETING_2              52
+#define CFG_USER_MEETING_3              53
+#define CFG_USER_MEETING_4              54
+#define CFG_USER_COURSE_1               55
+#define CFG_USER_COURSE_2               56
+#define CFG_USER_COURSE_3               57
+#define CFG_USER_COURSE_4               58
+*/
+
 //=================================================================================//
 //         可以存于VM, sys_cfg.bin(默认值)和BTIF区域的配置项[100 ~ 127]            //
 //         (VM支持扩展到511)                                                      //

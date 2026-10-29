@@ -2281,15 +2281,16 @@ static int bt_music_key_event_handler(struct key_event *key)
     if ((!alarm_music_play_stop() && (key->value != KEY_SUPSPEND && key->value != KEY_RESUM && key->value != KEY_POWER)) || sleep) {
         return true;//闹钟在响，按键失效
     }
+    //所有按键事件都要先判断是否是重复按键，如果是重复按键则不处理
+    if (key_func_set(__this->last_key, key->action, key->value)) {
+        __this->last_key = ((key->action & 0xFF) << 8) | (key->value & 0xFF);
+        return true;
+    }
 
     switch (key->action) {
     case KEY_EVENT_UP:
         switch (key->value) {
         case KEY_MODE:
-            ;
-            if (((__this->last_key >> 8) & 0xFF) == KEY_EVENT_LONG) {
-                printf("-->KEY_EVENT_LONG hand_up\n");
-            }
             break;
         case KEY_SUPSPEND:
             break;
@@ -2340,12 +2341,10 @@ static int bt_music_key_event_handler(struct key_event *key)
 //            else {
 //                bt_connection_enable();
 //            }
-            extern int audio_app_mode_switch(char *name);
-            audio_app_mode_switch(NULL);
+            key_do_double_action(KEY_DOUBLE_MODE_SWITCH);
             break;
         case KEY_POWER:;//唤醒
-            extern void aisp_wake(char index);//0:小飞小飞，8：配网模式
-            aisp_wake(0);
+            key_do_short_action(KEY_SHORT_WAKEUP);
             break;
         case KEY_SUPSPEND://按键或语音暂停播放的停止播放
             bt_music_play_set(1, 1);
@@ -2411,21 +2410,12 @@ static int bt_music_key_event_handler(struct key_event *key)
         case KEY_OK:
         case KEY_POWER:
             ;
-            void sys_power_poweroff(void);
+            void sys_power_poweroff(unsigned int time_ms);
             if (__this->enable) {
                 bt_music_play_set(1, 1);
                 bt_connection_disable();
             }
-            extern void sys_power_poweroff(void);
-            extern int music_play_waite(void);
-#ifdef CONFIG_UI_PLAY_EMOJI
-            play_face_emoji(AI_UART_CMD_PWR_OFF);
-#endif
-            ai_speaker_mode_exit();
-            music_play_stop_all();
-            music_play_res_file("PwrOff.mp3");
-            music_play_waite();
-            sys_power_poweroff();
+            key_do_long_action(__this->last_key, KEY_LONG_POWER);
             break;
         case KEY_CPU_RESET:
             if (__this->enable) {
@@ -2445,16 +2435,6 @@ static int bt_music_key_event_handler(struct key_event *key)
         break;
 
     case KEY_EVENT_HOLD:
-        if (key->value != KEY_CANCLE) { //闹钟唤醒事件
-            void music_play_alarm_url_clear(void);
-            //music_play_alarm_url_clear();
-            music_play_res_file("AlarmRing1.mp3");
-            music_play_alarm(key->value);
-#ifdef CONFIG_LVGL_UI_ENABLE
-            int lv_demo_switch_to_ring_page(void);
-            lv_demo_switch_to_ring_page();
-#endif
-        }
         break;
     case KEY_EVENT_DOUBLE_CLICK:
         if (key->value == KEY_OK) { //暂停播放
@@ -2469,8 +2449,7 @@ static int bt_music_key_event_handler(struct key_event *key)
 //            else {
 //                bt_connection_enable();
 //            }
-            extern int audio_app_mode_switch(char *name);
-            audio_app_mode_switch(NULL);
+            key_do_double_action(KEY_DOUBLE_MODE_SWITCH);
         }
 #ifdef  USED_TM1629_SHOWN
         else if (key->value == KEY_MODE) { //显示亮度切换
@@ -2481,47 +2460,21 @@ static int bt_music_key_event_handler(struct key_event *key)
         break;
     case KEY_EVENT_TRIPLE_CLICK:
         if (key->value == KEY_OK) { //暂停播放
-            extern void aisp_wake(char index);//0:小飞小飞，8：配网模式
-            aisp_wake(8);//按键进入配网
+            key_do_short_action(KEY_SHORT_WAKEUP);
         }
         break;
     case KEY_EVENT_FOURTH_CLICK:
 #if (defined CONFIG_WIFI_ENABLE && defined CONFIG_LTE_PHY_ENABLE)
         //4G和WiFi切换
         if (key->value == KEY_OK) {
-            int net_ch = sys_net_channel_read();
-            if (net_ch < 0) {
-                sys_net_channel_write(NET_CH_SELECT_WIFI);
-                net_ch = sys_net_channel_read();
-            } else {
-                net_ch = net_ch ? 0 : 1;
-                sys_net_channel_write(net_ch);
-                if (sys_net_channel_read() == net_ch) {
-                    aisp_all_pause(1);
-                    usb_net_set_module_reset_status(1);
-                    music_play_res_file("SysReset.mp3");
-                    music_play_waite();
-                    if (sys_net_channel_read() == 0 && app_usb_get_driver_status()) {
-                        app_usb_at_cmd_send_reset();
-                        lte_power_control(0);
-                    }
-                    system_reset();
-                }
-            }
+            key_do_fourth_action(KEY_FOURTH_4G_WIFI);
         }
 #endif
         break;
     //六连击以上，恢复出厂设置
     case KEY_EVENT_MORE_CLICK:
         if (key->value == KEY_OK || key->value == KEY_MODE) {
-            aisp_all_pause(1);
-            music_play_res_file("SysRstFaSet.mp3");
-            music_play_waite();
-            //恢复出厂设置
-            system_restore_factory_settings();
-            music_play_res_file("SysReset.mp3");
-            music_play_waite();
-            system_reset();
+            key_do_many_action(KEY_MANY_FACTORY_RESET);
         }
         break;
     default:

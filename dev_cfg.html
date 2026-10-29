@@ -1,0 +1,3052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>board_open_dev_cfg.h 图形编程配置器 v35</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2e; --panel2:#1c2438; --line:#2a3550;
+    --txt:#e6ebf5; --dim:#8b97b0; --accent:#4f8cff; --accent2:#22c55e;
+    --warn:#f59e0b; --danger:#ef4444; --mono:'Consolas','Menlo',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:system-ui,'Segoe UI','Microsoft YaHei',sans-serif;font-size:14px}
+  header{position:sticky;top:0;z-index:20;background:rgba(15,20,32,.96);
+         backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+         padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:15px;margin:0;font-weight:600;white-space:nowrap}
+  header h1 span{color:var(--accent)}
+  .search{flex:1;min-width:140px;max-width:280px;position:relative}
+  .search input{width:100%;padding:7px 10px 7px 30px;border-radius:8px;
+    border:1px solid var(--line);background:var(--panel);color:var(--txt);outline:none}
+  .search input:focus{border-color:var(--accent)}
+  .search::before{content:"🔍";position:absolute;left:9px;top:7px;font-size:12px;opacity:.7}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);
+    color:var(--txt);padding:7px 11px;border-radius:8px;font-size:13px;transition:.15s}
+  button:hover{border-color:var(--accent);color:#fff}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button.primary:hover{filter:brightness(1.1)}
+  button.ghost{background:transparent}
+  .stats{color:var(--dim);font-size:12px;white-space:nowrap}
+  .chip-select{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+  .chip-select select{background:var(--panel);color:var(--txt);border:1px solid var(--line);
+    border-radius:8px;padding:6px 8px;outline:none;font-size:13px}
+
+  #btnGenHeaderTop{
+    white-space:nowrap;
+    flex:none;
+  }
+  @media (max-width: 720px){
+    header{
+      gap:6px;
+    }
+    header h1{
+      font-size:13px;
+      flex:1 1 100%;
+    }
+    .chip-select{
+      order:2;
+    }
+    .search{
+      order:3;
+      max-width:none;
+      flex:1 1 100%;
+    }
+    .stats{
+      order:4;
+    }
+    #btnGenHeaderTop{
+      order:1;
+      margin-left:auto;
+      padding:6px 10px;
+      font-size:12px;
+    }
+  }
+
+  main{max-width:1320px;margin:0 auto;padding:16px}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tabs button{padding:8px 16px;border-radius:10px}
+  .tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+
+  .group{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+         margin-bottom:14px;overflow:hidden}
+  .group-head{display:flex;align-items:center;gap:10px;padding:11px 14px;
+    cursor:pointer;user-select:none;background:linear-gradient(180deg,#1a2338,#161d2e)}
+  .group-head:hover{background:#1e2740}
+  .group-head .arrow{transition:.2s;color:var(--dim);font-size:11px}
+  .group.collapsed .arrow{transform:rotate(-90deg)}
+  .group.collapsed .group-body{display:none}
+  .group-head h2{font-size:14px;margin:0;font-weight:600}
+  .group-head .badge{font-size:11px;color:var(--dim);font-family:var(--mono);
+    background:#0d1220;border:1px solid var(--line);padding:1px 7px;border-radius:20px}
+  .group-head .desc{font-size:12px;color:var(--dim);flex:1;text-align:right;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .group-body{padding:4px 0}
+
+  .item{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;
+    padding:8px 14px;border-top:1px solid #1f2840}
+  .item:first-child{border-top:none}
+  .item:hover{background:#1a2236}
+  .item.disabled .name{color:var(--dim)}
+  .item.disabled .value-box{opacity:.55}
+  .item.conflict{background:rgba(239,68,68,.08);border-left:3px solid var(--danger)}
+  .item.fixed .switch{visibility:hidden}
+
+  .switch{position:relative;width:38px;height:20px;flex:none}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:#2a3550;border-radius:20px;
+    transition:.2s;cursor:pointer}
+  .slider::before{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;
+    background:#8b97b0;border-radius:50%;transition:.2s}
+  .switch input:checked + .slider{background:var(--accent2)}
+  .switch input:checked + .slider::before{transform:translateX(18px);background:#fff}
+
+  .meta{min-width:0}
+  .name{font-family:var(--mono);font-size:13px;color:#cfe0ff;word-break:break-all}
+  .cond{font-size:11px;color:var(--warn);margin-top:2px;font-family:var(--mono)}
+  .comment{font-size:11px;color:var(--dim);margin-top:2px;line-height:1.4}
+
+  .value-box{display:flex;align-items:center;gap:6px;min-width:0}
+  .value-box input,.value-box select{width:190px;max-width:42vw;padding:5px 8px;border-radius:6px;
+    border:1px solid var(--line);background:#0d1220;color:var(--txt);
+    font-family:var(--mono);font-size:12px;outline:none}
+  .value-box input:focus,.value-box select:focus{border-color:var(--accent)}
+  .value-box .novalue{font-size:11px;color:var(--dim);font-style:italic}
+  .value-box .type{font-size:10px;padding:1px 6px;border-radius:4px;background:#0d1220;
+    border:1px solid var(--line);color:var(--dim);font-family:var(--mono)}
+
+  .io-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+  .io-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .io-card.off{opacity:.6}
+  .io-card h3{margin:0 0 10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .io-card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent2)}
+  .io-card h3 .dot.off{background:var(--dim)}
+  .io-card h3 .card-en{display:flex;align-items:center;gap:4px;margin-left:auto;font-size:11px;
+    color:var(--dim);font-weight:400; transition: opacity 0.2s;}
+  
+  /* 新增：使能未勾选时文字变浅 */
+  .io-card h3 .card-en.off { opacity: 0.5; }
+
+  .io-card h3 .card-en input{accent-color:var(--accent2)}
+  .io-card .card-body.locked{display:none}
+  .io-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px}
+  .io-row label{flex:none;width:110px;color:var(--dim)}
+  .io-row input,.io-row select{flex:1;min-width:0;padding:4px 7px;border-radius:6px;
+    border:1px solid var(--line);background:#0d1220;color:var(--txt);
+    font-family:var(--mono);font-size:12px;outline:none}
+  .io-row input:focus,.io-row select:focus{border-color:var(--accent)}
+  .io-row input[readonly]{opacity:.7;cursor:not-allowed}
+  .io-row select:disabled{opacity:.45;cursor:not-allowed}
+  .io-row .hint{font-size:11px;color:var(--dim);width:100%;line-height:1.45}
+  .io-row input[type=checkbox].inline-chk{flex:none;width:auto;accent-color:var(--accent2)}
+  .checks{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:6px}
+  .checks label{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--txt);width:auto}
+  .checks label.disabled{opacity:.4;cursor:not-allowed}
+  .checks input{accent-color:var(--accent)}
+  .checks input:disabled{accent-color:var(--dim)}
+  .conflict-box{background:rgba(239,68,68,.1);border:1px solid var(--danger);
+    border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;display:none}
+  .conflict-box.show{display:block}
+  .conflict-box b{color:var(--danger)}
+  .key-card{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:8px 0}
+  .key-card .key-title{font-size:12px;color:var(--accent);margin-bottom:4px;font-weight:600}
+  .key-card .key-note{font-size:11px;color:var(--dim);margin-top:4px;line-height:1.4}
+  .key-card .key-func-val{margin-top:6px;padding:6px 8px;border-radius:6px;
+    background:#0d1220;border:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--accent2)}
+  .sub-card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;background:#131a2a}
+  .sub-card .sub-title{font-size:12px;color:var(--accent2);font-weight:600;margin-bottom:4px}
+  .usb-chk{display:flex;flex-wrap:wrap;gap:6px 16px;margin:4px 0 6px}
+  .usb-chk label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt);width:auto}
+  .usb-chk input{accent-color:var(--accent2)}
+  .warn-inline{font-size:11px;color:var(--danger);line-height:1.45;margin-top:2px}
+  .empty-tip{text-align:center;color:var(--dim);padding:60px 0;font-size:13px}
+
+  .drawer{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:50}
+  .drawer.open{display:block}
+  .drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(820px,96vw);
+    background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column}
+  .drawer-head{display:flex;align-items:center;gap:10px;padding:12px 16px;
+    border-bottom:1px solid var(--line);background:var(--panel2)}
+  .drawer-head h3{margin:0;font-size:14px;flex:1}
+  .drawer-body{flex:1;overflow:auto;padding:0}
+  .drawer-body textarea{width:100%;height:100%;border:none;resize:none;outline:none;
+    background:#0b0f18;color:#cfe0ff;font-family:var(--mono);font-size:12px;
+    line-height:1.55;padding:14px;white-space:pre;overflow:auto}
+  .drawer-foot{padding:10px 16px;border-top:1px solid var(--line);
+    display:flex;gap:10px;justify-content:flex-end;background:var(--panel2)}
+  .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+    background:var(--accent2);color:#04210f;padding:12px 22px;border-radius:10px;
+    font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;
+    box-shadow:0 8px 28px rgba(0,0,0,.45);text-align:center;max-width:80vw}
+  .toast.show{opacity:1;transform:translate(-50%,-50%)}
+  .hidden{display:none!important}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;z-index:60;
+    align-items:center;justify-content:center}
+  .modal.open{display:flex}
+  .modal-box{background:var(--panel);border:1px solid var(--danger);border-radius:14px;
+    width:min(520px,92vw);max-height:80vh;display:flex;flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .modal-head{display:flex;align-items:center;gap:10px;padding:14px 16px;
+    border-bottom:1px solid var(--line);background:rgba(239,68,68,.12)}
+  .modal-head h3{margin:0;font-size:15px;color:var(--danger);flex:1}
+  .modal-body{padding:14px 16px;overflow:auto;font-size:13px;line-height:1.6}
+  .modal-body .c-item{margin:6px 0;padding:8px 10px;border-radius:8px;
+    background:#0d1220;border:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  .modal-body .c-item .io{color:var(--warn);font-weight:600}
+  .modal-foot{padding:12px 16px;border-top:1px solid var(--line);
+    display:flex;justify-content:flex-end;gap:10px;background:var(--panel2)}
+
+  .echo-en-label,
+  .touch-en-label{
+    font-weight:700 !important;
+    color:var(--accent2) !important;
+  }
+
+  .io-output-bar{
+    margin:20px 0 40px;padding:16px;border:1px dashed var(--accent);
+    border-radius:12px;background:rgba(79,140,255,.06);
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .io-output-bar .io-output-tip{font-size:12px;color:var(--dim)}
+
+  .item-wrap{border-top:1px solid #1f2840}
+  .item-wrap:first-child{border-top:none}
+  .sub-items{padding:2px 14px 10px 58px;display:flex;flex-direction:column;gap:6px}
+  .sub-item{display:flex;align-items:center;gap:10px;font-size:12px;
+    padding:4px 8px;border-radius:8px;background:#131a2a;border:1px solid #1f2840}
+  .sub-item label{color:var(--dim);flex:none;width:150px}
+  .sub-item select,.sub-item input[type=number]{flex:1;min-width:0;padding:4px 7px;border-radius:6px;
+    border:1px solid var(--line);background:#0d1220;color:var(--txt);
+    font-family:var(--mono);font-size:12px;outline:none}
+  .sub-item .hint{font-size:11px;color:var(--dim)}
+  .multi-select{display:flex;flex-wrap:wrap;gap:6px 14px;padding:4px 0}
+  .multi-select label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt)}
+  .multi-select input{accent-color:var(--accent2)}
+  .lcd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;padding:6px 0}
+  .lcd-grid label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt);
+    padding:4px 8px;border-radius:8px;background:#131a2a;border:1px solid #1f2840}
+  .lcd-grid input{accent-color:var(--accent2)}
+  .eye-row{display:flex;flex-wrap:wrap;gap:8px 18px;padding:4px 0}
+  .eye-row label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt)}
+  .eye-row input{accent-color:var(--accent2)}
+
+  .group[data-group="通用配置"] .group-body,
+  .group[data-group="产品配置"] .group-body{counter-reset:genitem}
+  .group[data-group="通用配置"] .item .name::before,
+  .group[data-group="产品配置"] .item .name::before{
+    counter-increment:genitem;
+    content:counter(genitem) ". ";
+    color:var(--accent);
+    font-weight:700;
+    margin-right:2px;
+  }
+
+  .spi-warn-tip{
+    font-size:12px;
+    color:var(--warn);
+    line-height:1.45;
+    margin:4px 0 6px;
+    padding:6px 8px;
+    border:1px dashed var(--warn);
+    border-radius:8px;
+    background:rgba(245,158,11,.08);
+  }
+
+  .mgp-input{
+    flex:1;min-width:0;padding:4px 7px;border-radius:6px;
+    border:1px solid var(--line);background:#0d1220;color:var(--txt);
+    font-family:var(--mono);font-size:12px;outline:none;
+  }
+  .mgp-input:focus{border-color:var(--accent)}
+  .mgp-input.err{border-color:var(--danger);box-shadow:0 0 0 2px rgba(239,68,68,.25)}
+  .sub-item label.mgp-label{width:180px}
+
+  .bt-name-input{
+    flex:1;min-width:0;padding:4px 7px;border-radius:6px;
+    border:1px solid var(--line);background:#0d1220;color:var(--txt);
+    font-family:var(--mono);font-size:12px;outline:none;
+  }
+  .bt-name-input:focus{border-color:var(--accent)}
+  .bt-name-input.err{border-color:var(--danger);box-shadow:0 0 0 2px rgba(239,68,68,.25)}
+  .bt-name-bytes{font-size:11px;color:var(--dim);white-space:nowrap}
+  .bt-name-bytes.err{color:var(--danger);font-weight:600}
+
+  .mutex-tag{
+    font-size:11px;color:var(--warn);font-weight:400;white-space:nowrap;
+  }
+
+  /* 抽屉顶部按钮组 */
+  .drawer-head .drawer-head-actions{
+    display:flex;align-items:center;gap:8px;flex:none;
+  }
+
+  /* “复制”按钮旁的局部提示气泡 */
+  .copy-bubble-wrap{
+    position:relative;display:inline-flex;align-items:center;
+  }
+  .copy-bubble{
+    position:absolute;
+    left:50%;
+    bottom:calc(100% + 8px);
+    transform:translateX(-50%) translateY(4px);
+    background:var(--accent2);
+    color:#04210f;
+    font-weight:600;
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:8px;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    z-index:80;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  .copy-bubble::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:100%;
+    transform:translateX(-50%);
+    border:5px solid transparent;
+    border-top-color:var(--accent2);
+  }
+  .copy-bubble.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  /* 重绘原生复选框，确保勾选后百分之百为绿色 */
+  input[type="checkbox"] {
+	  appearance: none;
+	  -webkit-appearance: none;
+	  width: 14px;
+	  height: 14px;
+	  border: 1px solid var(--line);
+	  border-radius: 3px;
+	  background: #0d1220;
+	  cursor: pointer;
+	  position: relative;
+	  vertical-align: middle;
+	  margin: 0 4px 0 0;
+	}
+
+	/* 勾选后的底色（绿色） */
+	input[type="checkbox"]:checked {
+	  background-color: var(--accent2) !important;
+	  border-color: var(--accent2) !important;
+	}
+
+	/* 勾选后的白色对勾（用纯CSS画一个对勾） */
+	input[type="checkbox"]:checked::after {
+	  content: "";
+	  position: absolute;
+	  left: 4px;
+	  top: 1px;
+	  width: 3px;
+	  height: 7px;
+	  border: solid #fff;
+	  border-width: 0 2px 2px 0;
+	  transform: rotate(45deg);
+	}
+
+	/* 覆盖禁用状态，防止浏览器再次强制置灰 */
+	input[type="checkbox"]:disabled {
+	  opacity: 1 !important;
+	  cursor: not-allowed;
+	}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ <span>board_open_dev_cfg.h</span> 图形编程配置器 v35</h1>
+  <div class="chip-select">
+    芯片/模组
+    <select id="chipSelect">
+      <option value="QYAI-AC-A100模组" selected>QYAI-AC-A100模组</option>
+      <option value="AC7916AB">AC7916AB</option>
+      <option value="AC7911BA">AC7911BA</option>
+      <option value="AC7911BB">AC7911BB</option>
+    </select>
+  </div>
+  <div class="search"><input id="search" placeholder="搜索宏名 / 注释 / 分组…" autocomplete="off"></div>
+  <span class="stats" id="stats"></span>
+  <button class="primary" id="btnGenHeaderTop">📄 点击生成配置文件</button>
+  <button class="ghost" id="btnResetCfg">↺ 恢复默认</button>
+  <span class="io-output-tip" style="color:var(--warn);font-size:12px;line-height:1.45;max-width:520px;">
+    注意：在SDK运行dev_cfg.html文件，点击生成配置文件后需要手动替换SDK\apps\wifi_story_machine\board\wl82\board_open_dev_cfg.h的配置文件（网页版编程的请忽略）
+  </span>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="active" data-tab="io">外设 IO 配置</button>
+    <button data-tab="macro">功能模块</button>
+  </div>
+
+  <div id="conflictBox" class="conflict-box"></div>
+
+  <div id="tab-macro" class="hidden"><div id="app"></div></div>
+  <div id="tab-io">
+    <div class="io-grid" id="ioGrid"></div>
+  </div>
+</main>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-panel">
+    <div class="drawer-head">
+      <h3>生成结果 · board_open_dev_cfg.h</h3>
+      <div class="drawer-head-actions">
+        <span class="copy-bubble-wrap">
+          <button class="ghost" id="btnCopy">复制</button>
+          <span class="copy-bubble" id="copyBubble">已复制</span>
+        </span>
+        <button class="primary" id="btnDownload">输出配置文件</button>
+        <button class="ghost" id="btnCloseDrawer">关闭</button>
+      </div>
+    </div>
+    <div class="drawer-body"><textarea id="output" spellcheck="false"></textarea></div>
+  </div>
+</div>
+
+<div class="modal" id="conflictModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>⚠ IO / USB 冲突</h3>
+      <button class="ghost" id="btnCloseConflict">关闭</button>
+    </div>
+    <div class="modal-body" id="conflictModalBody"></div>
+    <div class="modal-foot">
+      <button class="primary" id="btnCloseConflict2">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="tipModal">
+  <div class="modal-box" style="border-color:var(--warn)">
+    <div class="modal-head" style="background:rgba(245,158,11,.12)">
+      <h3 style="color:var(--warn)">提示</h3>
+      <button class="ghost" id="btnCloseTip">关闭</button>
+    </div>
+    <div class="modal-body" id="tipModalBody"></div>
+    <div class="modal-foot">
+      <button class="primary" id="btnCloseTip2">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+ * 0.0 页面配置持久化（localStorage，键名 dev_html.cfg）
+ * ============================================================ */
+const STORAGE_KEY = "dev_html.cfg";
+
+function saveCfg(){
+  try{
+    const data = {
+      chip: IO_STATE.chip,
+      flashSize: IO_STATE.flashSize,
+      MODULE_STATE,
+      IO_STATE
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }catch(e){
+    console.warn("saveCfg failed", e);
+  }
+}
+
+function loadCfg(){
+  let raw = null;
+  try{
+    raw = localStorage.getItem(STORAGE_KEY);
+  }catch(e){
+    return;
+  }
+  if(!raw) return;
+  let data = null;
+  try{
+    data = JSON.parse(raw);
+  }catch(e){
+    return;
+  }
+  if(!data || typeof data !== "object") return;
+
+  if(data.MODULE_STATE && typeof data.MODULE_STATE === "object"){
+    for(const gk of Object.keys(MODULE_STATE)){
+      if(!data.MODULE_STATE[gk]) continue;
+      if(typeof MODULE_STATE[gk] === "object" && !Array.isArray(MODULE_STATE[gk])){
+        Object.assign(MODULE_STATE[gk], data.MODULE_STATE[gk]);
+        if(gk === "system" && data.MODULE_STATE.system.autoSleepCfg){
+          Object.assign(MODULE_STATE.system.autoSleepCfg, data.MODULE_STATE.system.autoSleepCfg);
+        }
+        if(gk === "av" && data.MODULE_STATE.av.micGainParams){
+          Object.assign(MODULE_STATE.av.micGainParams, data.MODULE_STATE.av.micGainParams);
+        }
+        if(gk === "av" && data.MODULE_STATE.av.ui){
+          Object.assign(MODULE_STATE.av.ui, data.MODULE_STATE.av.ui);
+        }
+      } else {
+        MODULE_STATE[gk] = data.MODULE_STATE[gk];
+      }
+    }
+  }
+
+  if(data.IO_STATE && typeof data.IO_STATE === "object"){
+    const S = data.IO_STATE;
+    if(S.chip && CHIP_IO[S.chip]) IO_STATE.chip = S.chip;
+    if(S.flashSize) IO_STATE.flashSize = S.flashSize;
+
+    for(const key of Object.keys(IO_STATE)){
+      if(!S[key]) continue;
+      const cur = IO_STATE[key];
+      const src = S[key];
+      if(Array.isArray(cur)){
+        IO_STATE[key] = src;
+      } else if(cur && typeof cur === "object"){
+        Object.assign(cur, src);
+        if(Array.isArray(src.list)) cur.list = src.list;
+        if(Array.isArray(src.keys)) cur.keys = src.keys;
+        if(Array.isArray(src.dual)) cur.dual = src.dual;
+        if(Array.isArray(src.usbIfs)) cur.usbIfs = src.usbIfs;
+        if(Array.isArray(src.micGainParams)) cur.micGainParams = src.micGainParams;
+      } else {
+        IO_STATE[key] = src;
+      }
+    }
+  }
+
+  const chipSel = $("chipSelect");
+  if(chipSel && IO_STATE.chip) chipSel.value = IO_STATE.chip;
+
+  normalizeDacMode();
+  normalizeUsbIfs();
+}
+
+/* ============================================================
+ * 0. 芯片 IO / SDRAM / 常量
+ * ============================================================ */
+const CHIP_IO = {
+  "QYAI-AC-A100模组": [
+    "IO_PORTB_00","IO_PORTB_01","IO_PORTB_03",
+    "IO_PORTH_09","IO_PORTH_08",
+    "IO_PORTA_03","IO_PORTA_04","IO_PORTA_02","IO_PORTA_01",
+    "IO_PORTA_10","IO_PORTA_09","IO_PORTA_08","IO_PORTA_07","IO_PORTA_06","IO_PORTA_05","IO_PORTA_00",
+    "IO_PORTH_00","IO_PORTH_01","IO_PORTH_02","IO_PORTH_03","IO_PORTH_04","IO_PORTH_07",
+    "IO_PORTC_00","IO_PORTC_01","IO_PORTC_02","IO_PORTC_03","IO_PORTC_04",
+    "IO_PORT_USB_DPA","IO_PORT_USB_DNA",
+    "IO_PORTC_10","IO_PORTC_09","IO_PORTC_08","IO_PORTC_07","IO_PORTC_06","IO_PORTC_05"
+  ],
+  "AC7916AB": [
+    "IO_PORTC_10","IO_PORTC_09","IO_PORTC_08","IO_PORTC_07","IO_PORTC_06","IO_PORTC_05",
+    "IO_PORTC_04","IO_PORTC_03","IO_PORTC_02","IO_PORTC_01","IO_PORTC_00",
+    "IO_PORTB_07","IO_PORTB_06","IO_PORTB_05","IO_PORTB_04","IO_PORTB_03","IO_PORTB_02","IO_PORTB_08",
+    "IO_PORTB_01","IO_PORTB_00",
+    "IO_PORTA_00","IO_PORTA_01","IO_PORTA_02","IO_PORTA_03","IO_PORTA_04","IO_PORTA_05",
+    "IO_PORTA_06","IO_PORTA_07","IO_PORTA_08","IO_PORTA_09","IO_PORTA_10",
+    "IO_PORTH_00","IO_PORTH_01","IO_PORTH_02","IO_PORTH_03","IO_PORTH_04","IO_PORTH_05","IO_PORTH_06","IO_PORTH_07","IO_PORTH_08","IO_PORTH_09",
+    "IO_PORT_USB_DPA","IO_PORT_USB_DNA","IO_PORT_USB_DPB","IO_PORT_USB_DNB"
+  ],
+  "AC7911BA": [
+    "IO_PORTA_10","IO_PORTA_09","IO_PORTA_08","IO_PORTA_07","IO_PORTA_06","IO_PORTA_05",
+    "IO_PORTA_04","IO_PORTA_03","IO_PORTA_02","IO_PORTA_01","IO_PORTA_00",
+    "IO_PORTH_09","IO_PORTH_08","IO_PORTH_07","IO_PORTH_06","IO_PORTH_04",
+    "IO_PORTB_01","IO_PORTB_08",
+    "IO_PORTC_00","IO_PORTC_01","IO_PORTC_05","IO_PORTC_02","IO_PORTC_06","IO_PORTC_07","IO_PORTC_08","IO_PORTC_09","IO_PORTC_10",
+    "IO_PORT_USB_DPA","IO_PORT_USB_DNA"
+  ],
+  "AC7911BB": [
+    "IO_PORTA_10","IO_PORTA_09","IO_PORTA_08","IO_PORTA_07","IO_PORTA_06","IO_PORTA_05",
+    "IO_PORTA_04","IO_PORTA_03","IO_PORTA_02","IO_PORTA_01","IO_PORTA_00",
+    "IO_PORTH_09","IO_PORTH_08","IO_PORTH_07","IO_PORTH_06","IO_PORTH_04",
+    "IO_PORTB_01","IO_PORTB_08",
+    "IO_PORTC_00","IO_PORTC_01","IO_PORTC_05","IO_PORTC_02","IO_PORTC_06","IO_PORTC_07","IO_PORTC_08","IO_PORTC_09","IO_PORTC_10",
+    "IO_PORT_USB_DPA","IO_PORT_USB_DNA"
+  ]
+};
+const ADKEY_ALLOWED_IO = new Set([
+  "IO_PORTA_07","IO_PORTA_08","IO_PORTA_10",
+  "IO_PORTB_01","IO_PORTB_06","IO_PORTB_07",
+  "IO_PORTC_00","IO_PORTC_01","IO_PORTC_09","IO_PORTC_10",
+  "IO_PORTH_00","IO_PORTH_03"
+]);
+const CHIP_DEFAULT = {
+  "QYAI-AC-A100模组": { vcc33:"IO_PORTB_03", iovdd:"IO_PORTB_00" },
+  "AC7916AB":        { vcc33:"IO_PORTB_03", iovdd:"IO_PORTB_00" },
+  "AC7911BA":        { vcc33:"空",           iovdd:"IO_PORTA_00" },
+  "AC7911BB":        { vcc33:"空",           iovdd:"IO_PORTA_00" }
+};
+const CHIP_SDRAM = {
+  "QYAI-AC-A100模组": "8MB",
+  "AC7916AB":        "8MB",
+  "AC7911BA":        "2MB",
+  "AC7911BB":        "8MB"
+};
+const BANNED_UART2 = new Set(["IO_PORTB_00","IO_PORTB_03","IO_PORTB_01","RTC32K_XOSCO","RTC32K_XOSCI","USB0_DP","USB0_DM","HUSB_DP","HUSB_DM"]);
+const BANNED_DEBUG = new Set(["IO_PORTB_00","IO_PORTB_03","IO_PORTB_01","RTC32K_XOSCO","RTC32K_XOSCI","USB0_DM","HUSB_DP","HUSB_DM"]);
+const BANNED_PWM   = new Set(["IO_PORTB_00","IO_PORTB_03","IO_PORTB_01","RTC32K_XOSCO","RTC32K_XOSCI","USB0_DP","USB0_DM","HUSB_DP","HUSB_DM"]);
+const BANNED_IIC   = new Set(["IO_PORTB_00","IO_PORTB_03","IO_PORTB_01","RTC32K_XOSCO","RTC32K_XOSCI","USB0_DP","USB0_DM","HUSB_DP","HUSB_DM"]);
+const PWM_MAP = {
+  "IO_PORTA_08":"PWMCH1_L","IO_PORTC_08":"PWMCH2_L","IO_PORTH_01":"PWMCH3_L","IO_PORTC_02":"PWMCH4_L","IO_PORTH_07":"PWMCH5_L",
+  "IO_PORTA_07":"PWMCH1_H","IO_PORTC_07":"PWMCH2_H","IO_PORTH_00":"PWMCH3_H","IO_PORTC_00":"PWMCH4_H","IO_PORTH_03":"PWMCH5_H"
+};
+const LCD_SPI_BUS = {
+  "spi1b": { name:"SPI1-B", do:"IO_PORTC_10", di:"IO_PORTC_08", clk:"IO_PORTC_09" },
+  "spi1c": { name:"SPI1-C", do:"IO_PORTA_04", di:"IO_PORTA_02", clk:"IO_PORTA_03" },
+  "spi2a": { name:"SPI2-A", do:"IO_PORTH_01", di:"IO_PORTH_02", clk:"IO_PORTH_00" }
+};
+const MIC_PIN = {
+  "MIC0-P":"IO_PORTA_02","MIC0-N":"IO_PORTA_01",
+  "MIC1-P":"IO_PORTH_09","MIC1-N":"IO_PORTH_08",
+  "MIC2-P":"IO_PORTA_03","MIC2-N":"IO_PORTA_04"
+};
+const MIC_NUM = { "MIC0":0, "MIC1":1, "MIC2":2 };
+const MIC_GROUPS = ["MIC1","MIC2","MIC0"];
+const LTE_VENDORS = [
+  {name:"中移 307R/C", value:"VENDOR_ML307R"},
+  {name:"域格 YM310", value:"VENDOR_YUGEYM310"},
+  {name:"全网通 GT108", value:"VENDOR_GT108"},
+  {name:"骐俊 ML120H", value:"VENDOR_ML120H"},
+  {name:"合宙 780E", value:"VENDOR_AIR780E"},
+  {name:"利尔达 NT26K", value:"VENDOR_NT26K"},
+  {name:"雁飞 CE105", value:"VENDOR_CE105"}
+];
+
+const KEY_SLOTS = [
+  { key:"short",  label:"短按",     bits:[0,3],  options:[
+      {v:0, n:"无"}, {v:1, n:"短按唤醒"}, {v:2, n:"短按下一首"}, {v:3, n:"短按上一首"},
+      {v:4, n:"短按灯模式(开/关灯)切换"}, {v:5, n:"短按模式切换"}, {v:6, n:"短按暂停/播放音乐"}
+  ]},
+  { key:"long",   label:"长按",     bits:[4,7],  options:[
+      {v:0, n:"无"}, {v:1, n:"长按开关机"}, {v:2, n:"长按音量加"}, {v:3, n:"长按音量减"}, {v:4, n:"长按4G/WIFI模式"}, {v:5, n:"长按配网模式"}, {v:6, n:"长按对话"}, {v:7, n:"长按开关灯"}
+  ]},
+  { key:"double", label:"双击",     bits:[8,11], options:[
+      {v:0, n:"无"}, {v:1, n:"双击模式切换"},, {v:2, n:"双击配网模式"}
+  ]},
+  { key:"triple", label:"三击",     bits:[12,15],options:[
+      {v:0, n:"无"}, {v:1, n:"三击配网模式"}
+  ]},
+  { key:"quad",   label:"四击",     bits:[16,19],options:[
+      {v:0, n:"无"}, {v:1, n:"四击厂测模式"}, {v:2, n:"四击4G/WIFI模式"}
+  ]},
+  { key:"five",   label:"五击",     bits:[20,23],options:[
+      {v:0, n:"无"}, {v:1, n:"五击厂测模式"}
+  ]},
+  { key:"many",   label:"六击以上", bits:[24,27],options:[
+      {v:0, n:"无"}, {v:1, n:"六击以上恢复出厂设置"}
+  ]}
+];
+const FLASH_SIZES = ["4MB","8MB","16MB"];
+const IO_EMPTY = "空";
+const IO_PULLUP_EMPTY = "空";
+
+const KEY_RESISTORS = [
+  { label:"0Ω",    value:0   },
+  { label:"22KΩ",  value:22  },
+  { label:"33KΩ",  value:33  },
+  { label:"51KΩ",  value:51  },
+  { label:"100KΩ", value:100 },
+  { label:"120KΩ", value:120 }
+];
+const WS_BAUD_PRESETS = [
+  { label:"3.3M", value:3300000 },
+  { label:"2.5M", value:2500000 },
+  { label:"其他", value:"other" }
+];
+
+
+const DEBUG_BAUD_PRESETS = ["115200","460800","1000000","2000000","其他"];
+const SPI_SPEED_PRESETS = ["2000000","8000000","16000000","24000000","32000000","48000000","64000000"];
+const SDIO_CLK_PRESETS = ["1000000","2000000","8000000","16000000","24000000","32000000","48000000"];
+
+const SDIO_PORTS = {
+  "SD0-A": { clk:"IO_PORTB_07", cmd:"IO_PORTB_06", dat0:"IO_PORTB_05", dat1:"IO_PORTB_04", dat2:"IO_PORTB_03", dat3:"IO_PORTB_02" },
+  "SD0-B": { clk:"IO_PORTA_08", cmd:"IO_PORTA_07", dat0:"IO_PORTA_09", dat1:"IO_PORTA_10", dat2:"IO_PORTA_05", dat3:"IO_PORTA_06" },
+  "SD0-D": { clk:"IO_PORTC_10", cmd:"IO_PORTC_09", dat0:"IO_PORTC_08", dat1:"IO_PORTC_07", dat2:"IO_PORTC_06", dat3:"IO_PORTC_05" },
+  "SD1-B": { clk:"IO_PORTC_01", cmd:"IO_PORTC_00", dat0:"IO_PORTC_02", dat1:"IO_PORTC_03", dat2:"IO_PORTC_04", dat3:"IO_PORTC_05" }
+};
+
+const AUX_CHANNELS = [
+  { name:"AUX0", pin:"IO_PORTA_00", mic:"MIC0" },
+  { name:"AUX1", pin:"IO_PORTH_07", mic:"MIC1" },
+  { name:"AUX2", pin:"IO_PORTA_05", mic:"MIC2" },
+  { name:"AUX3", pin:"IO_PORTH_04", mic:null }
+];
+
+const DAC_SINGLE_DIFF_OPTIONS = [
+  { label:"DACFL/R", pinText:"DACFL / DACFR", value:"FLR" },
+  { label:"DACRL/R", pinText:"DACRL / DACRR", value:"RLR" }
+];
+
+const USB_IF_OPTIONS = ["FUSB","HUSB"];
+const LED_FREQ_PRESETS = ["1000","2000","5000","10000","20000","其他"];
+
+const LCD_DRIVERS = [
+  { key:"ST7789S",    macro:"TCFG_LCD_ST7789S_ENABLE",   note:"" },
+  { key:"ST7735S",    macro:"TCFG_LCD_ST7735S_ENABLE",   note:"" },
+  { key:"ST7735SV",   macro:"TCFG_LCD_ST7735SV_ENABLE",  note:"0.8寸160*160方屏幕" },
+  { key:"ST7789V",    macro:"TCFG_LCD_ST7789V_ENABLE",   note:"2.1寸320*240屏幕" },
+  { key:"JD9853",     macro:"TCFG_LCD_JD9853_ENABLE",    note:"2.1寸296*240屏幕" },
+  { key:"GC3907",     macro:"TCFG_LCD_GC3907_ENABLE",    note:"" },
+  { key:"ST7789P3",   macro:"TCFG_LCD_ST7789P3_ENABLE",  note:"1.5寸手表圆屏" },
+  { key:"ST77912",    macro:"TCFG_LCD_ST77912_ENABLE",   note:"1.28寸手表圆屏" },
+  { key:"GC9D01",     macro:"TCFG_LCD_GC9D01_ENABLE",    note:"0.71寸手表圆屏" },
+  { key:"ST7735P3",   macro:"TCFG_LCD_ST7735P3_ENABLE",  note:"1.77寸160*128屏幕" },
+  { key:"NV3031A",    macro:"TCFG_LCD_NV3031A_ENABLE",   note:"2.8寸320*240屏幕" },
+  { key:"AXS15252",   macro:"TCFG_LCD_AXS15252_ENABLE",  note:"320*240屏幕" }
+];
+
+function keyFuncToInt(funcs){
+  let v = 0;
+  KEY_SLOTS.forEach(s=>{
+    const n = Number(funcs && funcs[s.key]) || 0;
+    const [lo,hi] = s.bits;
+    const mask = ((1 << (hi-lo+1)) - 1);
+    v |= (n & mask) << lo;
+  });
+  return v >>> 0;
+}
+function keyFuncToHex(funcs){
+  return "0x" + keyFuncToInt(funcs).toString(16).toUpperCase().padStart(8,"0");
+}
+function defaultKeyFuncs(){
+  return { short:0, long:0, double:0, triple:0, quad:0, five:0, many:0 };
+}
+
+/* ============================================================
+ * 1. 功能模块（宏配置）数据
+ * ============================================================ */
+const DATA = {
+  file: "board_open_dev_cfg.h",
+  guard: { ifndef:"CONFIG_BOARD_OPEN_DEV_CFG_H", define:"CONFIG_BOARD_OPEN_DEV_CFG_H" },
+  groups: {},
+  conditional_blocks: []
+};
+
+const MODULE_STATE = {
+  general: {
+    volumeStep: 10,
+    gainStep: 10,
+    minVolume: 10,
+    maxVolume: 100,
+    initVolume: 60,
+    hwVolume: 70,
+    prodTestVolume: 80,
+    flash4Line: false,
+    wakeWord: "空"
+  },
+  product: {
+    companyUuid: "",
+    productName: "",
+    productBatch: "",
+    productBatchNum: ""
+  },
+  av: {
+    fadeEnable: true,
+    btEnable: true,
+    eqOnline: false,
+    micGain: 80,
+    micGainParams: {
+      AEC:  "y = -0.5x + 80",
+      MIC1: "y = -0.6x + 85",
+      MIC2: "y = -0.6x + 85"
+    },
+    ui: {
+      enable: false,
+      driver: "ST77912",
+      lcdW: 240,
+      lcdH: 240,
+      rotateTear: false,
+      twoEye: false,
+      gifEye: false,
+      aviEye: false
+    }
+  },
+  network: {
+    ttsReply: false,
+    moreNotice: true,
+    qyaiMqtt: true
+  },
+  system: {
+    firstPowerOff: false,
+    vbatCheck: false,
+    autoSleep: true,
+    btName: "QYAI",
+    autoSleepCfg: {
+      lowPowerSec: 30,
+      deepSleepMin: 5,
+      autoPowerOffMin: 30,
+      lowPowerEn: true,
+      deepSleepEn: false,
+      autoPowerOffEn: false
+    }
+  },
+  test: {
+    moduleProdTest: false,
+    moduleProdTestPort: "IO_PORTC_05",
+    allFuncTest: false
+  }
+};
+
+/* ============================================================
+ * 2. IO / 芯片 / Flash / IIC / SDIO / AUX / DAC / 4G / U盘 / LED 状态
+ * ============================================================ */
+const IO_STATE = {
+  chip: "QYAI-AC-A100模组",
+  flashSize: "8MB",
+  key: {
+    enable: true,
+    count: 1,
+    pullup: 22,
+    port: "IO_PORTB_01",
+    keys: [
+      { label:"按键1", resistor:0, funcs:{ short:1, long:1, double:1, triple:1, quad:1, five:0, many:1 } }
+    ]
+  },
+  power: { enable:true, vcc33:"IO_PORTB_03", iovdd:"IO_PORTB_00" },
+  mic: {
+    enable: true,
+    mode: "双麦",
+    singleGroup: "MIC1",
+    dual: ["MIC1","MIC2"]
+  },
+  echo: { enable:true, group:"MIC0" },
+  spi: {
+    enable: false,
+    bus:"spi1b", duplex:"半双工",
+    cs:"IO_PORTH_07",
+    rs:"IO_PORTC_00",
+    te: IO_EMPTY,
+    rst: IO_EMPTY,
+    bl:"IO_PORTH_03",
+    cs1: IO_EMPTY,
+    power: IO_EMPTY,
+    touch: "iic0",
+    touchEn: false,
+    touchInt: "IO_PORTH_04",
+    touchReset: "IO_PORTH_00",
+    speed: "32000000"
+  },
+  iic: {
+    enable: false,
+    list: [
+      { id:"iic0", enable:true,  scl:"IO_PORTA_00", sda:"IO_PORTH_02", delay:20 }
+    ]
+  },
+  ws2812: {
+    enable:false, tx:"IO_PORTC_10",
+    baudPreset:"3.3M",
+    baudCustom:3300000,
+    ledNum:12,
+    defaultColor: IO_EMPTY
+  },
+  debug: {
+    enable: true,
+    port: "IO_PORTA_10",
+    baudPreset: "1000000",
+    baudCustom: 1000000
+  },
+  ledPwm: {
+    enable:false,
+    port:"IO_PORTH_00",
+    ch:"PWMCH3_H",
+    freqPreset:"10000",
+    freqCustom:10000
+  },
+  lte: {
+    enable:false,
+    vendor:"VENDOR_GT108",
+    usbIfs: ["FUSB"],
+    power:"IO_PORTC_06",
+    usbSwitch:"IO_PORTA_03",
+    defaultNetChannel: 0
+  },
+  udisk: {
+    enable:false,
+    usbIfs: ["HUSB"],
+    autoPlay: true
+  },
+  sdPlay: {
+    enable: false,
+    autoPlay: true
+  },
+  screen: { enable:false, type:"单眼", spi:"spi1b" },
+  sdio: {
+    enable: false,
+    port: "SD0-B",
+    width: 1,
+    detMode: "SD_CMD_DECT",
+    detIo: IO_EMPTY,
+    detLevel: 0,
+    clk: "24000000"
+  },
+  aux: {
+    enable: false,
+    detIo: "IO_PORTA_07",
+    channel: "AUX3",
+    autoPlay: true
+  },
+  dac: {
+    mode: "双路差分",
+    singleDiff: "FLR",
+    muteIo: "IO_PORTH_01",
+    muteLevel: 0,
+    autoMute: 0
+  },
+  charge: {
+    enable: false,
+    fullDetIo: IO_EMPTY,
+    chargingDetIo: IO_EMPTY
+  }
+};
+const IIC1_DEFAULT = { id:"iic1", enable:true, scl:"IO_PORTC_00", sda:"IO_PORTC_02", delay:20 };
+
+function sdramOf(chip){ return CHIP_SDRAM[chip] || "无"; }
+function wsBaudValue(){
+  const p = IO_STATE.ws2812.baudPreset;
+  if(p === "3.3M") return 3300000;
+  if(p === "2.5M") return 2500000;
+  return Number(IO_STATE.ws2812.baudCustom) || 0;
+}
+function debugBaudValue(){
+  const p = IO_STATE.debug.baudPreset;
+  if(p === "其他") return Number(IO_STATE.debug.baudCustom) || 0;
+  return Number(p) || 0;
+}
+function ledFreqValue(){
+  const p = IO_STATE.ledPwm.freqPreset;
+  if(p === "其他") return Number(IO_STATE.ledPwm.freqCustom) || 0;
+  return Number(p) || 0;
+}
+function enabledIicIds(){
+  if(!IO_STATE.iic.enable) return [];
+  return IO_STATE.iic.list.filter(x=>x.enable).map(x=>x.id);
+}
+function usedMicGroups(){
+  const set = new Set();
+  if(IO_STATE.mic.enable){
+    if(IO_STATE.mic.mode === "单麦"){
+      set.add(IO_STATE.mic.singleGroup);
+    } else {
+      IO_STATE.mic.dual.forEach(g=>set.add(g));
+    }
+  }
+  if(IO_STATE.echo.enable){
+    set.add(IO_STATE.echo.group);
+  }
+  return set;
+}
+function isAuxChannelBlocked(chName){
+  const ch = AUX_CHANNELS.find(x=>x.name===chName);
+  if(!ch || !ch.mic) return false;
+  return usedMicGroups().has(ch.mic);
+}
+function dacSupportsDual(){
+  return IO_STATE.chip === "AC7916AB" || IO_STATE.chip === "QYAI-AC-A100模组";
+}
+function dacModeList(){
+  return dacSupportsDual() ? ["单路差分","双路差分"] : ["单端模拟"];
+}
+function normalizeDacMode(){
+  const list = dacModeList();
+  if(!list.includes(IO_STATE.dac.mode)) IO_STATE.dac.mode = list[0];
+  if(IO_STATE.dac.mode === "单路差分"){
+    if(!DAC_SINGLE_DIFF_OPTIONS.some(x=>x.value===IO_STATE.dac.singleDiff)){
+      IO_STATE.dac.singleDiff = "FLR";
+    }
+  }
+}
+function dacPinText(){
+  if(!dacSupportsDual()) return "DACFL";
+  if(IO_STATE.dac.mode === "双路差分") return "DACFL / DACFR / DACRL / DACRR";
+  const opt = DAC_SINGLE_DIFF_OPTIONS.find(x=>x.value===IO_STATE.dac.singleDiff) || DAC_SINGLE_DIFF_OPTIONS[0];
+  return opt.pinText;
+}
+function dacIsDiffOut(){
+  return IO_STATE.dac.mode !== "单端模拟";
+}
+function dacSoftChannelNum(){
+  if(IO_STATE.dac.mode === "双路差分") return 2;
+  if(IO_STATE.dac.mode === "单路差分") return 2;
+  return 1;
+}
+function dacHwChannelBit(){
+  if(IO_STATE.dac.mode === "单端模拟") return "BIT(0)";
+  if(IO_STATE.dac.mode === "双路差分") return "BIT(0)|BIT(1)|BIT(2)|BIT(3)";
+  if(IO_STATE.dac.singleDiff === "RLR") return "BIT(0)|BIT(1)|BIT(2)|BIT(3)";
+  return "BIT(0)|BIT(1)|BIT(2)|BIT(3)";
+}
+function usbIfList(){
+  return (IO_STATE.chip === "AC7911BA" || IO_STATE.chip === "AC7911BB")
+    ? ["FUSB"] : ["FUSB","HUSB"];
+}
+function usbDualIfSupported(){
+  return IO_STATE.chip === "AC7916AB" || IO_STATE.chip === "QYAI-AC-A100模组";
+}
+function lteNeedUsbSwitch(){
+  return IO_STATE.chip === "AC7911BA" || IO_STATE.chip === "AC7911BB";
+}
+function normalizeUsbIfs(){
+  const list = usbIfList();
+  const norm = arr => {
+    let a = Array.isArray(arr) ? arr.filter(x=>list.includes(x)) : [];
+    a = Array.from(new Set(a));
+    if(a.length === 0) a = [list[0]];
+    if(!usbDualIfSupported() && a.length > 1) a = [a[0]];
+    return a;
+  };
+  IO_STATE.lte.usbIfs = norm(IO_STATE.lte.usbIfs);
+  IO_STATE.udisk.usbIfs = norm(IO_STATE.udisk.usbIfs);
+}
+function usbUsage(){
+  const map = { FUSB: [], HUSB: [] };
+  if(IO_STATE.lte.enable){
+    IO_STATE.lte.usbIfs.forEach(x=>{ if(map[x]) map[x].push("4G/LTE"); });
+  }
+  if(IO_STATE.udisk.enable){
+    IO_STATE.udisk.usbIfs.forEach(x=>{ if(map[x]) map[x].push("U盘"); });
+  }
+  return map;
+}
+function usbConflicts(){
+  const m = usbUsage();
+  const out = [];
+  ["FUSB","HUSB"].forEach(k=>{
+    if(m[k].length > 1) out.push({ iface:k, owners:m[k] });
+  });
+  return out;
+}
+function usbIfsToOtgVal(ifArr){
+  const hasF = ifArr.includes("FUSB");
+  const hasH = ifArr.includes("HUSB");
+  if(hasF && hasH) return "0x3";
+  if(hasF) return "0x1";
+  if(hasH) return "0x2";
+  return "0x0";
+}
+function computeUsbOtgVal(){
+  const set = new Set();
+  if(IO_STATE.udisk.enable) IO_STATE.udisk.usbIfs.forEach(x=>set.add(x));
+  if(IO_STATE.lte.enable)   IO_STATE.lte.usbIfs.forEach(x=>set.add(x));
+  if(set.size === 0) return null;
+  return usbIfsToOtgVal(Array.from(set));
+}
+
+function sizeToBytes(s){
+  const m = String(s).trim().match(/^([\d.]+)\s*(MB|M|KB|K|B)?$/i);
+  if(!m) return 0;
+  const n = parseFloat(m[1]);
+  const unit = (m[2]||"").toUpperCase();
+  if(unit === "MB" || unit === "M") return Math.round(n * 1048576);
+  if(unit === "KB" || unit === "K") return Math.round(n * 1000);
+  return Math.round(n);
+}
+function baudToNumber(preset, custom){
+  if(preset === "3.3M") return 3300000;
+  if(preset === "2.5M") return 2500000;
+  if(preset === "其他") return Number(custom) || 0;
+  return Number(preset) || 0;
+}
+
+/* ============================================================
+ * 3. 工具
+ * ============================================================ */
+const state = JSON.parse(JSON.stringify(DATA));
+const collapsed = {};
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove("show"),1600); }
+function valueType(v){
+  if(v===null) return "NOVAL";
+  if(typeof v==="number") return Number.isInteger(v)?"INT":"FLOAT";
+  if(typeof v==="boolean") return "BOOL";
+  return "STR";
+}
+function parseValue(raw){
+  const s = raw.trim();
+  if(s==="") return null;
+  if(/^-?\d+$/.test(s)) return parseInt(s,10);
+  if(/^-?\d+\.\d+$/.test(s)) return parseFloat(s);
+  if(s==="true") return true;
+  if(s==="false") return false;
+  return s;
+}
+
+function parseLinearExpr(str){
+  const s = String(str || "").replace(/\s+/g, "");
+  const body = s.replace(/^[yY]=/, "");
+  const m = body.match(/^([+-]?\d*\.?\d*)x([+-]\d*\.?\d*)?$/i);
+  if(!m){
+    return { slope: 0, intercept: 0, ok:false };
+  }
+  let slopeStr = m[1];
+  if(slopeStr === "" || slopeStr === "+") slopeStr = "1";
+  if(slopeStr === "-") slopeStr = "-1";
+  const slope = parseFloat(slopeStr);
+  const intercept = m[2] ? parseFloat(m[2]) : 0;
+  if(isNaN(slope) || isNaN(intercept)){
+    return { slope: 0, intercept: 0, ok:false };
+  }
+  return { slope, intercept, ok:true };
+}
+
+function utf8ByteLength(str){
+  let n = 0;
+  const s = String(str || "");
+  for(let i = 0; i < s.length; i++){
+    const c = s.charCodeAt(i);
+    if(c <= 0x7F) n += 1;
+    else if(c <= 0x7FF) n += 2;
+    else if(c >= 0xD800 && c <= 0xDBFF){
+      n += 4;
+      i++;
+    }
+    else n += 3;
+  }
+  return n;
+}
+const BT_NAME_MAX_BYTES = 16;
+
+function chipIOs(){ return CHIP_IO[IO_STATE.chip] || []; }
+function isUsed(io){ return io && io !== IO_EMPTY; }
+function ioToMacro(io){ return isUsed(io) ? io : "-1"; }
+
+function collectUsage(){
+  const used = {};
+  const add = (io, id, label) => { if(!isUsed(io)) return; (used[io] = used[io]||[]).push({id,label}); };
+
+  if(IO_STATE.power.enable){
+    add(IO_STATE.power.vcc33, "power.vcc33", "3.3V使能");
+    add(IO_STATE.power.iovdd, "power.iovdd", "IOVDD使能");
+  }
+  if(IO_STATE.key.enable){
+    add(IO_STATE.key.port, "key.port", "ADKEY");
+  }
+  if(IO_STATE.spi.enable){
+    const b = LCD_SPI_BUS[IO_STATE.spi.bus];
+    add(b.do, "spi.do", "SPI DO");
+    add(b.clk, "spi.clk", "SPI CLK");
+    if(IO_STATE.spi.duplex === "全双工") add(b.di, "spi.di", "SPI DI");
+    add(IO_STATE.spi.cs, "spi.cs", "SPI CS");
+    add(IO_STATE.spi.rs, "spi.rs", "SPI RS");
+    add(IO_STATE.spi.te, "spi.te", "SPI TE");
+    add(IO_STATE.spi.rst, "spi.rst", "SPI RST");
+    add(IO_STATE.spi.bl, "spi.bl", "SPI BL");
+    add(IO_STATE.spi.cs1, "spi.cs1", "SPI CS1");
+    add(IO_STATE.spi.power, "spi.power", "屏幕电源");
+    if(IO_STATE.spi.touchEn){
+      add(IO_STATE.spi.touchInt, "spi.touchInt", "触摸中断");
+      add(IO_STATE.spi.touchReset, "spi.touchReset", "触摸复位");
+    }
+  }
+  if(IO_STATE.iic.enable){
+    IO_STATE.iic.list.forEach((it,i)=>{
+      if(!it.enable) return;
+      add(it.scl, `iic.${i}.scl`, `${it.id} SCL`);
+      add(it.sda, `iic.${i}.sda`, `${it.id} SDA`);
+    });
+  }
+  if(IO_STATE.ws2812.enable) add(IO_STATE.ws2812.tx, "ws2812.tx", "WS2812 TX");
+  if(IO_STATE.debug.enable) add(IO_STATE.debug.port, "debug.port", "调试日志打印");
+  if(IO_STATE.ledPwm.enable) add(IO_STATE.ledPwm.port, "ledPwm.port", "LED呼吸灯");
+  if(IO_STATE.lte.enable){
+    add(IO_STATE.lte.power, "lte.power", "LTE 电源");
+    if(lteNeedUsbSwitch()) add(IO_STATE.lte.usbSwitch, "lte.usbSwitch", "LTE USB模拟开关");
+  }
+  if(IO_STATE.mic.enable){
+    if(IO_STATE.mic.mode === "单麦"){
+      add(MIC_PIN[IO_STATE.mic.singleGroup+"-P"], "mic.p", "MIC P");
+      add(MIC_PIN[IO_STATE.mic.singleGroup+"-N"], "mic.n", "MIC N");
+    } else {
+      IO_STATE.mic.dual.forEach((g,i)=>{
+        add(MIC_PIN[g+"-P"], `mic.dual.${i}.p`, "MIC P");
+        add(MIC_PIN[g+"-N"], `mic.dual.${i}.n`, "MIC N");
+      });
+    }
+  }
+  if(IO_STATE.echo.enable){
+    add(MIC_PIN[IO_STATE.echo.group+"-P"], "echo.p", "回采 P");
+    add(MIC_PIN[IO_STATE.echo.group+"-N"], "echo.n", "回采 N");
+  }
+  if(IO_STATE.sdio.enable){
+    const p = SDIO_PORTS[IO_STATE.sdio.port];
+    add(p.clk, "sdio.clk", "SD CLK");
+    add(p.cmd, "sdio.cmd", "SD CMD");
+    add(p.dat0, "sdio.dat0", "SD DAT0");
+    if(IO_STATE.sdio.width === 4){
+      add(p.dat1, "sdio.dat1", "SD DAT1");
+      add(p.dat2, "sdio.dat2", "SD DAT2");
+      add(p.dat3, "sdio.dat3", "SD DAT3");
+    }
+    if(IO_STATE.sdio.detMode === "SD_IO_DECT") add(IO_STATE.sdio.detIo, "sdio.det", "SD DET");
+  }
+  if(IO_STATE.aux.enable){
+    add(IO_STATE.aux.detIo, "aux.det", "AUX DET");
+    const ch = AUX_CHANNELS.find(x=>x.name===IO_STATE.aux.channel);
+    if(ch) add(ch.pin, "aux.pin", "AUX 通道");
+  }
+  if(isUsed(IO_STATE.dac.muteIo)){
+    add(IO_STATE.dac.muteIo, "dac.muteIo", "DAC MUTE");
+  }
+  if(IO_STATE.charge.enable){
+    add(IO_STATE.charge.fullDetIo, "charge.fullDetIo", "充满检测");
+    add(IO_STATE.charge.chargingDetIo, "charge.chargingDetIo", "充电检测");
+  }
+  return used;
+}
+
+/* 统一 IO 下拉：被占用的 IO 不隐藏，而是 disabled + 灰色 + 标注占用模块 */
+function ioSelect(id, value, opts, banned, selfId, allowEmpty){
+  const used = collectUsage();
+  let html = `<select id="${id}">`;
+  if(allowEmpty){
+    html += `<option value="${IO_EMPTY}" ${value===IO_EMPTY?'selected':''}>${IO_EMPTY}</option>`;
+  }
+  const added = new Set();
+  opts.forEach(o=>{
+    if(added.has(o)) return;
+    added.add(o);
+    if(banned && banned.has(o)){
+      // 被禁用名单排除的 IO 不显示（这些是芯片保留脚）
+      return;
+    }
+    const owners = (used[o] || []).filter(x=>x.id !== selfId);
+    const occupied = owners.length > 0;
+    const isSelf = value === o;
+    let label = o;
+    let dis = "";
+    let style = "";
+    if(occupied && !isSelf){
+      label = `${o}（已被${owners.map(x=>x.label).join("/")}占用）`;
+      dis = "disabled";
+      style = `style="opacity:.45;cursor:not-allowed"`;
+    }
+    html += `<option value="${o}" ${isSelf?'selected':''} ${dis} ${style}>${label}</option>`;
+  });
+  // 若当前值不在 opts 中（例如切换芯片后遗留），仍补一个选项，避免空白
+  if(value && value !== IO_EMPTY && !added.has(value)){
+    const owners = (used[value] || []).filter(x=>x.id !== selfId);
+    const occupied = owners.length > 0;
+    let label = value;
+    let dis = "";
+    let style = "";
+    if(occupied){
+      label = `${value}（已被${owners.map(x=>x.label).join("/")}占用）`;
+      dis = "disabled";
+      style = `style="opacity:.45;cursor:not-allowed"`;
+    }
+    html += `<option value="${value}" selected ${dis} ${style}>${label}</option>`;
+  }
+  html += `</select>`;
+  return html;
+}
+
+/* ============================================================
+ * 4. 功能模块渲染 —— 产品、通用、音视频、网络、系统、测试
+ * ============================================================ */
+const app = $("app");
+
+function moduleItemHtml(opts){
+  const { group, key, name, comment, type, value, min, max, options, enabled, fixed } = opts;
+  const dis = enabled ? "" : "disabled";
+  const itemCls = `item ${enabled?'':'disabled'} ${fixed?'fixed':''}`;
+  let valueHtml = "";
+  if(type === "number"){
+    valueHtml = `<input type="number" data-mod="${group}.${key}" value="${esc(value)}"
+      ${min!==undefined?`min="${min}"`:""} ${max!==undefined?`max="${max}"`:""} ${dis}>`;
+  } else if(type === "select"){
+    valueHtml = `<select data-mod="${group}.${key}" ${dis}>
+      ${options.map(o=>`<option value="${esc(o.v)}" ${String(o.v)===String(value)?'selected':''}>${esc(o.n)}</option>`).join("")}
+    </select>`;
+  } else if(type === "bool"){
+    valueHtml = `<select data-mod="${group}.${key}" ${dis}>
+      <option value="1" ${value?'selected':''}>开启</option>
+      <option value="0" ${!value?'selected':''}>关闭</option>
+    </select>`;
+  } else if(type === "text"){
+    valueHtml = `<input type="text" data-mod="${group}.${key}" value="${esc(value)}" ${dis}>`;
+  }
+  return `<div class="${itemCls}" data-mod-group="${group}" data-mod-key="${key}">
+    <label class="switch" ${fixed?'style="visibility:hidden"':''}>
+      <input type="checkbox" data-mod-en="${group}.${key}" ${enabled?'checked':''} ${fixed?'disabled':''}>
+      <span class="slider"></span>
+    </label>
+    <div class="meta">
+      <div class="name">${esc(name)}</div>
+      ${comment?`<div class="comment">${esc(comment)}</div>`:""}
+    </div>
+    <div class="value-box">
+      <span class="type">${type==="number"?"INT":type==="bool"?"BOOL":"STR"}</span>
+      ${valueHtml}
+    </div>
+  </div>`;
+}
+
+function moduleSubItem(label, inner){
+  return `<div class="sub-item"><label>${label}</label>${inner}</div>`;
+}
+
+function validateMicGainParams(){
+  const mgp = MODULE_STATE.av.micGainParams;
+  const keys = ["AEC","MIC1","MIC2"];
+  for(const k of keys){
+    const r = parseLinearExpr(mgp[k]);
+    if(!r.ok) return k;
+  }
+  return null;
+}
+function wakeWordOptionsForChip(){
+  return (IO_STATE.chip === "AC7911BA")
+    ? ["小语小语","小飞小飞","哈喽优优"]          // 7911BA 没有「空」
+    : ["空","小语小语","小飞小飞","哈喽优优"];      // 其他芯片有「空」
+}
+
+function enforceWakeWordForChip(){
+  MODULE_STATE.general.wakeWord = (IO_STATE.chip === "AC7911BA") ? "小语小语" : "空";
+}
+function renderMacro(){
+  const kw = $("search").value.trim().toLowerCase();
+  let total=0, shown=0, html="";
+
+  /* ============ 产品配置（第一个大项） ============ */
+  {
+    const gk = "产品配置";
+    const g = MODULE_STATE.product;
+    const items = [
+      { key:"companyUuid", name:"用户公司UUID", comment:"默认空，只能输入英文和数字", type:"text", value:g.companyUuid, enabled:true, fixed:true },
+      { key:"productName", name:"产品名称", comment:"默认空，只能输入入英文和数字", type:"text", value:g.productName, enabled:true, fixed:true },
+      { key:"productBatch", name:"产品批次", comment:"默认空，数值范围 1-1000（可清空），比如B2N10，则填入B后面的2", type:"number", value:g.productBatch, min:0, max:1000, enabled:true, fixed:true },
+      { key:"productBatchNum", name:"产品数量", comment:"默认空，数值范围 1-1000，单位 K（可清空），比如B2N10，则填入N后面的10", type:"number", value:g.productBatchNum, min:0, max:1000, enabled:true, fixed:true }
+    ];
+    const filtered = items.filter(it=>!kw || (it.name+" "+(it.comment||"")).toLowerCase().includes(kw));
+    total += items.length; shown += filtered.length;
+    if(!kw || filtered.length > 0){
+      html += `<section class="group ${collapsed[gk]?'collapsed':''}" data-group="${gk}">
+        <div class="group-head" data-toggle="${gk}">
+          <span class="arrow">▼</span><h2>${esc(gk)}</h2>
+          <span class="badge">${items.length} 项 · ${items.filter(i=>i.enabled).length} 启用</span>
+          <span class="desc">产品配置（默认空则使用qyai.cfg配置）</span>
+        </div>
+		<div class="comment" style="color:var(--warn)">产品配置必填，否则设备将会随时无法使用。</div>
+        <div class="group-body">`;
+      for(const it of filtered){
+        html += moduleItemHtml({ group:"product", ...it });
+      }
+      html += `</div></section>`;
+    }
+  }
+
+  {
+    const gk = "通用配置";
+    const g = MODULE_STATE.general;
+    const items = [
+      { key:"volumeStep", name:"音量设置梯度", comment:"值范围：1-10", type:"number", value:g.volumeStep, min:1, max:10, enabled:true, fixed:true },
+      { key:"gainStep", name:"录音增益梯度", comment:"值范围：1-10", type:"number", value:g.gainStep, min:1, max:10, enabled:true, fixed:true },
+      { key:"minVolume", name:"最小音量", comment:"值范围：1-10", type:"number", value:g.minVolume, min:1, max:10, enabled:true, fixed:true },
+      { key:"maxVolume", name:"最大音量", comment:"值范围：10-100", type:"number", value:g.maxVolume, min:10, max:100, enabled:true, fixed:true },
+      { key:"initVolume", name:"默认初始化音量", comment:"值范围：MIN_VOLUME_VALUE - MAX_VOLUME_VALUE", type:"number", value:g.initVolume, min:g.minVolume, max:g.maxVolume, enabled:true, fixed:true },
+      { key:"hwVolume", name:"解码硬件最大音量", comment:"值范围：10 - 100", type:"number", value:g.hwVolume, min:10, max:100, enabled:true, fixed:true },
+      { key:"prodTestVolume", name:"厂测音量", comment:"值范围：10 - 100", type:"number", value:g.prodTestVolume, min:10, max:100, enabled:true, fixed:true },
+      { key:"flash4Line", name:"FLASH 4线模式", comment:"需要硬件原理图flash支持4线设计才能开启4线模式！", type:"bool", value:false, enabled:false, fixed:true }
+    ];
+	  items.push(
+		{ key:"wakeWord", name:"唤醒词(KWS)", comment:"选择唤醒词：小语小语 / 小飞小飞 / 哈喽优优，默认“空”则在qyai.cfg配置文件进行配置", type:"select", value:g.wakeWord, 
+		options: wakeWordOptionsForChip().map(v=>({ v, n:v })), 
+		enabled:true, fixed:true }
+	  );
+    const filtered = items.filter(it=>!kw || (it.name+" "+(it.comment||"")).toLowerCase().includes(kw));
+    total += items.length; shown += filtered.length;
+    if(!kw || filtered.length > 0){
+      html += `<section class="group ${collapsed[gk]?'collapsed':''}" data-group="${gk}">
+        <div class="group-head" data-toggle="${gk}">
+          <span class="arrow">▼</span><h2>${esc(gk)}</h2>
+          <span class="badge">${items.length} 项 · ${items.filter(i=>i.enabled).length} 启用</span>
+          <span class="desc">通用配置（无法关闭）</span>
+        </div>
+        <div class="group-body">`;
+      for(const it of filtered){
+        html += moduleItemHtml({ group:"general", ...it });
+      }
+      html += `</div></section>`;
+    }
+  }
+
+  {
+    const gk = "音视频配置";
+    const g = MODULE_STATE.av;
+    const items = [
+      { key:"fadeEnable", name:"网络音乐解码的淡入淡出", comment:"", type:"bool", value:g.fadeEnable, enabled:g.fadeEnable },
+      { key:"btEnable", name:"蓝牙播放模式", comment:"", type:"bool", value:g.btEnable, enabled:g.btEnable },
+      { key:"eqOnline", name:"在线EQ调试", comment:"开启后使用usb连接fusb插入电脑，使用jl-eq工具进行调试", type:"bool", value:g.eqOnline, enabled:g.eqOnline },
+      { key:"micGain", name:"麦克风增益值", comment:"本地空闲下mic增益，远场拾音加大80以上，进场拾音40以下", type:"number", value:g.micGain, min:0, max:100, enabled:true }
+    ];
+    const filtered = items.filter(it=>!kw || (it.name+" "+(it.comment||"")).toLowerCase().includes(kw));
+    total += items.length; shown += filtered.length;
+    if(!kw || filtered.length > 0){
+      html += `<section class="group ${collapsed[gk]?'collapsed':''}" data-group="${gk}">
+        <div class="group-head" data-toggle="${gk}">
+          <span class="arrow">▼</span><h2>${esc(gk)}</h2>
+          <span class="badge">${items.length} 项 · ${items.filter(i=>i.enabled).length} 启用</span>
+          <span class="desc">音视频配置</span>
+        </div>
+        <div class="group-body">`;
+      for(const it of filtered){
+        html += moduleItemHtml({ group:"av", ...it });
+      }
+      if(!kw || "麦克风/回采增益参数".toLowerCase().includes(kw)){
+        const mgp = MODULE_STATE.av.micGainParams;
+        const labels = { AEC:"AEC(线性曲线函数)", MIC1:"MIC1(线性曲线函数)", MIC2:"MIC2(线性曲线函数)" };
+        html += `<div class="item-wrap">
+          <div class="item" style="grid-template-columns:44px 1fr;">
+            <label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            <div class="meta">
+              <div class="name">麦克风/回采增益参数</div>
+              <div class="comment">按线性表达式填写，例如：y = -0.5x + 80；生成时解析为斜率与截距宏</div>
+              <div class="comment" style="color:var(--warn)">每一个产品都需要进行麦克风和回采参数调节，量产前必须调好麦克风/回采增益参数。</div>
+            </div>
+          </div>
+          <div class="sub-items">
+            ${["AEC","MIC1","MIC2"].map(k=>{
+              const ok = parseLinearExpr(mgp[k]).ok;
+              return `
+              <div class="sub-item">
+                <label class="mgp-label">${labels[k]}</label>
+                <input type="text" class="mgp-input ${ok?'':'err'}" data-mgp="${k}" value="${esc(mgp[k])}" placeholder="y = -0.5x + 80">
+                <span class="hint">格式：y = ax + b</span>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>`;
+      }
+      const uiEn = MODULE_STATE.av.ui.enable;
+      html += `<div class="item-wrap">
+        <div class="item ${uiEn?'':'disabled'}" style="grid-template-columns:44px 1fr;">
+          <label class="switch"><input type="checkbox" id="uiEnable" ${uiEn?'checked':''}><span class="slider"></span></label>
+          <div class="meta"><div class="name">屏幕UI屏显参数</div>
+          <div class="comment">LCD 屏驱、分辨率、表情显示。屏幕涉及开发工作量比较大，目前只是调试调试阶段，不能量产！</div></div>
+        </div>
+        ${uiEn ? `<div class="sub-items">
+          <div class="sub-card">
+            <div class="sub-title">LCD 屏驱选择（单选）</div>
+            <div class="lcd-grid">
+              ${LCD_DRIVERS.map(d=>`<label><input type="radio" name="lcdDriver" value="${d.key}" ${MODULE_STATE.av.ui.driver===d.key?'checked':''}> ${d.key} ${d.note?`<span style="font-size:11px;color:var(--dim)">${d.note}</span>`:''}</label>`).join("")}
+            </div>
+          </div>
+          <div class="sub-card">
+            <div class="sub-title">LCD 屏幕分辨率</div>
+            <div class="sub-item"><label>屏幕长(LCD_W)</label>
+              <select id="lcdW">
+                ${[128,160,240,320,360,480].map(v=>`<option ${v===MODULE_STATE.av.ui.lcdW?'selected':''}>${v}</option>`).join("")}
+              </select>
+            </div>
+            <div class="sub-item"><label>屏幕宽(LCD_H)</label>
+              <select id="lcdH">
+                ${[128,160,240,320,480].map(v=>`<option ${v===MODULE_STATE.av.ui.lcdH?'selected':''}>${v}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div class="sub-card">
+            <div class="sub-title">软件旋转消除撕裂感</div>
+            <div class="sub-item">
+              <label>使能</label>
+              <input type="checkbox" id="uiRotateTear" ${MODULE_STATE.av.ui.rotateTear?'checked':''} disabled>
+              <span class="hint">默认关闭（暂不可开启）</span>
+            </div>
+          </div>
+          <div class="sub-card">
+            <div class="sub-title">表情显示选择</div>
+            <div class="eye-row">
+              <label><input type="checkbox" id="uiTwoEye" ${MODULE_STATE.av.ui.twoEye?'checked':''}> 开启双眼表情显示</label>
+            </div>
+            <div class="eye-row">
+              <label><input type="radio" name="eyeFile" value="avi" ${MODULE_STATE.av.ui.aviEye?'checked':''}> AVI 眼睛</label>
+              <label><input type="radio" name="eyeFile" value="gif" ${MODULE_STATE.av.ui.gifEye?'checked':''}> GIF 眼睛</label>
+              <label><input type="radio" name="eyeFile" value="none" ${!MODULE_STATE.av.ui.aviEye&&!MODULE_STATE.av.ui.gifEye?'checked':''}> 不选择</label>
+            </div>
+          </div>
+        </div>` : ``}
+      </div>`;
+      html += `</div></section>`;
+    }
+  }
+
+  {
+    const gk = "网络配置";
+    const g = MODULE_STATE.network;
+    const items = [
+      { key:"ttsReply", name:"唤醒回复语启用在线TTS", comment:"", type:"bool", value:g.ttsReply, enabled:g.ttsReply },
+      { key:"moreNotice", name:"聊天多次提示回复语", comment:"", type:"bool", value:g.moreNotice, enabled:g.moreNotice },
+      { key:"qyaiMqtt", name:"轻语AI的IOT(MQTT)", comment:"", type:"bool", value:g.qyaiMqtt, enabled:g.qyaiMqtt }
+    ];
+    const filtered = items.filter(it=>!kw || (it.name+" "+(it.comment||"")).toLowerCase().includes(kw));
+    total += items.length; shown += filtered.length;
+    if(!kw || filtered.length > 0){
+      html += `<section class="group ${collapsed[gk]?'collapsed':''}" data-group="${gk}">
+        <div class="group-head" data-toggle="${gk}">
+          <span class="arrow">▼</span><h2>${esc(gk)}</h2>
+          <span class="badge">${items.length} 项 · ${items.filter(i=>i.enabled).length} 启用</span>
+          <span class="desc">网络配置</span>
+        </div>
+        <div class="group-body">`;
+      for(const it of filtered){
+        html += moduleItemHtml({ group:"network", ...it });
+      }
+      html += `</div></section>`;
+    }
+  }
+
+    {
+    const gk = "系统配置";
+    const g = MODULE_STATE.system;
+    const items = [
+      { key:"firstPowerOff", name:"首次上电开机关机", comment:"", type:"bool", value:g.firstPowerOff, enabled:g.firstPowerOff },
+      { key:"vbatCheck", name:"电量检测", comment:"", type:"bool", value:g.vbatCheck, enabled:g.vbatCheck }
+    ];
+    const autoSleepItem = { key:"autoSleep", name:"待机自动低功耗休眠", comment:"", type:"bool", value:g.autoSleep, enabled:g.autoSleep };
+    const filtered = items.filter(it=>!kw || (it.name+" "+(it.comment||"")).toLowerCase().includes(kw));
+    const autoSleepMatch = !kw || (autoSleepItem.name+" "+(autoSleepItem.comment||"")).toLowerCase().includes(kw);
+    total += items.length + 1; shown += filtered.length + (autoSleepMatch?1:0);
+    if(!kw || filtered.length > 0 || autoSleepMatch){
+      html += `<section class="group ${collapsed[gk]?'collapsed':''}" data-group="${gk}">
+        <div class="group-head" data-toggle="${gk}">
+          <span class="arrow">▼</span><h2>${esc(gk)}</h2>
+          <span class="badge">${items.length+1} 项 · ${items.filter(i=>i.enabled).length + (autoSleepItem.enabled?1:0)} 启用</span>
+          <span class="desc">系统配置</span>
+        </div>
+        <div class="group-body">`;
+      for(const it of filtered){
+        html += moduleItemHtml({ group:"system", ...it });
+      }
+      /* 经典蓝牙名称放在待机自动低功耗休眠前面 */
+      if(!kw || "经典蓝牙名称".toLowerCase().includes(kw)){
+        const btNameVal = MODULE_STATE.system.btName || "";
+        const btBytes = utf8ByteLength(btNameVal);
+        const btErr = btBytes > BT_NAME_MAX_BYTES;
+        html += `<div class="item-wrap">
+          <div class="item" style="grid-template-columns:44px 1fr auto;">
+            <label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            <div class="meta">
+              <div class="name">经典蓝牙名称</div>
+              <div class="comment">经典蓝牙广播名称，按 UTF-8 编码计算字节数，最多 ${BT_NAME_MAX_BYTES} 字节（中文通常占 3 字节）</div>
+            </div>
+            <div class="value-box" style="flex-direction:column;align-items:flex-end;gap:4px">
+              <input type="text" id="btNameInput" class="bt-name-input ${btErr?'err':''}" value="${esc(btNameVal)}" maxlength="60">
+              <span class="bt-name-bytes ${btErr?'err':''}">${btBytes} / ${BT_NAME_MAX_BYTES} 字节</span>
+            </div>
+          </div>
+        </div>`;
+      }
+      /* 待机自动低功耗休眠：开关行 + 子配置 */
+      if(autoSleepMatch){
+        html += moduleItemHtml({ group:"system", ...autoSleepItem });
+        const asCfg = g.autoSleepCfg;
+        const autoSleepEnabled = g.autoSleep;
+
+        html += `<div class="item-wrap">
+          <div class="sub-items">
+            <div class="sub-card">
+              <div class="sub-title" style="display:flex;align-items:center;gap:8px">
+                使能进入浅低功耗
+                <label style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim)">
+                  <input type="checkbox" id="lowPowerEn" ${asCfg.lowPowerEn?'checked':''} ${autoSleepEnabled?'':'disabled'} style="accent-color:var(--accent2)"> 开启
+                </label>
+              </div>
+              <div class="sub-item"><label>时间(秒) 30 ~ 1800</label>
+                <input type="number" id="lowPowerSec" min="30" max="1800" value="${asCfg.lowPowerSec}" ${autoSleepEnabled && asCfg.lowPowerEn?'':'disabled'}>
+              </div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-title" style="display:flex;align-items:center;gap:8px">
+                使能进入深低功耗
+                <label style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim)">
+                  <input type="checkbox" id="deepSleepEn" ${asCfg.deepSleepEn?'checked':''} ${autoSleepEnabled?'':'disabled'} style="accent-color:var(--accent2)"> 开启
+                </label>
+              </div>
+              <div class="sub-item"><label>时间(分钟) 1 ~ 120</label>
+                <input type="number" id="deepSleepMin" min="1" max="120" value="${asCfg.deepSleepMin}" ${autoSleepEnabled && asCfg.deepSleepEn?'':'disabled'}>
+              </div>
+              <div class="comment" style="font-size:11px;color:var(--dim);margin-top:4px">wifi关闭、蓝牙关闭、LVGL任务挂起、麦克风关闭，唤醒需要按按键</div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-title" style="display:flex;align-items:center;gap:8px">
+                使能进入自动关机
+                <label style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim)">
+                  <input type="checkbox" id="autoPowerOffEn" ${asCfg.autoPowerOffEn?'checked':''} ${autoSleepEnabled?'':'disabled'} style="accent-color:var(--accent2)"> 开启
+                </label>
+              </div>
+              <div class="sub-item"><label>时间(分钟) 1 ~ 480</label>
+                <input type="number" id="autoPowerOffMin" min="1" max="480" value="${asCfg.autoPowerOffMin}" ${autoSleepEnabled && asCfg.autoPowerOffEn?'':'disabled'}>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }
+      html += `</div></section>`;
+    }
+  }
+
+  {
+    const gk = "量产配置";
+    const g = MODULE_STATE.test;
+    const isQYAI = IO_STATE.chip === "QYAI-AC-A100模组";
+    const items = [];
+    if(isQYAI){
+      items.push({ key:"moduleProdTest", name:"模组产测模式", comment:"", type:"bool", value:g.moduleProdTest, enabled:g.moduleProdTest });
+    }
+    items.push({ key:"allFuncTest", name:"量产所有功能测试模式", comment:"触发所有功能，连接WIFI-PD-TEST，密码12345678，自测麦克风，开启PD_TEST经典蓝牙，屏幕颜色显示", type:"bool", value:g.allFuncTest, enabled:g.allFuncTest });
+
+    const filtered = items.filter(it=>!kw || (it.name+" "+(it.comment||"")).toLowerCase().includes(kw));
+    total += items.length; shown += filtered.length;
+    if(!kw || filtered.length > 0){
+      html += `<section class="group ${collapsed[gk]?'collapsed':''}" data-group="${gk}">
+        <div class="group-head" data-toggle="${gk}">
+          <span class="arrow">▼</span><h2>${esc(gk)}</h2>
+          <span class="badge">${items.length} 项 · ${items.filter(i=>i.enabled).length} 启用</span>
+          <span class="desc">量产配置</span>
+        </div>
+        <div class="group-body">`;
+      html += `<div class="item-wrap">
+        <div class="io-row"><span class="hint" style="color:var(--warn)">开启量产前确保已经调好麦克风/回采增益参数。</span></div>
+      </div>`;
+      for(const it of filtered){
+        html += moduleItemHtml({ group:"test", ...it });
+      }
+      if(isQYAI && g.moduleProdTest){
+        html += `<div class="item-wrap">
+          <div class="sub-items">
+            <div class="sub-card">
+              <div class="sub-title">触发模组量产测试功能的 IO 配置</div>
+              <div class="sub-item">
+                <label>触发 IO</label>
+                ${ioSelect("prodTestPort", g.moduleProdTestPort, chipIOs(), null, "test.moduleProdTestPort", false)}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }
+      html += `</div></section>`;
+    }
+  }
+
+  if(!html) html = `<div class="empty-tip">没有匹配的功能模块项</div>`;
+  app.innerHTML = html;
+  $("stats").textContent = kw ? `匹配 ${shown} / 共 ${total} 项` : `共 ${total} 项`;
+
+  app.querySelectorAll("[data-toggle]").forEach(head=>{
+    head.onclick = e=>{
+      if(e.target.closest(".switch")) return;
+      const g = head.dataset.toggle;
+      collapsed[g] = !collapsed[g];
+      renderMacro();
+    };
+  });
+
+  app.querySelectorAll("[data-mod-en]").forEach(cb=>{
+    cb.onchange = e=>{
+      const [group,key] = e.target.dataset.modEn.split(".");
+      if(group==="general" || group==="product") return;
+      MODULE_STATE[group][key] = e.target.checked;
+      renderMacro();
+    };
+  });
+
+    app.querySelectorAll("[data-mod]").forEach(inp=>{
+    const handle = (e, isInputEvent)=>{
+      const [group,key] = e.target.dataset.mod.split(".");
+      let v = e.target.value;
+
+      /* ---- 产品配置：批次 / 数量允许清空 ---- */
+      if(group==="product"){
+        if(key === "companyUuid" || key === "productName"){
+          // 只保留英文、数字、符号（ASCII 可见字符 0x20~0x7E，去掉空格）
+          const cleaned = String(v).replace(/[^\x21-\x7E]/g, "");
+          MODULE_STATE.product[key] = cleaned;
+          if(cleaned !== v){
+            e.target.value = cleaned; // 实时回显过滤后的值
+          }
+          saveCfg();
+          return;
+        }
+        // 批次 / 数量：空串 或 数值0 都视为清空
+        if(String(v).trim() === "" || Number(v) === 0){
+          MODULE_STATE.product[key] = "";
+          saveCfg();
+          e.target.value = "";   // 无条件清空显示
+          return;
+        }
+        let n = Number(v);
+        if(isNaN(n)) n = "";
+        else n = Math.max(1, Math.min(1000, n));
+        MODULE_STATE.product[key] = n;
+        if(!isInputEvent && n !== "" && String(n) !== String(v)){
+          e.target.value = n;
+        }
+        saveCfg();
+        return;
+      }
+
+      /* ---- 通用配置 ---- */
+      if(group==="general"){
+        if(key === "wakeWord"){
+          // 字符串选项，直接保存
+        } else {
+          v = Number(v);
+          if(isNaN(v)) v = 0;
+          const limits = {
+            volumeStep:[1,10], gainStep:[1,10], minVolume:[1,10], maxVolume:[10,100],
+            initVolume:[MODULE_STATE.general.minVolume, MODULE_STATE.general.maxVolume],
+            hwVolume:[10,100], prodTestVolume:[10,100]
+          };
+          if(limits[key]){
+            v = Math.max(limits[key][0], Math.min(limits[key][1], v));
+          }
+        }
+      } else if(key==="micGain"){
+        v = Number(v);
+        if(isNaN(v)) v = 0;
+      } else if(e.target.tagName==="SELECT" && e.target.options[e.target.selectedIndex].value==="1"){
+        v = true;
+      } else if(e.target.tagName==="SELECT" && e.target.options[e.target.selectedIndex].value==="0"){
+        v = false;
+      }
+      MODULE_STATE[group][key] = v;
+      if(!isInputEvent) renderMacro(); // change 时才重渲染，避免 input 时打断
+    };
+
+    inp.oninput = e=>handle(e, true);
+    inp.onchange = e=>handle(e, false);
+  });
+
+  app.querySelectorAll("[data-mgp]").forEach(inp=>{
+    inp.onchange = e=>{
+      const k = e.target.dataset.mgp;
+      const val = e.target.value;
+      const r = parseLinearExpr(val);
+      if(!r.ok){
+        e.target.classList.add("err");
+        openTip(`麦克风/回采增益参数 <b>${esc(k)}</b> 格式错误。<br><br>请按 <b>y = ax + b</b> 的格式填写，例如：<code>y = -0.5x + 80</code>。<br>支持省略 y=、空格，以及 a 为 +1/-1 的简写（如 <code>x + 5</code>）。`);
+        return;
+      }
+      e.target.classList.remove("err");
+      MODULE_STATE.av.micGainParams[k] = val;
+      saveCfg();
+    };
+    const r = parseLinearExpr(inp.value);
+    inp.classList.toggle("err", !r.ok);
+  });
+
+  if($("uiEnable")) $("uiEnable").onchange = e=>{
+    MODULE_STATE.av.ui.enable = e.target.checked;
+    renderMacro();
+  };
+
+  app.querySelectorAll('input[name="lcdDriver"]').forEach(r=>{
+    r.onchange = e=>{
+      if(e.target.checked){
+        MODULE_STATE.av.ui.driver = e.target.value;
+        renderMacro();
+      }
+    };
+  });
+  if($("lcdW")) $("lcdW").onchange = e=>{ MODULE_STATE.av.ui.lcdW = +e.target.value; saveCfg(); };
+  if($("lcdH")) $("lcdH").onchange = e=>{ MODULE_STATE.av.ui.lcdH = +e.target.value; saveCfg(); };
+  if($("uiTwoEye")) $("uiTwoEye").onchange = e=>{ MODULE_STATE.av.ui.twoEye = e.target.checked; saveCfg(); };
+  app.querySelectorAll('input[name="eyeFile"]').forEach(r=>{
+    r.onchange = e=>{
+      if(e.target.checked){
+        MODULE_STATE.av.ui.aviEye = e.target.value==="avi";
+        MODULE_STATE.av.ui.gifEye = e.target.value==="gif";
+        saveCfg();
+      }
+    };
+  });
+
+  /* 待机自动低功耗休眠子选项 */
+  if($("lowPowerEn")) $("lowPowerEn").onchange = e=>{
+    MODULE_STATE.system.autoSleepCfg.lowPowerEn = e.target.checked;
+    renderMacro();
+  };
+  if($("deepSleepEn")) $("deepSleepEn").onchange = e=>{
+    MODULE_STATE.system.autoSleepCfg.deepSleepEn = e.target.checked;
+    renderMacro();
+  };
+  if($("autoPowerOffEn")) $("autoPowerOffEn").onchange = e=>{
+    MODULE_STATE.system.autoSleepCfg.autoPowerOffEn = e.target.checked;
+    renderMacro();
+  };
+  if($("lowPowerSec")) $("lowPowerSec").onchange = e=>{ MODULE_STATE.system.autoSleepCfg.lowPowerSec = +e.target.value; saveCfg(); };
+  if($("deepSleepMin")) $("deepSleepMin").onchange = e=>{ MODULE_STATE.system.autoSleepCfg.deepSleepMin = +e.target.value; saveCfg(); };
+  if($("autoPowerOffMin")) $("autoPowerOffMin").onchange = e=>{ MODULE_STATE.system.autoSleepCfg.autoPowerOffMin = +e.target.value; saveCfg(); };
+
+  if($("btNameInput")){
+    const btInput = $("btNameInput");
+    const btBytesEl = btInput.parentElement.querySelector(".bt-name-bytes");
+    btInput.oninput = e=>{
+      const bytes = utf8ByteLength(e.target.value);
+      const over = bytes > BT_NAME_MAX_BYTES;
+      btInput.classList.toggle("err", over);
+      if(btBytesEl){
+        btBytesEl.textContent = `${bytes} / ${BT_NAME_MAX_BYTES} 字节`;
+        btBytesEl.classList.toggle("err", over);
+      }
+    };
+    btInput.onchange = e=>{
+      const val = e.target.value;
+      const bytes = utf8ByteLength(val);
+      if(bytes > BT_NAME_MAX_BYTES){
+        openTip(`经典蓝牙名称 <b>${esc(val)}</b> 共 <b>${bytes}</b> 字节，超过 ${BT_NAME_MAX_BYTES} 字节限制（UTF-8 编码）。<br><br>中文每个字符通常占 3 字节，英文/数字占 1 字节。请缩短名称。`);
+        renderMacro();
+        return;
+      }
+      MODULE_STATE.system.btName = val;
+      renderMacro();
+    };
+  }
+
+  if($("prodTestPort")) $("prodTestPort").onchange = e=>{
+    MODULE_STATE.test.moduleProdTestPort = e.target.value;
+    renderMacro();
+  };
+
+  saveCfg();
+}
+
+/* 搜索 */
+$("search").addEventListener("input", ()=>{ renderMacro(); });
+
+/* ============================================================
+ * 5. IO 配置渲染
+ * ============================================================ */
+function cardHead(title, enId, enabled, extra=""){
+  return `<h3><span class="dot ${enabled?'':'off'}"></span>${title}
+    <label class="card-en"><input type="checkbox" id="${enId}" ${enabled?'checked':''}> 使能</label>
+    ${extra}
+  </h3>`;
+}
+
+function usbIfCheckboxHtml(ownerKey){
+  const list = usbIfList();
+  const cur = IO_STATE[ownerKey].usbIfs || [];
+  const dualOk = usbDualIfSupported();
+  const disabled = !dualOk;
+  const items = list.map(x=>{
+    const checked = cur.includes(x);
+    const dis = disabled ? "disabled" : "";
+    const cls = disabled ? "style='opacity:.45;cursor:not-allowed'" : "";
+    return `<label ${cls} title="${disabled?'当前芯片不支持同时选择 FUSB 和 HUSB':''}">
+      <input type="checkbox" data-usb-owner="${ownerKey}" data-usb-if="${x}" ${checked?'checked':''} ${dis}> ${x}
+    </label>`;
+  }).join("");
+  return `<div class="usb-chk">${items}</div>`;
+}
+
+function renderIO(){
+  const ios = chipIOs();
+  const d = CHIP_DEFAULT[IO_STATE.chip];
+  if(IO_STATE.power.vcc33 !== IO_EMPTY && !ios.includes(IO_STATE.power.vcc33)) IO_STATE.power.vcc33 = d.vcc33;
+  if(IO_STATE.power.iovdd !== IO_EMPTY && !ios.includes(IO_STATE.power.iovdd)) IO_STATE.power.iovdd = d.iovdd;
+  if(!ios.includes(IO_STATE.key.port) || !ADKEY_ALLOWED_IO.has(IO_STATE.key.port)){
+    const firstAllowed = ios.find(x=>ADKEY_ALLOWED_IO.has(x));
+    if(firstAllowed) IO_STATE.key.port = firstAllowed;
+  }
+  normalizeDacMode();
+  normalizeUsbIfs();
+
+  if(IO_STATE.aux.detIo !== IO_EMPTY && !ios.includes(IO_STATE.aux.detIo)){
+    IO_STATE.aux.detIo = "IO_PORTA_07";
+  }
+  if(IO_STATE.aux.enable && isAuxChannelBlocked(IO_STATE.aux.channel)){
+    IO_STATE.aux.channel = "AUX3";
+  }
+
+  while(IO_STATE.key.keys.length < IO_STATE.key.count){
+    const n = IO_STATE.key.keys.length + 1;
+    IO_STATE.key.keys.push({ label:`按键${n}`, resistor:KEY_RESISTORS[Math.min(n-1,4)].value, funcs:defaultKeyFuncs() });
+  }
+  if(IO_STATE.key.keys.length > IO_STATE.key.count) IO_STATE.key.keys.length = IO_STATE.key.count;
+  IO_STATE.key.keys.forEach(k=>{
+    if(!k.funcs || typeof k.funcs !== "object") k.funcs = defaultKeyFuncs();
+  });
+
+  const multiKey = IO_STATE.key.count > 1;
+  const keyCards = IO_STATE.key.keys.map((k,i)=>{
+    const resHtml = multiKey ? `
+      <div class="io-row"><label>电阻</label>
+        <select data-keyres="${i}">
+          ${KEY_RESISTORS.map(r=>`<option value="${r.value}" ${r.value===k.resistor?'selected':''}>${r.label}</option>`).join("")}
+        </select>
+      </div>` : "";
+    const funcsHtml = KEY_SLOTS.map(slot=>`
+      <div class="io-row"><label>${slot.label}</label>
+        <select data-key="${i}" data-slot="${slot.key}">
+          ${slot.options.map(o=>{
+            const isLongPowerOff = slot.key === "long" && o.v === 1;
+            const disOpt = (isLongPowerOff && k.resistor !== 0) ? "disabled" : "";
+            const sel = ((k.funcs&&k.funcs[slot.key])||0)===o.v ? "selected" : "";
+            return `<option value="${o.v}" ${sel} ${disOpt}>${o.n}${disOpt?'（仅0Ω）':''}</option>`;
+          }).join("")}
+        </select>
+      </div>
+    `).join("");
+    return `<div class="key-card">
+      <div class="key-title">${esc(k.label)}</div>
+      ${resHtml}
+      ${funcsHtml}
+      <div class="key-func-val">功能值：${keyFuncToHex(k.funcs)}</div>
+      <div class="key-note">每个触发类型可选一个功能。输出 32 位整型：短按 bit0-3、长按 bit4-7、双击 bit8-11、三击 bit12-15、四击 bit16-19、五击 bit20-23、六击以上 bit24-27。长按开关机只能选择在 0Ω 电阻上。</div>
+    </div>`;
+  }).join("");
+	
+  let micHtml = `
+    <div class="io-row"><label>麦克风接法</label>
+      <select id="ioMicMode">
+        ${["单麦","双麦"].map(t=>`<option ${t===IO_STATE.mic.mode?'selected':''}>${t}</option>`).join("")}
+      </select>
+    </div>`;
+	micHtml += `<div class="io-row"><span class="hint" style="color:var(--warn)">默认单麦接 MIC1 通道，双麦接 MIC1 和 MIC2 通道，回采统一接 MIC0 通道</span></div>`;
+  if(IO_STATE.mic.mode === "单麦"){
+    const g = IO_STATE.mic.singleGroup;
+    micHtml += `
+      <div class="io-row"><label>MIC 序号</label>
+        <select id="ioMicSingleGroup">
+          ${["MIC1","MIC2","MIC0"].map(x=>`<option ${x===g?'selected':''}>${x}</option>`).join("")}
+        </select>
+      </div>
+      <div class="io-row"><label>MICP-PORT</label><input readonly value="${esc(MIC_PIN[g+"-P"]||'')}"></div>
+      <div class="io-row"><label>MICN-PORT</label><input readonly value="${esc(MIC_PIN[g+"-N"]||'')}"></div>
+      <div class="io-row"><span class="hint">单麦只选 MIC 序号（MIC1 或 MIC2），P/N 由芯片固定。</span></div>`;
+  } else {
+    micHtml += IO_STATE.mic.dual.map((g,i)=>`
+      <div class="sub-card">
+        <div class="sub-title">第${i+1}个MIC</div>
+        <div class="io-row"><label>MIC 通道</label>
+          <select data-micdual="${i}">${["MIC1","MIC2",,"MIC0"].map(x=>`<option ${x===g?'selected':''}>${x}</option>`).join("")}</select>
+        </div>
+        <div class="io-row"><label>MICP IO口</label><input readonly value="${esc(MIC_PIN[g+"-P"]||'')}"></div>
+        <div class="io-row"><label>MICN IO口</label><input readonly value="${esc(MIC_PIN[g+"-N"]||'')}"></div>
+      </div>`).join("");
+  }
+
+  const echoHtml = `
+    <div class="io-row" style="border-top:1px dashed var(--line);padding-top:8px;margin-top:8px">
+      <label class="echo-en-label">回采使能</label>
+      <input type="checkbox" id="ioEchoEnInner" ${IO_STATE.echo.enable?'checked':''} style="flex:none;width:auto">
+    </div>
+    ${IO_STATE.echo.enable ? `
+      <div class="io-row"><label>MIC 序号</label>
+        <select id="ioEchoGroup">${MIC_GROUPS.map(g=>`<option ${g===IO_STATE.echo.group?'selected':''}>${g}</option>`).join("")}</select>
+      </div>
+      <div class="io-row"><label>MICP-PORT</label><input readonly value="${esc(MIC_PIN[IO_STATE.echo.group+"-P"]||'')}"></div>
+      <div class="io-row"><label>MICN-PORT</label><input readonly value="${esc(MIC_PIN[IO_STATE.echo.group+"-N"]||'')}"></div>
+      <div class="io-row"><span class="hint">回采电路单独选一个 MIC 序号（MIC0/MIC1/MIC2）。</span></div>
+    ` : `<div class="io-row"><span class="hint">回采电路未开启，不占用 IO。</span></div>`}
+  `;
+
+  const spiHtml = `
+    <div class="spi-warn-tip">屏幕涉及开发工作量比较大，目前只是调试调试阶段，不能量产！</div>
+    <div class="io-row"><label>SPI 总线</label>
+      <select id="ioSpiBus">${Object.entries(LCD_SPI_BUS).map(([k,v])=>`<option value="${k}" ${k===IO_STATE.spi.bus?'selected':''}>${v.name}</option>`).join("")}</select>
+    </div>
+    <div class="io-row"><label>全/半双工</label>
+      <select id="ioSpiDuplex">${["全双工","半双工"].map(t=>`<option ${t===IO_STATE.spi.duplex?'selected':''}>${t}</option>`).join("")}</select>
+    </div>
+    <div class="io-row"><label>SPI 速率</label>
+      <select id="ioSpiSpeed">${SPI_SPEED_PRESETS.map(s=>`<option value="${s}" ${s===IO_STATE.spi.speed?'selected':''}>${s}</option>`).join("")}</select>
+    </div>
+    <div class="io-row"><label>MOSI(DO)</label><input readonly value="${esc(LCD_SPI_BUS[IO_STATE.spi.bus].do)}"></div>
+    ${IO_STATE.spi.duplex === "全双工" ? `<div class="io-row"><label>MISO(DI)</label><input readonly value="${esc(LCD_SPI_BUS[IO_STATE.spi.bus].di)}"></div>` : ``}
+    <div class="io-row"><label>CLK</label><input readonly value="${esc(LCD_SPI_BUS[IO_STATE.spi.bus].clk)}"></div>
+    <div class="io-row"><label>CS</label>${ioSelect("ioSpiCs", IO_STATE.spi.cs, ios, null, "spi.cs")}</div>
+    <div class="io-row"><label>RS</label>${ioSelect("ioSpiRs", IO_STATE.spi.rs, ios, null, "spi.rs")}</div>
+    <div class="io-row"><label>TE</label>${ioSelect("ioSpiTe", IO_STATE.spi.te, ios, null, "spi.te", true)}</div>
+    <div class="io-row"><label>RST</label>${ioSelect("ioSpiRst", IO_STATE.spi.rst, ios, null, "spi.rst", true)}</div>
+    <div class="io-row"><label>BL</label>${ioSelect("ioSpiBl", IO_STATE.spi.bl, ios, null, "spi.bl", true)}</div>
+    <div class="io-row"><label>CS1(双眼)</label>${ioSelect("ioSpiCs1", IO_STATE.spi.cs1, ios, null, "spi.cs1", true)}</div>
+    <div class="io-row"><label>屏幕电源控制 IO</label>${ioSelect("ioSpiPower", IO_STATE.spi.power, ios, null, "spi.power", true)}</div>
+    <div class="io-row">
+      <label class="touch-en-label">触摸</label>
+      <input type="checkbox" id="ioTouchEn" ${IO_STATE.spi.touchEn?'checked':''} style="flex:none;width:auto">
+      <span style="color:var(--dim);font-size:11px">使能触摸</span>
+    </div>
+    ${IO_STATE.spi.touchEn ? `
+      <div class="io-row"><label>touch_int</label>${ioSelect("ioTouchInt", IO_STATE.spi.touchInt, ios, null, "spi.touchInt", true)}</div>
+      <div class="io-row"><label>touch_reset</label>${ioSelect("ioTouchReset", IO_STATE.spi.touchReset, ios, null, "spi.touchReset", true)}</div>
+      <div class="io-row"><label>触摸 IIC</label>
+        <select id="ioTouchIic">${["iic0","iic1"].map(x=>{
+          const ok = enabledIicIds().includes(x);
+          return `<option value="${x}" ${x===IO_STATE.spi.touch?'selected':''} ${ok?'':'disabled'}>${x}${ok?'':'（未开启）'}</option>`;
+        }).join("")}</select>
+      </div>
+      <div class="io-row"><span class="hint">触摸 IIC 只能选已开启的 IIC。</span></div>
+    ` : ``}
+  `;
+
+  const iicListHtml = IO_STATE.iic.list.map((it,i)=>`
+    <div class="sub-card">
+      <div class="sub-title" style="display:flex;align-items:center;gap:8px">
+        ${it.id}
+        <label style="margin-left:auto;font-size:11px;color:var(--dim);display:flex;align-items:center;gap:4px">
+          <input type="checkbox" data-iic-en="${i}" ${it.enable?'checked':''} style="accent-color:var(--accent2)"> 使能
+        </label>
+      </div>
+      <div class="io-row"><label>SCL</label>${ioSelect(`iic_scl_${i}`, it.scl, ios, BANNED_IIC, `iic.${i}.scl`)}</div>
+      <div class="io-row"><label>SDA</label>${ioSelect(`iic_sda_${i}`, it.sda, ios, BANNED_IIC, `iic.${i}.sda`)}</div>
+      <div class="io-row"><label>速率延时</label><input type="number" min="1" max="255" data-iic-delay="${i}" value="${it.delay}"></div>
+      <div class="io-row"><span class="hint">默认 20，可设置 1 ~ 255。</span></div>
+    </div>
+  `).join("");
+
+  const sdioPins = SDIO_PORTS[IO_STATE.sdio.port];
+  const sdioHtml = `
+    <div class="io-row"><label>接口</label><select id="ioSdioPort">${Object.keys(SDIO_PORTS).map(p=>`<option ${p===IO_STATE.sdio.port?'selected':''}>${p}</option>`).join("")}</select></div>
+    <div class="io-row"><label>数据宽度</label><select id="ioSdioWidth">${[1,4].map(w=>`<option ${w===IO_STATE.sdio.width?'selected':''}>${w}</option>`).join("")}</select></div>
+    <div class="io-row"><label>SD_CLK</label><input readonly value="${sdioPins.clk}"></div>
+    <div class="io-row"><label>SD_CMD</label><input readonly value="${sdioPins.cmd}"></div>
+    <div class="io-row"><label>SD_DAT0</label><input readonly value="${sdioPins.dat0}"></div>
+    ${IO_STATE.sdio.width === 4 ? `
+      <div class="io-row"><label>SD_DAT1</label><input readonly value="${sdioPins.dat1}"></div>
+      <div class="io-row"><label>SD_DAT2</label><input readonly value="${sdioPins.dat2}"></div>
+      <div class="io-row"><label>SD_DAT3</label><input readonly value="${sdioPins.dat3}"></div>
+    ` : ``}
+    <div class="io-row"><label>检测模式</label><select id="ioSdioDetMode">${["SD_CMD_DECT","SD_CLK_DECT","SD_IO_DECT"].map(m=>`<option ${m===IO_STATE.sdio.detMode?'selected':''}>${m}</option>`).join("")}</select></div>
+    ${IO_STATE.sdio.detMode === "SD_IO_DECT" ? `
+      <div class="io-row"><label>检测 IO</label>${ioSelect("ioSdioDetIo", IO_STATE.sdio.detIo, ios, null, "sdio.det", true)}</div>
+      <div class="io-row"><label>上线电平</label><select id="ioSdioDetLevel">${[0,1].map(v=>`<option ${v===IO_STATE.sdio.detLevel?'selected':''}>${v}</option>`).join("")}</select></div>
+    ` : ``}
+    <div class="io-row"><label>SDIO 时钟</label><select id="ioSdioClk">${SDIO_CLK_PRESETS.map(c=>`<option value="${c}" ${c===String(IO_STATE.sdio.clk)?'selected':''}>${c}</option>`).join("")}</select></div>
+  `;
+
+  const auxChOptions = AUX_CHANNELS.map(ch=>{
+    const blocked = isAuxChannelBlocked(ch.name);
+    return `<option value="${ch.name}" ${ch.name===IO_STATE.aux.channel?'selected':''} ${blocked?'disabled style="opacity:.45;cursor:not-allowed"':''}>${ch.name}${blocked?'（与MIC冲突）':''} — ${ch.pin}</option>`;
+  }).join("");
+  const auxHtml = `
+    <div class="io-row"><label>DET 检测 IO</label>${ioSelect("ioAuxDet", IO_STATE.aux.detIo, ios, null, "aux.det", true)}</div>
+    <div class="io-row"><span class="hint">低电平插入，高电平拔出；可选择“空”。</span></div>
+    <div class="io-row"><label>AUX 通道</label><select id="ioAuxChannel">${auxChOptions}</select></div>
+    <div class="io-row"><span class="hint">AUX0/1/2 与 MIC0/1/2（含回采）共用 ADC；若 MIC 或回采已使用对应通道，AUX 不可选。</span></div>
+    <div class="io-row"><label class="echo-en-label">插入检测自动播放</label><input type="checkbox" id="ioAuxAutoPlay" ${IO_STATE.aux.autoPlay?'checked':''} class="inline-chk"></div>
+  `;
+
+  const dual = dacSupportsDual();
+  const dacModes = dacModeList();
+  const singleDiffHtml = (dual && IO_STATE.dac.mode === "单路差分") ? `
+    <div class="io-row"><label>差分通道</label>
+      <select id="ioDacSingleDiff">${DAC_SINGLE_DIFF_OPTIONS.map(o=>`<option value="${o.value}" ${o.value===IO_STATE.dac.singleDiff?'selected':''}>${o.label}</option>`).join("")}</select>
+    </div>` : ``;
+  const dacHtml = `
+    <div class="io-row"><label>输出模式</label>
+      <select id="ioDacMode" ${dual?'':'disabled style="opacity:.45;cursor:not-allowed"'}>${dacModes.map(m=>`<option ${m===IO_STATE.dac.mode?'selected':''}>${m}</option>`).join("")}</select>
+    </div>
+    ${singleDiffHtml}
+    <div class="io-row"><label>DAC 引脚</label><input readonly value="${esc(dacPinText())}"></div>
+    <div class="io-row"><label>MUTE 引脚</label>${ioSelect("ioDacMuteIo", IO_STATE.dac.muteIo, ios, null, "dac.muteIo", true)}</div>
+    <div class="io-row"><label>静音电平</label><select id="ioDacMuteLevel">${[0,1].map(v=>`<option value="${v}" ${v===IO_STATE.dac.muteLevel?'selected':''}>${v}</option>`).join("")}</select></div>
+    <div class="io-row"><label>自动静音</label><select id="ioDacAutoMute">${[0,1].map(v=>`<option value="${v}" ${v===IO_STATE.dac.autoMute?'selected':''}>${v}${v===1?'（使能）':'（关闭）'}</option>`).join("")}</select></div>
+    ${dual ? `<div class="io-row"><span class="hint">单路差分必须包含 L/R，可选 DACFL/R 或 DACRL/R；双路差分输出全部通道。MUTE 引脚可为空。</span></div>` : `<div class="io-row"><span class="hint">AC7911BA/BB 仅支持单端模拟输出，输出引脚为 DACFL。MUTE 引脚可为空。</span></div>`}
+  `;
+
+  const needSwitch = lteNeedUsbSwitch();
+  const dualUsbOk = usbDualIfSupported();
+  const lteVendorText = LTE_VENDORS.map(v=>v.name).join(" / ");
+  const lteHtml = `
+    <div class="io-row"><label>USB 接口</label>${usbIfCheckboxHtml("lte")}</div>
+    <div class="io-row"><span class="hint">${needSwitch
+      ? "AC7911BA/BB 只能选择 FUSB，并且必须配置 USB 模拟开关控制 IO。"
+      : (dualUsbOk ? "AC7916AB / QYAI-AC-A100模组 可同时勾选 FUSB 和 HUSB。" : "当前芯片仅支持 FUSB。")}</span></div>
+    <div class="io-row"><label>支持厂商模组</label><input readonly value="${esc(lteVendorText)}"></div>
+    <div class="io-row"><label>出厂网络模式</label>
+      <select id="ioLteDefaultNet">
+        <option value="0" ${IO_STATE.lte.defaultNetChannel===0?'selected':''}>0 - wifi模式</option>
+        <option value="1" ${IO_STATE.lte.defaultNetChannel===1?'selected':''}>1 - 4G模式</option>
+      </select>
+    </div>
+    <div class="io-row"><label>电源开关</label>${ioSelect("ioLtePower", IO_STATE.lte.power, ios, null, "lte.power")}</div>
+    ${needSwitch ? `<div class="io-row"><label>USB模拟开关</label>${ioSelect("ioLteUsbSwitch", IO_STATE.lte.usbSwitch, ios, null, "lte.usbSwitch")}</div>` : ``}
+    <div class="io-row"><span class="hint">只显示未占用 IO。</span></div>
+  `;
+
+  const udiskHtml = `
+    <div class="io-row"><label>USB 接口</label>${usbIfCheckboxHtml("udisk")}</div>
+    <div class="io-row"><span class="hint">${needSwitch ? "AC7911BA/BB 只能选择 FUSB。" : (dualUsbOk ? "AC7916AB / QYAI-AC-A100模组 可同时勾选 FUSB 和 HUSB。" : "当前芯片仅支持 FUSB。")}</span></div>
+    <div class="io-row"><label class="echo-en-label">挂载自动播放</label><input type="checkbox" id="ioUdiskAutoPlay" ${IO_STATE.udisk.autoPlay?'checked':''} class="inline-chk"></div>
+  `;
+
+  const debugHtml = `
+    <div class="io-row"><label>打印 IO</label>${ioSelect("ioDebug", IO_STATE.debug.port, ios, BANNED_DEBUG, "debug.port", true)}</div>
+    <div class="io-row"><label>波特率</label><select id="ioDebugBaudPreset">${DEBUG_BAUD_PRESETS.map(p=>`<option value="${p}" ${p===IO_STATE.debug.baudPreset?'selected':''}>${p}</option>`).join("")}</select></div>
+    ${IO_STATE.debug.baudPreset === "其他" ? `<div class="io-row"><label>自定义值</label><input id="ioDebugBaudCustom" type="number" value="${IO_STATE.debug.baudCustom}"></div>` : ``}
+    <div class="io-row"><span class="hint">默认 IO_PORTA_10；可选择“空”。默认波特率 1000000。</span></div>
+  `;
+
+  const ledFreqHtml = `
+    <div class="io-row"><label>频率</label><select id="ioLedFreqPreset">${LED_FREQ_PRESETS.map(p=>`<option value="${p}" ${p===IO_STATE.ledPwm.freqPreset?'selected':''}>${p}</option>`).join("")}</select></div>
+    ${IO_STATE.ledPwm.freqPreset === "其他" ? `<div class="io-row"><label>自定义频率</label><input id="ioLedFreqCustom" type="number" value="${IO_STATE.ledPwm.freqCustom}"></div>` : ``}
+  `;
+
+  const sdram = sdramOf(IO_STATE.chip);
+
+  const g = $("ioGrid");
+  g.innerHTML = `
+  <div class="io-card">
+    <h3><span class="dot"></span>芯片/模组</h3>
+    <div class="io-row"><label>当前芯片</label>
+      <select id="ioChip">${Object.keys(CHIP_IO).map(c=>`<option ${c===IO_STATE.chip?'selected':''}>${c}</option>`).join("")}</select>
+    </div>
+    <div class="io-row"><label>SDRAM</label><input readonly value="${esc(sdram)}"></div>
+    <div class="io-row"><label>Flash 大小</label>
+      <select id="ioFlashSize">${FLASH_SIZES.map(s=>`<option ${s===IO_STATE.flashSize?'selected':''}>${s}</option>`).join("")}</select>
+    </div>
+    <div class="io-row"><span class="hint">QYAI-AC-A100模组 / AC7916AB / AC7911BB 内置 SDRAM 8MB，AC7911BA 内置 SDRAM 2MB；Flash 可选 4/8/16MB，默认 8MB。</span></div>
+  </div>
+
+  <div class="io-card ${IO_STATE.debug.enable?'':'off'}">
+    ${cardHead("调试日志打印","ioDebugEn",IO_STATE.debug.enable)}
+    <div class="card-body ${IO_STATE.debug.enable?'':'locked'}">${debugHtml}</div>
+  </div>
+
+  <div class="io-card ${IO_STATE.power.enable?'':'off'}">
+    ${cardHead("电源使能","ioPowerEn",IO_STATE.power.enable)}
+    <div class="card-body ${IO_STATE.power.enable?'':'locked'}">
+      <div class="io-row"><label>3.3V 使能</label>${ioSelect("ioVcc33", IO_STATE.power.vcc33, ios, null, "power.vcc33", true)}</div>
+      <div class="io-row"><label>IOVDD 使能</label>${ioSelect("ioIovdd", IO_STATE.power.iovdd, ios, null, "power.iovdd", true)}</div>
+      <div class="io-row"><span class="hint">3.3V/IOVDD 仅可选择当前芯片支持的 IO，或选择“空”。</span></div>
+    </div>
+  </div>
+
+  <div class="io-card ${IO_STATE.key.enable?'':'off'}">
+    ${cardHead("按键 ADKEY","ioKeyEn",IO_STATE.key.enable)}
+    <div class="card-body ${IO_STATE.key.enable?'':'locked'}">
+      <div class="io-row"><label>按键数量</label><select id="ioKeyCount">${[1,2,3,4,5,6].map(n=>`<option ${n===IO_STATE.key.count?'selected':''}>${n}</option>`).join("")}</select></div>
+      <div class="io-row"><label>上拉电阻</label><input id="ioKeyPull" type="number" min="1" value="${IO_STATE.key.pullup}"><span style="color:var(--dim)">KΩ</span></div>
+            <div class="io-row"><label>ADKEY IO</label>${ioSelect("ioKeyPort", IO_STATE.key.port, ios.filter(x=>ADKEY_ALLOWED_IO.has(x)), null, "key.port")}</div>
+      <div class="io-row"><span class="hint" style="color:var(--warn)">1、IO默认 PB_01，多个按键顺序递增，则电阻阻值必须保持递增。</span></div>
+	  <div class="io-row"><span class="hint" style="color:var(--warn)">2、IO按键必须上拉电阻≥22K(上拉电源必须是IOVDD)；多键按  默认下拉电阻0Ω/22KΩ/33KΩ/51KΩ/100KΩ/120K 分压，并保持递增顺序。</span></div>
+      <div class="io-row"><span class="hint" style="color:var(--warn)">3、多个按键顺序递增，电阻阻值必须保持递增，且第1个有阻值电阻必须≥上拉电阻。</span></div>
+	  ${keyCards}
+    </div>
+  </div>
+
+  <div class="io-card ${IO_STATE.mic.enable?'':'off'}">
+    ${cardHead("麦克风 / 回采电路","ioMicEn",IO_STATE.mic.enable)}
+    <div class="card-body ${IO_STATE.mic.enable?'':'locked'}">
+      ${micHtml}
+      ${echoHtml}
+    </div>
+  </div>
+
+  <div class="io-card">
+    <h3><span class="dot"></span>DAC 输出</h3>
+    ${dacHtml}
+  </div>
+
+  <div class="io-card ${IO_STATE.charge.enable?'':'off'}">
+    ${cardHead("充电检查","ioChargeEn",IO_STATE.charge.enable)}
+    <div class="card-body ${IO_STATE.charge.enable?'':'locked'}">
+      <div class="io-row"><label>充满检测IO</label>${ioSelect("ioChargeFullDet", IO_STATE.charge.fullDetIo, ios, null, "charge.fullDetIo", true)}</div>
+      <div class="io-row"><label>充电检测IO</label>${ioSelect("ioChargeChargingDet", IO_STATE.charge.chargingDetIo, ios, null, "charge.chargingDetIo", true)}</div>
+      <div class="io-row"><span class="hint">可选“空”表示不使用。只显示未占用 IO。</span></div>
+    </div>
+  </div>
+
+  <div class="io-card ${IO_STATE.iic.enable?'':'off'}">
+    ${cardHead("软件IIC接口","ioIicEn",IO_STATE.iic.enable)}
+    <div class="card-body ${IO_STATE.iic.enable?'':'locked'}">
+      <div class="io-row"><span class="hint">默认只添加 iic0；可新增 iic1。iic0 / iic1 可同时开启。SCL/SDA 只显示未占用 IO，排除保留 IO。</span></div>
+      ${iicListHtml}
+      ${IO_STATE.iic.list.length < 2 ? `<div class="io-row"><button class="ghost" id="ioIicAdd" style="width:100%">＋ 新增 iic1</button></div>` : ``}
+    </div>
+  </div>
+
+  <div class="io-card ${IO_STATE.spi.enable?'':'off'}">
+    ${cardHead("屏幕SPI接口","ioSpiEn",IO_STATE.spi.enable)}
+    <div class="card-body ${IO_STATE.spi.enable?'':'locked'}">${spiHtml}</div>
+  </div>
+
+  <div class="io-card ${IO_STATE.sdio.enable?'':'off'}">
+    ${cardHead("SDIO配置（SD卡）","ioSdioEn",IO_STATE.sdio.enable)}
+    <div class="card-body ${IO_STATE.sdio.enable?'':'locked'}">${sdioHtml}</div>
+  </div>
+
+  <div class="io-card ${IO_STATE.sdPlay.enable?'':'off'}">
+    ${cardHead("SD卡播放模式","ioSdPlayEn",IO_STATE.sdPlay.enable)}
+    <div class="card-body ${IO_STATE.sdPlay.enable?'':'locked'}">
+      <div class="io-row"><label class="echo-en-label">挂载自动播放</label><input type="checkbox" id="ioSdAutoPlay" ${IO_STATE.sdPlay.autoPlay?'checked':''} class="inline-chk"></div>
+    </div>
+  </div>
+
+  <div class="io-card ${IO_STATE.udisk.enable?'':'off'}">
+    ${cardHead("U盘播放模式","ioUdiskEn",IO_STATE.udisk.enable)}
+    <div class="card-body ${IO_STATE.udisk.enable?'':'locked'}">${udiskHtml}</div>
+  </div>
+
+  <div class="io-card ${IO_STATE.aux.enable?'':'off'}">
+    ${cardHead("线路输入(AUX/linein)模式","ioAuxEn",IO_STATE.aux.enable)}
+    <div class="card-body ${IO_STATE.aux.enable?'':'locked'}">${auxHtml}</div>
+  </div>
+
+  <div class="io-card ${IO_STATE.lte.enable?'':'off'}">
+    ${cardHead("4G/LTE蜂窝网络","ioLteEn",IO_STATE.lte.enable)}
+    <div class="card-body ${IO_STATE.lte.enable?'':'locked'}">${lteHtml}</div>
+  </div>
+
+  <div class="io-card ${IO_STATE.ws2812.enable?'':'off'}">
+    ${cardHead("WS2812 灯带","ioWsEn",IO_STATE.ws2812.enable)}
+    <div class="card-body ${IO_STATE.ws2812.enable?'':'locked'}">
+      <div class="io-row"><label>UART2 TX</label>${ioSelect("ioWsTx", IO_STATE.ws2812.tx, ios, BANNED_UART2, "ws2812.tx")}</div>
+      <div class="io-row"><label>波特率</label><select id="ioWsBaudPreset">${WS_BAUD_PRESETS.map(p=>`<option value="${p.label}" ${p.label===IO_STATE.ws2812.baudPreset?'selected':''}>${p.label}</option>`).join("")}</select></div>
+      ${IO_STATE.ws2812.baudPreset === "其他" ? `<div class="io-row"><label>自定义值</label><input id="ioWsBaudCustom" value="${IO_STATE.ws2812.baudCustom}"></div>` : ``}
+      <div class="io-row"><label>灯珠数</label><input id="ioWsNum" value="${IO_STATE.ws2812.ledNum}"></div>
+      <div class="io-row"><label>默认开机灯带颜色</label>
+        <select id="ioWsDefaultColor">
+          ${[IO_EMPTY,"红色","橙色","黄色","绿色","青色","蓝色","紫色"].map(c=>
+            `<option ${c===IO_STATE.ws2812.defaultColor?'selected':''}>${c}</option>`
+          ).join("")}
+        </select>
+      </div>
+      <div class="io-row"><span class="hint">WS2812的T0H和T1H电平务必是2倍关系才能，硬件使用需经反相器(SN74LVC1G14)接 WS2812的DIN；波特率是3.3M/2.5M(0码高电平300ns则是3.3M，是400s则是2.5M)。只显示未占用 IO。</span></div>
+    </div>
+  </div>
+
+  <div class="io-card ${IO_STATE.ledPwm.enable?'':'off'}">
+    ${cardHead("LED呼吸灯","ioLedEn",IO_STATE.ledPwm.enable)}
+    <div class="card-body ${IO_STATE.ledPwm.enable?'':'locked'}">
+      <div class="io-row"><label>PWM IO</label>${ioSelect("ioLedPort", IO_STATE.ledPwm.port, ios, BANNED_PWM, "ledPwm.port")}</div>
+      <div class="io-row"><label>PWM 通道</label><input id="ioLedCh" readonly value="${esc(IO_STATE.ledPwm.ch)}"></div>
+      ${ledFreqHtml}
+      <div class="io-row"><span class="hint">默认 10000；自动匹配 PWMCH，不在表内用 PWM_TIMER3_OPCH3。</span></div>
+    </div>
+  </div>
+  `;
+
+  /* ===== 绑定 ===== */
+  const bindCardEn = (id, key) => {
+    const el = $(id);
+    if(el) el.onchange = e=>{
+      IO_STATE[key].enable = e.target.checked;
+      normalizeUsbIfs();
+      renderIO();
+      renderMacro();
+    };
+  };
+  bindCardEn("ioDebugEn","debug");
+  bindCardEn("ioPowerEn","power");
+  bindCardEn("ioKeyEn","key");
+  bindCardEn("ioMicEn","mic");
+  bindCardEn("ioIicEn","iic");
+  bindCardEn("ioSpiEn","spi");
+  bindCardEn("ioSdioEn","sdio");
+  bindCardEn("ioSdPlayEn","sdPlay");
+  bindCardEn("ioUdiskEn","udisk");
+  bindCardEn("ioAuxEn","aux");
+  bindCardEn("ioLteEn","lte");
+  bindCardEn("ioChargeEn","charge");
+
+  /* WS2812 与 LED呼吸灯 互斥：WS2812 使能 */
+  if($("ioWsEn")){
+    $("ioWsEn").onchange = e=>{
+      if(e.target.checked && IO_STATE.ledPwm.enable){
+        openTip("「WS2812 灯带」与「LED 呼吸灯」只能选择其中一个。<br><br>请先关闭 <b>LED 呼吸灯</b>，再开启 WS2812 灯带。");
+        e.target.checked = false;
+        return;
+      }
+      IO_STATE.ws2812.enable = e.target.checked;
+      normalizeUsbIfs();
+      renderIO();
+      renderMacro();
+    };
+  }
+
+  /* WS2812 与 LED呼吸灯 互斥：LED呼吸灯 使能 */
+  if($("ioLedEn")){
+    $("ioLedEn").onchange = e=>{
+      if(e.target.checked && IO_STATE.ws2812.enable){
+        openTip("「WS2812 灯带」与「LED 呼吸灯」只能选择其中一个。<br><br>请先关闭 <b>WS2812 灯带</b>，再开启 LED 呼吸灯。");
+        e.target.checked = false;
+        return;
+      }
+      IO_STATE.ledPwm.enable = e.target.checked;
+      normalizeUsbIfs();
+      renderIO();
+      renderMacro();
+    };
+  }
+
+  /* SD卡播放模式：开启前检查 SDIO 是否启用 */
+  const sdPlayEnEl = $("ioSdPlayEn");
+  if(sdPlayEnEl){
+    const origHandler = sdPlayEnEl.onchange;
+    sdPlayEnEl.onchange = e=>{
+      if(e.target.checked && !IO_STATE.sdio.enable){
+        openTip("开启 SD 卡播放模式前，请先在“SDIO配置（SD卡）”中启用 SDIO。");
+        e.target.checked = false;
+        IO_STATE.sdPlay.enable = false;
+        renderIO();
+        renderMacro();
+        return;
+      }
+      origHandler(e);
+    };
+  }
+
+  $("ioChip").onchange = e=>{
+    IO_STATE.chip = e.target.value;
+    normalizeDacMode();
+    normalizeUsbIfs();
+	enforceWakeWordForChip();
+	const chipSel = $("chipSelect");
+	if(chipSel) chipSel.value = IO_STATE.chip;
+    renderIO();
+    renderMacro();
+  };
+  if($("ioFlashSize")) $("ioFlashSize").onchange = e=>{ IO_STATE.flashSize = e.target.value; saveCfg(); };
+
+  if($("ioDebug")) $("ioDebug").onchange = e=>{ IO_STATE.debug.port = e.target.value; renderIO(); };
+  if($("ioDebugBaudPreset")) $("ioDebugBaudPreset").onchange = e=>{ IO_STATE.debug.baudPreset = e.target.value; renderIO(); };
+  if($("ioDebugBaudCustom")) $("ioDebugBaudCustom").onchange = e=>{ IO_STATE.debug.baudCustom = +e.target.value; saveCfg(); };
+
+  if($("ioVcc33")) $("ioVcc33").onchange = e=>{ IO_STATE.power.vcc33 = e.target.value; renderIO(); };
+  if($("ioIovdd")) $("ioIovdd").onchange = e=>{ IO_STATE.power.iovdd = e.target.value; renderIO(); };
+
+  if($("ioKeyCount")) $("ioKeyCount").onchange = e=>{ IO_STATE.key.count = +e.target.value; renderIO(); };
+  if($("ioKeyPull")) $("ioKeyPull").onchange = e=>{ IO_STATE.key.pullup = +e.target.value; saveCfg(); };
+  if($("ioKeyPort")) $("ioKeyPort").onchange = e=>{ IO_STATE.key.port = e.target.value; renderIO(); };
+  g.querySelectorAll('[data-keyres]').forEach(sel=>{
+    sel.onchange = e=>{
+      const i = +e.target.dataset.keyres;
+      const newRes = Number(e.target.value);
+      const keys = IO_STATE.key.keys[i];
+      keys.resistor = newRes;
+      if(newRes !== 0 && keys.funcs && keys.funcs.long === 1){
+        keys.funcs.long = 0;
+      }
+      renderIO();
+    };
+  });
+  g.querySelectorAll('[data-key]').forEach(sel=>{
+    sel.onchange = e=>{
+      const i = +e.target.dataset.key;
+      const slot = e.target.dataset.slot;
+      const v = Number(e.target.value)||0;
+      const keys = IO_STATE.key.keys[i];
+      if(!keys.funcs || typeof keys.funcs !== "object") keys.funcs = defaultKeyFuncs();
+      if(slot === "long" && v === 1 && keys.resistor !== 0){
+        openTip("长按开关机功能只能选择在 0Ω 电阻上。请先将该按键的电阻设置为 0Ω。");
+        e.target.value = keys.funcs[slot] || 0;
+        return;
+      }
+      keys.funcs[slot] = v;
+      renderIO();
+    };
+  });
+
+  if($("ioMicMode")) $("ioMicMode").onchange = e=>{ IO_STATE.mic.mode = e.target.value; renderIO(); };
+  if($("ioMicSingleGroup")) $("ioMicSingleGroup").onchange = e=>{ IO_STATE.mic.singleGroup = e.target.value; renderIO(); };
+  g.querySelectorAll('[data-micdual]').forEach(sel=>{
+    sel.onchange = e=>{
+      const i = +e.target.dataset.micdual;
+      IO_STATE.mic.dual[i] = e.target.value;
+      if(IO_STATE.mic.dual[0] === IO_STATE.mic.dual[1]){
+        IO_STATE.mic.dual[1] = (e.target.value==="MIC1") ? "MIC2" : "MIC1";
+      }
+      renderIO();
+    };
+  });
+  if($("ioEchoEnInner")) $("ioEchoEnInner").onchange = e=>{ IO_STATE.echo.enable = e.target.checked; renderIO(); };
+  if($("ioEchoGroup")) $("ioEchoGroup").onchange = e=>{ IO_STATE.echo.group = e.target.value; renderIO(); };
+
+  if($("ioDacMode")) $("ioDacMode").onchange = e=>{ IO_STATE.dac.mode = e.target.value; normalizeDacMode(); renderIO(); };
+  if($("ioDacSingleDiff")) $("ioDacSingleDiff").onchange = e=>{ IO_STATE.dac.singleDiff = e.target.value; renderIO(); };
+  if($("ioDacMuteIo")) $("ioDacMuteIo").onchange = e=>{ IO_STATE.dac.muteIo = e.target.value; renderIO(); };
+  if($("ioDacMuteLevel")) $("ioDacMuteLevel").onchange = e=>{ IO_STATE.dac.muteLevel = +e.target.value; saveCfg(); };
+  if($("ioDacAutoMute")) $("ioDacAutoMute").onchange = e=>{ IO_STATE.dac.autoMute = +e.target.value; saveCfg(); };
+
+  if($("ioChargeFullDet")) $("ioChargeFullDet").onchange = e=>{ IO_STATE.charge.fullDetIo = e.target.value; renderIO(); };
+  if($("ioChargeChargingDet")) $("ioChargeChargingDet").onchange = e=>{ IO_STATE.charge.chargingDetIo = e.target.value; renderIO(); };
+
+  g.querySelectorAll('[data-iic-en]').forEach(cb=>{
+    cb.onchange = e=>{
+      const i = +e.target.dataset.iicEn;
+      IO_STATE.iic.list[i].enable = e.target.checked;
+      renderIO();
+    };
+  });
+  IO_STATE.iic.list.forEach((it,i)=>{
+    const scl = $(`iic_scl_${i}`);
+    if(scl) scl.onchange = e=>{ IO_STATE.iic.list[i].scl = e.target.value; renderIO(); };
+    const sda = $(`iic_sda_${i}`);
+    if(sda) sda.onchange = e=>{ IO_STATE.iic.list[i].sda = e.target.value; renderIO(); };
+  });
+  g.querySelectorAll('[data-iic-delay]').forEach(inp=>{
+    inp.onchange = e=>{
+      const i = +e.target.dataset.iicDelay;
+      let v = parseInt(e.target.value,10);
+      if(isNaN(v)) v = 20;
+      v = Math.max(1, Math.min(255, v));
+      IO_STATE.iic.list[i].delay = v;
+      e.target.value = v;
+      saveCfg();
+    };
+  });
+  const addIic = $("ioIicAdd");
+  if(addIic) addIic.onclick = ()=>{
+    if(IO_STATE.iic.list.length >= 2) return;
+    IO_STATE.iic.list.push({ ...IIC1_DEFAULT });
+    renderIO();
+  };
+
+  if($("ioSpiBus")) $("ioSpiBus").onchange = e=>{ IO_STATE.spi.bus = e.target.value; renderIO(); };
+  if($("ioSpiDuplex")) $("ioSpiDuplex").onchange = e=>{ IO_STATE.spi.duplex = e.target.value; renderIO(); };
+  if($("ioSpiSpeed")) $("ioSpiSpeed").onchange = e=>{ IO_STATE.spi.speed = e.target.value; saveCfg(); };
+  if($("ioSpiCs")) $("ioSpiCs").onchange = e=>{ IO_STATE.spi.cs = e.target.value; renderIO(); };
+  if($("ioSpiRs")) $("ioSpiRs").onchange = e=>{ IO_STATE.spi.rs = e.target.value; renderIO(); };
+  if($("ioSpiTe")) $("ioSpiTe").onchange = e=>{ IO_STATE.spi.te = e.target.value; renderIO(); };
+  if($("ioSpiRst")) $("ioSpiRst").onchange = e=>{ IO_STATE.spi.rst = e.target.value; renderIO(); };
+  if($("ioSpiBl")) $("ioSpiBl").onchange = e=>{ IO_STATE.spi.bl = e.target.value; renderIO(); };
+  if($("ioSpiCs1")) $("ioSpiCs1").onchange = e=>{ IO_STATE.spi.cs1 = e.target.value; renderIO(); };
+  if($("ioSpiPower")) $("ioSpiPower").onchange = e=>{ IO_STATE.spi.power = e.target.value; renderIO(); };
+  if($("ioTouchEn")) $("ioTouchEn").onchange = e=>{ IO_STATE.spi.touchEn = e.target.checked; renderIO(); };
+  if($("ioTouchInt")) $("ioTouchInt").onchange = e=>{ IO_STATE.spi.touchInt = e.target.value; renderIO(); };
+  if($("ioTouchReset")) $("ioTouchReset").onchange = e=>{ IO_STATE.spi.touchReset = e.target.value; renderIO(); };
+  if($("ioTouchIic")) $("ioTouchIic").onchange = e=>{
+    const v = e.target.value;
+    if(!enabledIicIds().includes(v)){
+      openTip(`触摸选择的 ${v} 尚未开启。<br>请先在 “软件IIC接口” 中开启 ${v}，再选择触摸 IIC。`);
+      e.target.value = IO_STATE.spi.touch;
+      return;
+    }
+    IO_STATE.spi.touch = v;
+  };
+
+  if($("ioSdioPort")) $("ioSdioPort").onchange = e=>{ IO_STATE.sdio.port = e.target.value; renderIO(); };
+  if($("ioSdioWidth")) $("ioSdioWidth").onchange = e=>{ IO_STATE.sdio.width = +e.target.value; renderIO(); };
+  if($("ioSdioDetMode")) $("ioSdioDetMode").onchange = e=>{ IO_STATE.sdio.detMode = e.target.value; renderIO(); };
+  if($("ioSdioDetIo")) $("ioSdioDetIo").onchange = e=>{ IO_STATE.sdio.detIo = e.target.value; renderIO(); };
+  if($("ioSdioDetLevel")) $("ioSdioDetLevel").onchange = e=>{ IO_STATE.sdio.detLevel = +e.target.value; saveCfg(); };
+  if($("ioSdioClk")) $("ioSdioClk").onchange = e=>{ IO_STATE.sdio.clk = e.target.value; saveCfg(); };
+
+  if($("ioSdAutoPlay")) $("ioSdAutoPlay").onchange = e=>{ IO_STATE.sdPlay.autoPlay = e.target.checked; saveCfg(); };
+  if($("ioUdiskAutoPlay")) $("ioUdiskAutoPlay").onchange = e=>{ IO_STATE.udisk.autoPlay = e.target.checked; saveCfg(); };
+  if($("ioAuxAutoPlay")) $("ioAuxAutoPlay").onchange = e=>{ IO_STATE.aux.autoPlay = e.target.checked; saveCfg(); };
+
+  g.querySelectorAll('[data-usb-owner]').forEach(cb=>{
+    cb.onchange = e=>{
+      const owner = e.target.dataset.usbOwner;
+      const iface = e.target.dataset.usbIf;
+      let arr = IO_STATE[owner].usbIfs.slice();
+      if(e.target.checked){
+        if(!arr.includes(iface)) arr.push(iface);
+      } else {
+        arr = arr.filter(x=>x!==iface);
+      }
+      IO_STATE[owner].usbIfs = arr;
+      normalizeUsbIfs();
+      renderIO();
+    };
+  });
+
+  if($("ioAuxDet")) $("ioAuxDet").onchange = e=>{ IO_STATE.aux.detIo = e.target.value; renderIO(); };
+  if($("ioAuxChannel")) $("ioAuxChannel").onchange = e=>{ IO_STATE.aux.channel = e.target.value; renderIO(); };
+
+  if($("ioLteDefaultNet")) $("ioLteDefaultNet").onchange = e=>{ IO_STATE.lte.defaultNetChannel = +e.target.value; saveCfg(); };
+  if($("ioLtePower")) $("ioLtePower").onchange = e=>{ IO_STATE.lte.power = e.target.value; renderIO(); };
+  if($("ioLteUsbSwitch")) $("ioLteUsbSwitch").onchange = e=>{ IO_STATE.lte.usbSwitch = e.target.value; renderIO(); };
+
+  if($("ioWsTx")) $("ioWsTx").onchange = e=>{ IO_STATE.ws2812.tx = e.target.value; renderIO(); };
+  if($("ioWsBaudPreset")) $("ioWsBaudPreset").onchange = e=>{ IO_STATE.ws2812.baudPreset = e.target.value; renderIO(); };
+  if($("ioWsBaudCustom")) $("ioWsBaudCustom").onchange = e=>{ IO_STATE.ws2812.baudCustom = +e.target.value; saveCfg(); };
+  if($("ioWsNum")) $("ioWsNum").onchange = e=>{ IO_STATE.ws2812.ledNum = +e.target.value; saveCfg(); };
+  if($("ioWsDefaultColor")) $("ioWsDefaultColor").onchange = e=>{ IO_STATE.ws2812.defaultColor = e.target.value; saveCfg(); };
+
+  if($("ioLedPort")) $("ioLedPort").onchange = e=>{ IO_STATE.ledPwm.port = e.target.value; updateLedCh(); renderIO(); };
+  if($("ioLedFreqPreset")) $("ioLedFreqPreset").onchange = e=>{ IO_STATE.ledPwm.freqPreset = e.target.value; renderIO(); };
+  if($("ioLedFreqCustom")) $("ioLedFreqCustom").onchange = e=>{ IO_STATE.ledPwm.freqCustom = +e.target.value; saveCfg(); };
+
+  updateLedCh();
+  updateConflicts();
+  saveCfg();
+}
+
+function updateLedCh(){
+  IO_STATE.ledPwm.ch = PWM_MAP[IO_STATE.ledPwm.port] || "PWM_TIMER3_OPCH3";
+  const el = $("ioLedCh"); if(el) el.value = IO_STATE.ledPwm.ch;
+}
+
+let lastConflictKey = "";
+function updateConflicts(){
+  const used = collectUsage();
+  const ioConflicts = Object.entries(used).filter(([io,arr])=>arr.length>1);
+  const usbConf = usbConflicts();
+  const box = $("conflictBox");
+  const hasAny = ioConflicts.length || usbConf.length;
+
+  if(hasAny){
+    box.classList.add("show");
+    let html = "";
+    if(ioConflicts.length){
+      html += `<b>⚠ IO 冲突：</b>` + ioConflicts.map(([io,arr])=>
+        `<span style="display:inline-block;margin-left:10px">${io} → ${arr.map(x=>x.label).join(" / ")}</span>`).join("");
+    }
+    if(usbConf.length){
+      if(ioConflicts.length) html += `<br>`;
+      html += `<b>⚠ USB 占用冲突：</b>` + usbConf.map(c=>
+        `<span style="display:inline-block;margin-left:10px">${c.iface} → ${c.owners.join(" / ")}</span>`).join("");
+    }
+    box.innerHTML = html;
+
+    const key = JSON.stringify({
+      io: ioConflicts.map(([io,arr])=>io+":"+arr.map(x=>x.id).sort().join(",")).sort(),
+      usb: usbConf.map(c=>c.iface+":"+c.owners.slice().sort().join(",")).sort()
+    });
+    if(key !== lastConflictKey){
+      lastConflictKey = key;
+      openConflictModal(ioConflicts, usbConf);
+    }
+  } else {
+    box.classList.remove("show");
+    box.innerHTML = "";
+    lastConflictKey = "";
+  }
+}
+function openConflictModal(ioConflicts, usbConf){
+  const body = $("conflictModalBody");
+  let html = "";
+  if(ioConflicts && ioConflicts.length){
+    html += ioConflicts.map(([io,arr])=>
+      `<div class="c-item"><span class="io">${esc(io)}</span> 被以下模块同时占用：<br>${arr.map(x=>"• "+esc(x.label)).join("<br>")}</div>`
+    ).join("");
+  }
+  if(usbConf && usbConf.length){
+    html += usbConf.map(c=>
+      `<div class="c-item"><span class="io">${esc(c.iface)}</span> 被以下功能同时占用：<br>${c.owners.map(x=>"• "+esc(x)).join("<br>")}</div>`
+    ).join("");
+  }
+  html += `<div style="color:var(--dim);margin-top:10px;font-size:12px">请修改冲突的 IO 或 USB 接口，或关闭对应模块的使能。</div>`;
+  body.innerHTML = html;
+  $("conflictModal").classList.add("open");
+}
+$("btnCloseConflict").onclick = ()=> $("conflictModal").classList.remove("open");
+$("btnCloseConflict2").onclick = ()=> $("conflictModal").classList.remove("open");
+$("conflictModal").addEventListener("click", e=>{
+  if(e.target === $("conflictModal")) $("conflictModal").classList.remove("open");
+});
+
+function openTip(html){
+  $("tipModalBody").innerHTML = html;
+  $("tipModal").classList.add("open");
+}
+$("btnCloseTip").onclick = ()=> $("tipModal").classList.remove("open");
+$("btnCloseTip2").onclick = ()=> $("tipModal").classList.remove("open");
+$("tipModal").addEventListener("click", e=>{
+  if(e.target === $("tipModal")) $("tipModal").classList.remove("open");
+});
+
+/* ============================================================
+ * 6. 头文件生成（IO + 功能模块）
+ * ============================================================ */
+function genHeader(){
+  const L = [];
+  L.push(`#ifndef CONFIG_BOARD_OPEN_DEV_CFG_H`);
+  L.push(`#define CONFIG_BOARD_OPEN_DEV_CFG_H`);
+  L.push("");
+  L.push("/*");
+  L.push(" * board_open_dev_cfg.h");
+  L.push(" * 由图形编程配置器 v35 生成（IO 配置 + 功能模块）");
+  L.push(` * 生成时间: ${new Date().toLocaleString()}`);
+  L.push(" */");
+  L.push("");
+
+  /* ================= 芯片 / 存储 ================= */
+  L.push("/* ================= 芯片 / 存储 ================= */");
+  L.push(`// CHIP        = ${IO_STATE.chip}`);
+  L.push(`// SDRAM_SIZE  = ${sdramOf(IO_STATE.chip)}`);
+  L.push(`// FLASH_SIZE  = ${IO_STATE.flashSize}`);
+    L.push(`#define CONFIG_BOARD_OPEN_DEV_ENABLE`);
+  if(IO_STATE.chip === "QYAI-AC-A100模组" || IO_STATE.chip === "AC7916AB"){
+    L.push(`#define CONFIG_BOARD_7916AB`);
+  } else if(IO_STATE.chip === "AC7911BA"){
+    L.push(`#define CONFIG_BOARD_7911BA`);
+	L.push(`#define CONFIG_SFC_ENABLE`);
+  } else if(IO_STATE.chip === "AC7911BB"){
+    L.push(`#define CONFIG_BOARD_7911BB`);
+  }
+  
+  L.push(`#define __FLASH_SIZE__       ${sizeToBytes(IO_STATE.flashSize)}`);
+  L.push(`#define __SDRAM_SIZE__       ${sizeToBytes(sdramOf(IO_STATE.chip))}`);
+  if(MODULE_STATE.general.flash4Line) L.push(`#define CONFIG_FLASH_4LINE_ENABLE`);
+  L.push("");
+
+  /* ================= 产品配置 ================= */
+  {
+    const p = MODULE_STATE.product;
+    const lines = [];
+    if(p.companyUuid && String(p.companyUuid).trim() !== ""){
+      lines.push(`#define PRODUCT_UUID  "${String(p.companyUuid).trim()}"`);
+    }
+    if(p.productName && String(p.productName).trim() !== ""){
+      lines.push(`#define PRODUCT_NAME  "${String(p.productName).trim()}"`);
+    }
+    if(p.productBatch !== "" && p.productBatch !== undefined && p.productBatch !== null){
+      const b = Number(p.productBatch);
+      if(!isNaN(b) && b >= 1 && b <= 1000){
+        lines.push(`#define PRODUCT_BATCH ${b}`);
+      }
+    }
+    if(p.productBatchNum !== "" && p.productBatchNum !== undefined && p.productBatchNum !== null){
+      const n = Number(p.productBatchNum);
+      if(!isNaN(n) && n >= 1 && n <= 1000){
+        lines.push(`#define PRODUCT_NUM   ${n}`);
+      }
+    }
+    if(lines.length){
+      L.push("/* ================= 产品配置 ================= */");
+      lines.forEach(l=>L.push(l));
+      L.push("");
+    }
+  }
+
+  /* ================= 通用配置 ================= */
+  L.push("/* ================= 通用配置 ================= */");
+  L.push(`#define VOLUME_STEP                 ${MODULE_STATE.general.volumeStep}          //音量设置梯度`);
+  L.push(`#define GAIN_STEP                   ${MODULE_STATE.general.gainStep}          //录音增益梯度`);
+  L.push(`#define MIN_VOLUME_VALUE            ${MODULE_STATE.general.minVolume}          //最小音量`);
+  L.push(`#define MAX_VOLUME_VALUE            ${MODULE_STATE.general.maxVolume}          //最大音量`);
+  L.push(`#define INIT_VOLUME_VALUE           ${MODULE_STATE.general.initVolume}          //默认初始化音量`);
+  L.push(`#define HW_VOLUME_VALUE             ${MODULE_STATE.general.hwVolume}          //解码硬件最大音量`);
+  L.push(`#define PRODUCTION_TEST_VOLUME      ${MODULE_STATE.general.prodTestVolume}          //厂测音量`);
+
+	const wakeWord = MODULE_STATE.general.wakeWord || "空";
+	if(wakeWord !== "空"){
+	  L.push(`#define IFLY_KWS_MLP_CONST_ARRAY`);
+	  L.push(`#define IFLY_KWS_NAME   "${wakeWord}"`);
+	  if(wakeWord === "小语小语") L.push(`#define CONFIG_XY_KEYWORDS`);
+	  else if(wakeWord === "小飞小飞") L.push(`#define CONFIG_XF_KEYWORDS`);
+	  else if(wakeWord === "哈喽优优") L.push(`#define CONFIG_EN_KEYWORDS`);
+	  
+	}
+	L.push("");
+
+  /* ================= 音视频配置 ================= */
+  L.push("/* ================= 音视频配置 ================= */");
+  if(MODULE_STATE.av.fadeEnable) L.push(`#define NET_MUSIC_CONFIG_DEC_ANALOG_VOLUME_ENABLE //网络音乐解码的淡入淡出`);
+  if(MODULE_STATE.av.btEnable) L.push(`#define CONFIG_BT_MUSIC_MODE_ENABLE         //蓝牙播放模式使能`);
+  if(MODULE_STATE.av.eqOnline) L.push(`#define TCFG_EQ_ONLINE_ENABLE     1            //1:支持在线EQ调试`);
+  L.push(`#define CONFIG_AISP_MIC_ADC_GAIN            ${MODULE_STATE.av.micGain}      //本地空闲下mic增益，远场拾音加大80以上，进场拾音40以下`);
+  {
+    const mgp = MODULE_STATE.av.micGainParams;
+    L.push("/* 麦克风/回采增益参数（线性表达式 y = ax + b） */");
+    ["AEC","MIC1","MIC2"].forEach(k=>{
+      const r = parseLinearExpr(mgp[k]);
+      L.push(`#define ${k}_SLOPE          ${r.slope}`);
+      L.push(`#define ${k}_INTERCEPT      ${r.intercept}`);
+    });
+  }
+  L.push("");
+  if(MODULE_STATE.av.ui.enable){
+    L.push("/* 屏幕 UI 屏显参数 */");
+	L.push("#define CONFIG_UI_ENABLE	//开启UI屏显");
+	if(MODULE_STATE.av.ui.rotateTear) L.push(`#define CONFIG_UI_ROTATE_TEAR_ENABLE                  //软件旋转消除撕裂感`);
+    if(MODULE_STATE.av.ui.twoEye) L.push(`#define CONFIG_UI_TOW_EYE        //开2个眼睛显示`);
+    if(MODULE_STATE.av.ui.gifEye) L.push(`#define CONFIG_UI_GIF_EYE        //开启GIF眼睛显示`);
+    if(MODULE_STATE.av.ui.aviEye) L.push(`#define CONFIG_UI_AVI_EYE        //开启AVI眼睛显示`);
+	if(MODULE_STATE.av.ui.gifEye || MODULE_STATE.av.ui.aviEye) L.push(`#define CONFIG_UI_PLAY_EMOJI     //开启表情显示`);
+	
+    LCD_DRIVERS.forEach(d=>{
+      const v = (MODULE_STATE.av.ui.driver === d.key) ? 1 : 0;
+      L.push(`#define ${d.macro.padEnd(36)} ${v}${d.note?" //"+d.note:""}`);
+    });
+    L.push(`#define LCD_W     ${MODULE_STATE.av.ui.lcdW}`);
+    L.push(`#define LCD_H     ${MODULE_STATE.av.ui.lcdH}`);
+  }
+  L.push("");
+
+  /* ================= 网络配置 ================= */
+  L.push("/* ================= 网络配置 ================= */");
+  if(MODULE_STATE.network.ttsReply) L.push(`#define CONFIG_USE_TTS_REPLY_ENABLE         //使能唤醒回复语启用在线TTS`);
+  if(MODULE_STATE.network.moreNotice) L.push(`#define CONFIG_MORE_NOTIC_REPLY_ENABLE      //使能聊天多次提示回复语`);
+  if(MODULE_STATE.network.qyaiMqtt) L.push(`#define CONFIG_QYAI_MQTT_IOT_ENABLE             //开启QYAI-MQTT`);
+  L.push("");
+
+  /* ================= 系统配置 ================= */
+  L.push("/* ================= 系统配置 ================= */");
+  if(MODULE_STATE.system.firstPowerOff) L.push(`#define TCFG_FIRST_POWER_OFF_EN                 //首次上电开机需要关机`);
+  L.push(`#define TCFG_VBAT_CHECK_EN                  ${MODULE_STATE.system.vbatCheck?1:0}           //使能电量检测`);
+  L.push(`#define BT_DEV_NAME                         "${MODULE_STATE.system.btName || ""}"      //经典蓝牙名称(UTF-8, <=16字节)`);
+  L.push(`#define TCFG_AUTO_SLEEP_CHECK_EN            ${MODULE_STATE.system.autoSleep?1:0}           //使能特定时间待机检测空闲后进入关机`);
+  if(MODULE_STATE.system.autoSleep){
+    const asCfg = MODULE_STATE.system.autoSleepCfg;
+    if(asCfg.lowPowerEn){
+      L.push(`#define TCFG_AUTO_DEV_LOW_PWER_TIME_SEC     ${asCfg.lowPowerSec}          //使能${asCfg.lowPowerSec}秒进入外设低功耗(未关机，只是把耗电外设降低功耗)`);
+    }
+    if(asCfg.deepSleepEn){
+      L.push(`#define AUTO_DEEP_SLEEP_TIME_MIN            ${asCfg.deepSleepMin}           //使能进入（${asCfg.deepSleepMin}分钟）: wifi关闭、蓝牙关闭、LVGL任务挂起`);
+    }
+    if(asCfg.autoPowerOffEn){
+      L.push(`#define AUTO_PWEROFF_SLEEP_TIME_MIN         ${asCfg.autoPowerOffMin}           //${asCfg.autoPowerOffMin}分钟自动关机`);
+    }
+  }
+  L.push("");
+
+  /* ================= 量产配置 ================= */
+  L.push("/* ================= 量产配置 ================= */");
+  if(IO_STATE.chip === "QYAI-AC-A100模组" && MODULE_STATE.test.moduleProdTest){
+    L.push(`#define PRODUCTION_TEST_ENABLE                          //模组产测模式使能`);
+    L.push(`#define PRODUCTION_TEST_PORT                ${ioToMacro(MODULE_STATE.test.moduleProdTestPort)}     //触发模组量产测试功能的IO口`);
+  }
+  if(MODULE_STATE.test.allFuncTest) L.push(`#define PRODUCTION_ALL_TEST_ENABLE                     //量产所有功能测试模式使能`);
+  L.push("");
+
+  /* ================= 调试日志打印 ================= */
+  L.push("/* ================= 调试日志打印 ================= */");
+  if(IO_STATE.debug.enable){
+    L.push(`#define CONFIG_DEBUG_ENABLE      ${IO_STATE.debug.enable?1:0}`);
+    L.push(`#define TCFG_DEBUG_PORT          ${ioToMacro(IO_STATE.debug.port)}`);
+    L.push(`#define TCFG_DEBUG_BAUD          ${Number(debugBaudValue())||0}`);
+  }
+  L.push("");
+
+  /* ================= 电源使能 ================= */
+    /* ================= 电源使能 ================= */
+  L.push("/* ================= 电源使能 ================= */");
+  if(IO_STATE.power.enable){
+    if(isUsed(IO_STATE.power.vcc33)){
+      L.push(`#define TCFG_VCC33_CTRL_PORT    ${IO_STATE.power.vcc33}`);
+    }
+    if(isUsed(IO_STATE.power.iovdd)){
+      L.push(`#define TCFG_IOVDD_CTRL_PORT    ${IO_STATE.power.iovdd}`);
+    }
+  }
+  L.push("");
+
+  /* ================= 按键 ADKEY ================= */
+  L.push("/* ================= 按键 ADKEY ================= */");
+  if(IO_STATE.key.enable){
+    const isIoKeyMode = (IO_STATE.key.count === 1 && IO_STATE.key.pullup === 0);
+    if(isIoKeyMode){
+      L.push(`#define TCFG_IOKEY_PORT                     ${IO_STATE.key.port} //IO按键的IO`);
+      L.push(`#define TCFG_IOKEY_ENABLE                   1           //IO按键`);
+    } else {
+      L.push(`#define TCFG_ADKEY_ENABLE       ${IO_STATE.key.enable?1:0}`);
+      L.push(`#define TCFG_ADKEY_PORT         ${ioToMacro(IO_STATE.key.port)}`);
+      L.push(`#define ADKEY_KEY_COUNT         ${IO_STATE.key.count}`);
+      L.push(`#define ADKEY_PULLUP_RESISTOR   ${IO_STATE.key.pullup}`);
+      IO_STATE.key.keys.forEach((k,i)=>{
+        L.push(`/* ${k.label}: 电阻 ${k.resistor}KΩ, 功能值 ${keyFuncToHex(k.funcs)} */`);
+        L.push(`#define ADKEY_KEY${i+1}_PULLDOWN_RESISTOR   ${k.resistor}`);
+        L.push(`#define ADKEY_KEY${i+1}_FUNC                ${keyFuncToHex(k.funcs)}`);
+      });
+      if(IO_STATE.key.keys.some(k => k.funcs && k.funcs.long === 1)){
+        L.push(`#define CONFIG_PRESS_LONG_KEY_POWERON                   //长按开关`);
+      }
+    }
+  }
+  L.push("");
+
+  /* ================= 麦克风 / 回采 ================= */
+  L.push("/* ================= 麦克风 / 回采 ================= */");
+  if(IO_STATE.mic.enable){
+    if(IO_STATE.mic.mode === "单麦"){
+      const g = IO_STATE.mic.singleGroup;
+      L.push(`#define MIC1                    ${MIC_NUM[g]}`);
+      L.push(`#define MIC2                    ${MIC_NUM[g]}`);
+    } else {
+      const g1 = IO_STATE.mic.dual[0];
+      const g2 = IO_STATE.mic.dual[1];
+      L.push(`#define MIC1                    ${MIC_NUM[g1]}`);
+      L.push(`#define MIC2                    ${MIC_NUM[g2]}`);
+    }
+  } else {
+    L.push(`#define MIC1                    1`);
+    L.push(`#define MIC2                    1`);
+  }
+  if(IO_STATE.echo.enable){
+    const g = IO_STATE.echo.group;
+    L.push(`#define MIC_AEC                 ${MIC_NUM[g]}`);
+  } else {
+    L.push(`#define MIC_AEC                 0`);
+  }
+  if(IO_STATE.mic.mode === "单麦"){
+    L.push(`#define AUDIO_RECORD_MIC_COUNT  1   //1单麦,2双麦`);
+  } else {
+    L.push(`#define AUDIO_RECORD_MIC_COUNT  2   //1单麦,2双麦`);
+  }
+  L.push("");
+
+  /* ================= DAC 输出 ================= */
+  L.push("/* ================= DAC 输出 ================= */");
+  L.push(`#define TCFG_DAC_MUTE_PORT           ${ioToMacro(IO_STATE.dac.muteIo)}`);
+  L.push(`#define TCFG_DAC_MUTE_VALUE          ${IO_STATE.dac.muteLevel}`);
+  L.push(`#define TCFG_DAC_AUTO_MUTE_ENABLE    ${IO_STATE.dac.autoMute}`);
+  L.push(`#define TCFG_DAC_DIFF_OUT_ENABLE     ${dacIsDiffOut()?1:0}`);
+  L.push(`#define TCFG_DAC_SOFT_CHANNEL_NUM    ${dacSoftChannelNum()}`);
+  L.push(`#define TCFG_DAC_HW_CHANNEL_BIT      (${dacHwChannelBit()})   //BIT(0):DACFL、 BIT(1):DACFR、 BIT(2):DACRL、 BIT(3):DACRR`);
+  L.push("");
+
+  /* ================= 充电检查 ================= */
+  L.push("/* ================= 充电检查 ================= */");
+  if(IO_STATE.charge.enable){
+    L.push(`#define TCFG_CHARING_STATUS_PORT      ${ioToMacro(IO_STATE.charge.fullDetIo)}`);
+    L.push(`#define TCFG_CHARGFULL_STATUS_PORT    ${ioToMacro(IO_STATE.charge.chargingDetIo)}`);
+  }
+  L.push("");
+
+  /* ================= 软件 IIC 接口 ================= */
+  L.push("/* ================= 软件 IIC 接口 ================= */");
+  if(IO_STATE.iic.enable){
+    IO_STATE.iic.list.forEach((it)=>{
+      if(it.enable){
+        const n = it.id.toUpperCase();
+        L.push(`#define TCFG_SW_${n}_SCL_PORT         ${ioToMacro(it.scl)}`);
+        L.push(`#define TCFG_SW_${n}_SDA_PORT         ${ioToMacro(it.sda)}`);
+        L.push(`#define TCFG_SW_${n}_DELAY            ${it.delay}`);
+      }
+    });
+  }
+  L.push("");
+
+  /* ================= 屏幕 SPI 接口 ================= */
+  L.push("/* ================= 屏幕 SPI 接口 ================= */");
+  if(IO_STATE.spi.enable){
+    const b = LCD_SPI_BUS[IO_STATE.spi.bus];
+    const m = b.name.match(/^SPI(\d)-([A-Z])$/i);
+    const spiNum = m ? m[1] : "1";
+    const spiPort = m ? m[2].toUpperCase() : "B";
+    const spiName = `spi${spiNum}`;
+    const spiMacro = `SPI${spiNum}`;
+	
+	L.push(`#define CONFIG_UI_ENABLE`);
+    L.push(`#define LCD_SPI_NAME             "${spiName}"`);
+    L.push(`#define ${spiMacro}_PORT             '${spiPort}'`);
+    L.push(`#define ${spiMacro}_SPEED           ${IO_STATE.spi.speed}`);
+	if(IO_STATE.spi.duplex === "全双工"){
+	  L.push(`#define ${spiMacro}_BIDIR_MODE      SPI_BIDIR_MODE`);
+    }
+    L.push(`#define LCD_SPI_DO_PORT             ${b.do}`);
+    L.push(`#define LCD_SPI_CLK_PORT            ${b.clk}`);
+    if(IO_STATE.spi.duplex === "全双工"){
+      L.push(`#define LCD_SPI_DI_PORT             ${b.di}`);
+    }
+    L.push(`#define LCD_SPI_CS_PORT             ${ioToMacro(IO_STATE.spi.cs)}`);
+    L.push(`#define LCD_SPI_RS_PORT             ${ioToMacro(IO_STATE.spi.rs)}`);
+    L.push(`#define LCD_SPI_TE_PORT             ${ioToMacro(IO_STATE.spi.te)}`);
+    L.push(`#define LCD_SPI_RST_PORT            ${ioToMacro(IO_STATE.spi.rst)}`);
+    L.push(`#define LCD_SPI_BL_PORT             ${ioToMacro(IO_STATE.spi.bl)}`);
+    L.push(`#define LCD_SPI_CS1_PORT            ${ioToMacro(IO_STATE.spi.cs1)}`);
+    if(IO_STATE.spi.touchEn){
+      L.push(`#define LCD_TOUCH_ENABLE            ${IO_STATE.spi.touchEn?1:0}`);
+      L.push(`#define LCD_TOUCH_IIC_NAME_NAME          "${IO_STATE.spi.touch}"`);
+      L.push(`#define LCD_TOUCH_INT_PORT          ${ioToMacro(IO_STATE.spi.touchInt)}`);
+      L.push(`#define LCD_TOUCH_RESET_PORT        ${ioToMacro(IO_STATE.spi.touchReset)}`);
+    } else {
+      L.push(`#define LCD_TOUCH_INT_PORT          -1`);
+      L.push(`#define LCD_TOUCH_RESET_PORT        -1`);
+	}
+	if(isUsed(IO_STATE.spi.power)){
+      L.push(`#define LCD_POWER_PORT              ${IO_STATE.spi.power}`);
+    }
+  }
+  L.push("");
+
+  /* ================= SDIO 配置 ================= */
+  L.push("/* ================= SDIO 配置（SD卡） ================= */");
+  if(IO_STATE.sdio.enable){
+    const pm = IO_STATE.sdio.port.match(/^SD(\d)-([A-Z])$/i);
+    const sdNum = pm ? pm[1] : "0";
+    const sdPort = pm ? pm[2].toUpperCase() : "A";
+    L.push(`#define TCFG_SD${sdNum}_ENABLE              1`);
+    L.push(`#define TCFG_SD_PORTS                       '${sdPort}'`);
+    L.push(`#define TCFG_SD_DAT_WIDTH                   ${IO_STATE.sdio.width}`);
+    L.push(`#define TCFG_SD_DET_MODE                    ${IO_STATE.sdio.detMode}`);
+    L.push(`#define TCFG_SD_DET_IO                      ${IO_STATE.sdio.detMode === "SD_IO_DECT" ? ioToMacro(IO_STATE.sdio.detIo) : "-1"}`);
+    L.push(`#define TCFG_SD_DET_IO_LEVEL                ${IO_STATE.sdio.detLevel}`);
+    L.push(`#define TCFG_SD_CLK                         ${IO_STATE.sdio.clk}`);
+  } else {
+    L.push(`#define TCFG_SD0_ENABLE         0`);
+    L.push(`#define TCFG_SD1_ENABLE         0`);
+  }
+  L.push("");
+
+  /* ================= SD卡播放模式 ================= */
+  L.push("/* ================= SD卡播放模式 ================= */");
+  if(IO_STATE.sdPlay.enable){
+    L.push(`#define CONFIG_SD_MUSIC_MODE_ENABLE`);
+    if(IO_STATE.sdPlay.autoPlay){
+      L.push(`#define CONFIG_SD_AUTO_ENABLE`);
+    }
+  }
+  L.push("");
+
+  /* ================= U盘播放 ================= */
+  L.push("/* ================= U盘播放 ================= */");
+  if(IO_STATE.udisk.enable){
+    L.push(`#define CONFIG_USB_DISK_MUSIC_MODE_ENABLE`);
+    if(IO_STATE.udisk.autoPlay){
+      L.push(`#define CONFIG_USB_DISK_AUTO_ENABLE`);
+    }
+  }
+  L.push("");
+
+   L.push("/* ================= 线路输入(AUX/linein)模式 ================= */");
+  if(IO_STATE.aux.enable){
+    L.push(`#define CONFIG_AUX_MUSIC_MODE_ENABLE`);
+    if(IO_STATE.aux.autoPlay){
+      L.push(`#define CONFIG_AUX_AUTO_ENABLE`);
+    }
+    if(isUsed(IO_STATE.aux.detIo)){
+      L.push(`#define TCFG_AUX_DET_PORT       ${IO_STATE.aux.detIo}`);
+    }
+    L.push(`#define AUX_CHANNEL             LADC_CH_${IO_STATE.aux.channel}`);
+  }
+
+  /* ================= 4G/LTE ================= */
+   L.push("/* ================= 4G/LTE 蜂窝网络 ================= */");
+  if(IO_STATE.lte.enable){
+    L.push(`#define DEFAULT_NET_CHANNEL     ${IO_STATE.lte.defaultNetChannel}   //默认出厂设置的网络模式：0-wifi模式，1-4G模式`);
+    L.push(`#define CONFIG_LTE_PHY_ENABLE   ${IO_STATE.lte.enable?1:0}`);
+    if(isUsed(IO_STATE.lte.power)){
+      L.push(`#define LTE_POWER_ONOFF_PORT    ${IO_STATE.lte.power}`);
+    }
+    if(lteNeedUsbSwitch() && isUsed(IO_STATE.lte.usbSwitch)){
+      L.push(`#define LTE_USB_SWITCH_PORT     ${IO_STATE.lte.usbSwitch}`);
+    }
+    L.push(`/* 支持的 4G 模组（仅显示）：${LTE_VENDORS.map(v=>v.name).join(" / ")} */`);
+  }
+
+  /* ================= WS2812 ================= */
+  L.push("/* ================= WS2812 灯带(UART2)================= */");
+  if(IO_STATE.ws2812.enable && !IO_STATE.ledPwm.enable){
+    L.push(`#define USED_WS2812B_SHOWN`);
+    L.push(`#define WS2812B_HW_UART_NUM                  2`);
+    let uart2Baud;
+    if(IO_STATE.ws2812.baudPreset === "3.3M") uart2Baud = 3333333;
+    else if(IO_STATE.ws2812.baudPreset === "2.5M") uart2Baud = 2500000;
+    else uart2Baud = Number(IO_STATE.ws2812.baudCustom) || 0;
+    L.push(`#define UART2_BUAD                           ${uart2Baud}`);
+    L.push(`#define WS2812B_LED_NUM                      ${IO_STATE.ws2812.ledNum}`);
+    {
+      const COLOR_MAP = { "红色":1, "橙色":2, "黄色":3, "绿色":4, "青色":5, "蓝色":6, "紫色":7 };
+      const c = IO_STATE.ws2812.defaultColor;
+      if(c && c !== IO_EMPTY && COLOR_MAP[c]){
+        L.push(`#define WS2812_DEFAULT_COLOR                 ${COLOR_MAP[c]} //红1、橙2、黄3、绿4、青5、蓝6、紫7`);
+      }
+    }
+    if(isUsed(IO_STATE.ws2812.tx)){
+      L.push(`#define WS2812_UART_TX_PORT                  ${IO_STATE.ws2812.tx}`);
+    }
+  }
+
+  /* ================= LED 呼吸灯 ================= */
+  L.push("/* ================= LED 呼吸灯 ================= */");
+  if(IO_STATE.ledPwm.enable && !IO_STATE.ws2812.enable){
+    if(isUsed(IO_STATE.ledPwm.port)){
+      L.push(`#define TCFG_LED_PWM0_PORT            ${IO_STATE.ledPwm.port}`);
+    }
+    L.push(`#define TCFG_LED_PWM0_CH              ${IO_STATE.ledPwm.ch}`);
+    L.push(`#define TCFG_LED_PWM0_FREQ            ${ledFreqValue()}`);
+  }
+
+  /* ================= USB 配置 ================= */
+  const usbConf = usbConflicts();
+  if(usbConf.length){
+    L.push("/* ⚠ USB 占用冲突 */");
+    usbConf.forEach(c=>L.push(`// ${c.iface} 被同时占用：${c.owners.join(" / ")}`));
+    L.push("");
+  }
+  const otgVal = computeUsbOtgVal();
+  if(otgVal !== null){
+    L.push("/* ================= USB OTG 接口配置 ================= */");
+    L.push(`/* 0x1-FUSB，0x2-HUSB，0x3-FUSB和HUSB；由 U盘/4G 的 USB 接口并集决定 */`);
+    L.push(`#define CONFIG_USB_OTG_EN_VAL   ${otgVal}`);
+    L.push("");
+  }
+
+  L.push(`#endif`);
+  return L.join("\n");
+}
+
+/* ============================================================
+ * 7. 抽屉 / tabs / 生成
+ * ============================================================ */
+const drawer=$("drawer"), output=$("output");
+$("btnCloseDrawer").onclick = ()=> drawer.classList.remove("open");
+drawer.addEventListener("click", e=>{ if(e.target===drawer) drawer.classList.remove("open"); });
+
+/* “复制”按钮的中央提示气泡 */
+function showCopyBubble(){
+  const bubble = $("copyBubble");
+  if(!bubble) return;
+  /* 移除原来的局部气泡显示逻辑，改为中央 toast 提示 */
+  toast("已复制");
+}
+
+$("btnCopy").onclick = async ()=>{
+  try{
+    await navigator.clipboard.writeText(output.value);
+  }catch{
+    output.select();
+    document.execCommand("copy");
+  }
+  showCopyBubble();
+};
+
+$("btnDownload").onclick = ()=>{
+  const blob = new Blob([output.value], {type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="board_open_dev_cfg.h"; a.click(); URL.revokeObjectURL(a.href); toast("已生成");
+};
+
+document.querySelectorAll(".tabs button").forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    $("tab-macro").classList.toggle("hidden", tab!=="macro");
+    $("tab-io").classList.toggle("hidden", tab!=="io");
+  };
+});
+$("chipSelect").onchange = e=>{
+  IO_STATE.chip = e.target.value;
+  const d = CHIP_DEFAULT[IO_STATE.chip];
+  IO_STATE.power.vcc33 = d.vcc33;
+  IO_STATE.power.iovdd = d.iovdd;
+  normalizeDacMode();
+  normalizeUsbIfs();
+  enforceWakeWordForChip(); 
+  renderIO();
+  renderMacro();
+};
+
+$("btnResetCfg").onclick = ()=>{
+  if(!confirm("确定要清除已保存的页面配置，并恢复默认吗？")) return;
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  location.reload();
+};
+
+$("btnGenHeaderTop").onclick = ()=>{
+  const badKey = validateMicGainParams();
+  if(badKey){
+    openTip(`麦克风/回采增益参数 <b>${esc(badKey)}</b> 格式错误，无法生成配置文件。<br><br>请按 <b>y = ax + b</b> 的格式填写，例如：<code>y = -0.5x + 80</code>。<br>支持省略 y=、空格，以及 a 为 +1/-1 的简写（如 <code>x + 5</code>）。`);
+    return;
+  }
+  const btName = MODULE_STATE.system.btName || "";
+  const btBytes = utf8ByteLength(btName);
+  if(btBytes > BT_NAME_MAX_BYTES){
+    openTip(`经典蓝牙名称 <b>${esc(btName)}</b> 共 <b>${btBytes}</b> 字节，超过 ${BT_NAME_MAX_BYTES} 字节限制（UTF-8 编码）。<br><br>请修改“系统配置 → 经典蓝牙名称”。`);
+    return;
+  }
+  const txt = genHeader();
+  output.value = txt;
+  drawer.classList.add("open");
+  toast("已生成 board_open_dev_cfg.h");
+};
+
+loadCfg();
+renderMacro();
+renderIO();
+</script>
+</body>
+</html>

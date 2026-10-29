@@ -3,8 +3,12 @@
 
 #ifdef CONFIG_BOARD_7911B8
 
+#ifndef __FLASH_SIZE__
 #define __FLASH_SIZE__    (1 * 1024 * 1024)
+#endif
+#ifndef __SDRAM_SIZE__
 #define __SDRAM_SIZE__    (0 * 1024 * 1024)
+#endif
 
 #define CONFIG_FLASH_FOUR_WIDTH_ENABLE                 //FLASH四线模式
 #undef CONFIG_VIDEO_ENABLE

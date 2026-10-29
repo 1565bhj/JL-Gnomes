@@ -474,10 +474,7 @@ static int net_music_dec_end(int is_force_stop)
     __this->total_num++;
     printf("->net_music play num = %d \n", __this->total_num);
     if (is_force_stop || __this->play_one) {
-        __this->total_num = 0;
-        __this->play_one = 0;
-        __this->play_next_mode = NULL;
-        return 0;
+        goto _stop;
     }
 
     if (__this->total_num <= MUSIC_PLAY_NUM) { //完整播放完成，自动播放30首关闭
@@ -502,6 +499,7 @@ _stop:
         __this->play_one = 0;
         __this->play_next_mode = NULL;
         music_buf_play_set_stop();
+        aisp_mic_gain_resum();
     }
     return 0;
 }
@@ -547,6 +545,7 @@ _stop:
         music_buf_play_set_stop();
         net_music_dec_stop();
         net_music_play_set_stop();
+        aisp_mic_gain_resum();
     }
     os_mutex_post(&__this->mutex);
     if (!__this->ai_server) {
@@ -681,6 +680,7 @@ static int __net_music_dec_file(void *file)
         lv_demo_switch_to_music_page(__this->play_next_mode);
     }
 #endif
+    aisp_mic_gain_suspend();
     return 0;
 
 __err:
@@ -1099,6 +1099,7 @@ static void dec_server_event_handler(int event, int time)
             lv_demo_switch_to_music_page(__this->play_next_mode);
         }
 #endif
+        aisp_mic_gain_suspend();
         break;
     case HTTP_REQ_NO_FILE:
         printf("net_music: HTTP_REQ_NO_FILE ERR\n");

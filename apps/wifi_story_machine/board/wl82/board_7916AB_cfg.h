@@ -9,6 +9,8 @@
 
 #ifndef __FLASH_SIZE__
 #define __FLASH_SIZE__    (8 * 1024 * 1024)
+#endif
+#ifndef __SDRAM_SIZE__
 #define __SDRAM_SIZE__    (8 * 1024 * 1024)
 #endif
 

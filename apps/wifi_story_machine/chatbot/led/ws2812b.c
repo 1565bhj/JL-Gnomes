@@ -10,21 +10,27 @@
 #ifdef USED_WS2812B_SHOWN
 
 //注意：硬件需要加反相器输出到WS2812的DIN引脚
-#define WS2812B_SHOWN_LED_FFT   1 //1开启FFT显示
+#define WS2812B_SHOWN_LED_FFT   0 //1开启FFT显示
 #define WS2812B_SHOWN_TASK_NAME "ws_task"
 
-#define COLOR_RGB_VALUE_MAXC    255 //最大颜色值（默认最大255）
-#define COLOR_RGB_STEP          5 //七彩颜色步长(每个灯珠一样颜色)
-#define COLOR_RGB_SPEED         10 //七彩颜色速度(每个灯珠一样颜色)
-#define ONE_COLOR_AUTO_CHANGE   0   //单色自动切换颜色，MODE_ONE_COLOR_CYC有效
-#define COLOR_RAINBOW_RGB_SPEED     10 //七彩颜色速度(每个灯珠不同样颜色)
-#define GRADIENT_SPEED 8        // 渐变速度（1-255，值越大越快）
+#define COLOR_RGB_VALUE_MAX            255 //最大颜色值（默认最大255）
+#define COLOR_RGB_STEP                  2   //七彩颜色步长(每个灯珠一样颜色)
+#define COLOR_RGB_SPEED                 5  //七彩颜色速度(每个灯珠一样颜色)
+#define ONE_COLOR_AUTO_CHANGE           1   //单色自动切换颜色，MODE_ONE_COLOR_CYC有效
+#define ONE_COLOR_AUTO_CHANGE_SPEED     20  //单色自动切换颜色，MODE_ONE_COLOR_CYC有效
+#define COLOR_RAINBOW_RGB_SPEED         10  //七彩颜色速度(每个灯珠不同样颜色)
+#define GRADIENT_SPEED                  8   // 渐变速度（1-255，值越大越快）
 
-#ifndef WS2812B_SHOWN_LED_NUM
-#define WS2812B_SHOWN_LED_NUM 12
-#endif /* WS2812B_SHOWN_LED_NUM */
+#define MODE_ONE_CLICK_COLOR_ENABLE         //单色显示
 
-#define FFT_LED_L   WS2812B_SHOWN_LED_NUM           //列-频率区间
+#define BRIGHTNESS_PERCENT              50  //亮度百分比
+#define BRIGHT_PERCENT(v,p)             ((v)*(p)/100)
+
+#ifndef WS2812B_LED_NUM
+#define WS2812B_LED_NUM 12
+#endif /* WS2812B_LED_NUM */
+
+#define FFT_LED_L   WS2812B_LED_NUM           //列-频率区间
 #define FFT_LED_H   20          //行-能量值
 
 #define RGB_STEP    5
@@ -47,10 +53,12 @@ static struct ws2812_info {
     char on;
     char percent;
     OS_MUTEX mutex;
-    led_gradient_state_t led_states[WS2812B_SHOWN_LED_NUM];
-    uint8_t rgb_data[WS2812B_SHOWN_LED_NUM * 3];
-    int current_mode;
+    led_gradient_state_t led_states[WS2812B_LED_NUM];
+    uint8_t rgb_data[WS2812B_LED_NUM * 3];
+    unsigned int set_mode;
+    unsigned int current_mode;
     int one_color_mode;
+    int one_color_speed;
     void (*current_mode_func)(void);
 } WS_INFO;
 
@@ -61,6 +69,7 @@ static struct ws2812_fft {
 
 enum {
     WS2812_SHOWN_INIT = 0,
+    WS2812_SHOWN_MODE,
     WS2812_SHOWN_FREQ_SPEC,
     WS2812_SHOWN_SMILE_FACE,        //笑脸显示
     WS2812_SHOWN_SMILE_FACE_CLEAR,  //清空归零示
@@ -68,44 +77,154 @@ enum {
 };
 typedef enum rgb_type {
     MODE_BLACK  = 0x000000,
-    MODE_RED    = COLOR_RGB_VALUE_MAXC << 16,///0xFF0000,
-    MODE_YELLOW = (COLOR_RGB_VALUE_MAXC << 16) | (COLOR_RGB_VALUE_MAXC << 8), //0xFFFF00,
-    MODE_GREEN  = COLOR_RGB_VALUE_MAXC << 8,///0x00FF00,
-    MODE_CYAN   = (COLOR_RGB_VALUE_MAXC << 8) | COLOR_RGB_VALUE_MAXC, //0x00FFFF,
-    MODE_BLUE   = COLOR_RGB_VALUE_MAXC,//0x0000FF,
-    MODE_PUR    = (COLOR_RGB_VALUE_MAXC << 16) | COLOR_RGB_VALUE_MAXC, //0xFF00FF,
-    MODE_WIHTE  = (COLOR_RGB_VALUE_MAXC << 16) | (COLOR_RGB_VALUE_MAXC << 8) | COLOR_RGB_VALUE_MAXC, //0xFFFFFF,
+    MODE_RED    = COLOR_RGB_VALUE_MAX << 16,///0xFF0000,
+    MODE_ORANGE = (COLOR_RGB_VALUE_MAX << 16) | ((COLOR_RGB_VALUE_MAX / 2) << 8), //0xFFFF00,
+    MODE_YELLOW = (COLOR_RGB_VALUE_MAX << 16) | (COLOR_RGB_VALUE_MAX << 8), //0xFFFF00,
+    MODE_GREEN  = COLOR_RGB_VALUE_MAX << 8,///0x00FF00,
+    MODE_CYAN   = (COLOR_RGB_VALUE_MAX << 8) | COLOR_RGB_VALUE_MAX, //0x00FFFF,
+    MODE_BLUE   = COLOR_RGB_VALUE_MAX,//0x0000FF,
+    MODE_PUR    = (COLOR_RGB_VALUE_MAX << 16) | COLOR_RGB_VALUE_MAX, //0xFF00FF,
+    MODE_WIHTE  = (COLOR_RGB_VALUE_MAX << 16) | (COLOR_RGB_VALUE_MAX << 8) | COLOR_RGB_VALUE_MAX, //0xFFFFFF,
 } RGB_TYPE;
 // 彩虹颜色定义 (红黄绿青蓝紫)
 #define RAINBOW_COLORS_COUNT 6
 static const uint8_t rainbow_colors[RAINBOW_COLORS_COUNT][3] = {
-    {COLOR_RGB_VALUE_MAXC, 0, 0},     // 红
-    {COLOR_RGB_VALUE_MAXC, COLOR_RGB_VALUE_MAXC, 0},   // 黄
-    {0, COLOR_RGB_VALUE_MAXC, 0},     // 绿
-    {0, COLOR_RGB_VALUE_MAXC, COLOR_RGB_VALUE_MAXC},   // 青
-    {0, 0, COLOR_RGB_VALUE_MAXC},     // 蓝
-    {COLOR_RGB_VALUE_MAXC, 0, COLOR_RGB_VALUE_MAXC}    // 紫
+    {COLOR_RGB_VALUE_MAX, 0, 0},     // 红
+    {COLOR_RGB_VALUE_MAX, COLOR_RGB_VALUE_MAX, 0},   // 黄
+    {0, COLOR_RGB_VALUE_MAX, 0},     // 绿
+    {0, COLOR_RGB_VALUE_MAX, COLOR_RGB_VALUE_MAX},   // 青
+    {0, 0, COLOR_RGB_VALUE_MAX},     // 蓝
+    {COLOR_RGB_VALUE_MAX, 0, COLOR_RGB_VALUE_MAX}    // 紫
 };
 // 模式枚举
 typedef enum {
     MODE_NOME = 0,//静态炫彩渐变
-    MODE_STATIC_RAINBOW = 1,//静态炫彩渐变
-    MODE_FLOWING_RAINBOW = 2,//流水炫彩渐变
-    MODE_ALL_GRADIENT = 3, //静态单色逐色炫彩渐变
-    MODE_ONE_COLOR_GRADIENT = 4,//静态单色逐色炫彩
-    MODE_ONE_COLOR_CYC = 5,//单色自动循环显示
+    MODE_WIHTE35_CYC,//单色自动循环显示
+    MODE_WIHTE70_CYC,//单色自动循环显示
+    MODE_WIHTE100_CYC,//单色自动循环显示
+    MODE_ONE_COLOR_GRADIENT,//静态单色逐色炫彩
+    MODE_ONE_COLOR_CYC,//单色自动循环显示
+#ifdef MODE_ONE_CLICK_COLOR_ENABLE
+    MODE_ONE_COLOR_RED,//单色显示
+    MODE_ONE_COLOR_ORANGE,//单色显示
+    MODE_ONE_COLOR_YELLOW,//单色显示
+    MODE_ONE_COLOR_GREEN,//单色显示
+    MODE_ONE_COLOR_CYAN,//单色显示
+    MODE_ONE_COLOR_BLUE,//单色显示
+    MODE_ONE_COLOR_PUR,//单色显示
+#endif
+    MODE_ALL_GRADIENT, //静态单色逐色炫彩渐变
+    MODE_FLOWING_7COLOR_CYC,//7色自动循环显示
+    MODE_FLOWING_RAINBOW,//流水炫彩渐变
+    MODE_STATIC_RAINBOW,//静态炫彩渐变
+    MODE_COLOR_MODE_MAX,
 } LedMode;
 
 #ifdef WS2812B_HW_UART_NUM
-static unsigned char ws_rgb_buf[8 * WS2812B_SHOWN_LED_NUM] sec(.sram) ALIGNED(32) = {0};
+static unsigned char ws_rgb_buf[8 * WS2812B_LED_NUM] sec(.sram) ALIGNED(32) = {0};
 //用于串口接收缓存数据的循环buf
 static u8 uart_buf[1024] __attribute__((aligned(32)));
 #else
-static unsigned char ws_rgb_buf[9 * WS2812B_SHOWN_LED_NUM] sec(.sram) ALIGNED(32) = {0};
+static unsigned char ws_rgb_buf[9 * WS2812B_LED_NUM] sec(.sram) ALIGNED(32) = {0};
 #endif /*  WS2812B_HW_UART_NUM */
 
 int led_eya_get_work(void);
 static void ws2812_shown_clear(void);
+
+
+static const char *ws2812_cmd_open[] = {
+    "打开彩灯", "打开灯光", "开灯",
+#ifdef CONFIG_KWS_ENGLISH
+    "Turn on light", "turn on light",
+#endif
+    NULL,
+};
+static const char *ws2812_cmd_close[] = {
+    "关闭彩灯", "关闭灯光", "关灯",
+#ifdef CONFIG_KWS_ENGLISH
+    "Turn off light", "turn off light",
+#endif
+    NULL,
+};
+static const char *ws2812_cmd_mode[] = {
+    "变颜色", "变色", "改变颜色", "切换颜色", "换颜色", "换色",
+#ifdef CONFIG_KWS_ENGLISH
+    "Change color", "Change light color",
+    "change color", "change light color",
+#endif
+    NULL,
+};
+#ifdef MODE_ONE_CLICK_COLOR_ENABLE
+static const char *ws2812_cmd_mode_color[] = {
+    "红色", "橙色", "黄色", "绿色", "浅蓝色", "蓝色", "紫色",
+    NULL,
+};
+static const char *ws2812_cmd_mode_change[] = {
+    "变", "改", "切换", "换",
+#ifdef CONFIG_KWS_ENGLISH
+    "Change color", "Change light color",
+    "change color", "change light color",
+#endif
+    NULL,
+};
+#endif
+
+void ws2812_shown_on(void);
+void ws2812_shown_off(void);
+void ws2812_shown_mode_auto(void);
+void ws2812_shown_mode(int mode, int percent);
+
+int ws2812_cmd_callback(char *word)
+{
+    int close_type = 0;
+    int i, j;
+    for (i = 0; ws2812_cmd_open[i] != NULL; i++) { //开启
+        if (strstr(word, ws2812_cmd_open[i]) && strlen(word) <= strlen(ws2812_cmd_open[i]) + 6) {
+            ws2812_shown_on();
+            close_type = 1;
+            puts("-> led_close\n");
+            goto exit;
+        }
+    }
+    for (i = 0; ws2812_cmd_close[i] != NULL; i++) { //关闭
+        if (strstr(word, ws2812_cmd_close[i]) && strlen(word) <= strlen(ws2812_cmd_close[i]) + 6) {
+            ws2812_shown_off();
+            close_type = 1;
+            puts("-> led_open\n");
+            goto exit;
+        }
+    }
+    for (i = 0; ws2812_cmd_mode[i] != NULL; i++) { //变色
+        if (strstr(word, ws2812_cmd_mode[i]) && strlen(word) <= strlen(ws2812_cmd_mode[i]) + 6) {
+            ws2812_shown_mode_auto();
+            close_type = 1;
+            puts("-> led_open\n");
+            goto exit;
+        }
+    }
+#ifdef MODE_ONE_CLICK_COLOR_ENABLE
+    for (i = 0; ws2812_cmd_mode_change[i] != NULL; i++) { //变色
+        char *str = strstr(word, ws2812_cmd_mode_change[i]);
+        if (str) {
+            for (j = 0; ws2812_cmd_mode_color[j] != NULL; j++) { //变色
+                if (strstr(str, ws2812_cmd_mode_color[j]) && strlen(str) <= strlen(ws2812_cmd_mode_color[j]) + 6) {
+                    ws2812_shown_on();
+                    ws2812_shown_mode(MODE_ONE_COLOR_RED + j, 0);
+                    close_type = 1;
+                    puts("-> led_color\n");
+                    goto exit;
+                }
+            }
+        }
+    }
+#endif
+    return close_type;
+exit:
+    music_play_anser_OK();//好的
+    music_play_waite();//等提示音播完了关闭设备
+    return close_type;
+}
+
 
 #ifdef WS2812B_HW_UART_NUM
 static int ws2812_uart_init(void)
@@ -154,7 +273,8 @@ static int ws2812_uart_init(void)
     if (UART_DATA_TX() != (u8)0xFF) {
         gpio_set_hd(UART_DATA_TX(), 1);//WS2812需要开启强驱，防止部分的反相器识别不到
     }
-#ifdef WS2812B_HW_UART_TX_PORT
+#ifdef WS2812_UART_TX_PORT
+    gpio_direction_output(WS2812_UART_TX_PORT, 1);
     char out, die;
     out = die = 0;
     switch (UART_DATA_OUTCH()) {
@@ -182,10 +302,10 @@ static int ws2812_uart_init(void)
         JL_IOMAP->CON3 |= (UART_DATA_OUTCH_MAP_SET() << 28);
         break;
     }
-    gpio_set_pull_down(WS2812B_HW_UART_TX_PORT, 1);
-    gpio_set_pull_up(WS2812B_HW_UART_TX_PORT, 1);
-    gpio_direction_output(WS2812B_HW_UART_TX_PORT, out);
-    gpio_set_die(WS2812B_HW_UART_TX_PORT, die);
+    gpio_set_pull_down(WS2812_UART_TX_PORT, 1);
+    gpio_set_pull_up(WS2812_UART_TX_PORT, 1);
+    gpio_direction_output(WS2812_UART_TX_PORT, out);
+    gpio_set_die(WS2812_UART_TX_PORT, die);
 #endif
 
     /* 4 . 使能特殊串口,启动收发数据 */
@@ -545,9 +665,9 @@ static void ws2812_shown_face_auto_led(char on)
 {
     unsigned char energy_num_data[FFT_LED_L] = {0};
     if (on) {
-        unsigned char enn = rand() % COLOR_RGB_VALUE_MAXC;
+        unsigned char enn = rand() % COLOR_RGB_VALUE_MAX;
         while (enn < 128) {
-            enn = rand() % COLOR_RGB_VALUE_MAXC;
+            enn = rand() % COLOR_RGB_VALUE_MAX;
         }
         for (int i = 0; i < FFT_LED_L; i++) {
             energy_num_data[i] = enn;
@@ -570,7 +690,7 @@ static void ws2812_shown_face_breath_led(char on)
 {
     unsigned char r, g, b;
     unsigned char *buf = ws_rgb_buf;
-    int energy = COLOR_RGB_VALUE_MAXC;
+    int energy = COLOR_RGB_VALUE_MAX;
     memset(ws_rgb_buf, 0, sizeof(ws_rgb_buf));
     int cyc = 1;
     if (!on) {
@@ -704,28 +824,28 @@ static void WS2812_Update(void)
 // 设置单个LED颜色
 static void set_led_color(uint16_t index, uint8_t r, uint8_t g, uint8_t b)
 {
-    if (index >= WS2812B_SHOWN_LED_NUM) {
+    if (index >= WS2812B_LED_NUM) {
         return;
     }
 
-    WS_INFO.rgb_data[index * 3] = r;     // 红色
-    WS_INFO.rgb_data[index * 3 + 1] = g; // 绿色
-    WS_INFO.rgb_data[index * 3 + 2] = b; // 蓝色
+    WS_INFO.rgb_data[index * 3] = BRIGHT_PERCENT(r, WS_INFO.percent);     // 红色
+    WS_INFO.rgb_data[index * 3 + 1] = BRIGHT_PERCENT(g, WS_INFO.percent); // 绿色
+    WS_INFO.rgb_data[index * 3 + 2] = BRIGHT_PERCENT(b, WS_INFO.percent); // 蓝色
 }
 // 颜色混合函数
 static uint8_t color_blend(uint8_t color1, uint8_t color2, uint16_t factor)
 {
     // factor范围: 0-255, 0=完全color1, 255=完全color2
-    uint16_t result = (color1 * (COLOR_RGB_VALUE_MAXC - factor) + color2 * factor) / COLOR_RGB_VALUE_MAXC;
-    return (uint8_t)(result > COLOR_RGB_VALUE_MAXC ? COLOR_RGB_VALUE_MAXC : result);
+    uint16_t result = (color1 * (COLOR_RGB_VALUE_MAX - factor) + color2 * factor) / COLOR_RGB_VALUE_MAX;
+    return (uint8_t)(result > COLOR_RGB_VALUE_MAX ? COLOR_RGB_VALUE_MAX : result);
 }
 
 // 设置初始颜色分布（从左到右的红黄绿青蓝紫）
 static void ws2812_set_initial_color_distribution(void)
 {
-    for (uint16_t i = 0; i < WS2812B_SHOWN_LED_NUM; i++) {
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
         // 计算每个LED应该显示的颜色索引
-        uint8_t color_index = (i * RAINBOW_COLORS_COUNT) / WS2812B_SHOWN_LED_NUM;
+        uint8_t color_index = (i * RAINBOW_COLORS_COUNT) / WS2812B_LED_NUM;
 
         // 设置LED的初始颜色
         set_led_color(i,
@@ -739,9 +859,9 @@ static void ws2812_set_initial_color_distribution(void)
 // 初始化LED渐变状态
 static void ws2812_init_led_gradient_states(void)
 {
-    for (uint16_t i = 0; i < WS2812B_SHOWN_LED_NUM; i++) {
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
         // 每个LED从不同的颜色开始，创建彩虹分布效果
-        WS_INFO.led_states[i].current_color_index = (i * RAINBOW_COLORS_COUNT) / WS2812B_SHOWN_LED_NUM;
+        WS_INFO.led_states[i].current_color_index = (i * RAINBOW_COLORS_COUNT) / WS2812B_LED_NUM;
         WS_INFO.led_states[i].next_color_index = (WS_INFO.led_states[i].current_color_index + 1) % RAINBOW_COLORS_COUNT;
         WS_INFO.led_states[i].blend_factor = 0;
         WS_INFO.led_states[i].direction = 0; // 正向渐变
@@ -750,7 +870,7 @@ static void ws2812_init_led_gradient_states(void)
 // 单向渐变版本（只从当前颜色渐变到下一个颜色）
 static void update_led_gradient_simple(uint16_t led_index)
 {
-    if (led_index >= WS2812B_SHOWN_LED_NUM) {
+    if (led_index >= WS2812B_LED_NUM) {
         return;
     }
 
@@ -759,7 +879,7 @@ static void update_led_gradient_simple(uint16_t led_index)
     // 更新混合因子（单向渐变）
     state->blend_factor += GRADIENT_SPEED;
 
-    if (state->blend_factor >= COLOR_RGB_VALUE_MAXC) {
+    if (state->blend_factor >= COLOR_RGB_VALUE_MAX) {
         // 渐变完成，切换到下一个颜色对
         state->blend_factor = 0;
         state->current_color_index = state->next_color_index;
@@ -792,7 +912,7 @@ static void ws2812_update_all_gradient(void)
         // 初始化LED渐变状态
         ws2812_init_led_gradient_states();
     }
-    for (uint16_t i = 0; i < WS2812B_SHOWN_LED_NUM; i++) {
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
         update_led_gradient_simple(i);
     }
     WS2812_Update();
@@ -802,9 +922,9 @@ static void ws2812_update_all_gradient(void)
 static void ws2812_rainbow_static(void)
 {
     WS_INFO.current_mode = MODE_STATIC_RAINBOW;
-    for (uint16_t i = 0; i < WS2812B_SHOWN_LED_NUM; i++) {
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
         // 计算颜色索引
-        float position = (float)i / WS2812B_SHOWN_LED_NUM * RAINBOW_COLORS_COUNT;
+        float position = (float)i / WS2812B_LED_NUM * RAINBOW_COLORS_COUNT;
         int color_index1 = (int)position % RAINBOW_COLORS_COUNT;
         int color_index2 = (color_index1 + 1) % RAINBOW_COLORS_COUNT;
         float ratio = position - (int)position;
@@ -820,18 +940,19 @@ static void ws2812_rainbow_static(void)
         set_led_color(i, r, g, b);
     }
     WS2812_Update();
-    os_time_dly(COLOR_RAINBOW_RGB_SPEED * 10);
+    os_time_dly(COLOR_RAINBOW_RGB_SPEED);
 }
 // 彩虹流水效果
 static void ws2812_rainbow_flow(void)
 {
     static uint8_t offset = 0;
+    static uint8_t offset_cnt = 0;
     if (WS_INFO.current_mode != MODE_FLOWING_RAINBOW) {
         WS_INFO.current_mode = MODE_FLOWING_RAINBOW;
         offset = 0;
     }
 
-    for (uint16_t i = 0; i < WS2812B_SHOWN_LED_NUM; i++) {
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
         // 计算颜色索引（带偏移量）
         uint8_t color_index = (i + offset) % RAINBOW_COLORS_COUNT;
         set_led_color(i,
@@ -841,10 +962,75 @@ static void ws2812_rainbow_flow(void)
     }
 
     WS2812_Update();
-    offset = (offset + 1) % RAINBOW_COLORS_COUNT;
-    os_time_dly(COLOR_RAINBOW_RGB_SPEED);
+    if (++offset_cnt % 3 == 0) {
+        offset = (offset + 1) % RAINBOW_COLORS_COUNT;
+    }
+    os_time_dly(COLOR_RAINBOW_RGB_SPEED / 2);
 }
-static void ws2812_shown_one_color_auto(void)//单独颜色，亮度设置：brightness_percent 0 -100
+
+static void ws2812_shown_one_color_set(void)
+{
+    char *rgb_buffer = ws_rgb_buf;
+    unsigned char color_r = 0;
+    unsigned char color_g = 0;
+    unsigned char color_b = 0;
+
+    switch (WS_INFO.one_color_mode) {
+    case MODE_WIHTE:
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = COLOR_RGB_VALUE_MAX;
+        break;
+    case MODE_BLACK:
+        color_r = 0;
+        color_g = 0;
+        color_b = 0;
+        break;
+    case MODE_RED:
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = 0;
+        color_b = 0;
+        break;
+    case MODE_ORANGE:
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = COLOR_RGB_VALUE_MAX / 2;
+        color_b = 0;
+        break;
+    case MODE_YELLOW:
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = 0;
+        break;
+    case MODE_GREEN:
+        color_r = 0;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = 0;
+        break;
+    case MODE_CYAN:
+        color_r = 0;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = COLOR_RGB_VALUE_MAX;
+        break;
+    case MODE_BLUE:
+        color_r = 0;
+        color_g = 0;
+        color_b = COLOR_RGB_VALUE_MAX;
+        break;
+    case MODE_PUR:
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = 0;
+        color_b = COLOR_RGB_VALUE_MAX;
+        break;
+    default:
+        break;
+    }
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
+        set_led_color(i, color_r, color_g, color_b);
+    }
+    WS2812_Update();
+}
+
+static void ws2812_shown_one_color_auto()//单独颜色，亮度设置：brightness_percent 0 -100
 {
     if (WS_INFO.current_mode != MODE_ONE_COLOR_CYC) {
         WS_INFO.current_mode = MODE_ONE_COLOR_CYC;
@@ -855,86 +1041,108 @@ static void ws2812_shown_one_color_auto(void)//单独颜色，亮度设置：bri
     unsigned char color_g = 0;
     unsigned char color_b = 0;
 
-#define BRIGHT_PERCENT(v,p) ((v)*(p)/100)
     switch (WS_INFO.one_color_mode) {
     case MODE_WIHTE:
-        color_r = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = COLOR_RGB_VALUE_MAX;
         break;
     case MODE_BLACK:
-        color_r = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(0, WS_INFO.percent);
+        color_r = 0;
+        color_g = 0;
+        color_b = 0;
         break;
     case MODE_RED:
-        color_r = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(0, WS_INFO.percent);
-        WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_YELLOW : WS_INFO.one_color_mode;
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = 0;
+        color_b = 0;
+        if (ONE_COLOR_AUTO_CHANGE && ++WS_INFO.one_color_speed % ONE_COLOR_AUTO_CHANGE_SPEED == 0) {
+            WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_ORANGE : WS_INFO.one_color_mode;
+        }
+        break;
+    case MODE_ORANGE:
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = COLOR_RGB_VALUE_MAX / 2;
+        color_b = 0;
+        if (ONE_COLOR_AUTO_CHANGE && ++WS_INFO.one_color_speed % ONE_COLOR_AUTO_CHANGE_SPEED == 0) {
+            WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_YELLOW : WS_INFO.one_color_mode;
+        }
         break;
     case MODE_YELLOW:
-        color_r = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(0, WS_INFO.percent);
-        WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_GREEN : WS_INFO.one_color_mode;
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = 0;
+        if (ONE_COLOR_AUTO_CHANGE && ++WS_INFO.one_color_speed % ONE_COLOR_AUTO_CHANGE_SPEED == 0) {
+            WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_GREEN : WS_INFO.one_color_mode;
+        }
         break;
     case MODE_GREEN:
-        color_r = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(0, WS_INFO.percent);
-        WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_CYAN : WS_INFO.one_color_mode;
+        color_r = 0;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = 0;
+        if (ONE_COLOR_AUTO_CHANGE && ++WS_INFO.one_color_speed % ONE_COLOR_AUTO_CHANGE_SPEED == 0) {
+            WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_CYAN : WS_INFO.one_color_mode;
+        }
         break;
     case MODE_CYAN:
-        color_r = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_BLUE : WS_INFO.one_color_mode;
+        color_r = 0;
+        color_g = COLOR_RGB_VALUE_MAX;
+        color_b = COLOR_RGB_VALUE_MAX;
+        if (ONE_COLOR_AUTO_CHANGE && ++WS_INFO.one_color_speed % ONE_COLOR_AUTO_CHANGE_SPEED == 0) {
+            WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_BLUE : WS_INFO.one_color_mode;
+        }
         break;
     case MODE_BLUE:
-        color_r = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_PUR : WS_INFO.one_color_mode;
+        color_r = 0;
+        color_g = 0;
+        color_b = COLOR_RGB_VALUE_MAX;
+        if (ONE_COLOR_AUTO_CHANGE && ++WS_INFO.one_color_speed % ONE_COLOR_AUTO_CHANGE_SPEED == 0) {
+            WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_PUR : WS_INFO.one_color_mode;
+        }
         break;
     case MODE_PUR:
-        color_r = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        color_g = BRIGHT_PERCENT(0, WS_INFO.percent);
-        color_b = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAXC, WS_INFO.percent);
-        WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_RED : WS_INFO.one_color_mode;
+        color_r = COLOR_RGB_VALUE_MAX;
+        color_g = 0;
+        color_b = COLOR_RGB_VALUE_MAX;
+        if (ONE_COLOR_AUTO_CHANGE && ++WS_INFO.one_color_speed % ONE_COLOR_AUTO_CHANGE_SPEED == 0) {
+            WS_INFO.one_color_mode = ONE_COLOR_AUTO_CHANGE ? MODE_RED : WS_INFO.one_color_mode;
+        }
+        break;
+    default:
         break;
     }
-    for (uint16_t i = 0; i < WS2812B_SHOWN_LED_NUM; i++) {
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
         set_led_color(i, color_r, color_g, color_b);
     }
     WS2812_Update();
     os_time_dly(COLOR_RGB_SPEED);
 }
+
 static void ws2812_shown_one_color_gradient(void)//所有灯珠绚丽彩灯
 {
     char *rgb_buffer = ws_rgb_buf;
-    static unsigned char color_r = COLOR_RGB_VALUE_MAXC;//初始化为红色
+    static unsigned char color_r = 0;//初始化为红色
     static unsigned char color_g = 0;//初始化为0
     static unsigned char color_b = 0;//初始化为0
-    static unsigned int last_mode = MODE_RED;//初始化为红色,color_r = 255
+    static unsigned int last_mode = MODE_BLACK;//初始化为红色开始,color_r = 0 - 255
 
     if (WS_INFO.current_mode != MODE_ONE_COLOR_GRADIENT) {
         WS_INFO.current_mode = MODE_ONE_COLOR_GRADIENT;
-        color_r = COLOR_RGB_VALUE_MAXC;
+        color_r = COLOR_RGB_VALUE_MAX;
         color_g = color_b = 0;
     }
     switch (last_mode) {
-    case MODE_WIHTE:
+    case MODE_BLACK:
         color_r += COLOR_RGB_STEP;
-        if (color_r >= (COLOR_RGB_VALUE_MAXC - COLOR_RGB_STEP)) {
-            color_r = COLOR_RGB_VALUE_MAXC;
+        if (color_r >= (COLOR_RGB_VALUE_MAX - COLOR_RGB_STEP)) {
+            color_r = COLOR_RGB_VALUE_MAX;
             last_mode = MODE_RED;
         }
         break;
     case MODE_RED:
         color_g += COLOR_RGB_STEP;
-        if (color_g >= (COLOR_RGB_VALUE_MAXC - COLOR_RGB_STEP)) {
-            color_g = COLOR_RGB_VALUE_MAXC;
+        if (color_g >= (COLOR_RGB_VALUE_MAX - COLOR_RGB_STEP)) {
+            color_g = COLOR_RGB_VALUE_MAX;
             last_mode = MODE_YELLOW;
         }
         break;
@@ -947,8 +1155,8 @@ static void ws2812_shown_one_color_gradient(void)//所有灯珠绚丽彩灯
         break;
     case MODE_GREEN:
         color_b += COLOR_RGB_STEP;
-        if (color_b >= (COLOR_RGB_VALUE_MAXC - COLOR_RGB_STEP)) {
-            color_b = COLOR_RGB_VALUE_MAXC;
+        if (color_b >= (COLOR_RGB_VALUE_MAX - COLOR_RGB_STEP)) {
+            color_b = COLOR_RGB_VALUE_MAX;
             last_mode = MODE_CYAN;
         }
         break;
@@ -961,20 +1169,112 @@ static void ws2812_shown_one_color_gradient(void)//所有灯珠绚丽彩灯
         break;
     case MODE_BLUE:
         color_r += COLOR_RGB_STEP;
-        if (color_r >= (COLOR_RGB_VALUE_MAXC - COLOR_RGB_STEP)) {
-            color_r = COLOR_RGB_VALUE_MAXC;
+        if (color_r >= (COLOR_RGB_VALUE_MAX - COLOR_RGB_STEP)) {
+            color_r = COLOR_RGB_VALUE_MAX;
             last_mode = MODE_PUR;
         }
     case MODE_PUR:
         color_b -= COLOR_RGB_STEP;
         if (color_b <= COLOR_RGB_STEP) {
             color_b = 0;
-            last_mode = MODE_RED;
+            last_mode = MODE_WIHTE;
+        }
+        break;
+    case MODE_WIHTE:
+        color_r -= COLOR_RGB_STEP;
+        if (color_r <= COLOR_RGB_STEP) {
+            color_r = 0;
+            last_mode = MODE_BLACK;
         }
         break;
     }
-    for (uint16_t i = 0; i < WS2812B_SHOWN_LED_NUM; i++) {
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
         set_led_color(i, color_r, color_g, color_b);
+    }
+    WS2812_Update();
+    os_time_dly(COLOR_RGB_SPEED);
+}
+
+// 均分7彩 + 颜色右移循环
+// 将 LED 均分为 7 段，每段一种彩虹色，每次调用整体向右平移一个灯位
+static void ws2812_group_gradient_cycle(void)
+{
+    // 7 色彩虹表：红、橙、黄、绿、青、蓝、紫
+    static const uint8_t rainbow7[7][3] = {
+        {COLOR_RGB_VALUE_MAX, 0,                     0},                   // 红
+        {COLOR_RGB_VALUE_MAX, COLOR_RGB_VALUE_MAX / 2, 0},                 // 橙
+        {COLOR_RGB_VALUE_MAX, COLOR_RGB_VALUE_MAX,   0},                   // 黄
+        {0,                   COLOR_RGB_VALUE_MAX,   0},                   // 绿
+        {0,                   COLOR_RGB_VALUE_MAX,   COLOR_RGB_VALUE_MAX}, // 青
+        {0,                   0,                     COLOR_RGB_VALUE_MAX}, // 蓝
+        {COLOR_RGB_VALUE_MAX, 0,                     COLOR_RGB_VALUE_MAX}, // 紫
+    };
+
+    static uint16_t offset = 0;   // 平移偏移量，跨调用保持
+
+    WS_INFO.current_mode = MODE_STATIC_RAINBOW;
+
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
+        // 向右平移：每个灯珠取"左边 offset 位"的颜色
+        // 若想向左平移，改为 (i + WS2812B_LED_NUM - offset) % WS2812B_LED_NUM
+        uint16_t pos = (i + offset) % WS2812B_LED_NUM;
+
+        // 将 pos 映射到 0~6 的段索引（均分 7 段）
+        uint8_t seg = (uint8_t)((uint32_t)pos * 7 / WS2812B_LED_NUM);
+        if (seg > 6) {
+            seg = 6;
+        }
+
+        set_led_color(i,
+                      rainbow7[seg][0],
+                      rainbow7[seg][1],
+                      rainbow7[seg][2]);
+    }
+
+    WS2812_Update();
+
+    // 偏移量递增，移完所有灯后从头开始
+    offset = (offset + 1) % WS2812B_LED_NUM;
+
+    os_time_dly(COLOR_RAINBOW_RGB_SPEED);
+}
+
+static void ws2812_shown_white_color35_auto(void)
+{
+    if (WS_INFO.current_mode != MODE_WIHTE35_CYC) {
+        WS_INFO.current_mode = MODE_WIHTE35_CYC;
+    }
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
+        WS_INFO.rgb_data[i * 3]     = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 10); // 红色
+        WS_INFO.rgb_data[i * 3 + 1] = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 10); // 绿色
+        WS_INFO.rgb_data[i * 3 + 2] = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 10); // 蓝色
+    }
+    WS2812_Update();
+    os_time_dly(COLOR_RGB_SPEED);
+}
+
+static void ws2812_shown_white_color70_auto(void)
+{
+    if (WS_INFO.current_mode != MODE_WIHTE70_CYC) {
+        WS_INFO.current_mode = MODE_WIHTE70_CYC;
+    }
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
+        WS_INFO.rgb_data[i * 3]     = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 50); // 红色
+        WS_INFO.rgb_data[i * 3 + 1] = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 50); // 绿色
+        WS_INFO.rgb_data[i * 3 + 2] = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 50); // 蓝色
+    }
+    WS2812_Update();
+    os_time_dly(COLOR_RGB_SPEED);
+}
+static void ws2812_shown_white_color100_auto(void)
+{
+    if (WS_INFO.current_mode != MODE_WIHTE100_CYC) {
+        WS_INFO.current_mode = MODE_WIHTE100_CYC;
+    }
+    for (uint16_t i = 0; i < WS2812B_LED_NUM; i++) {
+        WS_INFO.rgb_data[i * 3]     = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 100); // 红色
+        WS_INFO.rgb_data[i * 3 + 1] = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 100); // 绿色
+        WS_INFO.rgb_data[i * 3 + 2] = BRIGHT_PERCENT(COLOR_RGB_VALUE_MAX, 100); // 蓝色
     }
     WS2812_Update();
     os_time_dly(COLOR_RGB_SPEED);
@@ -991,7 +1291,11 @@ static void ws2812_shown_one_color_gradient(void)//所有灯珠绚丽彩灯
 */
 void ws2812_shown_mode(int mode, int percent)
 {
-    WS_INFO.percent = (char)percent;
+    if (percent) {
+        WS_INFO.percent = (char)percent;
+    }
+    WS_INFO.percent = WS_INFO.percent ? WS_INFO.percent : BRIGHTNESS_PERCENT;
+    printf("--->ws2812_shown_mode %d\n", mode);
     switch (mode) {
     case MODE_FLOWING_RAINBOW:
         ws2812_rainbow_flow();
@@ -1013,7 +1317,68 @@ void ws2812_shown_mode(int mode, int percent)
         ws2812_shown_one_color_auto();
         WS_INFO.current_mode_func = ws2812_shown_one_color_auto;
         break;
+    case MODE_FLOWING_7COLOR_CYC:
+        ws2812_group_gradient_cycle();
+        WS_INFO.current_mode_func = ws2812_group_gradient_cycle;
+        break;
+    case MODE_WIHTE35_CYC:
+        ws2812_shown_white_color35_auto();
+        WS_INFO.current_mode_func = ws2812_shown_white_color35_auto;
+        break;
+    case MODE_WIHTE70_CYC:
+        ws2812_shown_white_color70_auto();
+        WS_INFO.current_mode_func = ws2812_shown_white_color70_auto;
+        break;
+    case MODE_WIHTE100_CYC:
+        ws2812_shown_white_color100_auto();
+        WS_INFO.current_mode_func = ws2812_shown_white_color100_auto;
+        break;
+#ifdef MODE_ONE_CLICK_COLOR_ENABLE
+    case MODE_ONE_COLOR_RED:
+        WS_INFO.one_color_mode = MODE_RED;
+        WS_INFO.current_mode = MODE_ONE_COLOR_RED;
+        ws2812_shown_one_color_set();
+        WS_INFO.current_mode_func = ws2812_shown_one_color_set;
+        break;
+    case MODE_ONE_COLOR_ORANGE: // 单色显示：橙
+        WS_INFO.one_color_mode = MODE_ORANGE;
+        WS_INFO.current_mode = MODE_ONE_COLOR_ORANGE;
+        ws2812_shown_one_color_set();
+        WS_INFO.current_mode_func = ws2812_shown_one_color_set;
+        break;
+    case MODE_ONE_COLOR_YELLOW: // 单色显示：黄
+        WS_INFO.one_color_mode = MODE_YELLOW;
+        WS_INFO.current_mode = MODE_ONE_COLOR_YELLOW;
+        ws2812_shown_one_color_set();
+        WS_INFO.current_mode_func = ws2812_shown_one_color_set;
+        break;
+    case MODE_ONE_COLOR_GREEN:  // 单色显示：绿
+        WS_INFO.one_color_mode = MODE_GREEN;
+        WS_INFO.current_mode = MODE_ONE_COLOR_GREEN;
+        ws2812_shown_one_color_set();
+        WS_INFO.current_mode_func = ws2812_shown_one_color_set;
+        break;
+    case MODE_ONE_COLOR_CYAN:   // 单色显示：青
+        WS_INFO.one_color_mode = MODE_CYAN;
+        WS_INFO.current_mode = MODE_ONE_COLOR_CYAN;
+        ws2812_shown_one_color_set();
+        WS_INFO.current_mode_func = ws2812_shown_one_color_set;
+        break;
+    case MODE_ONE_COLOR_BLUE:   // 单色显示：蓝
+        WS_INFO.one_color_mode = MODE_BLUE;
+        WS_INFO.current_mode = MODE_ONE_COLOR_BLUE;
+        ws2812_shown_one_color_set();
+        WS_INFO.current_mode_func = ws2812_shown_one_color_set;
+        break;
+    case MODE_ONE_COLOR_PUR:    // 单色显示：紫
+        WS_INFO.one_color_mode = MODE_PUR;
+        WS_INFO.current_mode = MODE_ONE_COLOR_PUR;
+        ws2812_shown_one_color_set();
+        WS_INFO.current_mode_func = ws2812_shown_one_color_set;
+        break;
+#endif
     default:
+        ws2812_shown_clear();
         WS_INFO.current_mode_func = NULL;
         break;
     }
@@ -1037,46 +1402,146 @@ void ws2812_shown_one_color_mode(int mode, int percent)
     WS_INFO.one_color_mode = mode;
     WS_INFO.percent = (char)percent;
 }
+
+void ws2812_shown_onoff_auto(void)
+{
+    if (!WS_INFO.on) {
+        WS_INFO.percent = WS_INFO.percent ? WS_INFO.percent : BRIGHTNESS_PERCENT;
+        if (WS_INFO.set_mode >= MODE_COLOR_MODE_MAX) {
+            WS_INFO.set_mode = MODE_NOME;
+        }
+        if (WS_INFO.set_mode == MODE_NOME) {
+            WS_INFO.set_mode++;
+        }
+        ws2812_shown_mode(WS_INFO.set_mode, WS_INFO.percent);
+        WS_INFO.set_mode++;
+    }
+    WS_INFO.on = !WS_INFO.on;
+    os_taskq_post(WS2812B_SHOWN_TASK_NAME, 2, WS2812_SHOWN_SMILE_FACE_CLEAR, WS_INFO.on);
+}
+
+void ws2812_shown_mode_auto(void)
+{
+    if (!WS_INFO.on) {
+        WS_INFO.on = !WS_INFO.on;
+    }
+    WS_INFO.percent = WS_INFO.percent ? WS_INFO.percent : BRIGHTNESS_PERCENT;
+    if (WS_INFO.set_mode >= MODE_COLOR_MODE_MAX) {
+        WS_INFO.set_mode = MODE_NOME;
+    }
+    if (WS_INFO.set_mode == MODE_NOME) {
+        WS_INFO.set_mode++;
+    }
+    ws2812_shown_mode(WS_INFO.set_mode, WS_INFO.percent);
+    WS_INFO.set_mode++;
+    os_taskq_post(WS2812B_SHOWN_TASK_NAME, 2, WS2812_SHOWN_SMILE_FACE_CLEAR, WS_INFO.on);
+}
+
+void ws2812_shown_on(void)
+{
+    if (!WS_INFO.on) {
+        ws2812_shown_onoff_auto();
+    }
+}
+
+void ws2812_shown_off(void)
+{
+    if (WS_INFO.on) {
+        ws2812_shown_onoff_auto();
+    }
+}
+
+/*
+ 应用层使用的API，设置RGB灯的单色模式自动循环
+ 对应的percent：亮度百分比，只有模式MODE_ONE_COLOR_CYC才有效
+*/
+void ws2812_shown_all_auto_mode(void)
+{
+    os_taskq_post(WS2812B_SHOWN_TASK_NAME, 2, WS2812_SHOWN_MODE, 1);
+}
+
+static void ws2812_shown_auto_mode(void)
+{
+    if (!WS_INFO.on) {
+        WS_INFO.percent = WS_INFO.percent ? WS_INFO.percent : BRIGHTNESS_PERCENT;
+        ws2812_shown_onoff_auto();
+    } else {
+        if (WS_INFO.set_mode >= MODE_COLOR_MODE_MAX) {
+            WS_INFO.set_mode = MODE_NOME;
+        }
+        printf("--> line : %d, mode = %d, percent = %d\n", __LINE__, WS_INFO.set_mode, WS_INFO.percent);
+        ws2812_shown_mode(WS_INFO.set_mode, WS_INFO.percent);
+        WS_INFO.set_mode++;
+    }
+}
+
+void ws2812_shown_product(char start)
+{
+    if (start) {
+        ws2812_shown_auto_mode();
+        ws2812_shown_mode(MODE_ALL_GRADIENT, 0);
+    } else {
+        ws2812_shown_onoff_auto();
+    }
+}
+
 /*
  应用层使用的API，设置RGB灯的单色模式自动循环
  对应的percent：亮度百分比，只有模式MODE_ONE_COLOR_CYC才有效
 */
 void ws2812_shown_one_color_auto_mode(void)
 {
-    if (!WS_INFO.one_color_mode) {
-        WS_INFO.one_color_mode = MODE_RED;
+    if (!WS_INFO.on) {
+        ws2812_shown_onoff_auto();
     } else {
-        switch (WS_INFO.one_color_mode) {
-        case MODE_RED:
-            WS_INFO.one_color_mode = MODE_YELLOW;
-            break;
-        case MODE_YELLOW:
-            WS_INFO.one_color_mode = MODE_GREEN;
-            break;
-        case MODE_GREEN:
-            WS_INFO.one_color_mode = MODE_CYAN;
-            break;
-        case MODE_CYAN:
-            WS_INFO.one_color_mode = MODE_BLUE;
-            break;
-        case MODE_BLUE:
-            WS_INFO.one_color_mode = MODE_PUR;
-            break;
-        case MODE_PUR:
+        if (!WS_INFO.one_color_mode) {
             WS_INFO.one_color_mode = MODE_RED;
-            break;
+        } else {
+            switch (WS_INFO.one_color_mode) {
+            case MODE_RED:
+                WS_INFO.one_color_mode = MODE_YELLOW;
+                break;
+            case MODE_YELLOW:
+                WS_INFO.one_color_mode = MODE_GREEN;
+                break;
+            case MODE_GREEN:
+                WS_INFO.one_color_mode = MODE_CYAN;
+                break;
+            case MODE_CYAN:
+                WS_INFO.one_color_mode = MODE_BLUE;
+                break;
+            case MODE_BLUE:
+                WS_INFO.one_color_mode = MODE_PUR;
+                break;
+            case MODE_PUR:
+                WS_INFO.one_color_mode = MODE_BLACK;
+                break;
+            }
         }
+    }
+}
+
+void ws2812_shown_auto_led(int on)
+{
+    if (WS_INFO.on) {
+        os_taskq_post(WS2812B_SHOWN_TASK_NAME, 2, WS2812_SHOWN_AUTO_LED, on);
+    }
+}
+
+void ws2812_shown_percent_auto(void)
+{
+    WS_INFO.percent += 25;
+    if (WS_INFO.percent > 100) {
+        WS_INFO.percent = 0;
+    }
+    if (WS_INFO.on) {
+        os_taskq_post(WS2812B_SHOWN_TASK_NAME, 2, WS2812_SHOWN_SMILE_FACE_CLEAR, WS_INFO.on);
     }
 }
 
 void ws2812_shown_face(int on)
 {
     os_taskq_post(WS2812B_SHOWN_TASK_NAME, 2, WS2812_SHOWN_SMILE_FACE, on);
-}
-
-void ws2812_shown_auto_led(int on)
-{
-    os_taskq_post(WS2812B_SHOWN_TASK_NAME, 2, WS2812_SHOWN_AUTO_LED, on);
 }
 
 void ws2812_shown_auto_led_ctrl(char on)
@@ -1124,28 +1589,35 @@ static int ws_shown_task(void*p)
     ws2812_shown_auto_led_ctrl(2);
 #else
 //    ws2812_shown_mode(MODE_STATIC_RAINBOW, 100);//所有模式的灯
-    ws2812_shown_mode(MODE_FLOWING_RAINBOW, 100);//所有模式的灯
+//    ws2812_shown_mode(MODE_FLOWING_RAINBOW, 100);//所有模式的灯
 //    ws2812_shown_mode(MODE_ALL_GRADIENT, 100);//所有模式的灯
 //    ws2812_shown_mode(MODE_ONE_COLOR_GRADIENT, 100);//所有模式的灯
 //    ws2812_shown_mode(MODE_ONE_COLOR_CYC, 100);//所有模式的灯
 #endif
     os_time_dly(200);
+    ws2812_shown_clear();
+#if (defined WS2812_DEFAULT_COLOR && WS2812_DEFAULT_COLOR > 0)
+    ws2812_shown_mode(MODE_ONE_COLOR_RED + (WS2812_DEFAULT_COLOR - 1), 0);
+#endif
     while (1) {
         //res = os_task_pend("taskq", msg, ARRAY_SIZE(msg));
         res = os_taskq_accept(ARRAY_SIZE(msg), msg);
-#ifndef WS2812B_FFT_EFFECT_ENABLE
-        if (WS_INFO.current_mode_func) {
+
+        if (WS_INFO.current_mode_func && WS_INFO.on) {
             WS_INFO.current_mode_func();
         } else {
             os_time_dly(10);
         }
-#else
         if (res == OS_TASK_DEL_IDLE) {
             break;
         } else if (res == OS_TASKQ) {
+            printf("--> OS_TASKQ : %d\n", msg[0]);
             if (msg[0] == Q_USER) {
                 face_on = msg[2];
                 switch (msg[1]) {
+                case WS2812_SHOWN_MODE:
+                    ws2812_shown_auto_mode();
+                    break;
                 case WS2812_SHOWN_SMILE_FACE:
                     ws2812_shown_face_on_off(face_on);
                     face_auto_on = 0;
@@ -1157,9 +1629,23 @@ static int ws_shown_task(void*p)
                     face_auto_on = face_on;
                     face_auto_on_cnt = 0;
                     break;
+                case WS2812_SHOWN_SMILE_FACE_CLEAR:
+                    printf("--->face_on %d\n", face_on);
+                    if (face_on) {
+                        if (WS_INFO.current_mode_func) {
+                            WS_INFO.current_mode_func();
+                        }
+                    } else {
+                        printf("--->ws2812_shown_clear %d\n", face_on);
+                        ws2812_shown_clear();
+                    }
+                    face_auto_on = 0;
+                    face_auto_on_cnt = 0;
+                    break;
                 }
             }
         }
+#ifdef WS2812B_FFT_EFFECT_ENABLE
         os_time_dly(10);
 //        if(face_auto_on && (face_auto_on_cnt++ % 50) == 0){
 //            ws2812_shown_face_auto_led(face_auto_on);
@@ -1247,7 +1733,7 @@ get_fft_data:
 //                fft_num++;
 //            }
 //            max_eng = max_eng > FFT_ENERGY_MAX ? FFT_ENERGY_MAX : max_eng;
-//            int maxengy = max_eng * COLOR_RGB_VALUE_MAXC / (FFT_ENERGY_MAX);
+//            int maxengy = max_eng * COLOR_RGB_VALUE_MAX / (FFT_ENERGY_MAX);
 //            for(int i = 0; i < FFT_LED_L; i++){
 //                energy_num_data[i] = maxengy;
 //            }
@@ -1296,11 +1782,11 @@ get_fft_data:
 #endif
     }
 }
-int ws_shown_init(void)
+int ws2812_shown_init(void)
 {
     os_task_create(ws_shown_task, NULL, 10, 1600, 64, WS2812B_SHOWN_TASK_NAME);
     return 0;
 }
-//late_initcall(ws_shown_init);
+//late_initcall(ws2812_shown_init);
 
 #endif
