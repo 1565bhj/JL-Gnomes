@@ -462,32 +462,73 @@ static void ai_speaker_mode_stop(void)
     aisp_clear(1);
 }
 
+#define VOLUME_CHECK(x) if ((x) == 0) {ret = 0;goto exit;}
 int ai_speaker_volume_set(int volume, char update_gain)
 {
     int ret = music_buf_play_set_volume(volume) && music_play_set_volume(volume) && net_music_set_dec_volume(volume) && http_pipe_music_play_set_volume(volume);
+    VOLUME_CHECK(ret);
 #if defined CONFIG_BT_ENABLE && defined CONFIG_BT_MUSIC_MODE_ENABLE
     extern int bt_music_set_volume(u8 volume);
-    ret |= bt_music_set_volume((u8)volume);
+    VOLUME_CHECK(bt_music_set_volume((u8)volume));
 #endif
 #ifdef CONFIG_USB_DISK_MUSIC_MODE_ENABLE
     extern int usbdisk_music_set_dec_volume(int volume);
-    ret |= usbdisk_music_set_dec_volume(volume);
+    VOLUME_CHECK(usbdisk_music_set_dec_volume(volume));
 #endif
 #ifdef CONFIG_SD_MUSIC_MODE_ENABLE
     extern int sd_music_set_dec_volume(int volume);
-    ret |= sd_music_set_dec_volume(volume);
+    VOLUME_CHECK(sd_music_set_dec_volume(volume));
 #endif
 #ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
     extern int aux_dec_volume_set_volume(int volume);
-    ret |= aux_dec_volume_set_volume(volume);
+    VOLUME_CHECK(aux_dec_volume_set_volume(volume));
 #endif
+exit:
     if (ret) {
         sys_volume_write(&volume);
     }
     if (update_gain) {
 //        aisp_mic_gain_set(volume);
     }
-    return 0;
+    return ret ? -1 : 0;
+}
+
+int ai_speaker_volume_set_step(int step)
+{
+    int ret = -1;
+    char play = true;
+    unsigned char volume = 0;
+    sys_volume_read(&volume);
+    volume = sys_volume_chack(volume + step);
+    if (net_music_set_dec_volume_step(step) && music_buf_play_set_volume_step(step)
+        && music_play_set_volume_step(step) && http_pipe_music_play_set_volume_step(step)) {
+#if defined CONFIG_BT_ENABLE && defined CONFIG_BT_MUSIC_MODE_ENABLE
+        extern int bt_music_set_volume_(u8 volume);
+        VOLUME_CHECK(bt_music_set_volume(volume));
+#endif
+#ifdef CONFIG_USB_DISK_MUSIC_MODE_ENABLE
+        extern int usbdisk_music_set_dec_volume(int volume);
+        VOLUME_CHECK(usbdisk_music_set_dec_volume(volume));
+#endif
+#ifdef CONFIG_SD_MUSIC_MODE_ENABLE
+        extern int sd_music_set_dec_volume(int volume);
+        VOLUME_CHECK(sd_music_set_dec_volume(volume));
+#endif
+#ifdef CONFIG_AUX_MUSIC_MODE_ENABLE
+        extern int aux_dec_volume_set_volume(int volume);
+        VOLUME_CHECK(aux_dec_volume_set_volume(volume));
+#endif
+        if (ret) {
+            sys_volume_write(volume);
+        }
+        play = false;//没有播放音频
+    }
+exit:
+    sys_volume_read(&volume);
+    if (volume > 0 && volume <= 100 && play) {
+        aisp_mic_gain_set(volume);
+    }
+    return ret ? -1 : 0;
 }
 
 int sys_all_volume_auto_set(int volume)

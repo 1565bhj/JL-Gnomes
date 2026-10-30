@@ -133,6 +133,12 @@ int key_do_short_action(int act)
             net_music_play_next(net_music_play_type_get());
         }
         break;
+    case KEY_SHORT_VOL_UP:       /* 短按音量加 */
+        ai_speaker_volume_set_step(VOLUME_STEP);
+        break;
+    case KEY_SHORT_VOL_DOWN:     /* 短按音量减 */
+        ai_speaker_volume_set_step(-VOLUME_STEP);
+        break;
     default:
         return false;
     }
@@ -157,26 +163,10 @@ int key_do_long_action(int last_key, int act)
         sys_power_poweroff(0);
         break;
     case KEY_LONG_VOL_UP:       /* 长按音量加 */
-        if (net_music_set_dec_volume_step(VOLUME_STEP) && music_buf_play_set_volume_step(VOLUME_STEP)
-            && music_play_set_volume_step(VOLUME_STEP) && http_pipe_music_play_set_volume_step(VOLUME_STEP)) {
-            sys_volume_write_step(VOLUME_STEP);
-            play = 0;//没有播放音频
-        }
-        sys_volume_read(&volume);
-        if (volume > 0 && volume <= 100 && play) {
-            aisp_mic_gain_set(volume);
-        }
+        ai_speaker_volume_set_step(VOLUME_STEP);
         break;
     case KEY_LONG_VOL_DOWN:     /* 长按音量减 */
-        if (net_music_set_dec_volume_step(-VOLUME_STEP) && music_buf_play_set_volume_step(-VOLUME_STEP)
-            && music_play_set_volume_step(-VOLUME_STEP) && http_pipe_music_play_set_volume_step(-VOLUME_STEP)) {
-            sys_volume_write_step(-VOLUME_STEP);
-            play = 0;//没有播放音频
-        }
-        sys_volume_read(&volume);
-        if (volume > 0 && volume <= 100 && play) {
-            aisp_mic_gain_set(volume);
-        }
+        ai_speaker_volume_set_step(-VOLUME_STEP);
         break;
     case KEY_LONG_4G_WIFI:      /* 长按4G/WIFI模式 */
         int cur_net_mode = sys_net_mode_read();

@@ -87,6 +87,8 @@ enum {
     KEY_SHORT_LED_MODE,        /* 短按灯模式(开/关灯)切换 */
     KEY_SHORT_MODE_SWITCH,     /* 短按模式切换 */
     KEY_SHORT_MUSIC_SWITCH,    /* 短按暂停/播放音乐 */
+    KEY_SHORT_VOL_UP,          /* 短按音量加 */
+    KEY_SHORT_VOL_DOWN,        /* 短按音量减 */
 };
 
 /* 长按功能 */
