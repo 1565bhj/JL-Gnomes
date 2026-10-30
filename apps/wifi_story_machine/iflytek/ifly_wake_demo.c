@@ -50,8 +50,6 @@ static char aisp_mic_suspend = 0;
 #define CAE_KEYWORD_BIN_SIZE_MAX (4 * 1024)   //唤醒词文件大小
 #define CAE_AEC_BUF_SIZE_MAX     (40 * 1024)
 
-#undef WIFI_PCM_STREAN_SOCKET_ENABLE
-
 #else
 #define IFLY_AUDIO_RECORD_ONCE_SR_POINTS 128
 #define IFLY_AUDIO_RECORD_BUF_POINTS (256 * IFLY_AUDIO_RECORD_ONCE_SR_POINTS)

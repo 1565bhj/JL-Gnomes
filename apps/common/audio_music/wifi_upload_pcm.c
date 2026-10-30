@@ -5,14 +5,11 @@
 #include "app_config.h"
 
 #define TEST_RUN_TIME_SEC   60
-#ifdef CONFIG_UI_ENABLE
-#define TEST_PCM_BUFF_SIZE  (64*1024)
-#else
+
 #if __SDRAM_SIZE__ <= (2 * 1024 * 1024)
 #define TEST_PCM_BUFF_SIZE  (64*1024)
 #else
-#define TEST_PCM_BUFF_SIZE  (256*1024)
-#endif
+#define TEST_PCM_BUFF_SIZE  (128*1024)
 #endif
 
 #define PCM_STREAM_TCP_PORT     5002
