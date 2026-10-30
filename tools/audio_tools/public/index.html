@@ -65,8 +65,9 @@
   .clear-btn:hover { background: #3a3a3a; color: #fff; }
   .no-device { color: #777; font-size: 12px; font-style: italic; }
 
+  /* ★ 最新原始包：现在放在 #toolbar 中，紧跟 #udpStatus 后面 */
   #rawDataPanel {
-    display: flex; align-items: center; gap: 10px; margin-left: auto;
+    display: flex; align-items: center; gap: 10px;
     background: #1a1a1a; padding: 4px 12px; border-radius: 6px;
     border: 1px solid #444; max-width: 50%; overflow: hidden;
   }
@@ -80,6 +81,108 @@
   }
   #resetViewBtn:hover {
     background: #3a5f8a;
+  }
+
+  #paramSection {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-left: 4px;
+  }
+  #saveParamBtn {
+    background: #2d5a3a; border-color: #81c784; color: #c8e6c9;
+  }
+  #saveParamBtn:hover { background: #3a6b48; }
+  #linFuncBtn {
+    background: #4a2d6b; border-color: #b39ddb; color: #e1d5f5;
+  }
+  #linFuncBtn:hover { background: #5e3d82; }
+  #linFuncBtn:disabled {
+    background: #2a2a2a; border-color: #555; color: #666; cursor: not-allowed;
+  }
+  #linOutput {
+    position: fixed;
+    top: 90px;
+    right: 12px;
+    width: 360px;
+    max-height: 60vh;
+    overflow-y: auto;
+    background: #1a1a1a;
+    border: 1px solid #4fc3f7;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #b0e0ff;
+    white-space: pre-wrap;
+    font-family: Consolas, monospace;
+    line-height: 1.6;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.55);
+  }
+  #linOutput .func-line { color: #ffd54f; }
+  #linOutput .meta { color: #888; font-size: 11px; }
+  #copyLinBtn {
+    position: fixed;
+    top: 60px;
+    right: 12px;
+    background: #1e3a5a;
+    border: 1px solid #4fc3f7;
+    color: #b0e0ff;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    display: none;
+    z-index: 1001;
+    cursor: pointer;
+  }
+  #copyLinBtn:hover { background: #2a4a6a; }
+  #paramCount {
+    color: #8cf; font-size: 11px; margin-left: 2px;
+  }
+
+  #applyBtn {
+    background: #2d6b4a;
+    border-color: #66bb6a;
+    color: #e8f5e9;
+  }
+  #applyBtn:hover {
+    background: #3a8a5e;
+  }
+  #stopBtn {
+    background: #6b1e1e;
+    border-color: #f77;
+    color: #fdd;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  #stopBtn:hover {
+    background: #8a2a2a;
+  }
+  #stopBtn.start-mode {
+    background: #1e4a2d;
+    border-color: #66bb6a;
+    color: #e8f5e9;
+  }
+  #stopBtn.start-mode:hover {
+    background: #2a6b3e;
+  }
+
+  /* ★ 新增：屏幕上中间 toast 提示（2秒后自动消失） */
+  #toast {
+    position: fixed;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(200, 40, 40, 0.95);
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 2000;
+    display: none;
+    pointer-events: none;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    font-family: Consolas, Menlo, monospace;
   }
 </style>
 </head>
@@ -110,23 +213,40 @@
   
   <button id="applyBtn">设置</button>
   <button id="resetViewBtn" title="清空所有音频波形数据，重新开始接收PCM">🔄 重置视图</button>
-  <button id="stopBtn" style="background: #6b1e1e; border-color: #f77; color: #fdd;">停止接收</button>
+  <button id="stopBtn">停止接收</button>
+
+  <div id="paramSection">
+    <button id="saveParamBtn" title="保存当前音量、回采增益、麦1增益、麦2增益到参数表">💾 保存参数</button>
+    <button id="linFuncBtn" title="需要至少2组参数才能拟合线性函数" disabled>📈 生成线性函数</button>
+    <span id="paramCount">已保存 0 组</span>
+  </div>
   
   <span id="udpStatus">UDP: 未初始化</span>
+
+  <!-- ★ 最新原始包：放在 UDP 状态后面 -->
+  <div id="rawDataPanel">
+    <span id="rawDataLabel">最新原始包:</span>
+    <span id="rawDataText">等待数据...</span>
+  </div>
+
   <span id="rxStats">📊 已接收: 0 包 (0 KB)</span>
   <span id="status">等待设备…</span>
 </div>
 
+<div id="linOutput"></div>
+<button id="copyLinBtn">📋 复制结果</button>
+
+<!-- ★ 新增：屏幕上中间的 toast 提示 -->
+<div id="toast"></div>
+
 <div id="deviceBar">
   <span class="label">📡 广播设备:</span>
-  <div id="broadcastList">
-    <span class="no-device">暂无广播设备，请等待…</span>
-  </div>
+
+  <!-- ★ 清除列表：放在"广播设备:"标签后面 -->
   <button id="clearDevicesBtn" class="clear-btn" title="清除所有已发现设备">清除列表</button>
 
-  <div id="rawDataPanel">
-    <span id="rawDataLabel">最新原始包:</span>
-    <span id="rawDataText">等待数据...</span>
+  <div id="broadcastList">
+    <span class="no-device">暂无广播设备，请等待…</span>
   </div>
 </div>
 
@@ -155,7 +275,6 @@ let totalSamples = 0;
 let totalPackets = 0;
 let totalBytes = 0;
 
-// 缩放与平移状态
 let zoomLevel = 1.0; 
 let panOffset = 0;   
 let isDragging = false;
@@ -166,6 +285,7 @@ let discoveredDevices = new Map();
 let selectedDeviceIP = null;
 let broadcastListEl = document.getElementById('broadcastList');
 let deviceNodes = new Map();       
+let deviceExpiryTimers = new Map();
 let noBroadcastTimer = null;
 let gotAnyBroadcast = false;
 
@@ -175,9 +295,199 @@ const ctx = canvas.getContext('2d');
 const rawDataTextEl = document.getElementById('rawDataText');
 const rxStatsEl = document.getElementById('rxStats');
 
-// ==========================================
-// 核心解析函数
-// ==========================================
+let isReceiving = false;
+const stopBtn = document.getElementById('stopBtn');
+
+let savedParams = [];
+
+const saveParamBtn = document.getElementById('saveParamBtn');
+const linFuncBtn = document.getElementById('linFuncBtn');
+const linOutput = document.getElementById('linOutput');
+const copyLinBtn = document.getElementById('copyLinBtn');
+const paramCount = document.getElementById('paramCount');
+
+// ★ 新增：toast 显示函数（屏幕上中间，2秒后消失）
+let toastTimer = null;
+function showToast(msg, duration = 2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.style.display = 'none';
+  }, duration);
+}
+
+function updateParamUI() {
+  const n = savedParams.length;
+  paramCount.textContent = `已保存 ${n} 组`;
+  if (n >= 2) {
+    linFuncBtn.disabled = false;
+  } else {
+    linFuncBtn.disabled = true;
+    linOutput.style.display = 'none';
+    copyLinBtn.style.display = 'none';
+  }
+}
+
+function saveCurrentParams() {
+  const vol = Number(document.getElementById('vol').value);
+  const aec = Number(document.getElementById('aec').value);
+  const mic0 = Number(document.getElementById('mic0').value);
+  const mic1 = Number(document.getElementById('mic1').value);
+  const dual = (String(vol) !== '1');
+
+  const isDuplicate = savedParams.some(p =>
+    p.vol === vol &&
+    p.aec === aec &&
+    p.mic0 === mic0 &&
+    (dual ? p.mic1 === mic1 : p.mic1 === null)
+  );
+
+  if (isDuplicate) {
+    setStatus('该组参数已保存过，未重复添加', true);
+    alert('该组参数（音量/回采/麦1/麦2）已存在，未重复保存。');
+    return;
+  }
+
+  const record = {
+    vol,
+    aec,
+    mic0,
+    mic1: dual ? mic1 : null,
+    dual,
+    timestamp: Date.now()
+  };
+  savedParams.push(record);
+  updateParamUI();
+  setStatus(`已保存参数组 #${savedParams.length}`);
+  console.log('保存参数:', record, '当前总组数:', savedParams.length);
+
+  if (linOutput.style.display === 'block') {
+    const output = buildLinearOutput();
+    if (output) {
+      linOutput.textContent = output;
+    } else {
+      linOutput.textContent = '参数不足，暂时无法拟合。请至少保存 2 组有效参数且音量值不完全相同。';
+    }
+  }
+}
+
+function linearRegression(points) {
+  const n = points.length;
+  if (n < 2) return null;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for (let p of points) {
+    const x = p.x, y = p.y;
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumXX += x * x;
+  }
+  const denom = n * sumXX - sumX * sumX;
+  if (Math.abs(denom) < 1e-12) return null;
+  const a = (n * sumXY - sumX * sumY) / denom;
+  const b = (sumY - a * sumX) / n;
+  return { a, b, n };
+}
+
+function buildLinearOutput() {
+  if (savedParams.length < 2) return null;
+
+  const validParams = savedParams.filter(p => p.vol != null && p.aec != null && p.mic0 != null);
+  if (validParams.length < 2) return null;
+
+  const pointsAec = validParams.map(p => ({ x: p.vol, y: p.aec }));
+  const fitAec = linearRegression(pointsAec);
+
+  const pointsMic0 = validParams.map(p => ({ x: p.vol, y: p.mic0 }));
+  const fitMic0 = linearRegression(pointsMic0);
+
+  // ★ 修复：只有 mic1 值确实存在变化时（不全为同一值）才拟合 MIC2。
+  //   单麦场景 mic1 通常恒为默认值 50 → 视为单麦，不显示 MIC2 函数。
+  const dualParams = validParams.filter(p => p.dual === true && p.mic1 != null);
+  let fitMic1 = null;
+  if (dualParams.length >= 2) {
+    const firstMic1 = dualParams[0].mic1;
+    const hasVariation = dualParams.some(p => p.mic1 !== firstMic1);
+    if (hasVariation) {
+      const pointsMic1 = dualParams.map(p => ({ x: p.vol, y: p.mic1 }));
+      fitMic1 = linearRegression(pointsMic1);
+    }
+  }
+
+  if (!fitAec || !fitMic0) return null;
+
+  let output = `📊 参数拟合结果 (共 ${validParams.length} 组数据，把函数复制到“麦克风/回采增益参数”配置选项)\n`;
+  output += `🔊 AEC(线性曲线函数) : y = ${fitAec.a.toFixed(4)} x + ${fitAec.b.toFixed(4)}\n`;
+  output += `🎤 MIC1(线性曲线函数): y = ${fitMic0.a.toFixed(4)} x + ${fitMic0.b.toFixed(4)}\n`;
+  if (fitMic1) {
+    output += `🎤 MIC2(线性曲线函数): y = ${fitMic1.a.toFixed(4)} x + ${fitMic1.b.toFixed(4)}\n`;
+  }
+  return output;
+}
+
+function generateLinearFunctions() {
+  if (savedParams.length < 2) {
+    alert('至少需要保存 2 组参数才能生成线性函数');
+    return;
+  }
+
+  const output = buildLinearOutput();
+  if (!output) {
+    alert('无法拟合线性函数，请检查数据是否有效（音量值不能全部相同）');
+    return;
+  }
+
+  if (linOutput.style.display === 'block') {
+    linOutput.style.display = 'none';
+    copyLinBtn.style.display = 'none';
+  } else {
+    linOutput.textContent = output;
+    linOutput.style.display = 'block';
+    copyLinBtn.style.display = 'block';
+  }
+}
+
+function copyLinResult() {
+  const text = linOutput.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    copyLinBtn.textContent = '✅ 已复制';
+    setTimeout(() => { copyLinBtn.textContent = '📋 复制结果'; }, 1500);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    copyLinBtn.textContent = '✅ 已复制';
+    setTimeout(() => { copyLinBtn.textContent = '📋 复制结果'; }, 1500);
+  });
+}
+
+saveParamBtn.addEventListener('click', saveCurrentParams);
+linFuncBtn.addEventListener('click', generateLinearFunctions);
+copyLinBtn.addEventListener('click', copyLinResult);
+
+updateParamUI();
+
+function updateStopButtonAppearance() {
+  if (isReceiving) {
+    stopBtn.textContent = '停止接收';
+    stopBtn.classList.remove('start-mode');
+  } else {
+    stopBtn.textContent = '开始接收';
+    stopBtn.classList.add('start-mode');
+  }
+}
+
+function setReceivingState(receiving) {
+  isReceiving = receiving;
+  updateStopButtonAppearance();
+}
+
 function parseBroadcastData(rawString) {
   let vol = null, mac = '', resetReason = '', productName = '', micCh = 2, hasCh = false;
   if (!rawString || typeof rawString !== 'string') return { vol, mac, resetReason, productName, micCh, hasCh };
@@ -210,10 +520,75 @@ function parseBroadcastData(rawString) {
   return { vol, mac, resetReason, productName, micCh, hasCh };
 }
 
-// vol:1 或 ch:1 都视为单麦（3 通道，去掉 MIC2）
 function resolveMicChannels(vol, micCh) {
   if (String(vol) === '1') return 1;
   return micCh === 1 ? 1 : 2;
+}
+
+// ============================================================
+// ★ 设备过期逻辑：连续 5 秒没有收到对应 IP 的广播包则删除设备
+//   —— 但"已选中的设备"即使超时也不删除。
+//      一旦它被取消选中（用户切到别的设备），下一轮检查会正常删除。
+// ============================================================
+const DEVICE_TIMEOUT_MS = 5000;
+
+function scheduleDeviceExpiry(ip) {
+  const previousTimer = deviceExpiryTimers.get(ip);
+  if (previousTimer) clearTimeout(previousTimer);
+
+  const dev = discoveredDevices.get(ip);
+  if (!dev) {
+    deviceExpiryTimers.delete(ip);
+    return;
+  }
+
+  const remaining = Math.max(0, dev.lastSeen + DEVICE_TIMEOUT_MS - Date.now());
+
+  const timer = setTimeout(() => {
+    const current = discoveredDevices.get(ip);
+    if (!current) {
+      deviceExpiryTimers.delete(ip);
+      return;
+    }
+
+    if (Date.now() - current.lastSeen < DEVICE_TIMEOUT_MS) {
+      scheduleDeviceExpiry(ip);
+      return;
+    }
+
+    // ★ 已选中的设备禁止删除
+    if (ip === selectedDeviceIP) {
+      deviceExpiryTimers.delete(ip);
+      const recheckTimer = setTimeout(() => {
+        deviceExpiryTimers.delete(ip);
+        if (discoveredDevices.has(ip)) {
+          scheduleDeviceExpiry(ip);
+        }
+      }, DEVICE_TIMEOUT_MS);
+      deviceExpiryTimers.set(ip, recheckTimer);
+      return;
+    }
+
+    // 未被选中的设备：超过 5 秒没有收到广播 → 删除
+    deviceExpiryTimers.delete(ip);
+    discoveredDevices.delete(ip);
+
+    if (ip === selectedDeviceIP) {
+      selectedDeviceIP = null;
+      deviceIP = null;
+      isDblClickLocked = false;
+      clearDataBuffers();
+      if (isReceiving && ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'disconnectDevice' }));
+        setReceivingState(false);
+      }
+      setStatus('选中的广播设备已离线（连续5秒未收到该设备广播）');
+    }
+
+    renderDeviceList();
+  }, remaining);
+
+  deviceExpiryTimers.set(ip, timer);
 }
 
 // ---------- 设备列表渲染 ----------
@@ -261,7 +636,6 @@ function renderDeviceList() {
       if (pnEl && pnEl.textContent !== displayProductName) pnEl.textContent = displayProductName;
       
       const badgeEl = chip.querySelector('.badge');
-      // ★ 无视任何锁，强制更新徽章
       if (badgeEl && badgeEl.textContent !== micText) badgeEl.textContent = micText;
       
       if (!isDblClickLocked) {
@@ -380,6 +754,8 @@ function sendSettingsTo(ip) {
 }
 
 function clearDevices() {
+  for (const timer of deviceExpiryTimers.values()) clearTimeout(timer);
+  deviceExpiryTimers.clear();
   discoveredDevices.clear();
   selectedDeviceIP = null;
   deviceIP = null;
@@ -389,6 +765,10 @@ function clearDevices() {
   setStatus('已清除所有广播设备');
   rawDataTextEl.textContent = '等待数据...'; 
   clearDataBuffers();
+  if (isReceiving && ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'disconnectDevice' }));
+    setReceivingState(false);
+  }
 }
 
 function upsertDevice(ip, port, parsedData, rawString) {
@@ -405,7 +785,6 @@ function upsertDevice(ip, port, parsedData, rawString) {
     if (productName) dev.productName = productName;
     if (rawString) dev.raw = rawString;
     
-    // ★ 核心修复：完全无视 isDblClickLocked 锁定，只要收到报文变化，立刻强制切换
     if (dev.micChannels !== effectiveMicCh) {
       dev.micChannels = effectiveMicCh;
       if (ip === selectedDeviceIP) {
@@ -418,6 +797,8 @@ function upsertDevice(ip, port, parsedData, rawString) {
       lastSeen: now, firstSeen: now, micChannels: effectiveMicCh, raw: rawString || ''
     });
   }
+
+  scheduleDeviceExpiry(ip);
 
   if (!selectedDeviceIP) {
     const firstIp = Array.from(discoveredDevices.keys())[0];
@@ -450,7 +831,6 @@ function rebuildBuffers(micCh, forceClear) {
     chData.length = dataChannels;
   }
 
-  // 强制同步重绘一次，防止因定时器导致视觉延迟
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   draw(); 
 }
@@ -468,18 +848,23 @@ function clearDataBuffers() {
 }
 
 function resizeCanvas() {
-  const r = canvas.parentElement.getBoundingClientRect();
+  const r = canvasWrap.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = r.width * dpr;
-  canvas.height = r.height * dpr;
-  canvas.style.width = r.width + 'px';
-  canvas.style.height = r.height + 'px';
+  const w = Math.max(1, Math.floor(r.width));
+  const h = Math.max(1, Math.floor(r.height));
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const el = document.getElementById('dbLabels');
-  el.style.height = r.height + 'px';
+  el.style.height = h + 'px';
   el.innerHTML = ['0 dB','-6','-12','-24','-48','-∞'].map(t => `<span>${t}</span>`).join('');
 }
 window.addEventListener('resize', resizeCanvas);
+
+const canvasResizeObserver = new ResizeObserver(() => { resizeCanvas(); });
+canvasResizeObserver.observe(canvasWrap);
 
 function setUdpStatus(text, cls) {
   const el = document.getElementById('udpStatus');
@@ -514,6 +899,7 @@ function connectWS() {
   ws.onclose = () => {
     setStatus('WebSocket 断开，3秒后重连…', true);
     setUdpStatus('连接断开', 'err');
+    setReceivingState(false);
     setTimeout(connectWS, 3000);
   };
 
@@ -536,7 +922,7 @@ function handleText(text) {
     return;
   }
 
-  if (msg.type === 'device' || msg.ip || msg.raw || msg.data || msg.payload || msg.text || msg.msg) {
+  if (msg.type === 'device' || (msg.type !== 'tcp' && (msg.ip || msg.raw || msg.data || msg.payload || msg.text || msg.msg))) {
     let rawDataString = '';
     for (const key of ['raw', 'data', 'payload', 'text', 'msg', 'rawString', 'str']) {
       if (msg[key] && typeof msg[key] === 'string') {
@@ -594,9 +980,16 @@ function handleText(text) {
       if (dev && dev.micChannels !== micChannels) {
         rebuildBuffers(dev.micChannels, false);
       }
+      setReceivingState(true);
     }
-    else if (msg.status === 'closed') setStatus('TCP 已关闭，等待重连…', true);
-    else if (msg.status === 'error') setStatus('TCP 错误: ' + msg.msg, true);
+    else if (msg.status === 'closed') {
+      setStatus('TCP 已关闭，等待重连…', true);
+      setReceivingState(false);
+    }
+    else if (msg.status === 'error') {
+      setStatus('TCP 错误: ' + msg.msg, true);
+      setReceivingState(false);
+    }
     return;
   }
 }
@@ -614,6 +1007,8 @@ function handlePcm(arrayBuffer) {
   const view = new DataView(arrayBuffer);
   const frames = Math.floor(arrayBuffer.byteLength / bpf);
   if (frames <= 0) return;
+
+  if (!isReceiving) setReceivingState(true);
 
   totalPackets++;
   totalBytes += arrayBuffer.byteLength;
@@ -680,12 +1075,31 @@ document.getElementById('resetViewBtn').addEventListener('click', () => {
   resetViewAndClearData();
 });
 
-document.getElementById('stopBtn').addEventListener('click', () => {
-  if (!ws || ws.readyState !== 1) return;
-  ws.send(JSON.stringify({ type: 'disconnectDevice' }));
-  isDblClickLocked = false;
-  setStatus('已停止接收，请选择新的设备');
-  renderDeviceList();
+stopBtn.addEventListener('click', () => {
+  if (isReceiving) {
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ type: 'disconnectDevice' }));
+    }
+    isDblClickLocked = false;
+    setReceivingState(false);
+    setStatus('已停止接收，点击“开始接收”将重新下发配置并连接');
+    renderDeviceList();
+  } else {
+    let targetIP = selectedDeviceIP;
+    if (!targetIP || !discoveredDevices.has(targetIP)) {
+      const first = Array.from(discoveredDevices.keys())[0];
+      if (first) targetIP = first;
+    }
+    if (!targetIP) {
+      setStatus('未找到可用设备，请等待广播或手动选择设备', true);
+      return;
+    }
+    if (selectedDeviceIP !== targetIP) {
+      selectedDeviceIP = targetIP;
+      deviceIP = targetIP;
+    }
+    onDeviceDblClick(targetIP);
+  }
 });
 
 document.getElementById('clearDevicesBtn').addEventListener('click', clearDevices);
@@ -804,7 +1218,13 @@ document.getElementById('testMode').addEventListener('change', (e) => {
   }
 });
 
+// ★ 设置按钮：只有处于“开始接收”状态时才能发送设置；
+//   若当前是“停止接收”状态，则屏幕上中间弹出 toast 提示“请先停止接收”（2秒后消失）。
 document.getElementById('applyBtn').addEventListener('click', () => {
+  if (isReceiving) {
+    showToast('请先停止接收');
+    return;
+  }
   if (!ws || ws.readyState !== 1) { setStatus('WebSocket 未连接', true); return; }
   if (selectedDeviceIP) {
     sendSettingsTo(selectedDeviceIP);
@@ -825,6 +1245,7 @@ window.addEventListener('load', () => {
   resizeCanvas();
   rebuildBuffers(2, true);
   broadcastListEl.innerHTML = '<span class="no-device">暂无广播设备，请等待…</span>';
+  setReceivingState(false);
   connectWS();
   requestAnimationFrame(draw);
 });

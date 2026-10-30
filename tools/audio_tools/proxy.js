@@ -44,6 +44,10 @@ const udpRecvSock = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
 udpRecvSock.on('error', (e) => {
   console.error('UDP 接收错误:', e);
+  if (e.code === 'EACCES') {
+    console.error('⚠️ 端口 5003 被占用，请关闭其他占用该端口的程序！！！');
+    process.exit(1);
+  }
 });
 
 udpRecvSock.on('listening', () => {

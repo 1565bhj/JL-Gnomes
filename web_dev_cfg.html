@@ -181,6 +181,27 @@
     font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;
     box-shadow:0 8px 28px rgba(0,0,0,.45);text-align:center;max-width:80vw}
   .toast.show{opacity:1;transform:translate(-50%,-50%)}
+
+  /* 底部居中的红色提示 */
+  .toast.bottom{
+    top:auto;
+    bottom:120px;
+    left:50%;
+    transform:translate(-50%,14px);
+    background:var(--danger);
+    color:#fff;
+    font-weight:600;
+    font-size:13px;
+    line-height:1.55;
+    text-align:center;
+    white-space:normal;
+    padding:12px 20px;
+    border-radius:10px;
+    max-width:min(620px,90vw);
+    border:1px solid rgba(255,255,255,.18);
+  }
+  .toast.bottom.show{opacity:1;transform:translate(-50%,0)}
+
   .hidden{display:none!important}
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;z-index:60;
@@ -439,6 +460,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="toast bottom" id="toastBottom"></div>
 
 <script>
 /* ============================================================
@@ -1060,6 +1082,17 @@ const collapsed = {};
 const $ = id => document.getElementById(id);
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove("show"),1600); }
+
+/* 屏幕下方中间的红色提示，默认 10 秒后消失 */
+function warnToast(msg, dur){
+  const t = $("toastBottom");
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._tm);
+  t._tm = setTimeout(()=> t.classList.remove("show"), (typeof dur === "number" ? dur : 10000));
+}
+
 function valueType(v){
   if(v===null) return "NOVAL";
   if(typeof v==="number") return Number.isInteger(v)?"INT":"FLOAT";
@@ -1406,7 +1439,7 @@ function renderMacro(){
             <div class="meta">
               <div class="name">麦克风/回采增益参数</div>
               <div class="comment">按线性表达式填写，例如：y = -0.5x + 80；生成时解析为斜率与截距宏</div>
-              <div class="comment" style="color:var(--warn)">每一个产品都需要进行麦克风和回采参数调节，量产前必须调好麦克风/回采增益参数。</div>
+              <div class="comment" style="color:var(--warn)">每一个产品都需要进行麦克风和回采参数调节，量产前必须调好麦克风/回采增益参数。调麦工具：SDK/tools/audio_tools/AudioEditor.bat，运行AudioEditor.bat即可</div>
             </div>
           </div>
           <div class="sub-items">
@@ -1650,6 +1683,12 @@ function renderMacro(){
       const [group,key] = e.target.dataset.modEn.split(".");
       if(group==="general" || group==="product") return;
       MODULE_STATE[group][key] = e.target.checked;
+
+      /* 量产配置：任一选项开启后，屏幕下方中间弹出红色提示，8 秒后消失 */
+      if(group === "test" && e.target.checked){
+        warnToast("请确保麦克风调试完毕，并把“线性曲线函数”填到了“麦克风/回采增益参数”各个选项", 8000);
+      }
+
       renderMacro();
     };
   });
@@ -2066,7 +2105,7 @@ function renderIO(){
       </select>
     </div>
     <div class="io-row"><label>电源开关</label>${ioSelect("ioLtePower", IO_STATE.lte.power, ios, null, "lte.power")}</div>
-    ${needSwitch ? `<div class="io-row"><label>USB模拟开关</label>${ioSelect("ioLteUsbSwitch", IO_STATE.lte.usbSwitch, ios, null, "lte.usbSwitch")}</div>` : ``}
+        ${needSwitch ? `<div class="io-row"><label>USB模拟开关</label>${ioSelect("ioLteUsbSwitch", IO_STATE.lte.usbSwitch, ios, null, "lte.usbSwitch")}</div>` : ``}
     <div class="io-row"><span class="hint">只显示未占用 IO。</span></div>
   `;
 
@@ -2710,7 +2749,6 @@ function genHeader(){
   L.push("");
 
   /* ================= 电源使能 ================= */
-    /* ================= 电源使能 ================= */
   L.push("/* ================= 电源使能 ================= */");
   if(IO_STATE.power.enable){
     if(isUsed(IO_STATE.power.vcc33)){

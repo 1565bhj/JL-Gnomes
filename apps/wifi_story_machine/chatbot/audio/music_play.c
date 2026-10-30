@@ -566,13 +566,14 @@ int music_play_backdown(void)   //主人我退下了
 
 int music_tts_play_hello_clear(void *priv)
 {
+    char play_hello = __this->tts_play_hello;
     if (!__this->tts_play_hello && __this->tts_check_time_id) {
         __this->tts_check_time_id = 0;
         return -1;
     }
     __this->tts_play_hello = 0;
     __this->tts_check_time_id = 0;
-    if (priv) {
+    if (priv && play_hello) {
         char path[32];
         char index = (char)priv - 1;
         sprintf(path, "hello%d.mp3", index + 1);

@@ -616,6 +616,7 @@ static int wifi_event_callback(void *network_ctx, enum WIFI_EVENT event)
             net.arg = "net";
             net.event = NET_NTP_GET_TIME_SUCC + 32;
             net_event_notify(NET_EVENT_FROM_USER, &net);
+            wifi_sta_connect_best_ssid_request();//重连最优信号路由
         }
         printf("---> info.mode = %d, %s, %s\n", info.mode, info.ssid, INIT_SSID);
 #endif
