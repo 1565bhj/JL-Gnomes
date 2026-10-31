@@ -1188,6 +1188,9 @@ static int local_music_key_click(struct key_event *key)
     int ret = true;
     u8 volume = 0;
     switch (key->value) {
+    case KEY_PAUSE:
+        local_music_dec_play_pause();
+        break;
     case KEY_OK:
         if (system_keyword_start()) {
             aisp_clear(1);

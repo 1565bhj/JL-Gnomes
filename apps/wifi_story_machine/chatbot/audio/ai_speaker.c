@@ -519,7 +519,7 @@ int ai_speaker_volume_set_step(int step)
         VOLUME_CHECK(aux_dec_volume_set_volume(volume));
 #endif
         if (ret) {
-            sys_volume_write(volume);
+            sys_volume_write(&volume);
         }
         play = false;//没有播放音频
     }
@@ -541,6 +541,15 @@ static int ai_speaker_key_click(struct key_event *key)
     int ret = true;
     printf("-->ai_speaker_key_click  = %d \n", key->value);
     switch (key->value) {
+    case KEY_PAUSE:
+        if (music_buf_play_supspend()) {
+            net_music_play_resum();
+        } else if (net_music_play_start_status()) {
+            net_music_play_puase();
+        } else {
+            net_music_play_next(net_music_play_type_get());
+        }
+        break;
     case KEY_MUTE:
     case KEY_OK://按键播放或者启动识别
         key_do_short_action(KEY_SHORT_WAKEUP);

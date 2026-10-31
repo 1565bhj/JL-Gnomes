@@ -45,6 +45,8 @@
 #define     KEY_8               38
 #define     KEY_9               39
 
+#define     KEY_PAUSE           40
+
 #define     NO_KEY              255
 
 #define     KEY_K1              13

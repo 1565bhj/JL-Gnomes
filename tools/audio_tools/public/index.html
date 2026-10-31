@@ -202,14 +202,14 @@
   <label>音量</label>
   <input id="vol" type="number" value="100" min="10" max="100" step="10">
   
-  <label title="从最大音量往下调：100/95/90...">回采增益</label>
-  <input id="aec" type="number" value="50" min="10" max="100" step="5" title="步进 5">
+  <label title="从最大增益往下调：95/90/85...">回采增益</label>
+  <input id="aec" type="number" value="50" min="10" max="95" step="5" title="步进 5，最大 95">
   
   <label>麦1增益</label>
-  <input id="mic0" type="number" value="50" min="10" max="100" step="5">
+  <input id="mic0" type="number" value="50" min="10" max="95" step="5" title="步进 5，最大 95">
   
   <label id="mic1Label">麦2增益</label>
-  <input id="mic1" type="number" value="50" min="10" max="100" step="5">
+  <input id="mic1" type="number" value="50" min="10" max="95" step="5" title="步进 5，最大 95">
   
   <button id="applyBtn">设置</button>
   <button id="resetViewBtn" title="清空所有音频波形数据，重新开始接收PCM">🔄 重置视图</button>
@@ -262,6 +262,10 @@ const BYTES_PER_SAMPLE = 2;
 const LABELS_4 = ['MIC1', 'MIC2', 'AEC(回采)', 'AEC_OUT'];
 const LABELS_3 = ['MIC1', 'AEC(回采)', 'AEC_OUT'];
 const COLORS = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373'];
+
+// ★ 增益输入范围：10 ~ 95（回采 / 麦1 / 麦2）
+const GAIN_MIN = 10;
+const GAIN_MAX = 95;
 
 let micChannels = 2;
 let dataChannels = 4;
@@ -318,6 +322,22 @@ function showToast(msg, duration = 2000) {
   }, duration);
 }
 
+// ★ 读取并钳制增益输入（10 ~ 95）
+function readGainInput(id) {
+  const raw = Number(document.getElementById(id).value);
+  if (!Number.isFinite(raw)) return GAIN_MIN;
+  return Math.max(GAIN_MIN, Math.min(GAIN_MAX, Math.round(raw)));
+}
+
+// ★ 输入框失焦/变更时，把超范围的值拉回 10~95
+['aec', 'mic0', 'mic1'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('change', () => {
+    const v = readGainInput(id);
+    if (Number(el.value) !== v) el.value = v;
+  });
+});
+
 function updateParamUI() {
   const n = savedParams.length;
   paramCount.textContent = `已保存 ${n} 组`;
@@ -332,9 +352,9 @@ function updateParamUI() {
 
 function saveCurrentParams() {
   const vol = Number(document.getElementById('vol').value);
-  const aec = Number(document.getElementById('aec').value);
-  const mic0 = Number(document.getElementById('mic0').value);
-  const mic1 = Number(document.getElementById('mic1').value);
+  const aec = readGainInput('aec');
+  const mic0 = readGainInput('mic0');
+  const mic1 = readGainInput('mic1');
   const dual = (String(vol) !== '1');
 
   const isDuplicate = savedParams.some(p =>
@@ -391,38 +411,67 @@ function linearRegression(points) {
   return { a, b, n };
 }
 
+// ★ 新增：拟合前过滤——对某个通道，其最大值只保留第一次出现的那一组，
+//   之后再出现的相同最大值（说明已经封顶 95）不再参与拟合。
+//   例：AEC 值 50/70/80/85/90/95/95/95 → 只保留第一个 95 之前的 + 第一个 95。
+function filterMaxFirstOccurrence(records, key) {
+  let maxVal = -Infinity;
+  for (let i = 0; i < records.length; i++) {
+    const v = records[i][key];
+    if (typeof v === 'number' && v > maxVal) maxVal = v;
+  }
+  if (maxVal === -Infinity) return [];
+
+  const out = [];
+  let maxUsed = false;
+  for (let i = 0; i < records.length; i++) {
+    const v = records[i][key];
+    if (v === maxVal) {
+      if (maxUsed) continue;   // 后续相同的最大值 → 丢弃
+      maxUsed = true;          // 第一组最大值 → 保留
+    }
+    out.push(records[i]);
+  }
+  return out;
+}
+
 function buildLinearOutput() {
   if (savedParams.length < 2) return null;
 
   const validParams = savedParams.filter(p => p.vol != null && p.aec != null && p.mic0 != null);
   if (validParams.length < 2) return null;
 
-  const pointsAec = validParams.map(p => ({ x: p.vol, y: p.aec }));
+  // ---- AEC：最大值只取第一组 ----
+  const aecParams = filterMaxFirstOccurrence(validParams, 'aec');
+  const pointsAec = aecParams.map(p => ({ x: p.vol, y: p.aec }));
   const fitAec = linearRegression(pointsAec);
 
-  const pointsMic0 = validParams.map(p => ({ x: p.vol, y: p.mic0 }));
+  // ---- MIC1（字段 mic0）：最大值只取第一组 ----
+  const mic0Params = filterMaxFirstOccurrence(validParams, 'mic0');
+  const pointsMic0 = mic0Params.map(p => ({ x: p.vol, y: p.mic0 }));
   const fitMic0 = linearRegression(pointsMic0);
 
-  // ★ 修复：只有 mic1 值确实存在变化时（不全为同一值）才拟合 MIC2。
-  //   单麦场景 mic1 通常恒为默认值 50 → 视为单麦，不显示 MIC2 函数。
+  // ---- MIC2（字段 mic1）：单麦场景不参与；且只有 mic1 值确实存在变化时才拟合 ----
   const dualParams = validParams.filter(p => p.dual === true && p.mic1 != null);
   let fitMic1 = null;
   if (dualParams.length >= 2) {
     const firstMic1 = dualParams[0].mic1;
     const hasVariation = dualParams.some(p => p.mic1 !== firstMic1);
     if (hasVariation) {
-      const pointsMic1 = dualParams.map(p => ({ x: p.vol, y: p.mic1 }));
+      // ★ MIC2：最大值只取第一组
+      const mic1Params = filterMaxFirstOccurrence(dualParams, 'mic1');
+      const pointsMic1 = mic1Params.map(p => ({ x: p.vol, y: p.mic1 }));
       fitMic1 = linearRegression(pointsMic1);
     }
   }
 
   if (!fitAec || !fitMic0) return null;
 
-  let output = `📊 参数拟合结果 (共 ${validParams.length} 组数据，把函数复制到“麦克风/回采增益参数”配置选项)\n`;
-  output += `🔊 AEC(线性曲线函数) : y = ${fitAec.a.toFixed(4)} x + ${fitAec.b.toFixed(4)}\n`;
-  output += `🎤 MIC1(线性曲线函数): y = ${fitMic0.a.toFixed(4)} x + ${fitMic0.b.toFixed(4)}\n`;
+  let output = `📊 参数拟合结果 (共 ${validParams.length} 组数据，各通道最大值只取首次出现的那组；把函数复制到“麦克风/回采增益参数”配置选项)\n`;
+  output += `🔊 AEC(线性曲线函数) : y = ${fitAec.a.toFixed(2)} x + ${fitAec.b.toFixed(2)}   [${fitAec.n}组]\n`;
+  output += `🎤 MIC1(线性曲线函数): y = ${fitMic0.a.toFixed(2)} x + ${fitMic0.b.toFixed(2)}   [${fitMic0.n}组]\n`;
   if (fitMic1) {
-    output += `🎤 MIC2(线性曲线函数): y = ${fitMic1.a.toFixed(4)} x + ${fitMic1.b.toFixed(4)}\n`;
+    output += `🎤 MIC2(线性曲线函数): y = ${fitMic1.a.toFixed(2)} x + ${fitMic1.b.toFixed(2)}   [${fitMic1.n}组]\n`;
   }
   return output;
 }
@@ -715,9 +764,9 @@ function onDeviceDblClick(ip) {
 function sendTestModePackets(ip, port, mode) {
   if (!ws || ws.readyState !== 1) return;
   const vol = document.getElementById('vol').value;
-  const aec = document.getElementById('aec').value;
-  const mic0 = document.getElementById('mic0').value;
-  const mic1 = document.getElementById('mic1').value;
+  const aec = readGainInput('aec');
+  const mic0 = readGainInput('mic0');
+  const mic1 = readGainInput('mic1');
   const isDual = String(vol) !== '1';
 
   let payload = `wifi_pcm_start-vol:${vol}-aec:${aec}-mic0:${mic0}`;
@@ -737,9 +786,9 @@ function sendSettingsTo(ip) {
   const dev = discoveredDevices.get(ip);
   const targetPort = dev ? dev.port : 5003;
   const vol = document.getElementById('vol').value;
-  const aec = document.getElementById('aec').value;
-  const mic0 = document.getElementById('mic0').value;
-  const mic1 = document.getElementById('mic1').value;
+  const aec = readGainInput('aec');
+  const mic0 = readGainInput('mic0');
+  const mic1 = readGainInput('mic1');
   const isDual = String(vol) !== '1';
 
   let payload = `wifi_pcm_start-vol:${vol}-aec:${aec}-mic0:${mic0}`;
@@ -1233,9 +1282,9 @@ document.getElementById('applyBtn').addEventListener('click', () => {
     ws.send(JSON.stringify({
       type: 'settings',
       vol: document.getElementById('vol').value,
-      aec: document.getElementById('aec').value,
-      mic0: document.getElementById('mic0').value,
-      mic1: document.getElementById('mic1').value
+      aec: readGainInput('aec'),
+      mic0: readGainInput('mic0'),
+      mic1: readGainInput('mic1')
     }));
     setStatus('已发送设置…');
   }

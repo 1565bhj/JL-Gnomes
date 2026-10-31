@@ -2301,6 +2301,9 @@ static int bt_music_key_event_handler(struct key_event *key)
 
     case KEY_EVENT_CLICK:
         switch (key->value) {
+        case KEY_PAUSE:
+            bt_music_play_pause();
+            break;
         case KEY_OK:
             if (system_keyword_start()) {
                 aisp_clear(1);

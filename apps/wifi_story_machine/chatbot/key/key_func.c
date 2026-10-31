@@ -22,8 +22,8 @@
  *   bit20-23 : 五击
  *   bit24-27 : 六击以上
  * ============================================================ */
-#ifndef ADKEY_KEY1_FUNC
-#define ADKEY_KEY1_RFUNC    0x01011111
+#ifdef ADKEY_KEY1_FUNC
+#define ADKEY_KEY1_RFUNC    ADKEY_KEY1_FUNC
 #else
 #define ADKEY_KEY1_RFUNC    0x01011111
 #endif
@@ -79,6 +79,7 @@ static int get_field(uint32_t func, int lo, int hi)
 /* ===================== 功能执行函数（示例） ===================== */
 int key_do_short_action(int act)
 {
+    struct key_event key = {0};
     switch (act) {
     case KEY_SHORT_WAKEUP:      /* 短按唤醒 */
         if (system_keyword_start()) {
@@ -98,13 +99,27 @@ int key_do_short_action(int act)
         }
         break;
     case KEY_SHORT_NEXT_SONG:   /* 短按下一首 */
-        net_music_play_next(net_music_play_type_get());
+        if (ai_speaker_app()) {
+            net_music_play_next(net_music_play_type_get());
+        } else {
+            key.type = KEY_EVENT_USER;
+            key.action = KEY_EVENT_CLICK;
+            key.value = KEY_DOWN;
+            key_event_notify(KEY_EVENT_FROM_USER, &key);
+        }
         break;
     case KEY_SHORT_PREV_SONG:   /* 短按上一首 */
-        if (net_music_play_last_check()) {
-            net_music_play_last_request();
+        if (ai_speaker_app()) {
+            if (net_music_play_last_check()) {
+                net_music_play_last_request();
+            } else {
+                net_music_play_next(net_music_play_type_get());
+            }
         } else {
-            net_music_play_next(net_music_play_type_get());
+            key.type = KEY_EVENT_USER;
+            key.action = KEY_EVENT_CLICK;
+            key.value = KEY_UP;
+            key_event_notify(KEY_EVENT_FROM_USER, &key);
         }
         break;
     case KEY_SHORT_LED_MODE:    /* 短按灯模式切换 */
@@ -125,12 +140,19 @@ int key_do_short_action(int act)
 #endif
         break;
     case KEY_SHORT_MUSIC_SWITCH:   /* 短按暂停/播放音乐 */
-        if (music_buf_play_supspend()) {
-            net_music_play_resum();
-        } else if (net_music_play_start_status()) {
-            net_music_play_puase();
+        if (ai_speaker_app()) {
+            if (music_buf_play_supspend()) {
+                net_music_play_resum();
+            } else if (net_music_play_start_status()) {
+                net_music_play_puase();
+            } else {
+                net_music_play_next(net_music_play_type_get());
+            }
         } else {
-            net_music_play_next(net_music_play_type_get());
+            key.type = KEY_EVENT_USER;
+            key.action = KEY_EVENT_CLICK;
+            key.value = KEY_PAUSE;
+            key_event_notify(KEY_EVENT_FROM_USER, &key);
         }
         break;
     case KEY_SHORT_VOL_UP:       /* 短按音量加 */
@@ -374,32 +396,40 @@ int key_func_set(int last_key, int key_action, int key_val)
 {
     uint32_t func = get_key_func(key_val);
     int act = 0;
-
+#define PRINTF_DEBUG() printf("key_func_set %d act = %x, func = 0x%x\n", __LINE__, act, func)
     switch (key_action) {
     case KEY_EVENT_UP:             /* 释放检测 */
         act = get_field(func, 4, 7);//只拿长按事件
+        PRINTF_DEBUG();
         return key_do_handup(last_key, act);
     case KEY_EVENT_CLICK:          /* 短按 */
         act = get_field(func, 0, 3);
+        PRINTF_DEBUG();
         return key_do_short_action(act);
     case KEY_EVENT_LONG:           /* 长按 */
         act = get_field(func, 4, 7);
+        PRINTF_DEBUG();
         return key_do_long_action(last_key, act);
     case KEY_EVENT_DOUBLE_CLICK:   /* 双击 */
         act = get_field(func, 8, 11);
+        PRINTF_DEBUG();
         return key_do_double_action(act);
     case KEY_EVENT_TRIPLE_CLICK:   /* 三击 */
         act = get_field(func, 12, 15);
+        PRINTF_DEBUG();
         return key_do_triple_action(act);
     case KEY_EVENT_FOURTH_CLICK:   /* 四击 */
         act = get_field(func, 16, 19);
+        PRINTF_DEBUG();
         return key_do_fourth_action(act);
     case KEY_EVENT_FIRTH_CLICK:    /* 五击 */
         act = get_field(func, 20, 23);
+        PRINTF_DEBUG();
         return key_do_five_action(act);
     case KEY_EVENT_SIX_CLICK:      /* 六击 */
     case KEY_EVENT_MORE_CLICK:     /* 六击以上 */
         act = get_field(func, 24, 27);
+        PRINTF_DEBUG();
         return key_do_many_action(act);
     default:
         return false;

@@ -204,11 +204,7 @@
 /* POWER引脚不同的4G模组不一样(根据实际情况来定义) */
 #define LTE_POWER_ONOFF_PORT                IO_PORTC_06 //LTE-4G电源开关IO
 #define LTE_USB_SWITCH_PORT                 IO_PORTA_03 //LTE-4G模组USB接到主控的USB通过模拟开关控制（默认1高电平选择到4G模块）
-
-/* 4G模组厂商选择 */
-#define CONFIG_LTE_VENDOR                   (VENDOR_ML307R) //默认中移全网通cat1-ML307R模组
 #endif
-
 
 //#define LED_EYA_OPEN                        1           //高电平睁眼-LED
 //#define TCFG_LED_EYA_R_PORT                 IO_PORTH_00 //LED眼睛：对话眨眼
@@ -278,7 +274,6 @@
 #define AEC_MIC_P_N         (CONFIG_AISP_AEC_USE_LINEIN ? 0 : LADC_CH_MIC0_P_N)
 
 #define CONFIG_AUDIO_ENC_SAMPLE_SOURCE      AUDIO_ENC_SAMPLE_SOURCE_MIC
-#define TCFG_MIC_CHANNEL_MAP                (LADC_CH_MIC1_P_N | LADC_CH_MIC2_P_N | AEC_MIC_P_N)
 
 /**********************************
 //   LADC_CH_AUX0  AUX通道0 PA0
@@ -308,6 +303,11 @@
 #define MIC2                                2   //mic1通道：对应LADC_CH_MIC2_P_N
 #define MIC_AEC                             0   //回采AEC回声消除通道：对应LADC_CH_MIC0_P_N
 #endif
+#define MIC1_CH_MAP     (MIC1 == 0 ? LADC_CH_MIC0_P_N : (MIC1 == 1 ? LADC_CH_MIC1_P_N : ((MIC1 == 2 ? LADC_CH_MIC2_P_N : (LADC_CH_MIC3_P_N)))))
+#define MIC2_CH_MAP     (MIC2 == 0 ? LADC_CH_MIC0_P_N : (MIC2 == 1 ? LADC_CH_MIC1_P_N : ((MIC2 == 2 ? LADC_CH_MIC2_P_N : (LADC_CH_MIC3_P_N)))))
+#define MIC_AEC_CH_MAP  (MIC_AEC == 0 ? LADC_CH_MIC0_P_N : (MIC_AEC == 1 ? LADC_CH_MIC1_P_N : ((MIC_AEC == 2 ? LADC_CH_MIC2_P_N : (LADC_CH_MIC3_P_N)))))
+
+#define TCFG_MIC_CHANNEL_MAP                (MIC1_CH_MAP | MIC2_CH_MAP | MIC_AEC_CH_MAP)
 
 #define TCFG_MIC_CHANNEL_NUM                (2 | (AEC_MIC_P_N ? 1 : 0))   //MIC通道数量
 

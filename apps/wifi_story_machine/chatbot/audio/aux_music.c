@@ -691,6 +691,9 @@ static int aux_key_click(struct key_event *key)
     int ret = true;
     u8 volume = 0;
     switch (key->value) {
+    case KEY_PAUSE:
+        aux_play_pause();
+        break;
     case KEY_OK:
         printf("--->KEY_OK aux_play_pause \n");
         if (__this->direct) {

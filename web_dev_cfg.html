@@ -2765,8 +2765,14 @@ function genHeader(){
   if(IO_STATE.key.enable){
     const isIoKeyMode = (IO_STATE.key.count === 1 && IO_STATE.key.pullup === 0);
     if(isIoKeyMode){
-      L.push(`#define TCFG_IOKEY_PORT                     ${IO_STATE.key.port} //IO按键的IO`);
-      L.push(`#define TCFG_IOKEY_ENABLE                   1           //IO按键`);
+      const k = IO_STATE.key.keys[0] || { label:"按键1", funcs:defaultKeyFuncs() };
+      L.push(`#define TCFG_IOKEY_PORT                ${IO_STATE.key.port} //IO按键的IO`);
+      L.push(`#define TCFG_IOKEY_ENABLE              1           //IO按键`);
+      L.push(`/* ${k.label}: 功能值 ${keyFuncToHex(k.funcs)} */`);
+      L.push(`#define ADKEY_KEY1_FUNC                ${keyFuncToHex(k.funcs)}  //永远是KEY1`);
+      if(k.funcs && k.funcs.long === 1){
+        L.push(`#define CONFIG_PRESS_LONG_KEY_POWERON                   //长按开关`);
+      }
     } else {
       L.push(`#define TCFG_ADKEY_ENABLE       ${IO_STATE.key.enable?1:0}`);
       L.push(`#define TCFG_ADKEY_PORT         ${ioToMacro(IO_STATE.key.port)}`);

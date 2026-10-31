@@ -635,6 +635,11 @@
 #define MIC2                                2   //mic1通道：对应LADC_CH_MIC2_P_N
 #define MIC_AEC                             0   //回采AEC回声消除通道：对应LADC_CH_MIC0_P_N
 #endif
+#define MIC1_CH_MAP     (MIC1 == 0 ? LADC_CH_MIC0_P_N : (MIC1 == 1 ? LADC_CH_MIC1_P_N : ((MIC1 == 2 ? LADC_CH_MIC2_P_N : (LADC_CH_MIC3_P_N)))))
+#define MIC2_CH_MAP     (MIC2 == 0 ? LADC_CH_MIC0_P_N : (MIC2 == 1 ? LADC_CH_MIC1_P_N : ((MIC2 == 2 ? LADC_CH_MIC2_P_N : (LADC_CH_MIC3_P_N)))))
+#define MIC_AEC_CH_MAP  (MIC_AEC == 0 ? LADC_CH_MIC0_P_N : (MIC_AEC == 1 ? LADC_CH_MIC1_P_N : ((MIC_AEC == 2 ? LADC_CH_MIC2_P_N : (LADC_CH_MIC3_P_N)))))
+
+#define TCFG_MIC_CHANNEL_MAP                (MIC1_CH_MAP | MIC2_CH_MAP | MIC_AEC_CH_MAP)
 
 #define TCFG_MIC_CHANNEL_NUM                (2 | (AEC_MIC_P_N ? 1 : 0))   //MIC通道数量
 
