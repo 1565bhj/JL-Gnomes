@@ -264,7 +264,7 @@ copy /b text.bin+data.bin+dynamic_data.bin+ram0_data.bin+cache_ram_data.bin app.
 
 #if defined CONFIG_UI_ENABLE
 #if defined CONFIG_UI_FILE_SAVE_IN_RESERVED_EXPAND_ZONE
-packres\packres.exe -n ui -o packres/UIPACKRES ui_res
+packres\packres.exe -n ui -o packres/UIPACKRES ui_res_emoji
 #else
 set UI_RES=ui_res
 #endif

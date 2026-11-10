@@ -1,5 +1,6 @@
 #include "system/app_core.h"
 #include "system/includes.h"
+#include "system/timer.h"
 #include "asm/system_reset_reason.h"
 #include "os/os_api.h"
 #include "event/device_event.h"
@@ -719,13 +720,9 @@ static int ai_speaker_key_event_handler(struct key_event *key)
         ai_speaker_key_long(key);
         break;
     case KEY_EVENT_DOUBLE_CLICK:
-        //模式切换
+        //ai_speaker 中双击 OK 进入 BLE OTA 广播接收模式。
         if (key->value == KEY_OK) {
-#ifdef CONFIG_QYAI_MUTILMODAL_ENABLE
-            //qyai_text2img_cyc_mode_auto(1);
-            //break;
-#endif
-            key_do_double_action(KEY_DOUBLE_MODE_SWITCH);
+            key_do_double_action(KEY_DOUBLE_RECV_BLE);
         }
 #ifdef  USED_TM1629_SHOWN
         else if (key->value == KEY_MODE) { //显示亮度切换
@@ -1056,6 +1053,7 @@ int ai_net_event_handler(struct net_event *event)
             }
             break;
         case NET_EVENT_CONNECTED:
+            ble_ota_scan_wifi_state(net_ch == 0);
             __this->associat_timeout_cnt = 0;
             printf("NET_EVENT_CONNECTED : %d, %d \n", keyword_wifi_enter_congfig, __this->net_dicon_cnt);
             if (keyword_wifi_enter_congfig >= 2 && system_reset_reason_get() != SYS_RST_ALM_WKUP && !is_production_test_enter(0) && __this->net_dicon_cnt == 0) {
@@ -1063,7 +1061,8 @@ int ai_net_event_handler(struct net_event *event)
                     music_play_res_file("WifiConSucc.mp3");
 #ifdef CONFIG_UI_PLAY_EMOJI
                     extern int play_face_emoji(int avi_index);
-                    play_face_emoji(AI_UART_CMD_WIFI_CONNECTED);
+                    // play_face_emoji(AI_UART_CMD_WIFI_CONNECTED);
+                    play_face_emoji(0);
 #endif
                 } else {
                     music_play_res_file("NetConSucc.mp3");
@@ -1155,6 +1154,7 @@ int ai_net_event_handler(struct net_event *event)
 #endif
             break;
         case NET_EVENT_DISCONNECTED:
+            ble_ota_scan_wifi_state(0);
             canceladdrinfo();
             __this->net_dicon_cnt = (keyword_wifi_enter_congfig == 1 || keyword_wifi_enter_congfig == 2) ? 0 : (__this->net_dicon_cnt + 1);//配网清空连接失败次数
             printf("NET_EVENT_DISCONNECTED : %d, %d \n", keyword_wifi_enter_congfig, __this->net_dicon_cnt);

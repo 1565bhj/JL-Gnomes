@@ -11,6 +11,7 @@
 #include "asm/debug.h"
 #include "asm/power_interface.h"
 #include "app_config.h"
+#include "ble_ota_scan.h"
 #include "http/http_cli.h"
 #include "system/timer.h"
 #include "database.h"
@@ -92,6 +93,7 @@ u8 is_in_config_network_state(void)
 
 void config_network_start(void)
 {
+    ble_ota_scan_wifi_state(0);
     printf("=====config_network_start=====");
     net_dhcp_status_set(NET_DHCP_INIT);
 

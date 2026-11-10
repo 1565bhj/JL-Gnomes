@@ -156,7 +156,7 @@
 #endif
 
 #ifndef TCFG_IOKEY_ENABLE
-#define TCFG_IOKEY_ENABLE             0         //IO按键
+#define TCFG_IOKEY_ENABLE             1         //IO按键
 #define TCFG_IO_MULTIPLEX_WITH_SD     0
 #endif
 
@@ -684,7 +684,7 @@
 //*********************************************************************************//
 //                                    电源配置                                     //
 //*********************************************************************************//
-// #define CONFIG_LOW_POWER_ENABLE                      //低功耗开关
+#define CONFIG_LOW_POWER_ENABLE                      //低功耗开关
 #define TCFG_LOWPOWER_BTOSC_DISABLE         0
 #ifdef CONFIG_LOW_POWER_ENABLE
 #define TCFG_LOWPOWER_LOWPOWER_SEL          (RF_SLEEP_EN)// | SYS_SLEEP_EN | RF_FORCE_SYS_SLEEP_EN | SYS_SLEEP_BY_IDLE)
@@ -755,6 +755,7 @@
 #define CONFIG_POWER_ON_ENABLE_EMITTER            0     //开机自动打开发射器
 #define CONFIG_POWER_ON_ENABLE_BT                 0     //开机自动打开经典蓝牙
 #define CONFIG_POWER_ON_ENABLE_BLE                0     //开机自动打开BLE
+#define CONFIG_BLE_OTA_SCAN_ENABLE                1     //联网且退出BLE配网后扫描OTA测试广播
 #define TCFG_BD_NUM                               1     //可连接设备数量，可支持同时连接2台设备
 
 #if __SDRAM_SIZE__ > 0

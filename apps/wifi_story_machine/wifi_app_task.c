@@ -10,6 +10,7 @@
 #include "system/timer.h"
 #include "asm/debug.h"
 #include "app_config.h"
+#include "ble_ota_scan.h"
 #include "json_c/json_tokener.h"
 #include "server/net_server.h"
 #include "streaming_media_server/fenice_config.h"
@@ -338,8 +339,8 @@ static int udp_server_init(int port)
 #else
 #define INIT_MODE STA_MODE  //SMP_CFG_MODE
 #define FORCE_DEFAULT_MODE 0 //配置wifi_on之后的模式,0为使用最后记忆的模式, 1为强制默认模式, 3-200为连接超时时间多少秒,如果超时都连接不上就连接最后记忆的或者最优网络
-#define INIT_SSID "GJ1"
-#define INIT_PWD  "8888888899"
+#define INIT_SSID "sz2.4"
+#define INIT_PWD  "12345679"
 #endif
 #define INIT_STORED_SSID (INIT_MODE==STA_MODE)//配置STA模式情况下,把默认配置SSID也存储起来, 以后即使保存过其他SSID,也不会覆盖丢失,使用连接最优信号SSID策略的情况下可以匹配连接
 #define INIT_CONNECT_BEST_SSID 0 //配置如果啟動WIFI后在STA模式下, 是否挑选连接记忆过的信号最优WIFI
@@ -608,10 +609,10 @@ static int wifi_event_callback(void *network_ctx, enum WIFI_EVENT event)
         wifi_get_mode_cur_info(&info);
         if (info.mode != STA_MODE || strcmp(info.ssid, INIT_SSID) == 0 ||
             (info.mode == STA_MODE && info.ssid[0] == '*')) { //和初始设置的一样则提示
-            net.arg = "net";
-            net.event = NET_EVENT_SMP_CFG_FIRST;
-            net_event_notify(NET_EVENT_FROM_USER, &net);
-            printf("---> NET_EVENT_SMP_CFG_FIRST\n");
+            // net.arg = "net";
+            // net.event = NET_EVENT_SMP_CFG_FIRST;
+            // net_event_notify(NET_EVENT_FROM_USER, &net);
+            // printf("---> NET_EVENT_SMP_CFG_FIRST\n");
         } else {
             net.arg = "net";
             net.event = NET_NTP_GET_TIME_SUCC + 32;
@@ -750,6 +751,13 @@ static int wifi_event_callback(void *network_ctx, enum WIFI_EVENT event)
         break;
 
     case WIFI_EVENT_STA_NETWORK_STACK_DHCP_SUCC:
+        {
+            struct netif_info info = {0};
+            const u8 *ip = (const u8 *)&info.ip;
+            lwip_get_netif_info(1, &info);
+            printf("[NET][%u ms] WIFI_IP_READY ip=%u.%u.%u.%u\n",
+                   sys_timer_get_ms(), ip[0], ip[1], ip[2], ip[3]);
+        }
         puts("|network_user_callback->WIFI_EVENT_STA_NETWPRK_STACK_DHCP_SUCC\n");
         qyai_net_interface_set(0);
 #if defined CONFIG_MP_TEST_ENABLE
@@ -822,6 +830,7 @@ static int wifi_event_callback(void *network_ctx, enum WIFI_EVENT event)
         break;
 
     case WIFI_EVENT_STA_DISCONNECT:
+        ble_ota_scan_wifi_state(0);
         puts("|network_user_callback->WIFI_STA_DISCONNECT\n");
 
         /*wifi_rxfilter_cfg(0);*/
@@ -849,6 +858,7 @@ static int wifi_event_callback(void *network_ctx, enum WIFI_EVENT event)
         break;
 
     case WIFI_EVENT_STA_NETWORK_STACK_DHCP_TIMEOUT:
+        ble_ota_scan_wifi_state(0);
         puts("|network_user_callback->WIFI_EVENT_STA_NETWPRK_STACK_DHCP_TIMEOUT\n");
         net.arg = "net";
         net.event = NET_CONNECT_DHCP_TIMEOUT;

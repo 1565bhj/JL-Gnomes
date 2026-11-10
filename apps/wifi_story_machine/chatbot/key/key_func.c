@@ -11,6 +11,7 @@
 #include "asm/pwm.h"
 #include "device/device.h"
 #include "ai_uart_ctrol.h"
+#include "ble_ota_scan.h"
 
 /* ===================== 按键功能宏（示例） =====================
  * 每个 KEYx_FUNC 为 32 位整型，位域分配：
@@ -273,6 +274,11 @@ int key_do_double_action(int act)
     case KEY_DOUBLE_NET_CFG:
         aisp_wake(8);//WIFI模式下按键进入配网
         break;
+#if BLE_OTA_SCAN_ENABLED
+    case KEY_DOUBLE_RECV_BLE:
+        ble_ota_scan_toggle();
+        break;
+#endif
     default:
         return false;
     }

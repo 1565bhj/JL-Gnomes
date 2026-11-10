@@ -23,6 +23,7 @@
 // *****************************************************************************
 #include "system/app_core.h"
 #include "system/includes.h"
+#include "system/timer.h"
 #include "event/net_event.h"
 #include "app_config.h"
 #include "asm/crc16.h"
@@ -34,11 +35,16 @@
 #include "third_party/common/ble_user.h"
 #include "le_net_cfg.h"
 #include "le_common.h"
+#include "ble_ota_scan.h"
 #include "event/key_event.h"
 #include "net_update.h"
+#include "update/http_update.h"
 
 #if (defined CONFIG_WIFI_ENABLE || defined CONFIG_EXT_WIFI_ENABLE)
 #include "wifi/wifi_def.h"
+#endif
+#if BLE_OTA_SCAN_ENABLED
+#include "wifi/wifi_connect.h"
 #endif
 
 #if (TCFG_BLE_DEMO_SELECT == DEF_BLE_DEMO_NET_CFG)
@@ -116,6 +122,418 @@ static int app_send_user_data_check(u16 len);
 static int app_send_user_data_do(void *priv, u8 *data, u16 len);
 static int app_send_user_data(u16 handle, const u8 *data, u16 len, u8 handle_type);
 extern u8 is_in_config_network_state(void);
+
+#if BLE_OTA_SCAN_ENABLED
+static volatile u8 ota_wifi_ready;
+static volatile u8 ota_scan_requested;
+static volatile u8 ota_scan_stop_requested;
+static volatile u8 ota_scan_running;
+static u8 ota_adv_active;
+static u8 ota_provision_pending;
+static u8 ota_cfg_exit_pending;
+static u16 ota_scan_timer;
+static u16 ota_cfg_exit_timer;
+static u32 ota_cfg_generation;
+static u32 ota_scan_retry_ms;
+static u32 ota_scan_stats_ms;
+static u32 ota_scan_rx_log_ms;
+static u32 ota_scan_reject_log_ms;
+static volatile u32 ota_scan_reports;
+static volatile u32 ota_scan_matches;
+static u8 ota_scan_rx_log_seq;
+static u8 ota_scan_rx_log_total;
+
+static void ble_module_enable_locked(u8 en);
+static void ble_ota_scan_reset_url(void);
+
+/* All controller scan commands share the provisioning mutex. */
+static int ble_ota_scan_stop(void)
+{
+    int ret;
+    if (!ota_scan_running) {
+        return 0;
+    }
+    ret = ble_op_scan_enable2(0, 0);
+    if (ret != BLE_CMD_RET_SUCESS) {
+        printf("[BLE_OTA][%u ms] SCAN_STOP_FAILED ret=%d\n", sys_timer_get_ms(), ret);
+        return ret;
+    }
+    ota_scan_running = 0;
+    ble_ota_scan_reset_url();
+    printf("[BLE_OTA][%u ms] SCAN_STOP reports=%u matched=%u\n",
+           sys_timer_get_ms(), ota_scan_reports, ota_scan_matches);
+    return 0;
+}
+
+#define BLE_OTA_ADV_COMPANY_ID       0xFFFF
+#define BLE_OTA_ADV_MAX_PAYLOAD      17
+#define BLE_OTA_ADV_RESULT_NONE      0
+#define BLE_OTA_ADV_RESULT_OK        1
+#define BLE_OTA_ADV_RESULT_FORMAT    (-1)
+#define BLE_OTA_ADV_RESULT_FRAGMENT  (-2)
+#define BLE_OTA_ADV_RESULT_CRC       (-3)
+#define BLE_OTA_SCAN_CRC8_POLY       (0x07U)
+#define BLE_OTA_URL_MAX_LEN          64
+#define BLE_OTA_URL_MAX_FRAGMENTS    4
+#define BLE_OTA_URL_TIMEOUT_MS       10000
+
+static u8 ota_url_buffer[BLE_OTA_URL_MAX_LEN + 1];
+static u8 ota_url_last_ready[BLE_OTA_URL_MAX_LEN + 1];
+static u16 ota_url_len;
+static u16 ota_url_last_ready_len;
+static volatile u8 ota_http_start_pending;
+static u8 ota_url_total;
+static u8 ota_url_next_seq;
+static u8 ota_url_active;
+static u32 ota_url_last_ms;
+static u32 ota_url_ready_ms;
+static u32 ota_url_drop_log_ms;
+
+static void ble_ota_scan_reset_url(void)
+{
+    ota_url_len = 0;
+    ota_url_total = 0;
+    ota_url_next_seq = 0;
+    ota_url_active = 0;
+    ota_url_last_ms = 0;
+}
+
+static void ble_ota_scan_reset_session(void)
+{
+    ble_ota_scan_reset_url();
+    ota_url_last_ready_len = 0;
+    ota_url_ready_ms = 0;
+    ota_http_start_pending = 0;
+}
+
+static void ble_ota_scan_url_drop(u32 now, int reason)
+{
+    if ((u32)(now - ota_url_drop_log_ms) >= 1000) {
+        ota_url_drop_log_ms = now;
+        printf("[BLE_OTA][%u ms] OTA_URL_DROP reason=%d\n", now, reason);
+    }
+    ble_ota_scan_reset_url();
+}
+
+/* Stage 4: collect ordered fragments and print the complete URL only. */
+static void ble_ota_scan_collect_url(u8 seq, u8 total, const u8 *payload,
+                                     u8 payload_len, u32 now)
+{
+    u16 i;
+    if (total > BLE_OTA_URL_MAX_FRAGMENTS || !payload_len) {
+        ble_ota_scan_url_drop(now, -1);
+        return;
+    }
+    if (ota_url_active &&
+        (u32)(now - ota_url_last_ms) >= BLE_OTA_URL_TIMEOUT_MS) {
+        ble_ota_scan_reset_url();
+    }
+    if (seq == 0) {
+        ble_ota_scan_reset_url();
+        ota_url_active = 1;
+        ota_url_total = total;
+    } else if (!ota_url_active || total != ota_url_total || seq != ota_url_next_seq) {
+        ble_ota_scan_url_drop(now, -2);
+        return;
+    }
+    if (ota_url_len + payload_len > BLE_OTA_URL_MAX_LEN) {
+        ble_ota_scan_url_drop(now, -3);
+        return;
+    }
+    memcpy(ota_url_buffer + ota_url_len, payload, payload_len);
+    ota_url_len += payload_len;
+    ota_url_next_seq = seq + 1;
+    ota_url_last_ms = now;
+    if (ota_url_next_seq != ota_url_total) {
+        return;
+    }
+    ota_url_buffer[ota_url_len] = '\0';
+    if ((ota_url_len < 7 || memcmp(ota_url_buffer, "http://", 7)) &&
+        (ota_url_len < 8 || memcmp(ota_url_buffer, "https://", 8))) {
+        ble_ota_scan_url_drop(now, -4);
+        return;
+    }
+    for (i = 0; i < ota_url_len; i++) {
+        if (ota_url_buffer[i] < 0x20 || ota_url_buffer[i] > 0x7e) {
+            ble_ota_scan_url_drop(now, -4);
+            return;
+        }
+    }
+    if (ota_url_len == ota_url_last_ready_len &&
+        !memcmp(ota_url_buffer, ota_url_last_ready, ota_url_len) &&
+        (u32)(now - ota_url_ready_ms) < BLE_OTA_URL_TIMEOUT_MS) {
+        printf("[BLE_OTA][%u ms] OTA_URL_DUPLICATE len=%u\n", now, ota_url_len);
+    } else {
+        memcpy(ota_url_last_ready, ota_url_buffer, ota_url_len + 1);
+        ota_url_last_ready_len = ota_url_len;
+        ota_url_ready_ms = now;
+        printf("[BLE_OTA][%u ms] OTA_URL_READY len=%u url=%s\n",
+               now, ota_url_len, ota_url_buffer);
+        ota_http_start_pending = 1;
+        ota_scan_stop_requested = 1;
+        ota_scan_requested = 0;
+        printf("[BLE_OTA][%u ms] OTA_HTTP_START_REQUEST url=%s\n",
+               now, ota_url_buffer);
+    }
+    ble_ota_scan_reset_url();
+}
+
+void ble_ota_scan_toggle(void)
+{
+    if (ota_scan_running) {
+        ota_scan_stop_requested = 1;
+        ota_scan_requested = 0;
+        printf("[BLE_OTA][%u ms] SCAN_EXIT_REQUEST source=key_double_click\n", sys_timer_get_ms());
+        return;
+    }
+    if (ota_scan_requested) {
+        ota_scan_requested = 0;
+        printf("[BLE_OTA][%u ms] SCAN_REQUEST_CANCELLED source=key_double_click\n", sys_timer_get_ms());
+        return;
+    }
+    ota_scan_stop_requested = 0;
+    ota_scan_requested = 1;
+    printf("[BLE_OTA][%u ms] SCAN_REQUEST source=key_double_click\n", sys_timer_get_ms());
+}
+
+/* CRC-8/ATM, polynomial 0x07, initial value 0. */
+static u8 ble_ota_scan_crc8(const u8 *data, u8 len)
+{
+    u8 crc = 0;
+    u8 i;
+    while (len--) {
+        crc ^= *data++;
+        for (i = 0; i < 8; i++) {
+            crc = (crc & 0x80) ? ((crc << 1) ^ BLE_OTA_SCAN_CRC8_POLY) : (crc << 1);
+        }
+    }
+    return crc;
+}
+
+/* Manufacturer payload: FF FF OTA seq total payload_len payload crc8. */
+static int ble_ota_scan_ota_packet(const u8 *data, u8 len,
+                                   u8 *seq, u8 *total, u8 *payload_len,
+                                   u8 *payload_crc, const u8 **payload)
+{
+    static const u8 marker[] = {'O', 'T', 'A'};
+    unsigned int offset = 0;
+    unsigned int field_len;
+    unsigned int manufacturer_len;
+    unsigned int crc_len;
+    const u8 *manufacturer;
+    while (offset < len) {
+        field_len = data[offset];
+        if (!field_len) {
+            break;
+        }
+        if (field_len > len - offset - 1) {
+            return BLE_OTA_ADV_RESULT_FORMAT;
+        }
+        if (field_len >= 10 &&
+            data[offset + 1] == 0xff &&
+            data[offset + 2] == (BLE_OTA_ADV_COMPANY_ID & 0xff) &&
+            data[offset + 3] == (BLE_OTA_ADV_COMPANY_ID >> 8) &&
+            !memcmp(data + offset + 4, marker, sizeof(marker))) {
+            manufacturer = data + offset + 2;
+            manufacturer_len = field_len - 1;
+            *seq = manufacturer[5];
+            *total = manufacturer[6];
+            *payload_len = manufacturer[7];
+            if (!*total || *seq >= *total || *payload_len > BLE_OTA_ADV_MAX_PAYLOAD ||
+                manufacturer_len != (unsigned int)(9 + *payload_len)) {
+                return BLE_OTA_ADV_RESULT_FRAGMENT;
+            }
+            crc_len = 8 + *payload_len;
+            *payload_crc = manufacturer[crc_len];
+            if (ble_ota_scan_crc8(manufacturer, crc_len) != *payload_crc) {
+                return BLE_OTA_ADV_RESULT_CRC;
+            }
+            *payload = manufacturer + 8;
+            return BLE_OTA_ADV_RESULT_OK;
+        }
+        offset += field_len + 1;
+    }
+    return BLE_OTA_ADV_RESULT_NONE;
+}
+
+static void ble_ota_scan_report(const u8 *packet, u16 size)
+{
+    int result;
+    u8 len;
+    u8 seq;
+    u8 total;
+    u8 payload_len;
+    u8 payload_crc;
+    const u8 *payload;
+    u32 now;
+    bd_addr_t address;
+    if (!ota_scan_running || !ota_wifi_ready || is_in_config_network_state() || size < 12) {
+        return;
+    }
+    len = packet[11];
+    if (packet[1] < 10 || (u16)packet[1] + 2 > size ||
+        len > 31 || len > packet[1] - 10 || packet[2] > 3) {
+        return;
+    }
+    ota_scan_reports++;
+    result = ble_ota_scan_ota_packet(packet + 12, len, &seq, &total,
+                                     &payload_len, &payload_crc, &payload);
+    if (result != BLE_OTA_ADV_RESULT_OK) {
+        if (result < 0) {
+            now = sys_timer_get_ms();
+            if ((u32)(now - ota_scan_reject_log_ms) >= 1000) {
+                ota_scan_reject_log_ms = now;
+                printf("[BLE_OTA][%u ms] OTA_ADV_REJECT reason=%d\n", now, result);
+            }
+        }
+        return;
+    }
+    ota_scan_matches++;
+    now = sys_timer_get_ms();
+    if (ota_scan_matches != 1 && seq == ota_scan_rx_log_seq &&
+        total == ota_scan_rx_log_total &&
+        (u32)(now - ota_scan_rx_log_ms) < 1000) {
+        return;
+    }
+    ota_scan_rx_log_ms = now;
+    ota_scan_rx_log_seq = seq;
+    ota_scan_rx_log_total = total;
+    gap_event_advertising_report_get_address(packet, address);
+    music_play_res_file("RecvBLE.mp3");
+    printf("[BLE_OTA][%u ms] OTA_ADV_RX seq=%u/%u payload=%u crc=%02X rssi=%d addr=%02X:%02X:%02X:%02X:%02X:%02X matched=%u\n",
+           now, seq, total, payload_len, payload_crc,
+           (s8)packet[10], address[0], address[1], address[2], address[3],
+           address[4], address[5], ota_scan_matches);
+    printf("[BLE_OTA][%u ms] OTA_ADV_RAW size=%u: ", now, size);
+    log_info_hexdump((u8 *)packet, size);
+    ble_ota_scan_collect_url(seq, total, payload, payload_len, now);
+}
+
+void ble_ota_scan_wifi_state(unsigned char ready)
+{
+    ota_wifi_ready = !!ready;
+}
+
+static void ble_ota_scan_poll(void *priv)
+{
+    int ret;
+    int ready;
+    u32 now = sys_timer_get_ms();
+    os_mutex_pend(&mutex, 0);
+    ready = ota_wifi_ready &&           // WiFi 网络事件已经通知联网成功。
+            wifi_is_on() &&             // WiFi 模块仍然处于开启状态。
+            wifi_get_sta_connect_state() == WIFI_STA_NETWORK_STACK_DHCP_SUCC && // WiFi 不只是连接上路由器，还必须已经完成 DHCP，具备正常网络能力。
+            !is_in_config_network_state() &&   // 当前不能处于 BLE 配网状态。这样可以避免 BLE 配网广播和 OTA 被动扫描同时使用 BLE 控制器。
+            !con_handle &&              // 当前没有 BLE GATT 连接。OTA 广播扫描阶段只接收广播，不允许已有连接占用相关资源。
+            !adv_ctrl_en &&             // 当前没有启用 BLE 配网广播。
+            !ota_adv_active &&          // 当前没有其他 BLE 可连接广播活动。
+            !complete &&                // BLE 配网流程没有处于完成但尚未完全退出的状态。
+            !ota_cfg_exit_pending &&    // 配网退出定时器还没有执行完成时，不启动扫描，避免配网广播关闭和 OTA 扫描启动发生冲突。
+            !ota_provision_pending;     // 当前没有等待启动 BLE 配网广播。
+#ifdef CONFIG_LTE_PHY_ENABLE
+    extern int sys_net_channel_read(void);
+    ready = ready && sys_net_channel_read() == 0;
+#endif
+    if (!ready) {
+        if (ota_scan_running && (u32)(now - ota_scan_retry_ms) >= 1000) {
+            ota_scan_retry_ms = now;
+            ble_ota_scan_stop();
+        }
+        ota_scan_stop_requested = 0;
+        if (ota_scan_requested) {
+            ota_scan_requested = 0;
+            printf("[BLE_OTA][%u ms] SCAN_REQUEST_REJECT prerequisites\n", now);
+        }
+        if (ota_http_start_pending) {
+            ota_http_start_pending = 0;
+            printf("[BLE_OTA][%u ms] OTA_HTTP_START_CANCELLED prerequisites\n", now);
+        }
+        if (!ota_scan_running && ota_provision_pending) {
+            ble_module_enable_locked(1);
+        }
+    } else if (ota_scan_stop_requested) {
+        if (!ota_scan_running) {
+            ota_scan_stop_requested = 0;
+        } else if (ble_ota_scan_stop() == 0) {
+            music_play_res_file("ExitRecvBC.mp3");
+            ota_scan_stop_requested = 0;
+            printf("[BLE_OTA][%u ms] SCAN_EXIT\n", now);
+            if (ota_http_start_pending) {
+                int http_ret;
+                ota_http_start_pending = 0;
+                http_ret = http_ota_init_with_url((const char *)ota_url_last_ready);
+                if (http_ret) {
+                    printf("[BLE_OTA][%u ms] OTA_HTTP_START_FAILED ret=%d\n", now, http_ret);
+                } else {
+                    printf("[BLE_OTA][%u ms] OTA_HTTP_START url=%s\n",
+                           now, ota_url_last_ready);
+                }
+            }
+        }
+    } else if (ota_scan_requested && !ota_scan_running &&
+               (u32)(now - ota_scan_retry_ms) >= 1000) {
+        music_play_res_file("EnterRecvBC.mp3");
+        ota_scan_retry_ms = now;
+        ret = ble_op_set_scan_filter_policy(0);
+        if (ret == BLE_CMD_RET_SUCESS) {
+            /*
+                扫描间隔interval：100 ms；
+                扫描窗口window：30 ms；
+                被动扫描；
+                不主动发送 Scan Request。
+            */
+            ret = ble_op_set_scan_param(0, ADV_SCAN_MS(100), ADV_SCAN_MS(30));
+        }
+        if (ret == BLE_CMD_RET_SUCESS) {
+            ret = ble_op_scan_enable2(1, 0);    // 启动扫描
+        }
+        if (ret == BLE_CMD_RET_SUCESS) {
+            ota_scan_reports = 0;
+            ota_scan_matches = 0;
+            ota_scan_rx_log_seq = 0xff;
+            ota_scan_rx_log_total = 0;
+            ota_scan_stats_ms = now;
+            ota_scan_running = 1;
+            ota_scan_requested = 0;
+            ota_scan_stop_requested = 0;
+            ble_ota_scan_reset_session();
+            ota_scan_retry_ms = now - 1000; /* Allow an immediate stop on disconnect. */
+            printf("[BLE_OTA][%u ms] SCAN_START passive interval=100ms window=30ms\n", now);
+        } else {
+            printf("[BLE_OTA][%u ms] SCAN_START_FAILED ret=%d\n", now, ret);
+        }
+    }
+    if (ota_scan_running && (u32)(now - ota_scan_stats_ms) >= 5000) {
+        ota_scan_stats_ms = now;
+        printf("[BLE_OTA][%u ms] SCAN_STATS reports=%u matched=%u\n",
+               now, ota_scan_reports, ota_scan_matches);
+    }
+    os_mutex_post(&mutex);
+}
+
+void ble_ota_scan_stack_ready(void)
+{
+    if (!os_mutex_valid(&mutex)) {
+        os_mutex_create(&mutex);
+    }
+    if (!ota_scan_timer) {
+        ota_scan_timer = sys_timer_add_to_task("sys_timer", NULL, ble_ota_scan_poll, 200);
+        printf("[BLE_OTA][%u ms] SCAN_INIT timer=%u\n", sys_timer_get_ms(), ota_scan_timer);
+    }
+}
+
+static void ble_ota_cfg_exit_timeout(void *priv)
+{
+    os_mutex_pend(&mutex, 0);
+    /* An old, already queued callback must not close a new provisioning session. */
+    if (ota_cfg_exit_pending && (u32)priv == ota_cfg_generation) {
+        ota_cfg_exit_pending = 0;
+        ota_cfg_exit_timer = 0;
+        ble_module_enable_locked(0);
+    }
+    os_mutex_post(&mutex);
+}
+#endif
 
 // Complete Local Name  默认的蓝牙名字
 extern const char *bt_get_local_name();
@@ -350,6 +768,12 @@ static void cbk_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
     case HCI_EVENT_PACKET:
         switch (hci_event_packet_get_type(packet)) {
 
+#if BLE_OTA_SCAN_ENABLED
+        case GAP_EVENT_ADVERTISING_REPORT:
+            ble_ota_scan_report(packet, size);
+            break;
+#endif
+
         /* case DAEMON_EVENT_HCI_PACKET_SENT: */
         /* break; */
         case ATT_EVENT_HANDLE_VALUE_INDICATION_COMPLETE:
@@ -368,6 +792,9 @@ static void cbk_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
                     break;
                 }
                 con_handle = hci_subevent_le_enhanced_connection_complete_get_connection_handle(packet);
+#if BLE_OTA_SCAN_ENABLED
+                ota_adv_active = 0; /* Connectable advertising stops on connection. */
+#endif
                 log_info("HCI_SUBEVENT_LE_ENHANCED_CONNECTION_COMPLETE : %0x\n", con_handle);
                 log_info("conn_interval = %d\n", hci_subevent_le_enhanced_connection_complete_get_conn_interval(packet));
                 log_info("conn_latency = %d\n", hci_subevent_le_enhanced_connection_complete_get_conn_latency(packet));
@@ -377,6 +804,9 @@ static void cbk_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
 
             case HCI_SUBEVENT_LE_CONNECTION_COMPLETE:
                 con_handle = hci_subevent_le_connection_complete_get_connection_handle(packet);
+#if BLE_OTA_SCAN_ENABLED
+                ota_adv_active = 0;
+#endif
                 log_info("HCI_SUBEVENT_LE_CONNECTION_COMPLETE: %0x\n", con_handle);
                 connection_update_complete_success(packet + 8);
                 server_profile_start(con_handle);
@@ -400,6 +830,8 @@ static void cbk_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
             break;
 
         case HCI_EVENT_DISCONNECTION_COMPLETE:
+            printf("[BLE][%u ms] BLE_DISCONNECTED handle=%04x reason=%02x cfg=%u adv_ctrl=%u\n",
+                   sys_timer_get_ms(), con_handle, packet[5], is_in_config_network_state(), adv_ctrl_en);
             log_info("HCI_EVENT_DISCONNECTION_COMPLETE: %0x\n", packet[5]);
             con_handle = 0;
             ble_user_cmd_prepare(BLE_CMD_ATT_SEND_INIT, 4, con_handle, 0, 0, 0);
@@ -1131,6 +1563,10 @@ extern void le_device_db_init(void);
 void ble_profile_init(void)
 {
     printf("ble profile init\n");
+    /* Auto-connect WiFi can start scanning without ever calling bt_ble_init(). */
+    if (!os_mutex_valid(&mutex)) {
+        os_mutex_create(&mutex);
+    }
     le_device_db_init();
 
 #if PASSKEY_ENTER_ENABLE
@@ -1154,7 +1590,13 @@ void ble_profile_init(void)
 static int set_adv_enable(void *priv, u32 en)
 {
     ble_state_e next_state, cur_state;
+    int ret;
 
+#if BLE_OTA_SCAN_ENABLED
+    if (en && ota_scan_running) {
+        return APP_BLE_OPERATION_ERROR;
+    }
+#endif
     if (!adv_ctrl_en && en) {
         return APP_BLE_OPERATION_ERROR;
     }
@@ -1186,11 +1628,18 @@ static int set_adv_enable(void *priv, u32 en)
         return APP_BLE_NO_ERROR;
     }
     log_info("adv_en:%d\n", en);
-    set_ble_work_state(next_state);
     if (en) {
         advertisements_setup_init();
     }
-    ble_user_cmd_prepare(BLE_CMD_ADV_ENABLE, 1, en);
+    ret = ble_user_cmd_prepare(BLE_CMD_ADV_ENABLE, 1, en);
+    if (ret != BLE_CMD_RET_SUCESS) {
+        printf("[BLE][%u ms] BLE_ADV_CMD_FAILED en=%u ret=%d\n", sys_timer_get_ms(), en, ret);
+        return APP_BLE_OPERATION_ERROR;
+    }
+#if BLE_OTA_SCAN_ENABLED
+    ota_adv_active = !!en;
+#endif
+    set_ble_work_state(next_state);
     return APP_BLE_NO_ERROR;
 }
 
@@ -1264,11 +1713,20 @@ void bt_ble_adv_enable(u8 enable)
     set_adv_enable(0, enable);
 }
 
-static void ble_module_enable(u8 en)
+/* Caller holds mutex; scan and provisioning advertising never start together. */
+static void ble_module_enable_locked(u8 en)
 {
-    os_mutex_pend(&mutex, 0);
     log_info("mode_en:%d\n", en);
     if (en) {
+#if BLE_OTA_SCAN_ENABLED
+        ota_wifi_ready = 0;
+        ota_provision_pending = 1;
+        if (ble_ota_scan_stop()) {
+            ota_scan_retry_ms = sys_timer_get_ms();
+            return; /* Timer retries the stop before enabling provisioning. */
+        }
+        ota_provision_pending = 0;
+#endif
         printf("+++++++++++++enable ble adv+++++++++++++");
         extern u8 get_ble_gatt_role(void);
         if (1 == get_ble_gatt_role()) {
@@ -1281,10 +1739,12 @@ static void ble_module_enable(u8 en)
         adv_ctrl_en = 1;
         bt_ble_adv_enable(1);
     } else {
+#if BLE_OTA_SCAN_ENABLED
+        ota_provision_pending = 0;
+#endif
         printf("+++++++++++++disable ble adv+++++++++++++");
         if (con_handle) {
             if (complete) {
-                os_mutex_post(&mutex);
                 return;
             }
             adv_ctrl_en = 0;
@@ -1295,6 +1755,22 @@ static void ble_module_enable(u8 en)
         }
         complete = 0;
     }
+}
+
+static void ble_module_enable(u8 en)
+{
+    os_mutex_pend(&mutex, 0);
+#if BLE_OTA_SCAN_ENABLED
+    if (en) {
+        ++ota_cfg_generation;
+        if (ota_cfg_exit_timer) {
+            sys_timeout_del(ota_cfg_exit_timer);
+            ota_cfg_exit_timer = 0;
+        }
+        ota_cfg_exit_pending = 0;
+    }
+#endif
+    ble_module_enable_locked(en);
     os_mutex_post(&mutex);
 }
 
@@ -1449,7 +1925,10 @@ int ble_connected_net_notify(void)
         rsp_mac_cmd[size++] = 0xFF;//end
         //printf("-> %s \n", &rsp_mac_cmd[6]);
         printf("rsp_mac_cmd: %d-%d-%s", rsp_mac_cmd[2] * 256 + rsp_mac_cmd[3], size, &rsp_mac_cmd[6]);
-        app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_mac_cmd, size, ATT_OP_AUTO_READ_CCC);
+        ret = app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_mac_cmd, size, ATT_OP_AUTO_READ_CCC);
+        if (ret != APP_BLE_NO_ERROR) {
+            printf("[BLE][%u ms] BLE_NOTIFY_SUCCESS_FAILED len=%d ret=%d\n", sys_timer_get_ms(), size, ret);
+        }
     } else {
         //app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, rsp_cmd0, sizeof(rsp_cmd0), ATT_OP_AUTO_READ_CCC);
         user_app_send_user_data(ATT_CHARACTERISTIC_ae82_01_VALUE_HANDLE, BLE_WIFI_CONNECTED, ATT_OP_AUTO_READ_CCC);
@@ -1478,7 +1957,21 @@ void ble_cfg_net_result_notify(int event)
         ble_connected_net_notify();
         complete = 0;
 #if !defined PAYMENT_AUDIO_SDK_ENABLE && !CONFIG_POWER_ON_ENABLE_BLE
+#if BLE_OTA_SCAN_ENABLED
+        os_mutex_pend(&mutex, 0);
+        ++ota_cfg_generation;
+        if (ota_cfg_exit_timer) {
+            sys_timeout_del(ota_cfg_exit_timer);
+        }
+        ota_cfg_exit_timer = sys_timeout_add((void *)ota_cfg_generation, ble_ota_cfg_exit_timeout, 1000);
+        ota_cfg_exit_pending = 1;
+        if (!ota_cfg_exit_timer) {
+            printf("[BLE_OTA] CFG_EXIT_TIMER_FAILED\n");
+        }
+        os_mutex_post(&mutex);
+#else
         sys_timeout_add(0, (void (*)(void *))ble_module_enable, 1000);
+#endif
 #endif
     }
 }

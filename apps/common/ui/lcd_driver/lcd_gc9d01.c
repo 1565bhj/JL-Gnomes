@@ -19,7 +19,6 @@
 
 #if TCFG_LCD_GC9D01_ENABLE
 
-
 #define READ_ID     0x04
 #define REGFLAG_DELAY 0x45
 
@@ -87,17 +86,16 @@ void GC9D01_Fill(u8 *img, u16 len)
     WriteDAT_DMA(img, len);
 }
 
-static int GC9D01_Sleep(char on)
+void GC9D01_SleepInMode(void)
 {
-    return on;//确保LCD屏幕支持睡眠指令再进行修改
-    if (on) {
-        WriteCOM(0x10); //Sleep in
-        lcd_delay(120); //Delay 120ms
-    } else {
-        WriteCOM(0x11); //Sleep out
-        lcd_delay(120);  //Delay 120ms
-    }
-    return on;
+    WriteCOM(0x10); //Sleep in
+    lcd_delay(120); //Delay 120ms
+}
+
+void GC9D01_SleepOutMode(void)
+{
+    WriteCOM(0x11); //Sleep out
+    lcd_delay(120);  //Delay 120ms
 }
 
 void GC9D01_Shown_Image(u8 *buff, u16 x_addr, u16 y_addr, u16 width, u16 height)
@@ -437,7 +435,6 @@ REGISTER_LCD_DEV(LCD_GC9D01) = {
     .LCD_DrawToDev     = GC9D01_Fill,//应用层直接到设备接口层，需要做好缓冲区共用互斥，慎用！
     .LCD_Lvgl_Full     = GC9D01_lvgl_Fill,//LVGL发送数据接口
     .LCD_ClearScreen   = GC9D01_clear_screen,
-    .LCD_Sleep         = GC9D01_Sleep,
     .Reset             = GC9D01_reset,
     .BackLightCtrl     = GC9D01_led_ctrl,
 };

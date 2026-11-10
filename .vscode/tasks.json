@@ -1,0 +1,65 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build AC791N_WIFI_STORY_MACHINE",
+            "type": "shell",
+            "command": "${workspaceFolder}\\tools\\utils\\make.exe",
+            "args": [
+                "-f",
+                "${workspaceFolder}\\apps\\wifi_story_machine\\board\\wl82\\Makefile"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}\\apps\\wifi_story_machine\\board\\wl82"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Build the AC791N_WIFI_STORY_MACHINE board target and run the board post-build steps"
+        },
+        {
+            "label": "Clean AC791N_WIFI_STORY_MACHINE",
+            "type": "shell",
+            "command": "${workspaceFolder}\\tools\\utils\\make.exe",
+            "args": [
+                "-f",
+                "${workspaceFolder}\\apps\\wifi_story_machine\\board\\wl82\\Makefile",
+                "clean"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}\\apps\\wifi_story_machine\\board\\wl82"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Clean the AC791N_WIFI_STORY_MACHINE board target"
+        },
+        {
+            "label": "Rebuild AC791N_WIFI_STORY_MACHINE",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Clean AC791N_WIFI_STORY_MACHINE",
+                "Build AC791N_WIFI_STORY_MACHINE"
+            ],
+            "problemMatcher": [],
+            "detail": "Clean and rebuild the AC791N_WIFI_STORY_MACHINE board target"
+        },
+        {
+            "label": "Download Last Build",
+            "type": "shell",
+            "command": "${workspaceFolder}\\cpu\\wl82\\tools\\download.bat",
+            "args": [
+                "sdk"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}\\cpu\\wl82\\tools"
+            },
+            "problemMatcher": [],
+            "detail": "Download the most recently built sdk image with the generated board download script"
+        }
+    ]
+}

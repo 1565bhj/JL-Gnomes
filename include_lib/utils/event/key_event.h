@@ -108,6 +108,7 @@ enum {
 /* 双击功能 */
 enum {
     KEY_DOUBLE_NONE = 0,
+    KEY_DOUBLE_RECV_BLE,       /* 双击进入接收蓝牙广播模式 */
     KEY_DOUBLE_MODE_SWITCH,    /* 双击模式切换 */
     KEY_DOUBLE_NET_CFG,        /* 双击配网模式 */
 };

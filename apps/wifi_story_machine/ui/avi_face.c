@@ -68,6 +68,7 @@ static u8 yuv_rev_buf[LCD_W * LCD_H * 3 / 2] /*sec(.sram)*/ ALIGNE(32);//外部�
 #ifdef CONFIG_UI_MIRROR_EYE
 //打开镜像时，需要设置镜像ID
 static int avi_mirror_index[] = {
+    AI_UART_CMD_EMOJI_DATA,
     AI_UART_CMD_EMOJI_HAPPY,
     AI_UART_CMD_EMOJI_EXCITE,
     AI_UART_CMD_EMOJI_QUIET,
@@ -211,6 +212,8 @@ static const char *dizzy_str[] = {
 static struct gif_eye {
     unsigned int avi_index;
     unsigned int lock_index;
+    unsigned int repeat_index;
+    unsigned int repeat_remaining;
     unsigned char task_init;
     unsigned char play_speed;
     unsigned char task_suspend;
@@ -583,6 +586,10 @@ uninit_redo:
                 if (AVI_FACE.loop_disable) {
                     goto exit;
                 }
+                if (index == AVI_FACE.avi_index && index == AVI_FACE.repeat_index && AVI_FACE.repeat_remaining > 1) {
+                    AVI_FACE.repeat_remaining--;
+                    goto redo;
+                }
                 cnt++;
                 if (index > AI_UART_CMD_EMOJI_REST && index < AI_UART_CMD_DIALUOGE_START) {
                     index = AI_UART_CMD_EMOJI_DATA;
@@ -755,7 +762,7 @@ void play_face_emoji_lock(int lock)//锁存AVI文件播放
         play_face_emoji_resum();
     }
 }
-int play_face_emoji(int avi_index)//启动AVI文件播放
+int play_face_emoji_repeat(int avi_index, unsigned int count)
 {
     char name[32];
     if (AVI_FACE.lock_index > 0) {
@@ -764,6 +771,8 @@ int play_face_emoji(int avi_index)//启动AVI文件播放
     printf("-->avi_index = %d\n", avi_index);
     user_lcd_init();
     avi_index = avi_index == AI_UART_CMD_REC_END ? AI_UART_CMD_EMOJI_DATA : avi_index;
+    AVI_FACE.repeat_index = avi_index;
+    AVI_FACE.repeat_remaining = count ? count : 1;
     if (AVI_FACE.task_init == TASK_INIT) {
         AVI_FACE.task_init = TASK_CREATE;
         AVI_FACE.play_speed = 5;
@@ -783,6 +792,11 @@ int play_face_emoji(int avi_index)//启动AVI文件播放
         }
     }
     return 0;
+}
+
+int play_face_emoji(int avi_index)//启动AVI文件播放
+{
+    return play_face_emoji_repeat(avi_index, 1);
 }
 
 int emoji_tts_callback(char *emoji)

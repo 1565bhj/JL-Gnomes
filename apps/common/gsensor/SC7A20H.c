@@ -14,6 +14,7 @@
 #include "app_config.h"
 //#include "common/ntc/ntc.h"
 #include "ai_uart_ctrol.h"
+#include "audio/music_play.h"
 
 #include "system/includes.h"
 #include "fs/fs.h"
@@ -104,9 +105,40 @@ static uint8_t shake_end_flag = 0;
 static bool shake_flag = 0;
 static bool is_shake_flag = false;
 extern bool music_start;
+extern int mp3_buf_play_res_file(char *name);
 static bool die_shake_flag = false;
 static bool draw_lots_shake_flag = false;
 static bool draw_lots_executed = false;
+
+#define SHAKE_SEQUENCE_COUNT        3
+#define SHAKE_SEQUENCE_TIMEOUT_MS   3000
+static uint8_t shake_sequence_count = 0;
+static unsigned int shake_sequence_last_time = 0;
+
+static void sc7a20h_reset_shake_sequence(void)
+{
+    shake_sequence_count = 0;
+    shake_sequence_last_time = 0;
+}
+
+static bool sc7a20h_record_shake(unsigned int now_ms)
+{
+    if (shake_sequence_count &&
+        now_ms - shake_sequence_last_time > SHAKE_SEQUENCE_TIMEOUT_MS) {
+        shake_sequence_count = 0;
+    }
+
+    shake_sequence_last_time = now_ms;
+    shake_sequence_count++;
+
+    if (shake_sequence_count >= SHAKE_SEQUENCE_COUNT) {
+        shake_sequence_count = 0;
+        shake_sequence_last_time = 0;
+        return true;
+    }
+
+    return false;
+}
 
 void qian_mode_sc7a20h_enable(int enbable)
 {
@@ -120,6 +152,7 @@ void qian_mode_restore(void)
 // 获取传感器加速度数据并处理摇晃检测逻辑
 // 在文件开头添加一个全局变量来标记是否正在播放表情
 static bool is_playing_emoji = false;
+extern int play_face_emoji(int avi_index);
 void qian_delay_6s(void)
 {
     draw_lots_executed = false;
@@ -281,6 +314,141 @@ float calculate_total_acceleration(float x, float y, float z)
     return magnitude;//fabs(magnitude - 1.0);
 }
 
+// 拍打检测参数，和SC7A20H2.c保持一致。
+#define TAP_IMPACT_G                     0.85f
+#define TAP_JERK_G                       0.15f
+#define TAP_MIN_GAP_MS                   80
+#define TAP_MAX_GAP_MS                   1500
+#define TAP_LANDING_BLOCK_MS             350
+#define TAP_REARM_MAGNITUDE_G            1.55f
+#define TAP_REARM_JERK_G                 0.55f
+#define TAP_REARM_SAMPLES                1
+
+typedef struct {
+    bool initialized;
+    bool tap_ready;
+    float previous_x;
+    float previous_y;
+    float previous_z;
+    unsigned char tap_quiet_samples;
+    unsigned char tap_count;
+    unsigned int tap_last_ms;
+    unsigned int tap_block_ms;
+} sc7a20h_tap_detector_t;
+
+static sc7a20h_tap_detector_t sc7a20h_tap_detector;
+
+static void sc7a20h_reset_tap_detector(void)
+{
+    memset(&sc7a20h_tap_detector, 0, sizeof(sc7a20h_tap_detector));
+}
+
+static bool sc7a20h_detect_tap(float x, float y, float z,
+                                unsigned int now_ms, bool *triple_tap)
+{
+    sc7a20h_tap_detector_t *detector = &sc7a20h_tap_detector;
+
+    *triple_tap = false;
+
+    if (!detector->initialized) {
+        detector->initialized = true;
+        detector->tap_ready = true;
+        detector->previous_x = x;
+        detector->previous_y = y;
+        detector->previous_z = z;
+        return false;
+    }
+
+    float magnitude = calculate_total_acceleration(x, y, z);
+    float jerk = calculate_total_acceleration(x - detector->previous_x,
+                                              y - detector->previous_y,
+                                              z - detector->previous_z);
+    detector->previous_x = x;
+    detector->previous_y = y;
+    detector->previous_z = z;
+
+    bool impact = (magnitude > TAP_IMPACT_G && jerk > TAP_JERK_G);
+
+    if (!detector->tap_ready) {
+        if (magnitude < TAP_REARM_MAGNITUDE_G && jerk < TAP_REARM_JERK_G) {
+            if (++detector->tap_quiet_samples >= TAP_REARM_SAMPLES) {
+                detector->tap_ready = true;
+            }
+        } else if (now_ms - detector->tap_last_ms >= TAP_MIN_GAP_MS) {
+            detector->tap_ready = true;
+        } else {
+            detector->tap_quiet_samples = 0;
+        }
+    }
+
+    if (detector->tap_count &&
+        now_ms - detector->tap_last_ms > TAP_MAX_GAP_MS) {
+        detector->tap_count = 0;
+    }
+
+    if (impact && detector->tap_ready &&
+        now_ms - detector->tap_block_ms >= TAP_LANDING_BLOCK_MS) {
+        unsigned int tap_gap = now_ms - detector->tap_last_ms;
+
+        detector->tap_ready = false;
+        detector->tap_quiet_samples = 0;
+
+        if (!detector->tap_count || tap_gap > TAP_MAX_GAP_MS) {
+            detector->tap_count = 1;
+            detector->tap_last_ms = now_ms;
+        } else if (tap_gap >= TAP_MIN_GAP_MS) {
+            detector->tap_count++;
+            detector->tap_last_ms = now_ms;
+        }
+
+        printf("SC7A20H: tap count=%d magnitude=%.2f jerk=%.2f\n",
+               detector->tap_count, magnitude, jerk);
+
+        if (detector->tap_count >= 3) {
+            detector->tap_count = 0;
+            *triple_tap = true;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+static void sc7a20h_handle_shake(void){
+    mp3_buf_play_res_file("shake.mp3");
+#ifdef CONFIG_UI_PLAY_EMOJI
+    play_face_emoji_repeat(AI_UART_CMD_EMOJI_DIZZY, 2);
+#endif
+    gpio_direction_output(IO_PORTC_03, 1);
+    os_time_dly(100);
+    gpio_direction_output(IO_PORTC_03, 0);
+
+}
+
+static void sc7a20h_handle_tap(void)
+{
+    printf("SC7A20H: triple tap detected\n");
+#ifdef CONFIG_UI_PLAY_EMOJI
+    play_face_emoji_repeat(AI_UART_CMD_EMOJI_ANGRY, 2);
+#endif
+    music_play_res_file("hate.mp3");
+    gpio_direction_output(IO_PORTC_03, 1);
+    os_time_dly(100);
+    gpio_direction_output(IO_PORTC_03, 0);
+}
+
+static void sc7a20h_handle_triple_shake(void)
+{
+    printf("SC7A20H: triple shake detected\n");
+#ifdef CONFIG_UI_PLAY_EMOJI
+    play_face_emoji_repeat(AI_UART_CMD_EMOJI_ANGRY, 2);
+#endif
+    music_play_res_file("shake2.mp3");
+    gpio_direction_output(IO_PORTC_03, 1);
+    os_time_dly(100);
+    gpio_direction_output(IO_PORTC_03, 0);
+}
+
 // 检测摇晃的主函数
 bool detect_shaking(sample_data_type *buf, Acceleration *current, float val)
 {
@@ -367,8 +535,8 @@ void sc7a20h_get_acceleration(unsigned int cnt)
         if (!draw_lots_executed) {
             printf("draw_lots_executed = %d\n", draw_lots_executed);
 #ifdef CONFIG_UI_PLAY_EMOJI
-            play_face_emoji(0, 200);
-            printf("play_face_emoji(0, 200);play_face_emoji(0, 200);play_face_emoji(0, 200);\n");
+            play_face_emoji_repeat(AI_UART_CMD_EMOJI_DRAW_LOTS, 3);
+            printf("play draw lots emoji %u times\n", 3);
 #endif
             draw_lots_executed = true;
         }
@@ -385,6 +553,8 @@ void sc7a20h_get_acceleration(unsigned int cnt)
     // 只有不在对话页面时才更新摇晃标志
     extern volatile int keyword_start;
     if (net_update_request() || keyword_start) {
+        sc7a20h_reset_tap_detector();
+        sc7a20h_reset_shake_sequence();
 //       printf("检查在对话页面\n");printf("关闭陀螺仪\n");
         //putchar('R');
         return;
@@ -428,6 +598,14 @@ void sc7a20h_get_acceleration(unsigned int cnt)
         .y = acc_y_g,
         .z = acc_z_g
     };
+    unsigned int now_ms = timer_get_ms();
+    // bool triple_tap = false;
+    // if (sc7a20h_detect_tap(current.x, current.y, current.z, now_ms,
+    //                        &triple_tap)) {
+    //     if (triple_tap) {
+    //         sc7a20h_handle_tap();
+    //     }
+    // }
 #define SHAKE_CNT   3
     if (detect_shaking(&sample_data, &current, SHAKE_THRESHOLD)) {
         shake_begin_flag++;
@@ -468,10 +646,11 @@ noshake:
 #endif
             // 如果在骰子游戏页面，不播放表情29
             if (!keyword_start) {
-#ifdef CONFIG_UI_PLAY_EMOJI
-                play_face_emoji(AI_UART_CMD_EMOJI_DIZZY);
-                os_time_dly(100);
-#endif
+                if (sc7a20h_record_shake(now_ms)) {
+                    sc7a20h_handle_triple_shake();
+                } else {
+                    sc7a20h_handle_shake();
+                }
             }
 
     } else if (shake_flag == 2 && shake_end_flag >= SHAKE_CNT) {
@@ -610,8 +789,10 @@ char sc7a20h_check(void)
 unsigned char sc7a20h_config(void)
 {
     if (sc7a20h_check() != 0) {
+        printf("SC7A20H_Check Fail!!!\r\n");
         return 0; // 检测失败
     }
+    printf("SC7A20H_Check Success!!!\r\n");
 
     // 配置电源模式
     sc7a20h_sensor_command(SC7A20H_CTRL_REG1, 0x00); // 关闭传感器电源

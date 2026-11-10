@@ -31,13 +31,13 @@
 #define TCFG_DEBUG_PORT -1
 #endif
 #ifndef UART0_BUAD
-#define UART0_BUAD  19200
+#define UART0_BUAD  1000000
 #endif
 #ifndef UART2_BUAD
-#define UART2_BUAD  9600
+#define UART2_BUAD  1000000
 #endif
 #ifndef UART2_PORT
-#define UART2_PORT 0
+#define UART2_PORT PORTH_2_3
 #endif
 
 UART0_PLATFORM_DATA_BEGIN(uart0_data)
@@ -63,25 +63,9 @@ UART0_PLATFORM_DATA_BEGIN(uart0_data)
     .flags = UART_DEBUG,
 UART0_PLATFORM_DATA_END();
 
-#ifdef RF_FCC_TEST_ENABLE
 UART1_PLATFORM_DATA_BEGIN(uart1_data)
-    .baudrate = 115200,
-    .port = PORTUSB_A,
-#if CONFIG_AUDIO_ENC_SAMPLE_SOURCE == AUDIO_ENC_SAMPLE_SOURCE_PLNK0
-    .output_channel = OUTPUT_CHANNEL3,
-#else
-    .output_channel = OUTPUT_CHANNEL0,
-#endif
-    .tx_pin = IO_PORT_USB_DPA,
-    .rx_pin = IO_PORT_USB_DMA,
-    .max_continue_recv_cnt = 1024,
-    .idle_sys_clk_cnt = 500000,
-    .clk_src = PLL_48M,
-    .flags = UART_DEBUG,
-UART1_PLATFORM_DATA_END();
-
-UART2_PLATFORM_DATA_BEGIN(uart2_data)
     .baudrate = TCFG_DEBUG_BAUD,
+    .port = PORT_REMAP,//PORTUSB_A
 #if CONFIG_AUDIO_ENC_SAMPLE_SOURCE == AUDIO_ENC_SAMPLE_SOURCE_PLNK0
     .output_channel = OUTPUT_CHANNEL3,
 #else
@@ -93,36 +77,15 @@ UART2_PLATFORM_DATA_BEGIN(uart2_data)
     .idle_sys_clk_cnt = 500000,
     .clk_src = PLL_48M,
     .flags = UART_DEBUG,
-UART2_PLATFORM_DATA_END();
-
-#else
-UART1_PLATFORM_DATA_BEGIN(uart1_data)
-    .baudrate = TCFG_DEBUG_BAUD,
-    .port = PORT_REMAP,//PORTUSB_A
-#if CONFIG_AUDIO_ENC_SAMPLE_SOURCE == AUDIO_ENC_SAMPLE_SOURCE_PLNK0
-    .output_channel = OUTPUT_CHANNEL3,
-#else
-    .output_channel = OUTPUT_CHANNEL0,
-#endif
-    .tx_pin = TCFG_DEBUG_PORT,//IO_PORT_USB_DPA
-    //.tx_pin = IO_PORT_USB_DPA,//IO_PORT_USB_DPA
-    .rx_pin = -1,//IO_PORT_USB_DMA
-    .max_continue_recv_cnt = 1024,
-    .idle_sys_clk_cnt = 500000,
-    .clk_src = PLL_48M,
-    .flags = UART_DEBUG,
 UART1_PLATFORM_DATA_END();
 
 UART2_PLATFORM_DATA_BEGIN(uart2_data)
     .baudrate = UART2_BUAD,
-//    .port = PORT_REMAP,//PORTC_9_10
-//    .tx_pin = IO_PORTC_10,//IO_PORT_USB_DPA,
-//    .rx_pin = IO_PORTC_09,//IO_PORTC_09,//IO_PORT_USB_DMA,
 
 #if UART2_PORT == PORTH_2_3
     .port = PORTH_2_3,
-    .tx_pin = IO_PORTH_02,//IO_PORT_USB_DPA,
-    .rx_pin = IO_PORTH_03,//IO_PORT_USB_DMA,
+    .tx_pin = -1,
+    .rx_pin = IO_PORTH_03,
 #else
 #ifdef USED_WS2812B_SHOWN
     .port = PORT_REMAP,
@@ -135,13 +98,13 @@ UART2_PLATFORM_DATA_BEGIN(uart2_data)
 #endif
 #endif
     .output_channel = OUTPUT_CHANNEL3,
-//    .input_channel = INPUT_CHANNEL1,
+    .input_channel = INPUT_CHANNEL1,
     .max_continue_recv_cnt = 1024,
     .idle_sys_clk_cnt = 500000,
     .clk_src = PLL_48M,
     .flags = UART_DEBUG,
 UART2_PLATFORM_DATA_END();
-#endif
+
 
 /**********************************SD模块****************************************
  * 暂只支持1个SD外设，如需要多个SD外设，自行去掉下面SD0/1_ENABLE控制，另外定义即可
@@ -497,7 +460,7 @@ static const struct pap_info pap_data = {
 #if TCFG_LCD_BL_PWM_PORT
 #define LCD_BL_PORT TCFG_LCD_BL_PWM_PORT
 #else
-#define LCD_BL_PORT IO_PORTH_03
+#define LCD_BL_PORT -1 //IO_PORTH_03
 #endif
 
 static const struct ui_lcd_platform_data pdata = {
@@ -507,10 +470,10 @@ static const struct ui_lcd_platform_data pdata = {
     .te_pin  = LCD_SPI_TE_PORT,
     .rst_pin = LCD_SPI_RST_PORT,
     .cs_pin  = LCD_SPI_CS_PORT,
+#ifdef CONFIG_UI_TOW_EYE
     .cs1_pin = LCD_SPI_CS1_PORT,
+#endif
     .bl_pin  = LCD_SPI_BL_PORT,
-    .touch_int_pin = LCD_TOUCH_INT_PORT,
-    .touch_reset_pin = LCD_TOUCH_RESET_PORT,
     .lcd_if  = LCD_SPI,//屏幕接口类型还有 PAP , SPI
 #else
 #if TCFG_LCD_ST7735S_ENABLE || TCFG_LCD_ST7789P3_ENABLE || TCFG_LCD_ST77912_ENABLE || TCFG_LCD_GC9D01_ENABLE || TCFG_LCD_ST7735P3_ENABLE || TCFG_LCD_JD9853_ENABLE
@@ -783,6 +746,32 @@ PWM_PLATFORM_DATA_BEGIN(pwm_data1)
 PWM_PLATFORM_DATA_END()
 #endif
 
+#ifdef TCFG_SERVO_ENABLE
+PWM_PLATFORM_DATA_BEGIN(pwm_data0)
+    .port	= TCFG_SERVO1_PORT,
+    .pwm_ch = TCFG_SERVO1_PWMCH,//初始化可选多通道,如:PWMCH0_H | PWMCH0_L | PWMCH1_H ... | PWMCH7_H | PWMCH7_L | PWM_TIMER2_OPCH2 | PWM_TIMER3_OPCH3 ,
+    .freq   = 50,//频率
+    .duty   = 7.5,//占空比
+    .point_bit = 2,//根据point_bit值调节占空比小数点精度位: 0<freq<=4K,point_bit=2;4K<freq<=40K,point_bit=1; freq>40K,point_bit=0;
+PWM_PLATFORM_DATA_END()
+
+PWM_PLATFORM_DATA_BEGIN(pwm_data1)
+    .port	= TCFG_SERVO2_PORT,
+    .pwm_ch = TCFG_SERVO2_PWMCH, //PWM_TIMER3_OPCH3 | TCFG_LED_PWMCH_PORT,//初始化可选多通道,如:PWMCH0_H | PWMCH0_L | PWMCH1_H ... | PWMCH7_H | PWMCH7_L | PWM_TIMER2_OPCH2 | PWM_TIMER3_OPCH3 ,
+    .freq   = 50,//频率
+    .duty   = 7.5,//占空比
+    .point_bit = 2,//根据point_bit值调节占空比小数点精度位: 0<freq<=4K,point_bit=2;4K<freq<=40K,point_bit=1; freq>40K,point_bit=0;
+PWM_PLATFORM_DATA_END()
+
+PWM_PLATFORM_DATA_BEGIN(pwm_data2)
+    .port	= TCFG_SERVO3_PORT,
+    .pwm_ch = TCFG_SERVO3_PWMCH, //PWM_TIMER3_OPCH3 | TCFG_LED_PWMCH_PORT,//初始化可选多通道,如:PWMCH0_H | PWMCH0_L | PWMCH1_H ... | PWMCH7_H | PWMCH7_L | PWM_TIMER2_OPCH2 | PWM_TIMER3_OPCH3 ,
+    .freq   = 50,//频率
+    .duty   = 7.5,//占空比
+    .point_bit = 2,//根据point_bit值调节占空比小数点精度位: 0<freq<=4K,point_bit=2;4K<freq<=40K,point_bit=1; freq>40K,point_bit=0;
+PWM_PLATFORM_DATA_END()
+#endif
+
 #if TCFG_USB_SLAVE_ENABLE || TCFG_USB_HOST_ENABLE
 static const struct otg_dev_data otg_data = {
 #if defined CONFIG_MP_TEST_ENABLE
@@ -930,6 +919,11 @@ REGISTER_DEVICES(device_table) = {
     { "pap",   &pap_dev_ops, (void *)&pap_data },
     { "emi",   &emi_dev_ops, (void *)&emi_data },
     { "imd",   &imd_dev_ops, NULL },
+#endif
+#ifdef TCFG_SERVO_ENABLE
+    { "pwm1",   &pwm_dev_ops,  (void *)&pwm_data0},
+    { "pwm2",   &pwm_dev_ops,  (void *)&pwm_data1},
+    { "pwm3",   &pwm_dev_ops,  (void *)&pwm_data2},
 #endif
 #ifdef TCFG_LED_PWM0_PORT
     { "pwm0",   &pwm_dev_ops,  (void *)&pwm_data0},
@@ -1254,6 +1248,13 @@ static void board_set_soft_poweroff(void)
         gpio_set_hd1(IO_PORT, 0);
         gpio_latch_en(IO_PORT, 1);
     }
+
+    gpio_latch_en(IO_PORTC_06, 0);
+    gpio_set_direction(IO_PORTC_06, 1);
+    gpio_set_die(IO_PORTC_06, 1);
+    gpio_set_pull_up(IO_PORTC_06, 1);
+    gpio_set_pull_down(IO_PORTC_06, 0);
+    gpio_latch_en(IO_PORTC_06, 1);
 }
 
 static void sleep_exit_callback(u32 usec)
@@ -1296,6 +1297,10 @@ static void sleep_enter_callback(u8  step)
 
 static void board_power_init(void)
 {
+    gpio_direction_input(TCFG_CHARING_STATUS_PORT);
+    gpio_set_pull_up(TCFG_CHARING_STATUS_PORT, 0);
+    gpio_set_pull_down(TCFG_CHARING_STATUS_PORT, 1);
+
     gpio_direction_input(IO_PORTB_08);
     gpio_set_pull_up(IO_PORTB_08, 0);
 	gpio_set_pull_down(IO_PORTB_08,0);
@@ -1381,11 +1386,7 @@ static void board_power_init(void)
 #ifdef CONFIG_DEBUG_ENABLE
 void debug_uart_init()
 {
-#ifdef RF_FCC_TEST_ENABLE
-	uart_init(&uart2_data);
-#else
     uart_init(&uart1_data);
-#endif
 }
 #endif
 

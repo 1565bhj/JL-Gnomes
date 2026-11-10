@@ -397,7 +397,7 @@
 
 
 #define TCFG_CHARING_STATUS_PORT            IO_PORTC_06     //TYPE-C插入电池充电检测IO
-#define TCFG_CHARGFULL_STATUS_PORT          IO_PORT_PR_00   //充满检测IO
+#define TCFG_CHARGFULL_STATUS_PORT          -1   //充满检测IO
 #define TCFG_LCD_BL_PWM_PORT                IO_PORTH_03     //LCD背光灯的PWM IO
 #define TCFG_LCD_BL_PWM_DEV_NUM             "pwm1"          //LCD背光灯的PWM设备名称
 
@@ -591,9 +591,9 @@
 #define TCFG_SW_IIC0_DELAY                   20
 #endif
 #ifndef TCFG_SW_IIC1_CLK_PORT
-#define TCFG_SW_IIC1_CLK_PORT                IO_PORTC_00
-#define TCFG_SW_IIC1_SDA_PORT                IO_PORTC_02
-#define TCFG_SW_IIC1_DELAY                   20
+#define TCFG_SW_IIC1_CLK_PORT                IO_PORTA_09
+#define TCFG_SW_IIC1_SDA_PORT                IO_PORTA_07
+#define TCFG_SW_IIC1_DELAY                   50
 #endif
 
 //*********************************************************************************//

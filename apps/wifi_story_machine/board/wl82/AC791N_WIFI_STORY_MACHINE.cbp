@@ -1523,6 +1523,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/qyai_pcm2opus.h" />
+		<Unit filename="../../chatbot/servo_pwm.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../chatbot/sys_instruct_word.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1536,6 +1539,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/tm_instruct_word.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../chatbot/touch_adc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../chatbot/uart_motor.c">

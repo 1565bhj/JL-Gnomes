@@ -116,10 +116,19 @@ static const at_command_t at_commands[] = {
 static char at_cmd_on = 0;
 static void *uart_hdl = NULL;
 static unsigned char recv_buf[AT_UART_BUFFER_SIZE] ALIGNED(4);
-static unsigned char uart_buf[1024]; // 串口接收缓存
+static unsigned char uart_buf[1024] ALIGNED(32); // 串口接收缓存
 static OS_SEM msg_sem;
 static OS_MUTEX mtx;
 static char g_asr_tts_result_buf[512] ALIGNED(4);
+
+static int at_uart_ioctl_check(const char *name, u32 cmd, u32 arg)
+{
+    int ret = dev_ioctl(uart_hdl, cmd, arg);
+    if (ret) {
+        printf("[AT_UART_CMD] %s failed, ret=%d\n", name, ret);
+    }
+    return ret;
+}
 
 // 发送数据到串口
 static void uart_send_data(char *data)
@@ -361,6 +370,7 @@ static void uart_recv_task_main(void *priv)
     int ret;
     struct key_event key = {0};
     char err_status = 0;
+    unsigned int timeout_count = 0;
     key.type = KEY_EVENT_USER;
     key.action = KEY_EVENT_CLICK;
     char sbuf[128] = {0};
@@ -369,10 +379,17 @@ static void uart_recv_task_main(void *priv)
         memset(recv_buf, 0, sizeof(recv_buf));
         int len = dev_read(uart_hdl, recv_buf, sizeof(recv_buf));
         if (len > 0) {
-            printf("recv: %d, %s\n", len, recv_buf);
+            printf("[AT_UART_CMD] recv: %s\n", recv_buf);
 
+            // if (strstr(recv_buf, "ota")) {
+            //     extern int http_ota_init(void *priv);
+            //     printf("[AT_UART_CMD] uart recv ota, start HTTP OTA\n");
+            //     uart_send_respond_cmd(http_ota_init((void *)1) ? 1 : 0);
+            //     continue;
+            // }
             // 检查是否收到AT命令，并识别具体命令
             const char *cmd = check_at_command(recv_buf, len);
+            printf("[AT_UART_CMD] cmd: %s\n", cmd);
             if (cmd) {
                 // 根据不同命令类型打印不同信息
                 printf("cmd: %s\n", cmd);
@@ -905,7 +922,15 @@ static void uart_recv_task_main(void *priv)
                 //uart_send_respond_cmd(1);
             }
         } else if (len == UART_CIRCULAR_BUFFER_WRITE_OVERLAY) {
-            dev_ioctl(uart_hdl, UART_FLUSH, 0); // 清空缓冲区
+            printf("[AT_UART_CMD] uart2 circular buffer overflow, flush\n");
+            at_uart_ioctl_check("UART_FLUSH", UART_FLUSH, 0); // 清空缓冲区
+        } else if (len == UART_RECV_TIMEOUT) {
+            timeout_count++;
+            if (timeout_count <= 3 || !(timeout_count % 20)) {
+                printf("[AT_UART_CMD] uart2 receive timeout, count=%u\n", timeout_count);
+            }
+        } else if (len < 0) {
+            printf("[AT_UART_CMD] uart2 receive failed, len=%d\n", len);
         }
     }
 }
@@ -915,6 +940,9 @@ static void uart_recv_task_main(void *priv)
 static void AT_uart_task_main(void *priv)
 {
     char name[32];
+    int ret;
+
+    printf("[AT_UART_CMD] uart2 task started\n");
     os_sem_create(&msg_sem, 0);
     os_mutex_create(&mtx);
 
@@ -923,41 +951,73 @@ static void AT_uart_task_main(void *priv)
     sprintf(name, "uart%d", AT_UART_CMD_ENABLE);
     uart_hdl = dev_open(name, NULL);
 #else
+    sprintf(name, "uart0");
     uart_hdl = dev_open("uart0", NULL);
 #endif
 
     if (!uart_hdl) {
-        printf("open uart err !!!\n");
+        printf("[AT_UART_CMD] open %s err !!!\n", name);
         return;
     }
+    printf("[AT_UART_CMD] open %s success, configure rx\n", name);
 
     /* 1 . 设置串口接收缓存数据的循环buf地址 */
-    dev_ioctl(uart_hdl, UART_SET_CIRCULAR_BUFF_ADDR, (int)uart_buf);
+    ret = at_uart_ioctl_check("UART_SET_CIRCULAR_BUFF_ADDR", UART_SET_CIRCULAR_BUFF_ADDR, (u32)uart_buf);
+    if (ret) {
+        goto uart_init_fail;
+    }
 
     /* 1 . 设置串口接收缓存数据的循环buf长度 */
-    dev_ioctl(uart_hdl, UART_SET_CIRCULAR_BUFF_LENTH, sizeof(uart_buf));
+    ret = at_uart_ioctl_check("UART_SET_CIRCULAR_BUFF_LENTH", UART_SET_CIRCULAR_BUFF_LENTH, sizeof(uart_buf));
+    if (ret) {
+        goto uart_init_fail;
+    }
 
     /* 3 . 设置接收数据为阻塞方式,需要非阻塞可以去掉,建议加上超时设置 */
-    dev_ioctl(uart_hdl, UART_SET_RECV_BLOCK, 1);
+    ret = at_uart_ioctl_check("UART_SET_RECV_BLOCK", UART_SET_RECV_BLOCK, 1);
+    if (ret) {
+        goto uart_init_fail;
+    }
 
-    u32 parm = 1000;
-    dev_ioctl(uart_hdl, UART_SET_RECV_TIMEOUT, (u32)parm); //超时设置
+    u32 parm = 100;
+    ret = at_uart_ioctl_check("UART_SET_RECV_TIMEOUT", UART_SET_RECV_TIMEOUT, parm); //超时设置
+    if (ret) {
+        goto uart_init_fail;
+    }
 
     /* 4 . 使能特殊串口,启动收发数据 */
-    dev_ioctl(uart_hdl, UART_START, 0);
+    ret = at_uart_ioctl_check("UART_START", UART_START, 0);
+    if (ret) {
+        goto uart_init_fail;
+    }
+
+    printf("[AT_UART_CMD] uart2 rx started, baud=1000000, rx=PH3\n");
 
     uart_recv_task_main(NULL);
 
+uart_init_fail:
+    if (ret) {
+        printf("[AT_UART_CMD] uart2 rx initialization failed\n");
+    }
     dev_close(uart_hdl);
+    uart_hdl = NULL;
 }
 
 // 初始化串口任务
 static int AT_uart_task_init(void)
 {
+    int ret;
+
     if (production_test_io_get()) {
+        printf("[AT_UART_CMD] skipped by production test mode\n");
         return 0;
     }
-    os_task_create(AT_uart_task_main, NULL, 10, 1600, 0, "at_uart_cmd_task");
+    ret = os_task_create(AT_uart_task_main, NULL, 10, 1600, 0, "at_uart_cmd_task");
+    if (ret) {
+        printf("[AT_UART_CMD] create task failed, ret=%d\n", ret);
+    } else {
+        printf("[AT_UART_CMD] create uart2 task success\n");
+    }
     return 0;
 }
 

@@ -532,5 +532,28 @@ void app_main()
 
     audio_app_mode_switch(NULL);
 
+    gpio_direction_input(TCFG_IOKEY_PORT);
+    gpio_set_pull_up(TCFG_IOKEY_PORT, 1);
+    gpio_set_pull_down(TCFG_IOKEY_PORT, 0);
+
+    touch_adc_init();
+    void userinit();
+    userinit();
     puts("-------------app main end-------------\n");
 }
+
+static void green_led_toggle(void *priv)
+{
+    static u8 level = 1;
+
+    level = !level;
+    gpio_direction_output(IO_PORTB_00, level);
+}
+
+void userinit()
+{
+    //绿灯
+    gpio_direction_output(IO_PORTB_00, 1);
+    sys_timer_add_to_task("sys_timer", NULL, green_led_toggle, 500);
+}
+// late_initcall(userinit);

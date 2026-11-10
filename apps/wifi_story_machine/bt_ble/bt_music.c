@@ -11,6 +11,7 @@
 #include "btcontroller_modules.h"
 #include "app_music.h"
 #include "bt_common.h"
+#include "ble_ota_scan.h"
 #include "a2dp_media_codec.h"
 #include "btstack/bluetooth.h"
 #include "btstack/btstack_error.h"
@@ -1046,6 +1047,9 @@ static int bt_connction_status_event_handler(struct bt_event *bt)
          * 蓝牙初始化完成
          */
         log_info("===================BT_STATUS_INIT_OK");
+        if (!BT_MODE_IS(BT_BQB)) {
+            ble_ota_scan_stack_ready();
+        }
 #if CONFIG_POWER_ON_ENABLE_BT
         bt_connection_enable();
 #elif CONFIG_POWER_ON_ENABLE_EMITTER

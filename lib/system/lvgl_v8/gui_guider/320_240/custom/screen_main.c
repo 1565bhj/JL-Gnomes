@@ -729,7 +729,7 @@ int BT_check_bluetooth_status(void)
 //充电检测相关
 static int chargfull;
 #define TCFG_CHARING_STATUS_PORT        IO_PORTC_06//IO_PORT_PR_00
-#define TCFG_CHARGFULL_STATUS_PORT      IO_PORT_PR_00
+#define TCFG_CHARGFULL_STATUS_PORT      -1
 #define DEBOUNCE_THRESHOLD 3  // 防抖阈值
 // 更新电池电量显示 - 作为唯一控制电池图标显示的函数
 void update_battery_display(u8 percent)
